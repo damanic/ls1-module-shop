@@ -1,0 +1,20 @@
+<? $columnDefinition = $form_field->getColDefinition(); ?>
+<li class="field <?= $form_field->formSide ?> <?= $this->form_preview_mode ? 'preview' : null ?> <?= $columnDefinition->isReference ? 'reference' : null ?> <?= $columnDefinition->isReference && $form_field->previewNoRelation ? 'previewNoRelation' : null ?>">
+	<label>
+		Payment Page
+	</label>
+
+	<div class="preview <?= $columnDefinition->type ?>">
+		<? $url = $form_model->get_payment_page_url(); ?>
+		<? if ($url): ?>
+			<a target="_blank" href="<?= h($url) ?>">Click to open the payment page</a>
+		<? else: ?>
+			The payment page is not defined
+		<? endif ?>
+
+		<div class="lt"></div>
+		<div class="rt"></div>
+		<div class="rb"></div>
+		<div class="lb"></div>
+	</div>
+</li>

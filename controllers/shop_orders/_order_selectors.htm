@@ -1,0 +1,14 @@
+<p class="list_select_controls">Select on this page: 
+	<a href="#" onclick="return select_orders(event, 'all')">all</a>, 
+	<a href="#" onclick="return select_orders(event, 'none')">none</a>, 
+	<a href="#" onclick="return select_orders(event, 'active')">active</a>, 
+	<a href="#" onclick="return select_orders(event, 'deleted')">deleted</a>
+	|
+	<? 
+		$statuses = Shop_OrderStatus::list_all_statuses();
+		$last_index = $statuses->count-1;
+		foreach ($statuses as $index=>$status):
+	?>
+		<a href="#" onclick="return select_orders(event, 'status_<?= $status->id ?>')"><?= mb_strtolower(h($status->name)) ?></a><?= $index < $last_index ? ', ' : null ?> 
+	<? endforeach ?>
+</p>

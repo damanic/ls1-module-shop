@@ -1,0 +1,22 @@
+<div id="existing_property_sets" class="relative">
+	<? $this->renderPartial('propset_select_control', array('form_model_class'=>$form_model_class)) ?>
+
+	<p class="last">
+		<a class="imageLink deleteDocument" href="#" onclick="return $(this).getForm().sendPhpr('onDeletePropertySet', {
+			confirm: 'Do you really want to delete the selected property set?', 
+			preCheckFunction: function(){
+				if ($('<?= $this->formGetUniquePrefix()?>Shop_PropertySet_existing_id').selectedIndex == 0) 
+					{
+						alert('Please select a property set to delete.'); 
+						return false;
+					}
+				return true;},
+			onSuccess: function(){
+				var select = $('<?= $this->formGetUniquePrefix()?>Shop_PropertySet_existing_id');
+				select.remove(select.selectedIndex);
+				select.select_update();
+			},
+			loadIndicator: {src: 'phproad/resources/images/form_load_30x30.gif', element: 'existing_property_sets', show: true, hideOnSuccess: true, injectInElement: true}});">Delete selected property set</a>
+	</p>
+	<div class="clear"></div>
+</div>

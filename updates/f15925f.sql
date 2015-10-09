@@ -1,0 +1,1 @@
+update shop_country_lookup set usps_name="England (Great Britain and Northern Ireland)" where iso_code="GB";

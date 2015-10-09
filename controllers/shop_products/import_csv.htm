@@ -1,0 +1,122 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/product_csv_import.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/products') ?>">Products</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<div class="form700">
+		<?= Phpr_Form::openTag() ?>
+			<h4 class="secondary">1. Upload a CSV file</h4>
+
+			<? $this->csvImportRenderCsvUploader() ?>
+	
+			<h4 class="secondary">2. Match the LemonStand product fields to the CSV file's columns</h4>
+		
+			<? if ($this->isHintVisible('csv_import_columns_hint')): ?>
+				<div class="hint">
+					<p>Drag columns from the right list to the left list, matching columns in your CSV file to LemonStand product fields. You can hide file columns which you do not want to be imported using the X icons in the left list.</p>
+					<p>Click a column title in the File Columns list to preview the column data.</p>
+					<p class="last">For new products, Name, Price, SKU, Categories and Tax Class are required and should be included either as columns or selected from the drop-down menus below. If you are updating existing products, only SKU column is required, others are optional.</p>
+					<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('csv_import_columns_hint', this)">Close</a>
+				</div>
+			<? endif ?>
+			
+			<? if ($this->isHintVisible('product_import_apply_rules')): ?>
+				<div class="hint">
+					<p class="last">Please apply Catalog Price Rules after importing products.</p>
+					<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('product_import_apply_rules', this)">Close</a>
+				</div>
+			<? endif ?>
+
+			<? $this->csvImportRenderColumnConfiguration() ?>
+			
+			<div class="form">
+				<h4 class="secondary">3. Set product import options</h4>
+
+				<ul class="formElements secondary_field">
+					<? $this->formRenderField('auto_product_types'); ?>
+				</ul>
+				<ul class="formElements csv_cb_feature" id="product_type_list">
+					<? $this->formRenderField('product_type'); ?>
+				</ul>
+
+				<ul class="formElements secondary_field">
+					<? $this->formRenderField('update_existing_sku'); ?>
+
+					<? $this->formRenderField('auto_create_categories'); ?>
+				</ul>
+
+				<ul class="formElements csv_cb_feature" id="category_list">
+					<? $this->formRenderField('categories'); ?>
+				</ul>
+
+				<ul class="formElements">
+					<? $this->formRenderField('import_product_images'); ?>
+				</ul>
+				
+				<div class="csv_cb_feature" id="images_controls">
+					<? $this->formRenderFieldContainer($this->csvImportGetModelObj(), 'images_file'); ?>
+
+					<ul class="formElements">
+						<? $this->formRenderField('images_directory_path'); ?>
+						<? $this->formRenderField('images_path'); ?>
+					</ul>
+				</div>
+
+				<ul class="formElements">
+					<? $this->formRenderField('import_product_files'); ?>
+				</ul>
+				
+				<div class="csv_cb_feature" id="files_controls">
+					<ul class="formElements">
+						<? $this->formRenderField('files_directory_path'); ?>
+					</ul>
+				</div>
+				
+				<ul class="formElements">
+					<? $this->formRenderField('auto_tax_classes'); ?>
+				</ul>
+				
+				<ul class="formElements csv_cb_feature" id="tax_class_list">
+					<? $this->formRenderField('tax_class'); ?>
+				</ul>
+				
+				<ul class="formElements">
+					<? $this->formRenderField('auto_manufacturers'); ?>
+				</ul>
+				
+				<ul class="formElements csv_cb_feature" id="manufacturer_list">
+					<? $this->formRenderField('manufacturer'); ?>
+				</ul>
+
+				<ul class="formElements">
+					<? $this->formRenderField('descriptions_html'); ?>
+				</ul>
+				
+				<ul class="formElements">
+					<? $this->formRenderField('short_descriptions_html'); ?>
+				</ul>
+
+				<ul class="formElements secondary_field">
+					<? $this->formRenderField('auto_create_product_groups'); ?>
+				</ul>
+				
+				<ul class="formElements csv_cb_feature" id="product_group_list">
+					<? $this->formRenderField('product_groups'); ?>
+				</ul>
+
+			</div>
+			
+			<input type="hidden" name="import_csv_flag" value="1"/>
+			
+			<?= backend_button('Import products', array('onclick'=>'return import_manager.import_data()', 'href'=>'javascript:;')) ?>
+			<div class="clear"></div>
+		</form>
+	</div>
+<? Phpr_View::endBlock() ?>

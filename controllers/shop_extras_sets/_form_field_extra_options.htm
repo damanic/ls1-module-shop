@@ -1,0 +1,39 @@
+<li class="field full">
+	<label>
+		Options
+		<span class="comment">Product extra options belonging to the option set.</span>
+	</label>
+	
+	<div id="extra_options_list" class="clear relative">
+		<? $this->renderPartial('extra_option_list') ?>
+	</div>
+
+	<p class="last">
+		<a class="imageLink addDocument img_noBottomPading" href="#" onclick="$('extra_option_id').value = ''; new PopupForm('onLoadExtraOptionForm', {closeByEsc: false, ajaxFields: $('extra_options_list').getForm()}); return false;">Add option</a>
+	</p>
+	<input type="hidden" name="extra_option_id" id="extra_option_id" value=""/>
+
+	<script type="text/javascript">
+		function updateExtraOptionsList()
+		{
+			cancelPopup();
+
+			$('extra_options_list').getForm().sendPhpr(
+				'onUpdateExtraOptionList',
+				{
+					update: 'extra_options_list',
+					loadIndicator: {
+						show: true,
+						element: 'extra_options_list',
+						hideOnSuccess: true,
+						injectInElement: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					},
+					onSuccess: function(){
+						make_extras_sortable()
+					}
+				}
+			)
+		}
+	</script>
+</li>

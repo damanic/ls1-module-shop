@@ -1,0 +1,1 @@
+alter table shop_configuration add column strict_option_values tinyint(4);

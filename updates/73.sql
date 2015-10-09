@@ -1,0 +1,1 @@
+alter table shop_currency_converter_params add column config_data text;

@@ -1,0 +1,162 @@
+<? 
+	$logo = $company_info->get_logo_url(600, 'auto'); 
+	$footer_colspan = $has_bundles ? 6 : 5;
+?>
+<table class="print_layout_table border_bottom">
+	<tr>
+		<? if ($logo): ?>
+			<td class="logo">
+				<img src="<?= $logo ?>" alt="<?= h($company_info->name) ?>"/>
+			</td>
+		<? endif ?>
+		<td class="company_info">
+			<h3><?= h($company_info->name) ?></h3>
+		
+			<p><?= nl2br(h($company_info->address_contacts)) ?></p>
+		</td>
+		<td class="inv_number last">
+			<div>
+				<h3>Invoice # <?= $order_id ?></h3>
+			</div>
+		</td>
+	</tr>
+</table>
+
+<?= $company_info->invoice_header_text ?>
+
+<table class="print_layout_table">
+	<tr>
+		<td class="client_info">
+			<p>
+				<?= strlen($order->billing_company) ? h($order->billing_company).'<br/>' : null ?>
+				<?= h($order->billing_first_name.' '.$order->billing_last_name) ?><br/>
+			</p>
+			<p class="address">
+				<?= nl2br(trim(h($order->billing_street_addr))) ?><br/>
+				<?= $order->billing_city ?>, 
+				<?= $order->billing_country ? h($order->billing_country->name) : null ?>
+				<?= $order->billing_state ? h($order->billing_state->name) : null ?>
+				<?= h($order->billing_zip) ?>
+			</p>
+		</td>
+		<td class="invoice_details last">
+			<ul>
+				<li>Total amount <span><?= format_currency($order->total) ?></span></li>
+				<? if ($display_due_date): ?>
+					<li>Due date <span><?= $due_date ? $due_date->format('%x') : 'UNKNOWN DATE' ?></span></li>
+				<? endif ?>
+				<li>Invoice date <span><?= $invoice_date ? $invoice_date->format('%x') : 'UNKNOWN DATE' ?></span></li>
+			</ul>
+			<div class="clear"></div>
+		</td>
+	</tr>
+</table>
+
+<table class="print_table">
+	<thead>
+		<tr>
+			<td>Order Item</td>
+			<td class="number">Price</td>
+			<td class="number">Discount</td>
+			<td class="number">Total Quantity</td>
+			<? if ($has_bundles): ?>
+				<td class="number">Quantity in Bundle</td>
+			<? endif ?>
+			<td class="number">Tax</td>
+			<td class="number">Subtotal</td>
+		</tr>
+	</thead>
+	<tbody>
+		<? foreach ($order->items as $item): ?>
+			<tr>
+				<td>
+					<div class="<?= $item->bundle_master_order_item_id ? 'bundle-item-container' : null ?>">
+						<?= $item->output_product_name(true, false, false, true) ?>
+					</div>
+				</td>
+				<td class="number">
+					<? if ($display_tax_included): ?>
+						<?= format_currency($item->price_tax_included) ?> <?= tax_incl_label($order) ?>
+					<? else: ?>
+						<?= format_currency($item->single_price) ?>
+					<? endif ?>
+				</td>
+				<td class="number">
+					<? if ($display_tax_included): ?>
+						<?= format_currency($item->discount_tax_included) ?>
+					<? else: ?>
+						<?= format_currency($item->discount) ?>
+					<? endif ?>
+				</td>
+				<td class="number"><?= $item->quantity ?></td>
+				<? if ($has_bundles): ?>
+					<td class="number">
+						<? if ($item->bundle_master_order_item_id): ?>
+							<?= $item->get_bundle_item_quantity() ?>
+						<? endif ?>
+					</td>
+				<? endif ?>
+				<td class="number"><?= h($item->tax_name_1) ?></td>
+				<td class="number">
+					<? if ($display_tax_included): ?>
+						<?= format_currency($item->subtotal_tax_incl) ?>
+					<? else: ?>
+						<?= format_currency($item->subtotal) ?>
+					<? endif ?>
+				</td>
+			</tr>
+		<? endforeach ?>
+		
+		<tr>
+			<th class="number" colspan="<?= $footer_colspan ?>">Subtotal</th>
+			<th class="number">
+				<? if ($display_tax_included): ?>
+					<?= format_currency($order->subtotal_tax_incl) ?>
+				<? else: ?>
+					<?= format_currency($order->subtotal) ?>
+				<? endif ?>
+			</th>
+		</tr>
+		<? if ($order->shipping_quote): ?>
+			<tr>
+				<th class="number" colspan="<?= $footer_colspan ?>">Shipping</th>
+				<th class="number">
+					<? if ($display_tax_included): ?>
+						<?= format_currency($order->shipping_quote_tax_incl) ?>
+					<? else: ?>
+						<?= format_currency($order->shipping_quote) ?>
+					<? endif ?>
+				</th>
+			</tr>
+		<? endif ?>
+		<? if ($order->discount): ?>
+			<tr>
+				<th class="number" colspan="<?= $footer_colspan ?>">Discount total</th>
+				<th class="number">
+					<? if ($display_tax_included): ?>
+						<?= format_currency($order->discount_tax_incl) ?>
+					<? else: ?>
+						<?= format_currency($order->discount) ?>
+					<? endif ?>
+				</th>
+			</tr>
+		<? endif ?>
+		<? foreach ($order->list_all_taxes() as $tax): ?>
+			<tr>
+				<th class="number" colspan="<?= $footer_colspan ?>"><?= h($tax->name) ?></th>
+				<th class="number"><?= format_currency($tax->total) ?></th>
+			</tr>
+		<? endforeach ?>
+		<tr>
+			<th class="number" colspan="<?= $footer_colspan ?>">Net amount</th>
+			<th class="number"><?= format_currency($order->total - $order->tax_total) ?></th>
+		</tr>
+
+		<tr class="grand_total">
+			<th class="number" colspan="<?= $footer_colspan ?>">Total</th>
+			<td class="number"><?= format_currency($order->total) ?> <?= tax_incl_label($order) ?></td>
+		</tr>
+	</tbody>
+</table>
+
+<?= $company_info->invoice_footer_text ?>

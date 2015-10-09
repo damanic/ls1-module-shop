@@ -1,0 +1,32 @@
+<li>
+	<p><a href="#" class="imageLink pasteDocument" onclick="
+		if (!confirm('Are you sure?')) return false;
+		$('Shop_Customer_shipping_first_name').value = $('Shop_Customer_first_name').value;
+		$('Shop_Customer_shipping_last_name').value = $('Shop_Customer_last_name').value;
+		
+		$('Shop_Customer_shipping_phone').value = $('Shop_Customer_phone').value;
+		$('Shop_Customer_shipping_company').value = $('Shop_Customer_company').value;
+		
+		$('Shop_Customer_shipping_street_addr').value = $('Shop_Customer_billing_street_addr').value;
+		$('Shop_Customer_shipping_city').value = $('Shop_Customer_billing_city').value;
+		$('Shop_Customer_shipping_zip').value = $('Shop_Customer_billing_zip').value;
+		$('Shop_Customer_shipping_country_id').selectedIndex = $('Shop_Customer_billing_country_id').selectedIndex;
+		$('Shop_Customer_shipping_country_id').select_update();
+		
+		$('Shop_Customer_billing_country_id').getForm().sendPhpr(
+			'onUpdateStatesList',
+			{
+				update: 'form_field_container_shipping_state_idShop_Customer',
+				loadIndicator: {show: false},
+				extraFields: {
+					'type': 'shipping_country_id'
+				},
+				onSuccess: function(){
+					$('Shop_Customer_shipping_state_id').selectedIndex = $('Shop_Customer_billing_state_id').selectedIndex;
+				}
+			}
+		)
+		
+		return false;
+	">Copy billing address</a></p>
+</li>

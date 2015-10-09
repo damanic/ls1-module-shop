@@ -1,0 +1,1 @@
+create index binding_index on db_deferred_bindings(detail_key_value, master_relation_name(30), master_class_name(30), is_bind, session_key(30));

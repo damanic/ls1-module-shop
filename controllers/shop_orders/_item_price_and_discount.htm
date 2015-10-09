@@ -1,0 +1,11 @@
+<div class="fieldContainer">
+	<label for="Shop_OrderItem_price">
+		Price <span class="required">*</span>	
+		<span class="comment">Please specify the item unit price.</span>
+	</label>
+
+	<input type="hidden" name="price" value="<?= $item->price ?>"/>
+	<input <? if ($item->auto_discount_price_eval): ?>disabled="disabled"<? endif ?> type="text" name="price" id="Shop_OrderItem_price" class="float" value="<?= round($item->price, 2) ?>"/>
+</div>
+
+<div class="clear"></div>

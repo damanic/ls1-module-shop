@@ -1,0 +1,44 @@
+<div id="change_status_form">
+	<h2>Change Order Status</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<p>Orders selected: <?= count($orders) ?></p>
+				
+					<? if ($end_transitions): ?>
+						<? $this->formRender($log_record) ?>
+
+						<?= backend_ajax_button('Update Orders', 'index_onSetOrderStatuses', array('class'=>'default'), "
+							loadIndicator: {injectInElement: true},
+							onSuccess: cancelPopup,
+							update: 'orders_page_content',
+							onAfterUpdate: update_scrollable_toolbars
+						") ?>
+						<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+						<script type="text/javascript">
+							$('change_status_form').addEvent('popupLoaded', function(){
+								$('Shop_OrderStatusLog_status_id').focus();
+							});
+						</script>
+						<input type="hidden" name="order_ids" value="<?= implode(',', $order_ids) ?>"/>
+					<? else: ?>
+						<? if (count($orders) > 1): ?>
+							<p>There are no end statuses you can send the selected orders to. Try to select orders with a same current status.</p>
+						<? else: ?>
+							<p>There are no end statuses you can send the selected order to.</p>
+						<? endif ?>
+						<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<? endif ?>
+
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

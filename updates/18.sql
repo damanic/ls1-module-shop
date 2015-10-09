@@ -1,0 +1,1 @@
+create index country_id on shop_states(country_id);

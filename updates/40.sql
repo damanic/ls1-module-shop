@@ -1,0 +1,1 @@
+alter table shop_payment_methods add column thankyou_page_id int;

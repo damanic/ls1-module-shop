@@ -1,0 +1,52 @@
+<div>
+	<h2>Find Product</h2>
+	<div class="content">
+		<div class="form700">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag(array('id'=>$this->listGetFormId())) ?>
+					<div class="formFlash"></div>
+
+					<div class="embeddedList">
+						<?
+							$listColumns = array('name', 'sku', 'total_in_stock', 'price');
+						?>
+					
+						<?= $this->listRender(array(
+							'list_model_class'=>'Shop_Product',
+							'list_columns'=>$listColumns,
+							'list_custom_prepare_func'=>'prepare_product_list',
+							'list_record_url'=>null,
+							'list_record_onclick'=>"
+								new PopupForm('onAddProduct', 
+									{
+										ajaxFields: {'product_id': '%s', 'edit_session_key': '$edit_session_key', 'customer_id': $('Shop_Order_customer_id') ? $('Shop_Order_customer_id').value : -1}
+									});
+							
+								return false;
+							",
+							'list_search_enabled' => true,
+							'list_no_setup_link'=>true,
+							'list_search_fields'=> array('shop_products.name', 'shop_products.sku'),
+							'list_search_prompt'=>'find products by name or SKU',
+							'list_no_form'=>true,
+							'list_items_per_page'=>10,
+							'list_custom_head_cells'=>false,
+							'list_custom_body_cells'=>false,
+							'list_top_partial'=>null
+						)) ?>
+					</div>
+
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+			
+					<div class="clear"></div>
+					<input type="hidden" name="edit_session_key" value="<?= h($edit_session_key) ?>"/>
+					<input type="hidden" name="find_product_mode" value="1"/>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

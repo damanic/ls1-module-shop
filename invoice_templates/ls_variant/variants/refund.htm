@@ -1,0 +1,99 @@
+<?
+$this->renderPartial(Shop_OrderDocsHelper::get_partial('header','ls_variant'), array());
+?>
+<h1>Refund</h1>
+<table class="print_layout_table">
+	<tr>
+		<td class="client_info">
+			<p>
+				<?= strlen($order->billing_company) ? h($order->billing_company).'<br/>' : null ?>
+				<?= h($order->billing_first_name.' '.$order->billing_last_name) ?><br/>
+			</p>
+			<p class="address">
+				<?= nl2br(trim(h($order->billing_street_addr))) ?><br/>
+				<?= $order->billing_city ?>, 
+				<?= $order->billing_country ? h($order->billing_country->name) : null ?>
+				<?= $order->billing_state ? h($order->billing_state->name) : null ?>
+				<?= h($order->billing_zip) ?>
+			</p>
+		</td>
+		<td class="invoice_details last">
+			<ul>
+				<li>Total amount <span><?= format_currency($order->total) ?></span></li>
+				<? if ($display_due_date): ?>
+					<li>Due date <span><?= $due_date ? $due_date->format('%x') : 'UNKNOWN DATE' ?></span></li>
+				<? endif ?>
+				<li>Invoice date <span><?= $invoice_date ? $invoice_date->format('%x') : 'UNKNOWN DATE' ?></span></li>
+			</ul>
+			<div class="clear"></div>
+		</td>
+	</tr>
+</table>
+
+<table class="print_table">
+	<thead>
+		<tr>
+			<td>Order Item</td>
+			<td class="number">Price</td>
+			<td class="number">Discount</td>
+			<td class="number">Total Quantity</td>
+			<? if ($has_bundles): ?>
+				<td class="number">Quantity in Bundle</td>
+			<? endif ?>
+			<td class="number">Subtotal</td>
+		</tr>
+	</thead>
+	<tbody>
+		<? foreach ($order->items as $item): ?>
+			<tr>
+				<td>
+					<div class="<?= $item->bundle_master_order_item_id ? 'bundle-item-container' : null ?>">
+						<?= $item->output_product_name(true, false, false, true) ?>
+					</div>
+				</td>
+				<td class="number"><?= format_currency($item->single_price) ?></td>
+				<td class="number"><?= format_currency($item->discount) ?></td>
+				<td class="number"><?= $item->quantity ?></td>
+				<? if ($has_bundles): ?>
+					<td class="number">
+						<? if ($item->bundle_master_order_item_id): ?>
+							<?= $item->get_bundle_item_quantity() ?>
+						<? endif ?>
+					</td>
+				<? endif ?>
+				<td class="number"><?= format_currency($item->subtotal) ?></td>
+			</tr>
+		<? endforeach ?>
+		
+		<tr>
+			<th class="number" colspan="<?= $footer_colspan ?>">Subtotal</th>
+			<th class="number"><?= format_currency($order->subtotal) ?></th>
+		</tr>
+		<? if ($order->shipping_quote): ?>
+			<tr>
+				<th class="number" colspan="<?= $footer_colspan ?>">Shipping</th>
+				<th class="number"><?= format_currency($order->shipping_quote) ?></th>
+			</tr>
+		<? endif ?>
+		<? if ($order->discount): ?>
+			<tr>
+				<th class="number" colspan="<?= $footer_colspan ?>">Discount </th>
+				<th class="number">-<?= format_currency($order->discount) ?></th>
+			</tr>
+		<? endif ?>
+		<? foreach ($order->list_all_taxes() as $tax): ?>
+			<tr>
+				<th class="number" colspan="<?= $footer_colspan ?>"><?= h($tax->name) ?></th>
+				<th class="number"><?= format_currency($tax->total) ?></th>
+			</tr>
+		<? endforeach ?>
+		<tr class="grand_total">
+			<th class="number" colspan="<?= $footer_colspan ?>">Total</th>
+			<td class="number"><?= format_currency($order->total) ?></td>
+		</tr>
+	</tbody>
+</table>
+
+<?
+$this->renderPartial(Shop_OrderDocsHelper::get_partial('footer','ls_variant'), array());
+?>

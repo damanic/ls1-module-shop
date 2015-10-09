@@ -1,0 +1,46 @@
+<?
+	$products = $this->get_product_list($form_model);
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="iconCell">&nbsp;</th>
+			<th class="checkbox">
+				<input type="checkbox" class="list_head_cb" value="1" onclick="$(this).findParent('table').getElements('tbody  input.list_cb').each(function(cb){cb.cb_update_state(this.checked)}, this)"/>
+			</th>
+			<th class="current">Name</th>
+			<th class="<?= !count($products) ? 'last' : null ?>">SKU</th>
+			<? if (count($products)): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody id="group_products_list">
+		<? if (!$products): ?>
+			<tr class="noData">
+				<td colspan="4" class="last">There are no products in this group.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($products as $product_item): 
+				$product = $product_item->product;
+				$sort_order = $product_item->sort_order;
+			?>
+				<tr class="<?= Backend_Html::zebra('products') ?>">
+					<td class="iconCell">
+						<a href="#" class="row_drag_handle sort_handle" onclick="return false" title="Reorder top products">Reorder products</a>
+						<input class="product_ids" name="product_ids[]" value="<?= $product->id ?>" type="hidden"/>
+						<input class="product_order" name="product_order[]" value="<?= $sort_order ?>" type="hidden"/>
+					</td>
+					<td class="checkbox">
+						<input name="list_ids[]" class="list_cb" type="checkbox" value="<?= $product->id ?>" onclick="if (!this.checked) $(this).findParent('table').getElement('thead input.list_head_cb').cb_uncheck()"/>
+					</td>
+					<td class="current"><?= h($product->name) ?></td>
+					<td><?= h($product->sku) ?></td>
+					<td class="iconCell last"><a onclick="$('product_id').value = '<?= $product->id ?>'; return $(this).getForm().sendPhpr('onRemoveProduct', {confirm: 'Do you really want to remove this product from the group?', onAfterUpdate: make_products_sortable, update: 'product_list', loadIndicator: {show: true, hideOnSuccess: true, element: 'product_list'}});" title="Remove product" class="deleteDocument" href="#">Remove from the group</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

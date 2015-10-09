@@ -1,0 +1,7 @@
+<? if ($item->product->track_inventory): 
+	$posted_options = post('product_options', array());
+?>
+	<div class="hint control_hint"><p class="last">
+		In stock: <strong><?= h($item->product->om('in_stock', $posted_options)) ?></strong>
+	</p></div>
+<? endif ?>

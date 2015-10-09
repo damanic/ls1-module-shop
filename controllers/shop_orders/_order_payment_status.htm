@@ -1,0 +1,23 @@
+<? if (!$form_model->payment_transactions->count): ?>
+	<p>
+		<? if ($form_model->payment_processed): ?>
+			Processed
+		<? else: ?>
+			Not processed
+		<? endif ?>
+	</p>
+	<? if ($form_model->payment_processed): ?>
+		<p class="description">
+			At: <?= $form_model->displayField('payment_processed') ?>
+		</p>
+	<? endif ?>
+<? else: ?>
+	<p>
+		<?= h($form_model->payment_transactions->first->transaction_status_name) ?>
+	</p>
+	<? if ($form_model->payment_processed): ?>
+		<p class="description">
+			At: <?= $form_model->payment_transactions->first->displayField('created_at') ?>
+		</p>
+	<? endif ?>
+<? endif ?>

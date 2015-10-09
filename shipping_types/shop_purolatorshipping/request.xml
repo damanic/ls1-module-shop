@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns1="http://purolator.com/pws/datatypes/v1">
+	<SOAP-ENV:Header>
+		<ns1:RequestContext>
+			<ns1:Version>1.0</ns1:Version>
+			<ns1:Language>en</ns1:Language>
+			<ns1:GroupID>xxx</ns1:GroupID>
+			<ns1:RequestReference>Rating Example</ns1:RequestReference>
+		</ns1:RequestContext>
+	</SOAP-ENV:Header>
+	<SOAP-ENV:Body>
+		<ns1:GetQuickEstimateRequest>
+			<ns1:BillingAccountNumber xsi:nil="true" />
+			<ns1:SenderPostalCode><?= h($shipping_params->zip_code) ?></ns1:SenderPostalCode>
+			<ns1:ReceiverAddress>
+				<ns1:City><?= h($city) ?></ns1:City>
+				<ns1:Province>BC</ns1:Province>
+				<? if($shipping_params->state): ?>
+				<ns1:Province><?= h($shipping_params->state->code) ?></ns1:Province>
+				<? endif ?>
+				<ns1:Country><?= h($shipping_params->country->code) ?></ns1:Country>
+				<ns1:PostalCode><?= h($zip) ?></ns1:PostalCode>
+			</ns1:ReceiverAddress>
+			<ns1:PackageType><?= $settings_obj->container ?></ns1:PackageType>
+			<ns1:TotalWeight>
+				<ns1:Value><?= h($weight) ?></ns1:Value>
+				<ns1:WeightUnit><?= h($shipping_params->weight_unit) ?></ns1:WeightUnit>
+			</ns1:TotalWeight>
+		</ns1:GetQuickEstimateRequest>
+	</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

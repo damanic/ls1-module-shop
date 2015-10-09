@@ -1,0 +1,5 @@
+<AccessRequest xml:lang='en-US'>
+	<AccessLicenseNumber><?= h($settings_obj->access_key) ?></AccessLicenseNumber>
+	<UserId><?= h($settings_obj->api_user) ?></UserId>
+	<Password><?= h($settings_obj->api_password) ?></Password>
+</AccessRequest>

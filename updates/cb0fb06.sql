@@ -1,0 +1,3 @@
+alter table shop_products add column low_stock_threshold int;
+
+INSERT INTO `system_email_templates` (`code`,`subject`,`content`,`description`,`is_system`) VALUES ('shop:low_stock_internal','Product \"{low_stock_product}\" has reached its low stock threshold','<p>Hi!</p>\n<p>This message is to inform you that product&nbsp;<strong>{low_stock_product}</strong> with SKU <strong>{low_stock_sku}</strong> has reached its low stock threshold. Number of items remaining in stock: <strong>{low_stock_count}</strong></p>\n<p>You can update the product stock status on <a href=\"{low_stock_url}\">this page</a>.</p>','This message is sent to the store team members when a product reaches the low stock threshold','1');

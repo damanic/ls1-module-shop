@@ -1,0 +1,33 @@
+<div>
+	<h2>Print Shipping Label</h2>
+	<div class="content">
+		<div class="form400">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag(array('class'=>'relative')) ?>
+					<? if ($tracking_code): ?>
+						<div class="hint"><p class="last">Shipping tracking code <strong><?= h($tracking_code->code) ?></strong> already exists for this order. Generating the new shipping label will override the existing code.</p></div>
+					<? endif ?>
+				
+					<? $this->formRender($shipping_method) ?>
+					
+					<?= backend_ajax_button('Generate label(s)', 'preview_onGenerateLabels', array(), "
+						loadIndicator: {show: true, hideOnSuccess: true, injectInElement: true},
+						update: 'multi',
+						onAfterUpdate: function(){
+							realignPopups();
+						}
+					") ?>
+
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()', 'class'=>'right')) ?>
+
+					<div class="clear"></div>
+					<div id="shipping_label_list"></div>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,72 @@
+<?= flash() ?>
+
+<? if (!$rules->count): ?>
+	<p class="noData">No rules found</p>
+<? else: ?>
+	<ul class="rule_list" id="rule_list">
+		<? 
+			$last_index = $rules->count-1;
+			$prev_is_terminating = false;
+			foreach ($rules as $index=>$rule): 
+				$classes = array();
+				if ($index == $last_index)
+					$classes[] = 'last';
+
+				if ($index == 0)
+					$classes[] = 'first';
+
+				if ($rule->terminating)
+					$classes[] = 'terminating';
+
+				if ($prev_is_terminating)
+					$classes[] = 'after_terminating';
+
+				if (!$rule->active)
+					$classes[] = 'inactive';
+
+				$collapsed = $this->rulesGetCollapseStatus($rule);
+				if ($collapsed)
+					$classes[] = 'collapsed';
+
+				$customer_groups = $rule->columnValue('customer_groups');
+				if (!strlen($customer_groups))
+					$customer_groups = 'All';
+			?>
+			<li class="rule <?= implode(' ', $classes) ?>" style="z-index: <?= 1000+$last_index-$index ?>">
+				<div class="rule_content_container">
+					<div class="drag_handle" title="Reorder rules"></div>
+					<div class="top_connector"></div>
+
+					<h4 class="rule_header">
+						<a href="<?= url($this->rules_edit_url.'/'.$rule->id) ?>"><?= h($rule->name) ?></a>
+						<a class="rule_collapse_control" href="#" onclick="return rules_toggle(this, '<?= $rule->id ?>', '<?= $this->getEventHandler('onSetRuleCollapseStatus') ?>')">Collapse/Expand</a>
+						<a title="Delete rule" class="rule_delete_icon" href="javascript:;" onclick="return rules_delete(this, '<?= $rule->id ?>')">delete</a>
+					</h4>
+					<div class="rule_description">
+						<p><?= h($rule->description) ?></p>
+					</div>
+
+					<div class="rule_info">
+						<p>
+							<?=  $rule->active ? 'Enabled.' : 'Disabled.' ?>
+							Customer groups: <?= $customer_groups ?>.
+							<? if ($rule->date_start): ?>
+								Start: <?= $rule->columnValue('date_start') ?>.
+							<? endif ?>
+							<? if ($rule->date_end): ?>
+								End: <?= $rule->columnValue('date_end') ?>.
+							<? endif ?>
+						</p>
+					</div>
+
+					<div class="bottom_connector"></div>
+
+					<input class="rule_id" value="<?=$rule->id?>" type="hidden"/>
+					<input class="rule_order" value="<?= $rule->sort_order ?>" type="hidden"/>
+				</div>
+			</li>
+		<? 
+			$prev_is_terminating = $rule->terminating;
+			endforeach ?>
+	</ul>
+<? endif ?>

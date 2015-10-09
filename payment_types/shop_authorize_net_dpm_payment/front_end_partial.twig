@@ -1,0 +1,41 @@
+<p>Please provide your credit card information.</p>
+
+<form action="{{ payment_method_obj.get_form_action(payment_method, order) }}" method="post">
+  {{ flash_message() }}
+  {% set hidden_fields = payment_method_obj.get_hidden_fields(payment_method, order) %}
+  {% for name, value in hidden_fields %}
+    <input type="hidden" name="{{ name }}" value="{{ value }}"/>
+  {% endfor %}
+  
+  <ul class="form">
+    <li class="field text left">
+      <label for="x_first_name">Cardholder First Name</label>
+      <div><input autocomplete="off" name="x_first_name" value="" id="x_first_name" type="text" class="text"/></div>
+    </li>    
+    <li class="field text right">
+      <label for="x_last_name">Cardholder Last Name</label>
+      <div><input autocomplete="off" name="x_last_name" value="" id="x_last_name" type="text" class="text"/></div>
+    </li>    
+
+    <li class="field text left">
+      <label for="x_card_num">Credit Card Number</label>
+      <div><input autocomplete="off" name="x_card_num" value="" id="x_card_num" type="text" class="text"/></div>
+    </li>
+    <li class="field text right">
+      <label for="x_exp_date">Expiration Date</label>
+      <div><input autocomplete="off" name="x_exp_date" value="" id="x_exp_date" type="text" class="text"/></div>
+    </li>
+    
+    <li class="field text">
+      <label for="x_card_code">
+        CVV2
+        <span class="comment">For MasterCard, Visa, and Discover, the CSC is the last three digits in the signature area on the back of your card. For American Express, it's the four digits on the front of the card.</span>
+      </label>
+      
+      <div><input autocomplete="off" name="x_card_code" value="" id="x_card_code" type="text" class="text"/></div>
+    </li>
+  </ul>
+  <div class="clear"></div>
+
+  <input type="submit" value="Pay with Authorize.Net"/>
+</form>

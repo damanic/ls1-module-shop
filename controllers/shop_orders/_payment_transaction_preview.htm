@@ -1,0 +1,33 @@
+<div>
+	<h2>Payment Transaction</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<div class="scoreboardReport">
+						<ul>
+							<li class="last">
+								<h3>Status</h3>
+								<p>
+									<?= h($record->transaction_status_name) ?>
+								</p>
+								<p class="description">Created: <?= $record->displayField('created_at') ?></p>
+								<? $record->payment_method->extend_transaction_preview($this, $record) ?>
+							</li>
+
+						</ul>
+						<div class="clear"></div>
+					</div>
+
+					<? $this->formRenderPreview($record) ?>
+					<div class="clear"></div>
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<? endif ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	</div>
+</div>

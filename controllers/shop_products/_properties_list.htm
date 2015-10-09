@@ -1,0 +1,42 @@
+<?
+	$properties = $form_model->list_related_records_deferred('properties', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<? if ($properties->count): ?>
+				<th class="iconCell">&nbsp;</th>
+			<? endif ?>
+			<th>Attribute</th>
+			<th class="<?= !$properties->count ? 'last' : null ?>">Value</th>
+			<? if ($properties->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody id="attributes_list_body<?= $this->formGetEditSessionKey() ?>">
+		<? if (!$properties->count): ?>
+			<tr class="noData">
+				<td colspan="3" class="last">There are no attributes.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($properties as $attribute): 
+				$onClick = "$('property_id').value = '{$attribute->id}'; new PopupForm('onLoadPropertyForm', {ajaxFields: $('property_id').getForm()}); return false;";
+			?>
+				<tr class="<?= Backend_Html::zebra('custom_attribute') ?>">
+					<td class="iconCell">
+						<a href="#" class="row_drag_handle sort_handle" onclick="return false" title="Reorder attributes">Reorder attributes</a>
+						<input class="option_id" value="<?= $attribute->id ?>" type="hidden"/>
+						<input class="option_order" value="<?= $attribute->sort_order ?>" type="hidden"/>
+					</td>
+
+					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($attribute->displayField('name', 'list')) ?></a></td>
+					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($attribute->value) ?></a></td>
+					<td class="iconCell last"><a onclick="$('property_id').value = '<?= $attribute->id ?>'; return $(this).getForm().sendPhpr('onDeleteProperty', {confirm: 'Do you really want to delete this attribute?', update: 'properties_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Delete attribute" class="deleteDocument" href="#">Delete</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

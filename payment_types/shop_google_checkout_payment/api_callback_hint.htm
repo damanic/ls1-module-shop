@@ -1,0 +1,16 @@
+<li>
+	<div class="hint">
+		<p>Please configure <strong>API callback URL</strong> in your Google Checkout seller account.</p>
+		
+		<ol class="simpleList">
+			<li>Log in to your Google Checkout Seller account.</li>
+			<li>Go to the Settings tab.</li>
+			<li>Go to Integration in the left menu column.</li>
+			<li>Under API callback URL, enter the following URL:
+			<a href="<?= site_url('ls_google_checkout_complete') ?>" onclick="return false"><?= site_url('ls_google_checkout_complete') ?></a></li>
+			<li>For the callback contents, choose Notification as XML.</li>
+			<li>Set your API Version to 2.5.</li>
+			<li>Under the Notification Filter, mark the "I am integrating using the Order Processing Tutorial..." checkbox.</li>
+		</ol>
+	</div>
+</li>

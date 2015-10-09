@@ -1,0 +1,29 @@
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="order_status">
+			</th>
+			<th>Status</th>
+			<th class="date">Date and Time</th>
+			<th>User</th>
+			<th class="last">Comment</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?
+			foreach ($form_model->log_records as $record):
+		?>
+		<tr class="<?= Backend_Html::zebra('order_log_items') ?>">
+			<td class="order_status">
+				<span style="background-color: <?= $record->status_color ?>">&nbsp;</span>
+			</td>
+			<td><?= h($record->status_name) ?></td>
+			<td class="date"><?= $record->displayField('created_at') ?></td>
+			<td><?= h($record->created_user_name) ?></td>
+			<td class="last"><?= h($record->comment) ?></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+	</tbody>
+</table>

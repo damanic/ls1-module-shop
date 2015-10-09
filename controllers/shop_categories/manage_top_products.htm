@@ -1,0 +1,32 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/top_category_products.js"></script>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css" type="text/css"/>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/categories') ?>">Categories</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="scoreboardReport">
+			<ul>
+				<li class="last">
+					<h3>Selected category</h3>
+					<p><?= h($category->name) ?></p>
+				</li>
+			</ul>
+			<div class="clear"></div>
+		</div>
+		
+		<div class="hint">
+			<p class="last">On this page you can specify which category products should be displayed on the top of the category product list, independently on a currently active sort mode. You can manage the product order by dragging the arrow icons up and down.</p>
+		</div>
+		
+		<?= $this->listRender(array('list_control_panel'=>'top_products_panel')) ?>
+	<? endif ?>
+	
+<? Phpr_View::endBlock() ?>

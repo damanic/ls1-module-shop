@@ -1,0 +1,2 @@
+alter table shop_order_items add column option_matrix_record_id int;
+create index option_matrix_record_id on shop_order_items(option_matrix_record_id);

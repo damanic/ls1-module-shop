@@ -1,0 +1,27 @@
+<div id="existing_option_sets" class="relative">
+	<? $this->renderPartial('optset_select_control', array('form_model_class'=>$form_model_class)) ?>
+
+	<p class="last">
+		<a class="imageLink deleteDocument" href="#" onclick="return $(this).getForm().sendPhpr('onDeleteOptionSet', {
+			confirm: 'Do you really want to delete the selected option set?', 
+			preCheckFunction: function(){
+				if ($('<?= $this->formGetUniquePrefix()?>Shop_OptionSet_existing_id').selectedIndex == 0) 
+					{
+						alert('Please select an option set to delete.'); 
+						return false;
+					}
+				return true;},
+			onSuccess: function(){
+				var select = $('<?= $this->formGetUniquePrefix()?>Shop_OptionSet_existing_id');
+				select.remove(select.selectedIndex);
+				select.select_update();
+			},
+			loadIndicator: {
+				src: 'phproad/resources/images/form_load_30x30.gif', 
+				element: 'existing_option_sets', 
+				show: true, 
+				hideOnSuccess: true,
+				injectInElement: true}});">Delete selected option set</a>
+	</p>
+	<div class="clear"></div>
+</div>

@@ -1,0 +1,1 @@
+alter table shop_shipping_options add column taxable tinyint;

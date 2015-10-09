@@ -1,0 +1,7 @@
+<ul class="condition_set">
+	<? $this->conditionsRenderPartial('condition', array('condition'=>$pricerule_rule_set, 'tree_level'=>0)) ?>
+</ul>
+
+<? if (isset($new_condition_id)): ?>
+	<input type="hidden" class="new_condition_id" name="new_condition_id" value="<?= $new_condition_id ?>"/>
+<? endif ?>

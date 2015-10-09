@@ -1,0 +1,21 @@
+<? if ($this->orderStatusSelectorVisible()): ?>
+	<? 
+		$statuses = Shop_OrderStatus::list_all_statuses();
+	 	$current_status_id = $this->getCurrentOrderStatus();
+	?>
+	<ul class="sidebar-selector order-status-icons">
+		<li class="<?= !$current_status_id ? 'current' : null ?>"><div><a href="#" onclick="return select_order_status('')"><span class="status-icon all">all</span>All orders</a></div></li>
+		<? foreach ($statuses as $status): ?>
+		<li class="<?= $current_status_id == $status->id ? 'current' : null ?>">
+			<div><a href="#" onclick="return select_order_status(<?= $status->id ?>)"><span class="status-icon" style="background-color: <?= $status->color ?>"><?= h($status->name) ?></span><?= h($status->name) ?></a></div>
+		</li>
+		<? endforeach ?>
+		<li class="separated no-arrow hide-selector">
+			<div><a href="#" onclick="return hide_status_selector()">Hide status selector</a></div>
+		</li>
+	</ul>
+<? else: ?>
+	<div class="order-status-handle">
+		<a href="#" title="Show order status selector" onclick="return show_status_selector()">Show order status selector</a>
+	</div>
+<? endif ?>

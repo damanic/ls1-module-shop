@@ -1,0 +1,33 @@
+<?
+	$states = $form_model->list_related_records_deferred('states', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>Code</th>
+			<th class="<?= !$states->count ? 'last' : null ?>">Name</th>
+			<? if ($states->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody>
+		<? if (!$states->count): ?>
+			<tr class="noData">
+				<td colspan="3" class="last">There are no states defined.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($states as $state):
+				$onClick = "$('state_id').value = '{$state->id}'; new PopupForm('onLoadCountryStateForm', {ajaxFields: $('state_id').getForm()}); return false;";
+			?>
+				<tr class="<?= Backend_Html::zebra('state') ?>">
+					<td class="link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($state->displayField('code', 'list')) ?></a></td>
+					<td class="link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($state->name) ?></a></td>
+					<td class="iconCell last"><a onclick="$('state_id').value = '<?= $state->id ?>'; return $(this).getForm().sendPhpr('onDeleteCountryState', {confirm: 'Do you really want to delete this state?', update: 'state_list', loadIndicator: {show: false}, onFailure: function(err){alert(err.message)}});" title="Delete state" class="deleteDocument" href="#">Delete</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

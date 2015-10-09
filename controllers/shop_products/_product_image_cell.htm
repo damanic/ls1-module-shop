@@ -1,0 +1,10 @@
+<? 
+	if(strlen($this->list_cell_partial))
+		$this->renderPartial($this->list_cell_partial, array('model'=>$model, 'index'=>$index, 'column'=>$column, 'url'=>$url), true, true);
+	$image_url = $model->image_url(0, 100, 100);
+	if ($image_url):
+?>
+	<a class="image" href="<?= $url ?>"><img class="list_inline_image" src="<?= $image_url ?>" alt="<?= h($model->name) ?>"/></a>
+<? else: ?>
+	<a href="<?= $url ?>">&nbsp;</a>
+<? endif ?>

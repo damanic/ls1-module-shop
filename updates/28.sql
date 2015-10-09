@@ -1,0 +1,1 @@
+alter table shop_tax_classes add column rates text;

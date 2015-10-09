@@ -1,0 +1,32 @@
+<div class="toolbar read_only_table">
+	<a class="imageLink new_document img_noBottomPading" onclick="new PopupForm('preview_onLoadShippingCodeForm'); return false;" href="#">Add tracking code</a>
+	<div class="clear"></div>
+</div>
+
+<? $codes = Shop_OrderTrackingCode::find_by_order($form_model) ?>
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>Shipping Method</th>
+			<th class="<?= !$codes->count ? 'last' : null ?>">Code</th>
+			<? if ($codes->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+	<tbody>
+		<? foreach ($codes as $record): ?>
+		<tr class="<?= Backend_Html::zebra('shipping_codes') ?>">
+			<td><?= h($record->displayField('code_shipping_method')) ?></td>
+			<td ><?= h($record->code) ?></td>
+			<td class="iconCell last"><a onclick="return $(this).getForm().sendPhpr('preview_onDeleteTrackingCode', {extraFields: {code_id: <?= $record->id ?>}, confirm: 'Do you really want to delete this tracking code?', update: 'tracking_code_list', loadIndicator: {show: false}});" title="Remove product" class="deleteDocument" href="#">Delete code</a></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+		
+		<? if (!$codes->count): ?>
+			<tr class="noData last"><td colspan="2">No shipping tracking codes found</td></tr>
+		<? endif ?>
+	</tbody>
+</table>

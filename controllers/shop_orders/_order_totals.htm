@@ -1,0 +1,55 @@
+<ul>
+	<? if (!$form_model->is_new_record()): ?>
+		<li>
+			<h3>Order</h3>
+			<p>
+				# <?= $form_model->id ?>
+				<? if ($form_model->deleted_at): ?> | Deleted <? endif ?>
+			</p>
+			<p class="description">
+				Created: <?= $form_model->order_datetime->format('%x') ?>
+			</p>
+		</li>
+		<li>
+			<h3>Customer</h3>
+			<p><a href="<?= url('shop/customers/preview/'.$form_model->customer_id) ?>"><?= h($form_model->billing_first_name).' '.h($form_model->billing_last_name) ?></a></p>
+			<p class="description">
+				Email: <a href="mailto:<?= $form_model->billing_email ?>"><?= h($form_model->billing_email) ?></a>
+			</p>
+		</li>
+	<? endif ?>
+	
+	<li>
+		<h3>Subtotal</h3>
+		<p><?= format_currency($form_model->subtotal ? $form_model->subtotal : 0) ?></p>
+		<p class="description">
+			Sales tax: <?= format_currency($form_model->goods_tax ? $form_model->goods_tax : 0) ?>
+		</p>
+	</li>
+	<li>
+		<h3>Shipping</h3>
+		<p><?= format_currency($form_model->shipping_quote ? $form_model->shipping_quote : 0) ?></p>
+		<p class="description">
+			Shipping tax: <?= format_currency($form_model->shipping_tax ? $form_model->shipping_tax : 0) ?>
+		</p>
+	</li>
+	<li>
+		<h3>Total discount applied</h3>
+		<p><?= format_currency($form_model->discount ? $form_model->discount : 0) ?></p>
+		<p class="description">
+			<? $coupon = $form_model->coupon; ?>
+			Coupon: <?= h($coupon ? $coupon->code : '<no coupon used>') ?>
+		</p>
+	</li>
+	<li class="last">
+		<h3>Total</h3>
+		<p><?= format_currency($form_model->total ? $form_model->total : 0) ?></p>
+		<p class="description">
+			<?
+				$tax_total = $form_model->goods_tax + $form_model->shipping_tax;
+			?>
+			Total tax: <?= format_currency($tax_total ? $tax_total : 0) ?>
+		</p>
+	</li>
+</ul>
+<div class="clear"></div>

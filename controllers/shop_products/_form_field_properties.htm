@@ -1,0 +1,41 @@
+<li class="field">
+	<div class="toolbar listToolbar">
+		<a class="imageLink new_document img_noBottomPading" href="#" onclick="$('property_id').value = ''; new PopupForm('onLoadPropertyForm', {ajaxFields: $('property_id').getForm()}); return false;">Add attribute</a>
+
+		<a class="imageLink document_import img_noBottomPading" href="#" onclick="$('property_id').value = ''; new PopupForm('onLoadSavePropertiesForm', {ajaxFields: $('property_id').getForm()}); return false;">Save property set</a>
+
+		<a class="imageLink group img_noBottomPading" href="#" onclick="$('property_id').value = ''; new PopupForm('onLoadLoadPropertiesForm', {ajaxFields: $('property_id').getForm()}); return false;">Load property set</a>
+
+		<div class="clear"></div>
+	</div>
+	
+	<div id="properties_list<?= $this->formGetEditSessionKey() ?>" class="clear relative">
+		<? $this->renderPartial('properties_list') ?>
+	</div>
+
+	<input type="hidden" name="property_id" id="property_id" value=""/>
+
+	<script type="text/javascript">
+		function updatePropertyList(session_key)
+		{
+			cancelPopup();
+
+			$('properties_list'+session_key).getForm().sendPhpr(
+				'onUpdatePropertyList',
+				{
+					update: 'properties_list'+session_key,
+					loadIndicator: {
+						show: true,
+						element: 'properties_list'+session_key,
+						hideOnSuccess: true,
+						injectInElement: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					},
+					onSuccess: function(){
+						make_attributes_sortable(session_key);
+					}
+				}
+			)
+		}
+	</script>
+</li>

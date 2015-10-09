@@ -1,0 +1,25 @@
+<?
+	$logo = $company_info->get_logo_url(600, 'auto');
+$footer_colspan = $has_bundles ? 5 : 4;
+?>
+<table class="print_layout_table border_bottom">
+	<tr>
+		<? if ($logo): ?>
+		<td class="logo">
+			<img src="<?= $logo ?>" alt="<?= h($company_info->name) ?>"/>
+		</td>
+		<? endif ?>
+		<td class="company_info">
+			<h3><?= h($company_info->name) ?></h3>
+
+			<p><?= nl2br(h($company_info->address_contacts)) ?></p>
+		</td>
+		<td class="inv_number last">
+			<div>
+				<h3>Order # <?= $order_id ?></h3>
+			</div>
+		</td>
+	</tr>
+</table>
+
+<?= $company_info->invoice_header_text ?>

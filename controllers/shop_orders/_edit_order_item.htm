@@ -1,0 +1,38 @@
+<div id="edit_item_popup">
+	<h2>Order Item</h2>
+	<div class="content">
+		<div class="form600 product_item_preview">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<div id="item_form" class="relative">
+						<? $this->renderPartial('item_form') ?>
+					</div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<? endif ?>
+				<div class="clear"></div>
+					
+				<input type="hidden" name="item_id" value="<?= $item->id ?>"/>
+				<? if (isset($bundle_item_product_id)): ?>
+					<input type="hidden" name="bundle_item_product_id" value="<?= $bundle_item_product_id ?>"/>
+
+					<input type="hidden" name="Shop_OrderItem[bundle_master_order_item_id]" value="<?= $bundle_master_order_item_id ?>"/>
+					<input type="hidden" name="Shop_OrderItem[bundle_master_bundle_item_id]" value="<?= $bundle_master_bundle_item_id ?>"/>
+					
+					<? if (isset($bundle_master_bundle_item_name)): ?>
+						<input type="hidden" name="Shop_OrderItem[bundle_master_bundle_item_name]" value="<?= h($bundle_master_bundle_item_name) ?>"/>
+					<? endif ?>
+				<? endif ?>
+				
+				<input type="hidden" name="edit_session_key" value="<?= $edit_session_key ?>"/>
+			</form>
+			
+			<script type="text/javascript">
+				$('edit_item_popup').addEvent('popupLoaded', function(){
+					track_itemp_price_change();
+				});
+			</script>
+		</div>
+	</div>
+</div>

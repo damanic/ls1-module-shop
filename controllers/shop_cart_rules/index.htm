@@ -1,0 +1,8 @@
+<? Phpr_View::beginBlock("view") ?>
+	<div class="toolbar">
+		<?= backend_ctr_button('Add rule', 'new_document', url('/shop/cart_rules/create')) ?>
+		<div class="clear"></div>
+	</div>
+
+	<? $this->rulesRender() ?>
+<? Phpr_View::endBlock() ?>

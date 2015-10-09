@@ -1,0 +1,30 @@
+<select name="Shop_PriceRuleCondition[operator]" id="Shop_PriceRuleCondition_operator" onchange="$(this).getForm().sendPhpr('<?= $this->getEventHandler('onConditionFormEvent') ?>', {
+	extraFields: {type: 'operator_change'},
+	loadIndicator: {show: false},
+	update: 'multi',
+	onBeforePost: LightLoadingIndicator.show.pass('Loading...'), 
+	evalScriptsAfterUpdate: true,
+	onComplete: LightLoadingIndicator.hide,
+	onAfterUpdate: realignPopups
+})">
+	<? 
+		$options = $this->formFieldGetOptions($form_field->dbName, $this->viewData['form_model']); 
+		$dbName = $this->formGetFieldDbName($form_field->dbName, $this->viewData['form_model']);
+	?>
+
+	<? if ($form_field->emptyOption !== null): ?>
+		<option value=""><?= h($form_field->emptyOption) ?></option>
+	<? endif ?>
+
+	<? 
+		$fieldName = $form_field->dbName;
+		foreach ($options as $value=>$name): 
+			if (is_array($name))
+			{
+				$keys = array_keys($name);
+				$name = !count($keys) ? $value : $keys[0];
+			}
+	?>
+		<option <?= Phpr_Form::optionState( $value, $form_model->$dbName ) ?> value="<?= h($value) ?>"><?= $form_field->optionsHtmlEncode ? h($name) : $name ?></option>
+	<? endforeach ?>
+</select>

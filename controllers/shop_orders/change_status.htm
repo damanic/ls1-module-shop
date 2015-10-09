@@ -1,0 +1,56 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/orders') ?>">Orders</a></li>
+		<li><a href="<?= url('/shop/orders/preview/'.$order_id.'?'.uniqid()) ?>">Order Preview</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+	
+	<?= flash() ?>
+	
+	<? if (!isset($fatalError)): ?>
+		<div class="scoreboardReport">
+			<ul>
+				<li>
+					<h3>Order</h3>
+					<p># <?= $order->id ?></p>
+					<p class="description">
+						Created: <?= $order->order_datetime->format('%x') ?>
+					</p>
+				</li>
+				<li class="last">
+					<h3>Current Status</h3>
+					<p>
+						<span class="order_status_marker" style="background-color: <?= $order->displayField('status_color') ?>"><?= h($order->displayField('status')) ?></span>
+						<?= h($order->displayField('status')) ?>
+					</p>
+					<p class="description">
+						Since: <?= $order->status_update_datetime->format('%x') ?>
+					</p>
+				</li>
+			</ul>
+			<div class="clear"></div>
+		</div>
+
+		<div class="form400">
+			<? if (Shop_StatusTransition::listAvailableTransitions($this->currentUser->shop_role_id, $order->status_id)->count): ?>
+				<?= Phpr_Form::openTag(array('id'=>'settings_form')) ?>
+					<? $this->formRender($log_record) ?>
+
+					<?= backend_ajax_button('Save', 'change_status_onSave', array('class'=>'default')) ?>
+					<?= backend_button('Cancel', url('/shop/orders/preview/'.$order_id.'?'.uniqid())) ?>
+
+					<div class="clear"></div>
+				</form>
+			<? else: ?>
+				<p>There are no possible transitions from the current order status.</p>
+				<?= backend_button('Cancel', url('/shop/orders/preview/'.$order_id.'?'.uniqid())) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+
+	<? else: ?>
+		<p><a href="<?= url('/shop/orders') ?>">Return to the order list</a></p>
+	<? endif ?>
+
+
+<? Phpr_View::endBlock() ?>

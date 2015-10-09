@@ -1,0 +1,10 @@
+<? if ($form_model->get_action_obj()->is_per_product_action()): ?>
+	<li class="inline_conditions field">
+		<label>
+			Product filter
+			<span class="comment">Apply the rule only to shopping cart items matching the following conditions. Leave the conditions empty to apply the rule to all products in the shopping cart.</span>
+		</label>
+	
+		<? $this->conditionsRender($form_model, $form_model->get_products_conditions_root($this->formGetEditSessionKey())) ?>
+	</li>
+<? endif ?>

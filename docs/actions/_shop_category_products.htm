@@ -1,0 +1,7 @@
+<? foreach ($category->products as $product): ?>
+	<h3><?= h($product->name) ?></h3>
+	
+	<img src="<?= $product->image_url(0, 130, 130) ?>"/>
+
+	<p><?= h($product->short_description) ?></p>
+<? endforeach ?>

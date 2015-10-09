@@ -1,0 +1,10 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+	<script type="text/javascript" src="modules/shop/resources/javascript/orders.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<div id="orders_page_content">
+		<? $this->renderPartial('orders_page_content') ?>
+	</div>
+<? Phpr_View::endBlock() ?>

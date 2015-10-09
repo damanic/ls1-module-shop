@@ -1,0 +1,62 @@
+<div class="form400">
+	<form action="<?= $payment_method_obj->get_form_action($payment_method, $order, true) ?>" method="post">
+		<?= flash() ?>
+		
+		<div class="form">
+			<ul class="formElements">
+				<li class="field text left">
+					<label for="x_first_name">Cardholder First Name <span class="required">*</span></label>
+					<div class="fieldContainer">
+						<input autocomplete="off" name="x_first_name" id="x_first_name" type="text" class="text"/>
+					</div>
+
+					<div class="clear"></div>
+				</li>
+				<li class="field text right">
+					<label for="x_last_name">Cardholder Last Name <span class="required">*</span></label>
+					<div class="fieldContainer">
+						<input autocomplete="off" name="x_last_name" id="x_last_name" type="text" class="text"/>
+					</div>
+
+					<div class="clear"></div>
+				</li>
+				
+				<li class="field text">
+					<label for="x_card_num">Credit Card Number <span class="required">*</span></label>
+					<div class="fieldContainer">
+						<input autocomplete="off" name="x_card_num" id="ACCT" type="text" class="text"/>
+					</div>
+
+					<div class="clear"></div>
+				</li>
+
+				<li class="field text left">
+					<label for="x_exp_date">Expiration Date (MM/YY)</label>
+					<div class="fieldContainer">
+						<input autocomplete="off" name="x_exp_date" id="EXPDATE" type="text" class="text"/>
+					</div>
+
+					<div class="clear"></div>
+				</li>
+				<li class="field text right">
+					<label for="x_card_code">Card Verification Value (CVV)</label>
+					<div class="fieldContainer">
+						<input autocomplete="off" name="x_card_code" id="CVV" type="text" class="text"/>
+					</div>
+
+					<div class="clear"></div>
+				</li>
+			</ul>
+			<div class="clear"></div>
+		</div>
+		
+		<?
+			$hidden_fields = $payment_method_obj->get_hidden_fields($payment_method, $order, true);
+			foreach ($hidden_fields as $name=>$value):
+		?>
+			<input type="hidden" name="<?= $name ?>" value="<?= h($value) ?>"/>
+		<? endforeach ?>
+
+		<?= backend_button('Submit', array('href'=>"#", 'onclick'=>"$(this).getForm().submit(); return false;")) ?>
+	</form>
+</div>

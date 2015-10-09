@@ -1,0 +1,47 @@
+<?
+	$nested = isset($nested) ? $nested : false;
+	$tree_level = isset($tree_level) ? $tree_level : 0;
+?>
+
+<? if (!$list_data->count): ?>
+	<p class="noData">No categories found.</p>
+<? else: ?>
+	<ul class="simple_tree <?= $nested ? null : 'page_tree_view' ?>" id="<?= $listId = uniqid('category_list') ?>">
+		<? foreach ($list_data as $row): 
+			$url = $this->listFormatRecordUrl($row);
+			$subcategories = $row->list_children('front_end_sort_order');
+		?>
+			<li>
+				<div class="tree_branch  <?= zebra('page_tree') ?>" style="padding-left: <?= $tree_level*20 ?>px">
+					<a href="#" onclick="return false" class="row_icon handle<?= $row->category_id ?>">
+						<img src="modules/cms/resources/images/icon_page.png"/>
+					</a>
+					<span class="title">
+						<span class="row_title"><?= h($row->name) ?></span>
+						<? if ($row->short_description): ?>
+							<span class="row_notes">
+								<?= h($row->short_description) ?>
+							</span>
+						<? endif ?>
+					</span>
+					<div class="clear"></div>
+				</div>
+
+				<input class="category_id<?= $row->category_id ?>" value="<?=$row->id?>" type="hidden"/>
+				<input class="category_order<?= $row->category_id ?>" value="<?= $row->front_end_sort_order ?>" type="hidden"/>
+
+				<? if ($subcategories->count): ?>
+					<? $this->renderPartial('category_tree', array('list_data'=>$subcategories, 'nested'=>true, 'tree_level'=>$tree_level+1)) ?>
+				<? endif ?>
+			</li>
+		<? endforeach ?>
+	</ul>
+	<? if ($list_data->count): ?>
+		<script type="text/javascript">
+			window.addEvent('domready', function() {
+				$('<?= $listId ?>').makeListSortable('reorder_categories_onSetOrders', 'category_order<?= $row->category_id ?>', 'category_id<?= $row->category_id ?>', 'handle<?= $row->category_id ?>');
+				$('<?= $listId ?>').addEvent('dragComplete', tree_after_drag);
+			});
+		</script>
+	<? endif ?>
+<? endif ?>

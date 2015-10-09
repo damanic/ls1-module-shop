@@ -1,0 +1,6 @@
+<? 
+	$url = $model->image_url(0, 100, 'auto');
+	if ($url):
+?>
+	<img class="list_inline_image" src="<?= $url ?>" alt="<?= h($model->name) ?>"/>
+<? endif ?>

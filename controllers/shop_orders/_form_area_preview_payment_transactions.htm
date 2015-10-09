@@ -1,0 +1,41 @@
+<?= Phpr_Form::openTag(array('id'=>'transactions_form')) ?>
+	<div class="toolbar">
+		<?
+			$operations_allowed = $form_model->transaction_operations_allowed();
+			$request_allowed = $operations_allowed && $form_model->payment_method->supports_transaction_status_query();
+		?>
+	
+		<? if ($form_model->transaction_operations_allowed()): ?>
+			<a class="imageLink change_transaction_status img_noBottomPading" href="<?= url('shop/orders/update_transaction_status/'.$form_model->id.'/?'.uniqid()) ?>">Change transaction status</a>
+		<? else: ?>
+			<a class="imageLink change_transaction_status img_noBottomPading disabled" href="javascript:;">Change status</a>
+		<? endif ?>
+		
+		<? if ($request_allowed): ?>
+			<a class="imageLink load_transaction_status img_noBottomPading" href="#" onclick="$(this).getForm().sendPhpr(
+				'preview_onRequestTransactionStatus',
+				{
+					update: 'multi',
+					onFailure: popupAjaxError,
+					loadIndicator: {
+						show: true,
+						element: 'payment_transaction_list',
+						hideOnSuccess: true,
+						injectInElement: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					}
+				}
+			); return false;">Request status from the gateway</a>
+		<? else: ?>
+			<a class="imageLink load_transaction_status img_noBottomPading disabled" href="javascript:;">Request status from the gateway</a>
+		<? endif ?>
+	
+		<? Backend::$events->fireEvent('shop:onExtendOrderPaymentTransactionsToolbar', $this, $form_model) ?>
+	
+		<div class="clear"></div>
+	</div>
+
+	<div id="payment_transaction_list" class="relative">
+		<? $this->renderPartial('payment_transaction_list') ?>
+	</div>
+</form>

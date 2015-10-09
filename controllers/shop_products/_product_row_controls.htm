@@ -1,0 +1,21 @@
+<? if ($index == 0): ?>
+	<div class="row_controls hidden" <?= click_link($url) ?>>
+		<div class="content">
+			<ul>
+				<li class="default">
+					<a href="<?= $url.'?'.uniqid() ?>">Edit</a>
+					<div class="handle"></div>
+				</li>
+				<li><a href="<?= url('shop/products/preview/'.$model->id.'?'.uniqid()) ?>">Product details</a></li>
+				
+				<? if (($preview_url = $this->getPreviewUrl())): ?>
+				<li>
+					<a href="<?= $preview_url.'/'.$model->url_name ?>" onclick="new Event(event).stopPropagation();" target="_blank">Preview</a>
+				</li>
+				<? endif ?>
+			</ul>
+			<div class="clear"></div>
+		</div>
+	</div>
+	<div id="comment_<?= $model->id ?>"></div>
+<? endif ?>

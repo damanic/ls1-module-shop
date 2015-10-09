@@ -1,0 +1,30 @@
+<li>
+	<p>Define states for the country. If there are no states in the country, leave this list empty.</p>
+	
+	<div id="state_list" class="clear">
+		<? $this->renderPartial('country_states_list') ?>
+	</div>
+
+	<p class="addDocument"><a href="#" onclick="$('state_id').value = ''; new PopupForm('onLoadCountryStateForm', {ajaxFields: $('state_id').getForm()}); return false;">Add state</a></p>
+	<input type="hidden" name="state_id" id="state_id" value=""/>
+
+	<script type="text/javascript">
+		function updateStates()
+		{
+			cancelPopup();
+
+			$('state_list').getForm().sendPhpr(
+				'onUpdateCountryStateList',
+				{
+					update: 'state_list',
+					loadIndicator: {
+						show: true,
+						element: 'state_list',
+						hideOnSuccess: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					}
+				}
+			)
+		}
+	</script>
+</li>

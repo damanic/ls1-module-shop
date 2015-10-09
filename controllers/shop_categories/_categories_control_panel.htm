@@ -1,0 +1,9 @@
+<div class="toolbar">
+	<?= Phpr_Form::openTag() ?>
+		<?= backend_ctr_button('Add category', 'new_document', url('/shop/categories/create')) ?>
+		<?= backend_ctr_button('Delete selected', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_selected()")) ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Manage category order', 'manage_order', url('/shop/categories/reorder_categories')) ?>
+		<div class="clear"></div>
+	</form>
+</div>

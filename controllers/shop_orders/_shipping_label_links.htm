@@ -1,0 +1,18 @@
+<div class="shipping_label_list_area">
+	<? $cnt = count($labels) ?>
+	<p>
+		<?= $cnt ?> label(s) have been generated.
+		<? if ($cnt): ?>
+			Use the links below to download or print the label images.
+		<? endif ?>
+	</p>
+
+	<? if ($cnt): ?>
+		<ul class="shipping_label_list">
+			<? foreach ($labels as $index=>$label): ?>
+				<li class="<?= strtolower($label->file_extension) ?>"><a target="_blank" href="<?= url('shop/orders/shippinglabel/'.$label->link) ?>"><? if($label->title): echo h($label->title); else: ?>Label <?= $index+1 ?><? endif ?></a> (<?= Phpr_Files::fileSize($label->file_size) ?>)</li>
+			<? endforeach ?>
+		</ul>
+		<div class="clear"></div>
+	<? endif ?>
+</div>

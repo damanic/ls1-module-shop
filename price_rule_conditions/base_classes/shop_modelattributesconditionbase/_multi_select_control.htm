@@ -1,0 +1,31 @@
+<div id="filter_list">
+	<div class="embeddedList">
+		<?
+			$listColumns = $columns;
+
+			$searchFields = $condition_obj->get_reference_search_fields($model, $columns);
+
+			$is_sliding_list = $model->isExtendedWith('Db_Act_As_Tree');
+		?>
+		
+		<?= $this->listRender(array(
+			'list_model_class'=>get_class($model),
+			'list_no_setup_link'=>true,
+			'list_columns'=>$listColumns,
+			'list_render_as_sliding_list'=>$is_sliding_list,
+			'list_custom_body_cells'=>PATH_APP.'/modules/shop/price_rule_conditions/base_classes/shop_modelattributesconditionbase/_multiselect_body_control.htm',
+			'list_custom_head_cells'=>PATH_APP.'/modules/shop/price_rule_conditions/base_classes/shop_modelattributesconditionbase/_multiselect_head_control.htm',
+			'list_search_fields'=>$searchFields,
+			'list_custom_prepare_func'=>'conditionsPrepareMultiselectData',
+			'list_scrollable'=>false,
+			'list_search_prompt'=>'search',
+			'list_no_form'=>true,
+			'list_record_url'=>null,
+			'list_items_per_page'=>6,
+			'list_search_enabled'=>true,
+			'list_name'=>'condition_settings_mutiselect_'.$attribute,
+			'list_no_js_declarations'=>true,
+			'condition_id'=>$condition_id
+		)) ?>
+	</div>
+</div>

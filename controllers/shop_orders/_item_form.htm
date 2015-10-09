@@ -1,0 +1,31 @@
+<div id="item_description">
+	<? $this->renderPartial('item_description') ?>
+</div>
+
+<div class="preview_right no_image">
+	<?= $this->formRender($item) ?>
+	<div class="clear"></div>
+</div>
+
+<? if (!post('edit_mode', $this->viewDataElement('edit_mode'))): ?>
+	<?= backend_ajax_button('Add', 'onAddItem', array('class'=>'default'), "
+		loadIndicator: {injectInElement: true},
+		extraFields: {'customer_id': $('Shop_Order_customer_id') ? $('Shop_Order_customer_id').value : -1},
+		onAfterUpdate: updateItemList
+	") ?>
+<? else: ?>
+	<?= backend_ajax_button('Save', 'onUpdateItem', array('class'=>'default'), "
+		loadIndicator: {injectInElement: true},
+		extraFields: {
+			'customer_id': $('Shop_Order_customer_id') ? $('Shop_Order_customer_id').value : -1,
+			'applied_discounts_data': $('applied_discounts_data_field').value
+		},
+		onAfterUpdate: updateItemList
+	") ?>
+<? endif ?>
+<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+<input type="hidden" name="edit_mode" value="<?= post('edit_mode', $this->viewDataElement('edit_mode')) ?>"/>
+<input type="hidden" name="item_postback" value="1"/>
+<div class="clear"></div>
+<input type="hidden" name="phpr_uploader_model_class" value="Shop_OrderItem"/>
+<input type="hidden" name="phpr_uploader_model_id" value="<?= $item->id ?>"/>

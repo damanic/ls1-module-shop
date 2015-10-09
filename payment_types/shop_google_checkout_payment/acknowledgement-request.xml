@@ -1,0 +1,1 @@
+<notification-acknowledgment xmlns="<?= $self->schema_url ?>" serial-number="<?= $serial ?>" />

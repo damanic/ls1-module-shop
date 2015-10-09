@@ -1,0 +1,62 @@
+<div id="option-matrix-popup">
+	<h2>Option Matrix</h2>
+	<div class="content">
+		<div class="inline_form" style="width: <?= $form_width.'px' ?>">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag(array('id'=>'option_matrix_form')) ?>
+					<div class="inline_details">
+						<table>
+							<tr>
+								<th>Base product</th>
+								<td><?= h($product->name) ?></td>
+								<th>SKU</th>
+								<td><?= h($product->sku) ?></td>
+								<th>Price</th>
+								<td><?= format_currency($product->price) ?></td>
+							</tr>
+						</table>
+					</div>
+				
+					<? $this->formRender($form_model) ?>
+				
+					<?= backend_ajax_button('Apply', 'onSaveOptionMatrix', array(), "
+						loadIndicator: {injectInElement: true},
+						'update': 'multi',
+						onSuccess: cancelPopup,
+						prepareFunction: function(){phprTriggerSave();}
+					") ?>
+					<?= backend_ajax_button('Cancel', 'onCancelOptionMatrix', array(), "
+						loadIndicator: {injectInElement: true},
+						'update': 'multi',
+						onSuccess: cancelPopup,
+						prepareFunction: function(){phprTriggerSave();}
+					") ?>
+					<input type="hidden" name="widget_model_class" value="<?= get_class($form_model) ?>"/>
+					<div class="clear"></div>
+
+					<script type="text/javascript">
+						$('option-matrix-popup').addEvent('popupLoaded', function() {
+							jQuery.ui.anchorLayout.suspend();
+						});
+						
+						$('option-matrix-popup').addEvent('onClosePopup', function() {
+							jQuery.ui.anchorLayout.resume();
+						});
+					</script>
+
+					<? if (isset($page_size)): ?>
+						<input type="hidden" name="page_size" value="<?= $page_size ?>"/>
+					<? endif ?>
+					
+					<input type="hidden" name="form_width" value="<?= $form_width ?>"/>
+					<input type="hidden" name="grouped_product_id" value="<?= $grouped_product_id ?>"/>
+					<input type="hidden" name="grouped_product" value="<?= $grouped_product ?>"/>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

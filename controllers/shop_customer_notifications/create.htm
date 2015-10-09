@@ -1,0 +1,48 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/system/resources/javascript/emailtemplates.js"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/unload_manager.js"></script>
+	
+	<script type="text/javascript">
+		UnloadManager.unload_message = 'The message content has been changed.';
+	</script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/orders') ?>">Order List</a></li>
+		<li><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Order Preview</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<table class="layoutTable">
+			<tr>
+				<td>
+					<?= Phpr_Form::openTag() ?>
+						<? $this->formRender() ?>
+						<input type="hidden" name="Shop_OrderNotification[is_system]" value="<?= $form_model->is_system ?>"/>
+
+						<?= backend_ajax_button('Send', 'create_onSave', array(), "onAfterUpdate: setupVariablesSize, onAfterError: setupVariablesSize, prepareFunction: function(){phprTriggerSave();}, onBeforeScriptEval: function(){UnloadManager.reset_changes()}") ?>
+						<?
+							$thisUserMail = $this->currentUser->email;
+							if (strlen($thisUserMail))
+								echo backend_ajax_button('Send test message', 'create_onTest', array(), "onAfterUpdate: setupVariablesSize, onAfterError: setupVariablesSize, confirm: 'Test message will be sent to your email address $thisUserMail. Continue?', loadIndicator: {hideOnSuccess: true}, hideErrorOnSuccess: false, update: $(this).getForm().getElement('.formFlash'), prepareFunction: function(){phprTriggerSave();}");
+							else
+								echo backend_ajax_button('Send test message', 'create_onTest', array(), "alert: 'Your email address is not defined. Please specify it in the user parameters.'");
+						?>
+
+						<?= backend_button('Cancel', url('/shop/orders/preview/'.$order_id)) ?>
+						<div class="clear"></div>
+					</form>
+				</td>
+				<td class="rightFixedColumn infoBlock">
+					<? $this->renderPartial('template_variables') ?>
+				</td>
+			</tr>
+		</table>
+	<? else: ?>
+		<p><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Return to the order preview page</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

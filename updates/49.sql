@@ -1,0 +1,3 @@
+insert into system_email_templates(code, subject, content, description) values('shop:order_thankyou', 'Thank you for the order!', '<p>Dear {customer_name}!</p><p>Thank you for the order. Your order details:</p><p>Number: {order_id}<br />Date: {order_date}<br />Total: {order_total}</p><p>Order items:</p><p>{order_content}</p>', 'This order is sent to customers on new order.');
+	
+update shop_order_statuses set customer_message_template_id=(select id from system_email_templates where code='shop:order_thankyou') where code='new';

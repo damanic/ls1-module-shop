@@ -1,0 +1,17 @@
+<p class="top_offset">
+	Please click the button for the secure payment form
+</p>	
+
+<?= open_form() ?>
+	<?= flash_message() ?>
+
+	<!-- Uncomment this to include Gift Aid checkbox on your form
+	<ul class="form">
+		<li class="field checkbox">
+			<div><input type="checkbox" name="GiftAid" id="GiftAid" value="1"></div>
+			<label for="GiftAid">Gift Aid</label>
+		</li>
+	</ul>
+	-->
+	<input type="button" onclick="return $(this).getForm().sendRequest('shop:on_pay')" value="Continue"/>
+</form>

@@ -1,0 +1,33 @@
+<div id="property_form">
+	<h2>Product Attribute</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($option) ?>
+
+					<?= backend_ajax_button('Save', 'onAddProperty', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updatePropertyList.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				
+					<script type="text/javascript">
+						$('property_form').addEvent('popupLoaded', function(){
+							$('<?= $this->formGetUniquePrefix()?>Shop_ProductProperty_name').focus();
+							init_attribute_form();
+						});
+					</script>
+			
+					<div class="clear"></div>
+					<input type="hidden" name="product_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="property_id" value="<?= $property_id ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

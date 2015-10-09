@@ -1,0 +1,62 @@
+<? Phpr_View::beginBlock("head") ?>
+	<? if (!isset($fatalError)): ?>
+		<? $this->renderPartial('product_types_js_setup') ?>
+	<? endif ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/product.js?<?= module_build('shop') ?>"></script>
+	<script type="text/javascript" src="modules/shop/resources/javascript/save_item.js"></script>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+	
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.event.drag-2.0.min.js"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.sizes.min.js"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.splitter.js"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.ui.fullheightlayout.js"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.ui.anchorlayout.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)):
+		$panel_width = Phpr::$request->cookie('splitter-widget-splitter-table', null);
+		$left_panel_width = $panel_width ? $panel_width.'px' : null;
+	?>
+		<? if (Shop_Category::categories_exist()): ?>
+			<table class="layoutTable splitter" id="splitter-table">
+				<tr>
+					<td class="splitter-panel left-panel" style="width: <?= $left_panel_width ?>">
+					<?= Phpr_Form::openTag(array('id'=>'form_element')) ?>
+						<div class="toolbar">
+							<?= backend_ajax_button('Create', 'create_onSave', array(), "prepareFunction: function(){phprTriggerSave();}") ?>
+							<?= backend_ajax_button('Create and Close', 'create_onSave', array('class'=>'default'), "prepareFunction: function(){phprTriggerSave();}, extraFields: {create_close: 1}") ?>
+							<?= backend_ajax_button('Cancel', 'create_onCancel') ?>
+
+							<div class="clear"></div>
+						</div>
+				
+						<? $this->formRender() ?>
+
+						<input type="hidden" value="1" id="new_record_flag"/>
+					</form>
+					</td>
+					<td class="splitter-separator"></td>
+					<td class="secondary_tabs splitter-panel right-panel" id="infoColumn">
+						<? $this->renderPartial('sidebar') ?>
+					</td>
+				</tr>
+			</table>
+		<? else: ?>
+			<div class="system_message_container">
+				<div class="system_message_panel system_warning">
+					<h3>Please create a category</h3>
+					<p>Please create a product category before adding your first product.</p>
+					<p class="last"><a href="<?= url('/shop/categories/create') ?>">Click here to navigate to the Create Category page.</a></p>
+				</div>
+				<div class="offsetTop">
+					<?= backend_button('Cancel', array('href'=>url('/shop/products'))) ?>
+				</div>
+			</div>
+		<? endif ?>
+	<? else: ?>
+		<p><a href="<?= url('/shop/products') ?>">Return to the product list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

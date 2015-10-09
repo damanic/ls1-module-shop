@@ -1,0 +1,21 @@
+<li class="first left">
+	<p class="last">
+		<a class="imageLink calculator" onclick="
+			return $('Shop_Order_shipping_first_name').getForm().sendPhpr(
+				'onCalculateDiscounts',
+				{
+					loadIndicator: {show: true, element: $('Shop_Order_shipping_first_name').getForm(), hideOnSuccess: true},
+					confirm: 'Do you really want to update discount values?',
+					onAfterUpdate: function(){
+						track_discount_changes(),
+						update_tooltips();
+					},
+					onComplete: function(){
+						shipping_info_changed = true;
+					}
+				}
+			)" href="#">Apply discounts</a>
+	</p>
+	<p class="imageLinkComment">Click the link to apply discounts defined on the <strong>Shop/Discounts</strong> tab. Order item discounts and the free shipping option will be updated automatically, based on price rules currently active. Please select a coupon if you want to apply a specific coupon code.</p>
+	<div class="clear"></div>
+</li>

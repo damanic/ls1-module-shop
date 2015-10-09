@@ -1,0 +1,7 @@
+<div class="toolbar">
+	<a class="imageLink go_back img_noBottomPading" href="<?= url('/shop/products') ?>">Return to the Product List</a>
+	<div class="separator"></div>
+	<?= backend_ctr_button('Approve selected', 'apply', array('href'=>'#', 'onclick'=>"return approve_selected()")) ?>
+	<?= backend_ctr_button('Delete selected', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_selected()")) ?>
+	<div class="clear"></div>
+</div>	

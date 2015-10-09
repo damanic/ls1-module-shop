@@ -1,0 +1,10 @@
+<p>
+	Click the button to pay with Sage Pay.
+</p>
+
+<?= Phpr_Form::openTag() ?>
+	<?= backend_ajax_button('Pay with Sage Pay', 'pay_onSubmit', array(), "loadIndicator: {show: false},
+	onFailure: popupAjaxError,
+	onBeforePost: LightLoadingIndicator.show.pass('Loading...'), 
+	onComplete: LightLoadingIndicator.hide") ?>
+</form>

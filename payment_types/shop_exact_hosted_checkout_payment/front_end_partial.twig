@@ -1,0 +1,16 @@
+<p class="top_offset">
+  Please click the button for the secure payment form
+</p>  
+<form action="{{ payment_method_obj.get_form_action(payment_method) }}" method="post">
+  {% set hidden_fields = payment_method_obj.get_hidden_fields(payment_method, order) %}
+  {% for name, value in hidden_fields %}
+    {% if value is not array %}
+      <input type="hidden" name="{{ name }}" value="{{ value }}"/>
+    {% else %}
+      {% for item in value %}
+        <input type="hidden" name="{{ name }}" value="{{ item }}"/>
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+  <input type="submit" value="Pay with E-xact"/>
+</form>

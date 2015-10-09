@@ -1,0 +1,42 @@
+<div class="scoreboardReport">
+	<ul>
+		<li>
+			<h3>Orders</h3>
+			<p>
+				<?= $totals_data->order_num ?>
+			</p>
+		</li>
+		<li>
+			<h3>Revenue</h3>
+			<p>
+				<?= format_currency($totals_data->revenue) ?>
+			</p>
+		</li>
+		<li>
+			<h3>Total</h3>
+			<p>
+				<?= format_currency($totals_data->total) ?>
+			</p>
+		</li>
+		<li>
+			<h3>Tax</h3>
+			<p>
+				<?= format_currency($totals_data->tax) ?>
+			</p>
+		</li>
+		<? if ($totals_data->cost > 0): ?>
+			<li>
+				<h3>Cost</h3>
+				<p>
+					<?= format_currency($totals_data->cost) ?>
+				</p>
+			</li>
+		<? endif ?>
+		<li class="last">
+			<h3>Shipping</h3>
+			<p>
+				<?= format_currency($totals_data->shipping) ?>
+			</p>
+		</li>
+	</ul>
+</div>

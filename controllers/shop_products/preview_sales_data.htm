@@ -1,0 +1,129 @@
+<?
+	function addToArray(&$arr, $key, &$value, $keyParams = array(), $array_key = null)
+	{
+		if (!array_key_exists($key, $arr))
+			$arr[$key] = (object)array('values'=>array(), 'params'=>$keyParams);
+
+		if (!strlen($array_key))
+			$arr[$key]->values[] = $value;
+		else
+			$arr[$key]->values[$array_key] = $value;
+	}
+	
+	$maxChartValue = 0;
+	
+	function addMaxValue($value)
+	{
+		global $maxChartValue;
+		$maxChartValue = max($value, $maxChartValue);
+		return $value;
+	}
+?>
+<settings>
+	<data>
+		<chart>
+			<series>
+				<?
+					$graphs = array();
+					$series = array();
+					foreach ($chart_data as $record)
+					{
+						addToArray($graphs, $record->graph_code, $record, $record, $record->series_id);
+					
+						if (Backend_Reports::unique('series', $record->series_id))
+							$series[] = $record;
+					}
+
+					$lastIndex = count($series)-1;
+					foreach ($chart_series as $index=>$record):
+				?>
+					<value xid="<?= h($record->series_id) ?>"><?= Phpr_DateTime::parse($record->series_id, Phpr_DateTime::universalDateFormat)->format('%b %d, %Y') ?></value>
+				<? endforeach ?>
+				
+				<? if (!count($chart_data)): ?>
+					<value xid="0">0</value>
+				<? endif ?>
+			</series>
+			<graphs>
+				<?
+				$index = 1;
+				foreach ($graphs as $code=>$data):
+					if (!strlen($code))
+						continue;
+					
+					$values = $data->values;
+					$params = $data->params;
+				?>
+					<graph axis="left" gid="<?= 'graph_'.$index ?>" color="#0d8ecf" color_hover="#0d8ecf" line_width="2" balloon_text="{description}" title="<?= h($code) ?>"	balloon_color="#0d8ecf">
+						<?
+							foreach ($chart_series as $serie):
+								if (array_key_exists($serie->series_id, $values)):
+									$value = $values[$serie->series_id];
+
+								$value->record_value = strlen($value->record_value) ? $value->record_value : 0;
+								$value->items_sold = strlen($value->items_sold) ? $value->items_sold : 0;
+						?>
+							<value bullet="round" bullet_size="<?= $value->record_value ? 4 : 0 ?>" description="Amount: <?= format_currency($value->record_value) ?>" xid="<?= h($value->series_id) ?>"><?= strlen($value->record_value) ? addMaxValue($value->record_value) : 0 ?></value>
+						 <? else: ?>
+							<value description="Amount: <?= format_currency(0) ?>" xid="<?= h($serie->series_id) ?>">0</value>
+							<? endif ?>
+						<? endforeach ?>
+						
+					</graph>
+
+					<graph bullet="round" axis="right" gid="<?= 'graph_right_'.$index ?>" line_width="2" color="#91B60C" color_hover="#91B60C" balloon_text="{description}" title="items_sold" balloon_color="#91B60C">
+						<?
+							foreach ($chart_series as $serie):
+								if (array_key_exists($serie->series_id, $values)):
+									$value = $values[$serie->series_id];
+
+								$value->items_sold = strlen($value->items_sold) ? $value->items_sold : 0;
+						?>
+							<value bullet_size="<?= $value->items_sold ? 4 : 0 ?>" description="Items ordered: <?= $value->items_sold ?>" xid="<?= h($value->series_id) ?>"><?= strlen($value->items_sold) ? addMaxValue($value->items_sold) : 0 ?></value>
+						 <? else: ?>
+							<value bullet_size="0" description="Items ordered: <?= 0 ?>" xid="<?= h($serie->series_id) ?>">0</value>
+							<? endif ?>
+						<? endforeach ?>
+						
+					</graph>
+				<?
+				$index++;
+				endforeach ?>
+			</graphs>
+		</chart>
+	</data>
+	
+	<graphs>
+		<graph gid="graph_1">
+			<line_width>2</line_width>
+			<color>#0d8ecf</color>
+			<color_hover>#0D8ECF</color_hover>
+			<bullet>round</bullet>
+			<bullet_size>6</bullet_size>
+			<fill_alpha>12</fill_alpha>
+		</graph>
+	</graphs>
+
+	<graphs>
+		<graph gid="graph_right_1">
+			<line_width>2</line_width>
+			<color>#91B60C</color>
+			<color_hover>#91B60C</color_hover>
+			<bullet>round</bullet>
+			<bullet_size>6</bullet_size>
+			<fill_alpha>12</fill_alpha>
+		</graph>
+	</graphs>
+
+	<plot_area>
+		<margins>
+			<left><?= strlen(Phpr::$lang->num($maxChartValue, 2))*10 ?></left>
+			<top>7</top>
+		</margins>
+	</plot_area>
+	
+	<legend>
+		<enabled>false</enabled>
+	</legend>
+	
+</settings>

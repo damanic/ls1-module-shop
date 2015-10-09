@@ -1,0 +1,33 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script src="modules/shop/resources/javascript/cart_rules.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript">
+		var action_menu_id = 'Shop_CartPriceRule_action_class_name';
+	</script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/cart_rules') ?>">Discounts</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="form500">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Save', 'create_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'create_onCancel') ?>
+				<input type="hidden" value="0" name="redirect"/>
+				<div class="clear"></div>
+				
+				<input type="hidden" id="current_condition_id" name="current_condition_id" value=""/>
+				<input type="hidden" id="action_base_name" value="<?= $this->getEventHandler('') ?>"/>
+			</form>
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/cart_rules') ?>">Return to the rule list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

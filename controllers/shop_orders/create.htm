@@ -1,0 +1,40 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+	<script type="text/javascript" src="modules/shop/resources/javascript/order.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/orders') ?>">Orders</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="scoreboardReport" id="order_totals">
+			<? $this->renderPartial('order_totals') ?>
+		</div>
+	
+		<div class="form800">
+			<?= Phpr_Form::openTag() ?>
+				<input type="hidden" name="Shop_Order[shipping_state_id]" value=""/>
+				<input type="hidden" name="Shop_Order[billing_state_id]" value=""/>
+				<div id="order_applied_discounts_data"><? $this->renderPartial('applied_discounts_data') ?></div>
+				<div id="order_applied_discount_list"><? $this->renderPartial('applied_discounts_list') ?></div>
+				<? $this->formRender() ?>
+				
+				<? if ($form_model->parent_order_id): ?>
+					<input type="hidden" name="Shop_Order[parent_order_id]" value="<?= $form_model->parent_order_id ?>"/>
+				<? endif ?>
+
+				<?= backend_ajax_button('Create', 'create_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'create_onCancel') ?>
+				<div class="clear"></div>
+				<div id="tmp_site"></div>
+			</form>
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/orders') ?>">Return to the order list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

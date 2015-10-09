@@ -1,0 +1,27 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/category_tree.js"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/categories') ?>">Categories</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+	
+	<? if ($this->isHintVisible('categories_order')): ?>
+		<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
+			<div class="hint">
+				<p class="last">Manage category order by dragging white icons in the list below. The category order will be taken into account on the front-end website.</p>
+				<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('categories_order', this)">Close</a>
+			</div>
+		</form>
+	<? endif ?>
+
+	<?= Phpr_Form::openTag(array('id'=>$this->listGetFormId())) ?>
+		<div class="list-hide-setup-panel">
+			<?= $this->listRender(array('list_control_panel'=>'reorder_categories_control_panel')) ?>
+		</div>
+	</form>
+<? Phpr_View::endBlock() ?>

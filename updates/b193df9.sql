@@ -1,0 +1,1 @@
+alter table shop_option_matrix_records add column allow_pre_order tinyint(4);

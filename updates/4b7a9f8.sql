@@ -1,0 +1,1 @@
+alter table shop_payment_transactions add column data_1 text;

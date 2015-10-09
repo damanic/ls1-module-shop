@@ -1,0 +1,30 @@
+<table class="simpleList toolbar_control">
+	<thead>
+		<tr>
+			<th>Method</th>
+			<th class="date">Date and Time</th>
+			<th>Status</th>
+			<th class="last">User</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?
+			foreach ($form_model->payment_transactions as $record):
+				$onClick = "new PopupForm('preview_onLoadPaymentTransactionPreview', {ajaxFields: {'record_id': '{$record->id}'}}); return false;";
+				$user_name = $record->fetched_from_gateway ? 'gateway' : $record->displayField('created_user_name');
+		?>
+		<tr class="<?= Backend_Html::zebra('order_transactions') ?>">
+			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->displayField('payment_method')) ?></a></td>
+			<td onclick="<?= $onClick ?>" class="date link"><a href="#" onclick="<?= $onClick ?>"><?= $record->displayField('created_at') ?></a></td>
+			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_status_name) ?></a></td>
+			<td onclick="<?= $onClick ?>" class="last link"><a href="#" onclick="<?= $onClick ?>"><?= h($user_name) ?></a></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+		
+		<? if (!$form_model->payment_transactions->count): ?>
+			<tr class="noData"><td colspan="4">No records found</td></tr>
+		<? endif ?>
+	</tbody>
+</table>

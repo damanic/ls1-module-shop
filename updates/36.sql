@@ -1,0 +1,1 @@
+alter table shop_order_statuses add column enabled tinyint;

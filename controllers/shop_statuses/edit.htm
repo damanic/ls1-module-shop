@@ -1,0 +1,32 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/colorpicker.js?<?= module_build('shop') ?>"></script>
+	<script type="text/javascript" src="modules/shop/resources/javascript/status.js?<?= module_build('shop') ?>"></script>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/system/settings') ?>">Settings</a></li>
+		<li><a href="<?= url('/shop/statuses') ?>">Order Statuses and Transitions</a></li>
+		<li><?= $this->app_page_title ?></li>	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="form450">
+			<?= Phpr_Form::openTag() ?>
+				<input type="hidden" name="Shop_OrderStatus[customer_message_template_id]" value=""/>
+				<input type="hidden" name="Shop_OrderStatus[admin_message_template_id]" value=""/>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Save', 'edit_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'edit_onCancel') ?>
+
+				<?= backend_ajax_button('Delete', 'edit_onDelete', array('class'=>"right"), "confirm: 'Do you really want to delete this order status?'") ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+	<p><a href="<?= url('/shop/statuses') ?>">Return to the status list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

@@ -1,0 +1,26 @@
+<div id="price_tier_form">
+	<h2>Price Tier</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($tier) ?>
+
+					<?= backend_ajax_button('Save', 'onUpdatePriceTier', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updatePriceTiers.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+					<input type="hidden" name="product_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="tier_id" value="<?= $tier_id ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

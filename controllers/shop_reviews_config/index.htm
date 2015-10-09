@@ -1,0 +1,24 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/reviews_config.js"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/system/settings') ?>">Settings</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+	
+	<? if (!isset($fatalError)): ?>
+		<div class="form400">
+			<?= Phpr_Form::openTag(array('id'=>'form_element')) ?>
+				<? $this->formRender($form_model) ?>
+
+				<?= backend_ajax_button('Save', 'index_onSave') ?>
+				<?= backend_button('Cancel', url('system/settings')) ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+		<?= flash() ?>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

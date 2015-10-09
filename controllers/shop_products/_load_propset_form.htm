@@ -1,0 +1,31 @@
+<div id="save_property_form">
+	<h2>Load Property Set</h2>
+	<div class="content">
+		<div class="form300">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag() ?>
+					<? $this->formRender($obj) ?>
+
+					<script type="text/javascript">
+						$('save_property_form').addEvent('popupLoaded', function(){
+							$('<?= $this->formGetUniquePrefix()?>Shop_PropertySet_existing_id').focus();
+						});
+					</script>
+
+					<?= backend_ajax_button('Load', 'onLoadPropSet', array('id'=>'load_propset_btn', 'class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updatePropertyList.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+					<input type="hidden" name="product_session_key" value="<?= h($session_key) ?>"/>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

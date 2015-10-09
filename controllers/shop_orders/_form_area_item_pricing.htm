@@ -1,0 +1,69 @@
+<li>
+	<div class="formFlash"></div>
+
+	<div class="form">
+		<ul class="formElements">
+			<li class="field text left">
+				<label for="Shop_OrderItem_quantity">
+					Quantity <span class="required">*</span>
+				</label>
+
+				<div class="fieldContainer">
+					<input type="text" name="quantity" id="Shop_OrderItem_quantity" class="float" value="<?= post('quantity', $item->get_bundle_item_quantity()) ?>"/>
+				</div>
+
+				<div class="clear"></div>
+			</li>
+			<li class="field text right" id="item_in_stock_indicator">
+				<? $this->renderPartial('item_in_stock_indicator') ?>
+			</li>
+		</ul>
+		<ul class="formElements">
+			<li class="field checkbox left">
+				<label for="Shop_OrderItem_auto_discount_price_eval">
+					Evaluate the price automatically
+				</label>
+
+				<div class="fieldContainer">
+					<input type="hidden" class="checkbox" value="" name="auto_discount_price_eval"/>
+					<input <?= checkbox_state($item->auto_discount_price_eval) ?> type="checkbox" class="checkbox" value="1" name="auto_discount_price_eval" id="Shop_OrderItem_auto_discount_price_eval" onclick="track_auto_price_eval(this)"/>
+				</div>
+				<p class="minorCommentAfter">
+					The item price is calculated based on the product tier price and <strong>catalog price rules</strong>.</p>
+			</li>
+
+			<li class="field text right">
+				<div id="item_price_and_discount" class="relative">
+					<? $this->renderPartial('item_price_and_discount') ?>
+				</div>
+			</li>
+
+			<li class="field checkbox left">
+				<label for="item_discount_manually">
+					Specify the discount manually
+				</label>
+
+				<div class="fieldContainer">
+					<input type="checkbox" id="item_discount_manually" class="checkbox" value="1" onclick="track_auto_discount_eval(this)"/>
+				</div>
+				<p class="minorCommentAfter">
+					The item discount is calculated based on the discount rules defined on the Shop/Discounts tab. If you want to apply an order-wide discount, please go to the <strong>Discounts</strong> tab on the order form.<br/><br/>
+			</li>
+
+			<? $this->renderPartial('item_discount') ?>
+		
+			<li class="field text">
+				<label for="Shop_OrderItem_cost">
+					Cost
+					<span class="comment">The product cost will be subtracted from the price to get the revenue value in reports. Leave this value empty if the revenue should match the product price.</span>
+				</label>
+
+				<div class="fieldContainer">
+					<input type="text" name="cost" id="Shop_OrderItem_cost" class="float" value="<?= post('cost', $item->cost) ?>"/>
+				</div>
+
+				<div class="clear"></div>
+			</li>
+		</ul>
+	</div>
+</li>

@@ -1,0 +1,89 @@
+<? 
+	$items = $product->list_related_records_deferred('bundle_items_link', $this->formGetEditSessionKey());
+	$current_item_id = isset($current_item_id) ? $current_item_id : null;
+	$current_item = null;
+	
+	if ($current_item_id || !strlen($current_item_id))
+	{
+		$current_found = false;
+		foreach ($items as $item)
+		{
+			if ($item->id == $current_item_id)
+			{
+				$current_found = true;
+				$current_item = $item;
+				break;
+			}
+		}
+		
+		if (!$current_found)
+		{
+			if ($items->first)
+			{
+				$current_item_id = $items->first->id;
+				$current_item = $items->first;
+			} else
+				$current_item_id = null;
+		}
+	}
+?>
+
+<div class="toolbar">
+	<?= backend_ctr_button('Add bundle item', 'add-bundle-item', array('href'=>'#', 'onclick'=>"return add_bundle_item()")) ?>
+	<? if ($items->count || post('bundle_updated')): ?>
+		<?= backend_ctr_button('Save changes', 'save-bundle-item', array('href'=>'#', 'id'=>'save-bundle-item-btn', 'onclick'=>"return save_bundle()", 'class'=>(post('bundle_updated') ? null : 'disabled'))) ?>
+	<? endif ?>
+
+	<? if ($items->count): ?>
+		<div class="separator"></div>
+		<?= backend_ctr_button('Edit item', 'edit-bundle-item', array('href'=>'#', 'onclick'=>"return edit_bundle_item()")) ?>
+		<?= backend_ctr_button('Delete item', 'delete-bundle-item', array('href'=>'#', 'onclick'=>"return delete_bundle_item()")) ?>
+		<div class="separator"></div>
+		<?= backend_ctr_button('Add product(s)', 'new_document', array('href'=>'#', 'onclick'=>"return show_add_products_to_bundle_form()")) ?>
+		<?= backend_ctr_button('Remove selected product(s)', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_bundle_products()")) ?>
+	<? endif ?>
+
+	<div class="clear"></div>
+</div>
+
+<? if ($items->count && $this->isHintVisible('manage_bundle_item')): ?>
+	<div class="hint">
+		<p class="last">You can sort bundle items in the sidebar by dragging them. To sort products drag the arrow icon in the product list.</p>
+		<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('manage_bundle_item', this)">Close</a>
+	</div>
+<? endif ?>
+
+<? if (!$items->count): ?>
+	<p class="noData">
+		This product has no bundle items
+	</p>
+<? else: ?>
+	<table class="bundle-item-layout">
+		<tr>
+			<td class="items-list">
+				<ul class="sidebar-selector" id="bundle-item-list">
+					<? foreach($items as $item): ?>
+						<li class="<?= $current_item_id == $item->id ? 'current' : null ?>">
+							<div class="bundle-item-handle"><a onclick="if ($(this).findParent('li').hasClass('drag')) return false; return refresh_bundle_ui({'bundle_navigate_to_item' : <?= $item->id ?>})" href="#"><?= h($item->name) ?></a></div>
+							<input class="bundle-item-id" value="<?= $item->id ?>" type="hidden"/>
+							<input class="bundle-item-order" value="<?= $item->sort_order ?>" type="hidden"/>
+						</li>
+					<? endforeach ?>
+				</ul>
+			</td>
+			<td class="item-ui">
+				<? 
+					if ($current_item)
+						$this->bundle_render_partial('bundle_item_ui', array('product'=>$product, 'item'=>$current_item)) 
+				?>
+			</td>
+		</tr>
+	</table>
+<? endif ?>
+<input type="hidden" id="bundle_current_item_id" name="bundle_current_item_id" value="<?= $current_item_id ?>"/>
+<? if ($current_item): ?>
+	<input type="hidden" id="bundle_current_control_type" value="<?= $current_item->control_type ?>"/>
+<? endif ?>
+<input type="hidden" value="<?= $this->formGetEditSessionKey() ?>" name="edit_session_key" id="bundle_session_key"/>
+<input type="hidden" value="<?= post('bundle_updated') ?>" name="bundle_updated" id="bundle_updated"/>
+<?= $this->bundle_get_post_storage()->create_field() ?>

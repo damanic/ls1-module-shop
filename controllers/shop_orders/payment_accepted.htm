@@ -1,0 +1,38 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css" type="text/css"/>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/orders') ?>">Orders</a></li>
+		<li><a href="<?= url('/shop/orders/preview/'.$form_record_id.'?'.uniqid()) ?>">Order Preview</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<? $this->renderPartial('payment_header') ?>
+
+		<? if ($order->payment_processed()): ?>
+			<p>Payment has been successfully accepted.</p>
+
+			<?
+				$gaSettings = Cms_Stats_Settings::get();
+				if ($gaSettings->ga_enabled)
+				{
+					echo $gaSettings->get_ga_tracking_code();
+					echo $gaSettings->get_ga_ec_tracking_code($order);
+					echo $gaSettings->get_ga_tracker_close_declaration();
+				}
+			?>
+		<? else: ?>
+			<p>Payment was not accepted.</p>
+		<? endif ?>
+
+		<?= backend_button('Close', url('/shop/orders/preview/'.$order->id.'?'.uniqid())) ?>
+		<div class="clear"></div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/orders') ?>">Return to the order list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

@@ -1,0 +1,1 @@
+alter table shop_orders add column customer_notes text;

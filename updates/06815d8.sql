@@ -1,0 +1,1 @@
+update shop_custom_attributes set sort_order=id where sort_order is null;

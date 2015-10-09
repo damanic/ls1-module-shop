@@ -1,0 +1,6 @@
+<a class="imageLink table_row_insert img_noBottomPading tooltip" title="Appends a row to the end of the grid. Hotkey: ctrl + i" href="#" onclick="jQuery('#<?= $container_id ?>').grid('appendRow'); return false;">Add row</a>
+<a class="imageLink table_row_delete img_noBottomPading tooltip" title="Deletes the current row. Hotkey: ctrl + d" href="#" onclick="jQuery('#<?= $container_id ?>').grid('deleteRow'); return false;">Delete row</a>
+
+<div class="separator"></div>
+
+<a class="imageLink enable img_noBottomPading tooltip" title="Generate records for all possible combinations of the product options<br/>It will not override any existing records." href="#" onclick="jQuery('#<?= $container_id ?>').grid('updateData', 'shop:onGenerateOptionMatrixRecords'); return false;">Generate records</a>

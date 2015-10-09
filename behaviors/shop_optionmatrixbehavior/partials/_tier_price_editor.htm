@@ -1,0 +1,99 @@
+<div class="form-450" id="ui-grid-tier-price-form">
+	<div class="ui-popup-header"><h2>Pricing</h2></div>
+	<?= Phpr_Form::openTag(array('id'=>null)) ?></form>
+	<?= Phpr_Form::openTag(array('id'=>'ui-grid-tier-price-form-element')) ?>
+		<div class="ui-popup-content">
+			<ul class="formElements">
+				<li class="field text full <?= $price_tiers->count ? null : 'last' ?>">
+					<label for="base_price">Base price <span class="required">*</span></label>
+					<div class="fieldContainer">
+						<input type="text" value="<?= h($base_price) ?>" class="float" id="base_price" name="base_price"/>
+					</div>
+				</li>
+				<? if ($price_tiers->count): ?>
+					<li class="field full last">
+						<label>
+							Tier pricing
+							<span class="comment">Leave cells the Price column empty to fallback to the base price.</span>
+						</label>
+				
+						<div class="scrollableList">
+							<table class="simpleList">
+								<thead>
+									<tr>
+										<th>Customer Group</th>
+										<th>Quantity</th>
+										<th class="float last">Price</th>
+									</tr>
+								</thead>
+								<tbody>
+									<? foreach ($price_tiers as $tier): 
+										$group_name = $tier->displayField('customer_group', 'list');
+										if (!strlen($group_name))
+											$group_name = 'Any customer';
+
+										$value = array_key_exists($tier->id, $price_data) ? $price_data[$tier->id] : null;
+									?>
+										<tr>
+											<td class="read_only"><?= h($group_name) ?></td>
+											<td class="read_only"><?= $tier->displayField('quantity', 'list').' and more' ?></td>
+											<td class="float last inline_container">
+												<input type="text" class="inline" name="tier_price[<?= $tier->id ?>]" value="<?= h($value) ?>"/>
+											</td>
+										</tr>
+									<? endforeach ?>
+								</tbody>
+							</table>
+						</div>
+					</li>
+				<? endif ?>
+			</ul>
+		</div>
+		<div class="ui-popup-footer">
+			<script type="text/javascript">
+				$('ui-grid-tier-price-form').addEvent('onEscape', function() {
+					editor = jQuery('#ui-grid-tier-price-form').data('ui.gridEditor'),
+					cell = jQuery('#ui-grid-tier-price-form').data('ui.gridCell'),
+					jQuery.ui.grid.hidePopup(); 
+					cell.trigger('navigateTo');
+				});
+			</script>
+		
+			<?= backend_button('Apply', array('href'=>'#', 'class'=>'default', 'onclick'=>"
+					$('ui-grid-tier-price-form-element').sendPhpr(
+						'".$this->getEventHandler('onFormWidgetEvent')."',
+						{
+							extraFields: {
+								'phpr_custom_event_name': 'on_editor_event',
+								'phpr_event_field': 'grid_data',
+								'phpr_grid_column': 'base_price',
+								'phpr_grid_editor_event': 'on_get_cell_internal_value'
+							},
+							onFailure: popupAjaxError,
+							onSuccess: function(tree, elements, data) {
+								var 
+									editor = jQuery('#ui-grid-tier-price-form').data('ui.gridEditor'),
+									cell = jQuery('#ui-grid-tier-price-form').data('ui.gridCell'),
+									data_decoded = JSON.decode(data);
+
+								editor.setCellInternalValue(cell, data_decoded.tiers);
+								editor.setCellValue(cell, data_decoded.base);
+								editor.setCellDisplayText(cell, data_decoded.base);
+								jQuery.ui.grid.hidePopup(); 
+								cell.trigger('navigateTo');
+							},
+							loadIndicator: {show: false}
+						}
+					);
+
+					return false;
+			")) ?>
+
+			<?= backend_button('Cancel', array('href'=>'#', 'onclick'=>"jQuery('#ui-grid-tier-price-form').data('ui.gridCell').trigger('navigateTo'); jQuery.ui.grid.hidePopup(); return false;")) ?>
+			<input type="hidden" name="widget_model_class" value="<?= get_class($form_model) ?>"/>
+			<input name="phpr_row_index" type="hidden" value="<?= $row_index ?>"/>
+
+			<div class="clear"></div>
+		</div>
+	</form>
+</div>

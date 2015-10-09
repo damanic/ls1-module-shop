@@ -1,0 +1,24 @@
+<?
+	$amountType = $this->getAmountType();
+	$paidStatus = $this->getOrderPaidStatus();
+?>
+
+<ul class="controls">
+	<li><label>Display amount:</label></li>
+	<li>
+		<select class="no-styling" onchange="$('chart_form').sendPhpr('index_onSetAmountType', {extraFields: {type_id:  $(this).get('value')}, loadIndicator: {show: false}, onSuccess: updateReportData.pass(false)});">
+			<? foreach ($this->amountTypes as $id=>$name): ?>
+				<option <?= Phpr_Form::optionState($amountType, $id) ?> value="<?= $id ?>"><?= h($name) ?></option>
+			<? endforeach ?>
+		</select>
+	</li>
+
+	<li><label>Status:</label></li>
+	<li>
+		<select class="no-styling" onchange="$('chart_form').sendPhpr('index_onSetOrderPaidStatus', {extraFields: {status_id:  $(this).get('value')}, loadIndicator: {show: false}, onSuccess: updateReportData.pass(false)});">
+			<? foreach ($this->orderStatuses as $id=>$name): ?>
+				<option <?= Phpr_Form::optionState($paidStatus, $id) ?> value="<?= $id ?>"><?= h($name) ?></option>
+			<? endforeach ?>
+		</select>
+	</li>
+</ul>

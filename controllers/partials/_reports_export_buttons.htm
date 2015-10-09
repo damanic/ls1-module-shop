@@ -1,0 +1,15 @@
+<div class="toolbar">
+	<?= backend_ctr_button('Export orders as CSV', 'document_export', array(
+		'onclick'=>alt_click_link(root_url(Phpr::$request->GetCurrentUri()).'/export_orders/iwork', root_url(Phpr::$request->GetCurrentUri()).'/export_orders'),
+		'class'=>'tooltip',
+		'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file')) ?>
+	<?= backend_ctr_button('Export orders and products as CSV', 'document_export_all', array(
+		'onclick'=>alt_click_link(root_url(Phpr::$request->GetCurrentUri()).'/export_orders_and_products/iwork', root_url(Phpr::$request->GetCurrentUri()).'/export_orders_and_products'),
+		'class'=>'tooltip',
+		'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file')) ?>
+	<?= backend_ctr_button('Export customers as CSV', 'people_export', array(
+		'onclick'=>alt_click_link(root_url(Phpr::$request->GetCurrentUri()).'/export_customers/iwork', root_url(Phpr::$request->GetCurrentUri()).'/export_customers'),
+		'class'=>'tooltip',
+		'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file')) ?>
+	<div class="clear"></div>
+</div>

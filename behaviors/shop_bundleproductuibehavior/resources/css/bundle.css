@@ -1,0 +1,52 @@
+.toolbar .add-bundle-item {
+  background: transparent url('../images/plugin_add.png') no-repeat 5px 4px;
+}
+.toolbar .delete-bundle-item {
+  background: transparent url('../images/plugin_delete.png') no-repeat 5px 4px;
+}
+.toolbar .edit-bundle-item {
+  background: transparent url('../images/plugin_edit.png') no-repeat 5px 4px;
+}
+.toolbar .save-bundle-item {
+  background: transparent url('../images/disk.png') no-repeat 5px 4px;
+}
+.bundle-item-layout {
+  width: 100%;
+  border-collapse: collapse;
+}
+.bundle-item-layout td {
+  vertical-align: top;
+}
+.bundle-item-layout .items-list {
+  width: 150px;
+}
+table.simpleList td .show-on-leave {
+  display: block;
+}
+table.simpleList td .show-on-hover {
+  display: none;
+}
+table.simpleList td:hover .show-on-leave {
+  display: none;
+}
+table.simpleList td:hover .show-on-hover {
+  display: block;
+}
+table.simpleList thead th.price-override, table.simpleList tbody td.price-override {
+  width: 120px;
+}
+table.simpleList tbody td.price-override {
+  padding: 0 2px;
+}
+table.simpleList tbody td.price-override span {
+  padding: 5px 3px;
+}
+table.simpleList tbody td.price-override select {
+  font: inherit;
+  width: 100%;
+  margin-top: 3px;
+  padding: 2px;
+}
+.webkit table.simpleList tbody td.price-override select {
+  margin-top: 4px;
+}

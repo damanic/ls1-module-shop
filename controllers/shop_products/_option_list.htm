@@ -1,0 +1,43 @@
+<?
+	$attributes = $form_model->list_related_records_deferred('options', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<? if ($attributes->count): ?>
+				<th class="iconCell">&nbsp;</th>
+			<? endif ?>
+			<th>Option</th>
+			<th class="<?= !$attributes->count ? 'last' : null ?>">Values</th>
+			<? if ($attributes->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody id="options_list_body<?= $this->formGetEditSessionKey() ?>">
+		<? if (!$attributes->count): ?>
+			<tr class="noData">
+				<td colspan="3" class="last">There are no options.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($attributes as $attribute):
+				$parent_session_key = $this->formGetEditSessionKey();
+				$onClick = "$('custom_attribute_id{$parent_session_key}').value = '{$attribute->id}'; new PopupForm('onLoadCustomAttributeForm', {ajaxFields: $('custom_attribute_id{$parent_session_key}').getForm()}); return false;";
+			?>
+				<tr class="<?= Backend_Html::zebra('custom_attribute') ?>">
+					<td class="iconCell">
+						<a href="#" class="row_drag_handle sort_handle" onclick="return false" title="Reorder options">Reorder options</a>
+						<input class="option_id" value="<?= $attribute->id ?>" type="hidden"/>
+						<input class="option_order" value="<?= $attribute->sort_order ?>" type="hidden"/>
+					</td>
+
+					<td class="link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($attribute->displayField('name', 'list')) ?></a></td>
+					<td class="link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h(implode(", ", $attribute->list_values())) ?></a></td>
+					<td class="iconCell last"><a onclick="$('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $attribute->id ?>'; return $(this).getForm().sendPhpr('onDeleteCustomAttribute', {confirm: 'Do you really want to delete this option?', update: 'custom_attribute_list<?= $this->formGetEditSessionKey() ?>', onFailure: popupAjaxError, loadIndicator: {show: false}});" title="Delete attribute" class="deleteDocument" href="#">Delete</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

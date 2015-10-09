@@ -1,0 +1,25 @@
+<div id="apply_rules_popup">
+	<h2>Apply Catalog Price Rules</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag(array('id'=>'apply_rules_form')) ?>
+
+				<? if (!isset($fatalError)): ?>
+					<p id="apply_confirmation">Do you really want to apply catalog price rules? It can take several minutes, depending on the number of products in the catalog.</p>
+				
+					<p class="loading hidden" id="apply_load_indicator">Applying catalog price rules...</p>
+					
+					<div class="clear"></div>
+					<?= backend_button('Apply', array('onclick'=>'return apply_catalog_rules()', 'id'=>'apply_btn')) ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? else: ?>
+					<div class="formFlash"><?= flash() ?></div>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<? endif ?>
+
+				<div class="clear"></div>
+			</form>
+		</div>
+	</div>
+</div>

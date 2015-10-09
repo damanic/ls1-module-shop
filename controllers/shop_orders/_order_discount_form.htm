@@ -1,0 +1,66 @@
+<div id="order_discount_form">
+	<h2>Discount</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+				
+					<div class="scoreboardReport">
+						<ul>
+							<li class="last">
+								<h3>Subtotal before discounts applied</h3>
+								<p><?= format_currency($subtotal) ?></p>
+							</li>
+						</ul>
+						<div class="clear"></div>
+					</div>
+					
+					<p>The discount value which you enter here will override discounts on individual items. The discount value will be distributed among the order items.</p>
+					
+					<div class="formFlash"></div>
+
+					<div class="form">
+						<ul class="formElements">
+							<li class="field text full">
+								<label for="discount_value">
+									Discount value <span class="required">*</span>
+									<span class="comment">The discount value can be specified as a fixed currency amount or percentage value. Examples: 12.5, 50%.</span>
+								</label>
+
+								<div class="fieldContainer">
+									<input type="text" name="discount_value" id="discount_value" class="float" value=""/>
+								</div>
+
+								<div class="clear"></div>
+							</li>
+						</ul>
+						<div class="clear"></div>
+					</div>
+
+					<?= backend_ajax_button('Apply', 'onApplyDiscount', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						extraFields: $('item_list').getForm(),
+						onAfterUpdate: update_tooltips,
+						update: 'multi',
+						onSuccess: cancelPopup
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<script type="text/javascript">
+						$('order_discount_form').addEvent('popupLoaded', function(){
+							$('discount_value').focus();
+						});
+						
+					</script>
+
+					<div class="clear"></div>
+					<input type="hidden" name="edit_session_key" value="<?= h($edit_session_key) ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

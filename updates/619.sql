@@ -1,0 +1,1 @@
+ALTER TABLE  shop_customers ADD notes TEXT NULL DEFAULT NULL;

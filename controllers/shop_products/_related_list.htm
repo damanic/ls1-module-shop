@@ -1,0 +1,35 @@
+<?
+	$products = $form_model->list_related_records_deferred('related_products_all', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>SKU</th>
+			<th class="float <?= !$products->count ? 'last' : null ?>">Price</th>
+			<? if ($products->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody>
+		<? if (!$products->count): ?>
+			<tr class="noData">
+				<td colspan="3" class="last">There are no related products.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($products as $product): 
+				$url = url("/shop/products/edit/".$product->id.'/?'.uniqid());
+			?>
+				<tr class="<?= Backend_Html::zebra('product_grouped') ?>">
+					<td class="link"><a target="_blank" href="<?= $url ?>"><?= h($product->displayField('name', 'list')) ?></a></td>
+					<td class="link"><a target="_blank" href="<?= $url ?>"><?= h($product->displayField('sku', 'list')) ?></a></td>
+					<td class="float link"><a target="_blank" href="<?= $url ?>"><?= h($product->displayField('price', 'list')) ?></a></td>
+					<td class="iconCell last"><a onclick="$('related_product_id').value = '<?= $product->id ?>'; return $(this).getForm().sendPhpr('onRemoveRelatedProduct', {confirm: 'Do you really want to remove this product from the related products list?', update: 'related_list', loadIndicator: {show: false}});" title="Remove product" class="deleteDocument" href="#">Remove from the list</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

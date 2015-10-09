@@ -1,0 +1,73 @@
+<div id="manufacturer_form">
+	<h2>New Manufacturer</h2>
+	<div class="content">
+		<div class="form600">
+			<? if ($this->isHintVisible('manufacturer_inline_editing')): ?>
+				<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
+					<div class="hint">
+						<p class="last">To manage the manufacturer list, click the <strong>Manage manufacturers</strong> button on the Shop/Products page.</p>
+						<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('manufacturer_inline_editing', this)">Close</a>
+					</div>
+				</form>
+			<? endif ?>
+			
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($manufacturer) ?>
+					<input type="hidden" name="phpr_uploader_model_class" value="<?= get_class($manufacturer) ?>"/>
+					<input type="hidden" name="phpr_uploader_model_id" value="<?= $manufacturer->id ?>"/>
+
+					<?= backend_ajax_button('Save', 'onAddManufacturer', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						'update': 'multi',
+						onSuccess: cancelPopup,
+						onAfterUpdate: assign_manufacturer_handler,
+						prepareFunction: function(){phprTriggerSave();}
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					
+					<script type="text/javascript">
+						$('manufacturer_form').addEvent('popupLoaded', function(){
+							$('Shop_Manufacturer_name').focus();
+							
+							$('Shop_Manufacturer_country_id').addEvent('change', function(){
+								$('Shop_Manufacturer_country_id').getForm().sendPhpr(
+									'onUpdateManufacturerStatesList',
+									{
+										loadIndicator: {show: false}
+									}
+								)
+							});
+							
+							manufacturer_url_modified = false;
+							
+							var manufacturer_name_field = $('Shop_Manufacturer_name');
+							if (manufacturer_name_field)
+							{
+								manufacturer_name_field.addEvent('keyup', update_manufacturer_url_title.pass(manufacturer_name_field));
+								manufacturer_name_field.addEvent('change', update_manufacturer_url_title.pass(manufacturer_name_field));
+								manufacturer_name_field.addEvent('paste', update_manufacturer_url_title.pass(manufacturer_name_field));
+							}
+
+							var manufacturer_url_element = $('Shop_Manufacturer_url_name');
+							manufacturer_url_element.addEvent('change', function(){
+								manufacturer_url_modified=true;
+							});
+						});
+					
+						$('manufacturer_form').addEvent('onClosePopup', function(){
+							$('Shop_Product_manufacturer_id').selectedIndex = 0;
+							$('Shop_Product_manufacturer_id').select_update();
+						});
+					</script>
+
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

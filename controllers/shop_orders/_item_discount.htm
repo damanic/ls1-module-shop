@@ -1,0 +1,13 @@
+<li class="field text right">
+	<label for="Shop_OrderItem_discount">
+		Discount <span class="required">*</span>
+		<span class="comment">Please specify the item unit discount. The discount value can be specified as a fixed currency amount or percentage value. Examples: 12.5, 50%.</span>
+	</label>
+
+	<div class="fieldContainer">
+		<input type="hidden" name="discount" value="<?= $item->discount ?>"/>
+		<input disabled="disabled" type="text" name="discount" id="Shop_OrderItem_discount" class="float" value="<?= round($item->discount, 2) ?>"/>
+	</div>
+
+	<div class="clear"></div>
+</li>

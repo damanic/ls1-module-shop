@@ -1,0 +1,10 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/products') ?>">Products</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<p><a href="<?= url('/shop/products') ?>">Return to the product list</a></p>
+<? Phpr_View::endBlock() ?>

@@ -1,0 +1,36 @@
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="order_status">
+			</th>
+			<th>#</th>
+			<th>Status</th>
+			<th class="date">Order Date and Time</th>
+			<th class="number last">Total</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? if (!$form_model->orders->count): ?>
+			<tr class="noData">
+				<td colspan="5">No orders found</td>
+			</tr>
+		<? endif ?>
+		
+		<?
+			foreach ($form_model->orders as $record):
+				$url = url('shop/orders/preview/'.$record->id);
+		?>
+		<tr class="<?= Backend_Html::zebra('customer_orders') ?> <?= $record->deleted_at ? 'deleted' : null ?>">
+			<td <?= click_link($url) ?> class="order_status">
+				<a href="<?= $url ?>"><span style="background-color: <?= $record->displayField('status_color') ?>">&nbsp;</span></a>
+			</td>
+			<td <?= click_link($url) ?> class="link"><a href="<?= $url ?>"><?= $record->id ?></a></td>
+			<td <?= click_link($url) ?> class="link"><a href="<?= $url ?>"><?= h($record->displayField('status')) ?></a></td>
+			<td <?= click_link($url) ?> class="link date"><a href="<?= $url ?>"><?= $record->displayField('order_datetime') ?></a></td>
+			<td <?= click_link($url) ?> class="link last number"><a href="<?= $url ?>"><?= $record->displayField('total', 'list') ?></a></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+	</tbody>
+</table>

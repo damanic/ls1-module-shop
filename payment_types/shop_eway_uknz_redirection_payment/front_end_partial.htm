@@ -1,0 +1,8 @@
+<p class="top_offset">
+	Please click the button to pay with eWay
+</p>
+<form action="<?= $payment_method_obj->get_form_action($payment_method, $order) ?>" method="post">
+	<?= flash_message() ?>
+	<input type="hidden" name="action" value="payment"/>
+	<input type="submit" value="Pay with eWay"/>
+</form>

@@ -1,0 +1,76 @@
+<div id="group_name_form">
+	<h2>Group</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<div class="formFlash"></div>
+
+					<div class="form">
+						<ul class="formElements">
+							<li class="field text full">
+								<label for="group_name">
+									Group name <span class="required">*</span>
+									<span class="comment">Non-used group names are deleted automatically.</span>
+								</label>
+
+								<div class="fieldContainer">
+									<input type="text" name="group_name" id="group_name" class="text" value=""/>
+								</div>
+
+								<div class="clear"></div>
+							</li>
+						</ul>
+						<div class="clear"></div>
+					</div>
+
+					<?= backend_ajax_button('Save', 'onSetExtraGroupName', array('id'=>'save_name_btn'), "
+						loadIndicator: {injectInElement: true},
+						update: 'multi',
+						onAfterUpdate: function(){
+							var group_selector = $('extra_option_form').getElement('select');
+							group_selector.addEvent('change', function(){
+								if (group_selector.get('value') == -1)
+									new PopupForm('onLoadExtraOptionGroupForm', {ajaxFields: $('extra_option_form_element').getForm()});
+							});
+							cancelPopup();
+						}
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<script type="text/javascript">
+						$('group_name_form').addEvent('popupLoaded', function(){
+							$('group_name').focus();
+							
+							$('group_name').bindKeys({'enter': function(){
+								$('save_name_btn').getForm().sendPhpr('onSetExtraGroupName', {
+									loadIndicator: {injectInElement: true},
+									onAfterUpdate: function(){
+										var group_selector = $('extra_option_form').getElement('select');
+										group_selector.addEvent('change', function(){
+											if (group_selector.get('value') == -1)
+												new PopupForm('onLoadExtraOptionGroupForm', {ajaxFields: $('extra_option_form_element').getForm()});
+										});
+										cancelPopup();
+									}
+								}); 
+							}});
+						});
+				
+						$('group_name_form').addEvent('onClosePopup', function(){
+							if ($('<?= $form_prefix ?>Shop_ExtraOption_group_name').selectedIndex == 1)
+								$('<?= $form_prefix ?>Shop_ExtraOption_group_name').selectedIndex = 0;
+						});
+					</script>
+					
+					<input type="hidden" name="form_prefix" value="<?= $form_prefix ?>"/>
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

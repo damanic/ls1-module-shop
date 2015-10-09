@@ -1,0 +1,1 @@
+insert into system_email_templates(code, subject, content, description) values('shop:password_reset', 'New password', '<p>Dear {customer_name}!</p><p>Here is your new password for accessing our store: {customer_password}</p>', 'Message to send to a customer after successful password reset.');

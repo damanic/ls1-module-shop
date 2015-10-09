@@ -1,0 +1,1 @@
+create index front_end_sort_order on shop_categories(front_end_sort_order);

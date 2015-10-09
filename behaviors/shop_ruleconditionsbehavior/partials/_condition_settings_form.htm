@@ -1,0 +1,73 @@
+<div id="property_form">
+	<h2>
+		<? if (!isset($fatalError)): ?>
+			<?= h($condition->get_condition_obj()->get_title($condition)) ?>
+		<? else: ?>
+			Condition
+		<? endif ?>
+	</h2>
+	<div class="content">
+		<div class="form700 inline_form">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($condition) ?>
+
+					<?= backend_ajax_button('Save', $this->getEventHandler('onSaveCondition'), array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						extraFields: $('condition_".$condition->id."').getForm(),
+						update: conditions_find_container('condition_".$condition->id."'),
+						onSuccess: function() {
+							$('save_success').value = 1;
+							cancelPopup();
+						}
+					") ?>
+
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<? if (!in_array($condition->id, $conditions_root_id)): ?>
+						<?= backend_ajax_button('Delete', $this->getEventHandler('onDeleteCondition'), array('class'=>'right'), "
+							'confirm': 'Do you really want to delete this condition?',
+							loadIndicator: {injectInElement: true},
+							extraFields: $('condition_".$condition->id."').getForm(),
+							update: conditions_find_container('condition_".$condition->id."'),
+							onSuccess: function() {
+								$('save_success').value = 1;
+								cancelPopup();
+							}
+						") ?>
+					<? endif ?>
+
+					<script type="text/javascript">
+						$('property_form').addEvent('onClosePopup', function(){
+							if ($('save_success').value == 0 && conditions_find_new_id('<?= 'condition_'.$condition->id ?>'))
+							{
+								$('current_condition_id').value = null;
+								$('form_flag').getForm().sendPhpr('<?= $this->getEventHandler('onCancelConditionSettings')?>', {
+									extraFields: $('<?= 'condition_'.$condition->id ?>').getForm(),
+									update: conditions_find_container('<?= 'condition_'.$condition->id ?>'),
+									loadIndicator: {show: false},
+									onBeforePost: LightLoadingIndicator.show.pass('Loading...'), 
+									onComplete: LightLoadingIndicator.hide
+								})
+							}
+						});
+					</script>
+
+					<div class="clear"></div>
+					<input type="hidden" name="edit_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="current_condition_id" value="<?= $condition->id ?>"/>
+					<input type="hidden" name="host_rule_set" value="<?= $condition->host_rule_set ?>"/>
+					<!-- <? foreach ($conditions_root_id as $root_id): ?>
+						<input type="hidden" name="conditions_root_id[]" value="<?= $root_id ?>"/>
+					<? endforeach ?> -->
+					<input type="hidden" id="form_flag" value="0"/>
+					<input type="hidden" id="save_success" value="0"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

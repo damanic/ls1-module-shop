@@ -1,0 +1,32 @@
+<div id="custom_attr_form">
+	<h2>Product Option</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($attribute) ?>
+
+					<?= backend_ajax_button('Save', 'onAddCustomAttribute', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updateCustomAttributeList.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					
+					<script type="text/javascript">
+						$('custom_attr_form').addEvent('popupLoaded', function(){
+							$('<?= $this->formGetUniquePrefix().'Shop_CustomAttribute_name' ?>').focus();
+						});
+					</script>
+			
+					<div class="clear"></div>
+					<input type="hidden" name="product_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="attribute_id" value="<?= $attribute_id ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

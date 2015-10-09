@@ -1,0 +1,1 @@
+alter table shop_configuration add column product_details_behavior varchar(30) default 'first_available';

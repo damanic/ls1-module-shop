@@ -1,0 +1,66 @@
+h3
+{
+	font-size: 15px;
+	font-weight: bold;
+}
+
+table.print_layout_table td.slip_number div
+{
+	display: inline-block;
+	vertical-align: middle;
+	background: #eee;
+	padding: 20px 10px;
+	text-align: left;
+}
+
+table.print_layout_table td.slip_number h3
+{
+	font-size: 18px;
+	padding-bottom: 0;
+}
+
+table.print_layout_table td.company_info,
+table.print_layout_table td.slip_number
+{
+	vertical-align: bottom;
+}
+
+table.print_layout_table td.slip_number
+{
+	text-align: right;
+}
+
+table.print_layout_table td p:last-child
+{
+	padding-bottom: 0;
+}
+
+td.client_info
+{
+	color: #333;
+	line-height: 150%;
+	padding-bottom: 15px;
+}
+
+td.client_info p
+{
+	font-size: 12px;
+	font-weight: normal;
+	line-height: 130%;
+}
+
+.border_bottom
+{
+	border-bottom: 1px solid #ccc!important;
+}
+
+.data_column
+{
+	float: left;
+	margin-right: 30px;
+}
+
+.data_column h3
+{
+	padding-bottom: 10px;
+}

@@ -1,0 +1,31 @@
+<div>
+	<h2>Payment Attempt</h2>
+	<div class="content">
+		<div class="form500">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<div class="scoreboardReport">
+						<ul>
+							<li class="last">
+								<h3>Status</h3>
+								<p>
+									<?= $record->is_successful ? 'Success' : 'Error' ?>
+								</p>
+								<p class="description">Created: <?= $record->displayField('created_at') ?></p>
+							</li>
+						</ul>
+						<div class="clear"></div>
+					</div>
+
+					<? $this->formRenderPreview($record) ?>
+					<div class="clear"></div>
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<? endif ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,43 @@
+<div id="grouped_product_form">
+	<h2>Grouped Product</h2>
+	<div class="content">
+		<div class="form800">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($product) ?>
+
+					<?= backend_ajax_button('Save', 'onAddGroupedProduct', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updateGroupedProductList.pass(['$session_key', {'updated_product_id': '$grouped_product_id', 'updated_stock_value': $('groupedShop_Product_in_stock').value}]),
+						prepareFunction: function(){phprTriggerSave();}
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<script type="text/javascript">
+						$('grouped_product_form').addEvent('popupLoaded', function(){
+							try
+							{
+								make_extras_sortable('<?= h($this->formGetEditSessionKey()) ?>');
+								make_options_sortable('<?= h($this->formGetEditSessionKey()) ?>');
+								make_attributes_sortable('<?= h($this->formGetEditSessionKey()) ?>');
+								init_grouped_on_sale_controls();
+								init_grouped_shipping_controls();
+							} catch (e) {}
+						});
+					</script>
+			
+					<div class="clear"></div>
+					<input type="hidden" name="product_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" value="1" name="grouped_product"/>
+					<input type="hidden" name="grouped_product_id" value="<?= $grouped_product_id ?>"/>
+					<!-- <input type="hidden" name="Shop_Product[url_name]" value="<?= h($product->url_name) ?>"/> -->
+					<input type="hidden" name="Shop_Product[page_id]" value="<?= h($product->page_id) ?>"/>
+					<input type="hidden" name="Shop_Product[product_type_id]" value="<?= h($product->product_type_id) ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

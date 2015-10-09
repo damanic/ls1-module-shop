@@ -1,0 +1,68 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/products') ?>">Products</a></li>
+		<li><a href="<?= url('/shop/reviews') ?>">Reviews</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+	
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="scoreboardReport">
+			<ul>
+				<li>
+					<h3>Review</h3>
+					<p>
+						# <?= $form_model->id ?>, added <?= $form_model->created_at->format('%x') ?>
+					</p>
+					<p class="description">
+						Product: <?= h($form_model->displayField('product_link')) ?>
+					</p>
+				</li>
+				
+				<li class="last">
+					<? if ($form_model->customer_link): ?>
+						<h3>Customer</h3>
+						<p>
+							<a href="<?= url('shop/customers/preview/'.$form_model->created_customer_id) ?>">
+								<?= h($form_model->author) ?>
+							</a>
+						</p>
+						<p class="description">
+							<? if ($form_model->review_author_email): ?>
+								<a href="mailto:<?= h($form_model->review_author_email) ?>"><?= h($form_model->review_author_email) ?></a>
+							<? endif ?>
+						</p>
+					<? else: ?>
+						<h3>Guest visitor</h3>
+						<p>
+							<?= h($form_model->author) ?>
+						</p>
+						<p class="description">
+							<? if ($form_model->review_author_email): ?>
+								<a href="mailto:<?= h($form_model->review_author_email) ?>"><?= h($form_model->review_author_email) ?></a>, 
+							<? endif ?>
+							IP: <?= h($form_model->customer_ip) ?>
+						</p>
+					<? endif ?>
+				</li>
+			</ul>
+			<div class="clear"></div>
+		</div>
+	
+		<div class="form600">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Save', 'edit_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'edit_onCancel') ?>
+
+				<?= backend_ajax_button('Delete', 'edit_onDelete', array('class'=>"right"), "confirm: 'Do you really want to delete this review?'") ?>
+				<input type="hidden" name="referer" value="<?= Phpr::$request->getReferer(url('/shop/reviews')) ?>"/>
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/manufacturers') ?>">Return to the manufacturer list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

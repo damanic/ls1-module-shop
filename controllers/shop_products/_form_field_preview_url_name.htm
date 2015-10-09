@@ -1,0 +1,15 @@
+<? $columnDefinition = $form_field->getColDefinition(); ?>
+<li class="field <?= $form_field->formSide ?> <?= $this->form_preview_mode ? 'preview' : null ?> <?= $columnDefinition->isReference ? 'reference' : null ?> <?= $columnDefinition->isReference && $form_field->previewNoRelation ? 'previewNoRelation' : null ?>">
+	<label>
+		URL Name
+	</label>
+
+	<div class="preview <?= $columnDefinition->type ?>">
+		<? $url = $this->getPreviewUrl(); ?>
+		<? if ($url): ?>
+			<a target="_blank" href="<?= $url.'/'.$form_model->url_name ?>"><?= h($form_model->url_name) ?></a>
+		<? else: ?>
+			<?= h($form_model->url_name) ?>
+		<? endif ?>
+	</div>
+</li>

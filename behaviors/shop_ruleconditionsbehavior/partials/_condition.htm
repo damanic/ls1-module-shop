@@ -1,0 +1,63 @@
+<? 
+	$is_compound = $condition->is_compound();
+	$condition->define_form_fields();
+	$is_root = $tree_level == 0;
+	
+	$collapsed = $this->conditionsGetCollapseStatus($condition);
+?>
+
+<li id="<?= 'condition_'.$condition->id ?>" class="condition <?= $is_compound ? 'compound' : 'single' ?> <?= $is_root ? 'root_condition' : 'inner' ?> <?= $collapsed ? 'collapsed' : null ?>">
+	<? if ($is_compound): ?>
+		<h4>
+			<a class="condition_collapse_control" href="#" onclick="return conditions_toggle(this, '<?= $condition->id ?>', '<?= $this->getEventHandler('onSetCollapseStatus') ?>')">Collapse/Expand</a>
+
+			<a href="#" onclick="return conditions_show_settings('<?= $condition->id ?>', '<?= $this->getEventHandler('onLoadConditionSetup') ?>')"><?= h($this->conditionsGetTextCache($condition, $condition->get_text())) ?></a>
+			<? if (!$is_root): ?>
+				<a title="Delete condition" class="condition_delete_icon" href="#" onclick="$('current_condition_id').value = <?= $condition->id ?>; return $(this).getForm().sendPhpr('<?= $this->getEventHandler('onDeleteCondition') ?>', {'confirm': 'Do you really want to delete this condition?',
+					extraFields: {host_rule_set: '<?= $condition->host_rule_set ?>'},
+					loadIndicator: {show: false},
+					onBeforePost: LightLoadingIndicator.show.pass('Loading...'), 
+					onComplete: LightLoadingIndicator.hide,
+					update: conditions_find_container(this)
+				})">delete</a>
+			<? endif ?>
+		</h4>
+	<? else: ?>
+		<div class="condition_text"><a href="#" onclick="return conditions_show_settings('<?= $condition->id ?>', '<?= $this->getEventHandler('onLoadConditionSetup') ?>')"><?= $this->conditionsGetTextCache($condition, $condition->get_text()) ?></a></div>
+		<a title="Delete condition" class="condition_delete_icon" href="#" onclick="$('current_condition_id').value = <?= $condition->id ?>; return $(this).getForm().sendPhpr('<?= $this->getEventHandler('onDeleteCondition') ?>', {'confirm': 'Do you really want to delete this condition?',
+			extraFields: {host_rule_set: '<?= $condition->host_rule_set ?>'},
+			loadIndicator: {show: false},
+			onBeforePost: LightLoadingIndicator.show.pass('Loading...'), 
+			onComplete: LightLoadingIndicator.hide,
+			update: conditions_find_container(this)
+		})">delete</a>
+	<? endif ?>
+	
+	<? if ($is_compound): ?>
+		<div class="compound_content">
+			<ul class="rules_container">
+				<?
+					$children = $condition->list_related_records_deferred('children', $this->formGetEditSessionKey().'_'.$condition->id);
+					$last_index = $children->count - 1;
+					foreach ($children as $index=>$child_condition):
+						$this->conditionsRenderPartial('condition', array('condition'=>$child_condition, 'tree_level'=>$tree_level+1, 'parent_condition'=>$condition));
+						if ($index < $last_index):
+						?>
+							<li class="compound_join"><a href="#" onclick="return conditions_show_settings('<?= $condition->id ?>', '<?= $this->getEventHandler('onLoadConditionSetup') ?>')"><?= h($this->conditionsGetJoinTextCache($condition, $condition->get_condition_obj()->get_join_text($condition))) ?></a></li>
+						<?
+						endif;
+					endforeach
+				?>
+			<li class="compound_add"><a href="#" title="Add condition" onclick="$('current_condition_id').value = <?= $condition->id ?>; new PopupForm('<?= $this->getEventHandler('onLoadConditionChildSelector') ?>', {ajaxFields: $('current_condition_id').getForm()}); return false;"><img src="modules/shop/behaviors/shop_ruleconditionsbehavior/resources/images/add_icon.png"/></a></li>
+			</ul>
+		</div>
+	<? endif ?>
+	<input type="hidden" value="<?= h($this->conditionsGetCache($condition, $condition->xml_data)) ?>" name="condition_data[<?= $condition->id ?>]"/>
+	<input type="hidden" value="<?= h($this->conditionsGetTextCache($condition, $condition->get_text())) ?>" name="condition_text_data[<?= $condition->id ?>]"/>
+	<? if ($is_compound): ?>
+		<input type="hidden" value="<?= h($this->conditionsGetJoinTextCache($condition, $condition->get_condition_obj()->get_join_text($condition))) ?>" name="condition_join_text_data[<?= $condition->id ?>]"/>
+	<? endif ?>
+	<? if (isset($parent_condition)): ?>
+		<input type="hidden" value="<?= $parent_condition->id ?>" name="condition_parent_id[<?= $condition->id ?>]"/>
+	<? endif ?>
+</li>

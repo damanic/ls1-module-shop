@@ -1,0 +1,37 @@
+<div id="coupon_form">
+	<h2>New Coupon</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($coupon) ?>
+
+					<?= backend_ajax_button('Save', 'onAddCoupon', array(), "
+						loadIndicator: {injectInElement: true},
+						'update': 'multi',
+						onSuccess: cancelPopup,
+						onAfterUpdate: assign_coupon_handler
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					
+					<script type="text/javascript">
+						$('coupon_form').addEvent('popupLoaded', function(){
+							$('Shop_Coupon_code').focus();
+						});
+					
+						$('coupon_form').addEvent('onClosePopup', function(){
+							$('Shop_CartPriceRule_coupon_id').selectedIndex = 0;
+							$('Shop_CartPriceRule_coupon_id').select_update();
+						});
+					</script>
+
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

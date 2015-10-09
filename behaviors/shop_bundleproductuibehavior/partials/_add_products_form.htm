@@ -1,0 +1,40 @@
+<div>
+	<h2>Add Bundle Item Products</h2>
+	<div class="content">
+		<div class="form700">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag(array('id'=>$this->listGetFormId(), 'class'=>'relative')) ?>
+					<div class="formFlash"></div>
+
+					<div class="embeddedList search700">
+						<?= $this->listRender($this->bundle_get_product_popup_list_options()) ?>
+					</div>
+
+					<?= backend_ajax_button('Add selected products', 'preview_on_add_bundle_products', array('class'=>'default'), "
+						loadIndicator: {show: true, hideOnSuccess: true, injectInElement: true},
+						update: 'multi',
+						onSuccess: function(){},
+						onAfterUpdate: function(){
+							realignPopups();
+							make_bundle_items_sortable();
+							make_bundle_item_products_sortable();
+							register_bundle_item_change();
+						}
+					") ?>
+
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+			
+					<div class="clear"></div>
+					<input type="hidden" name="bundle_current_item_id" value="<?= h($bundle_current_item_id) ?>"/>
+					<input type="hidden" name="add_bundle_products_mode" value="1"/>
+					<input type="hidden" name="edit_session_key" value="<?= $product_session_key ?>"/>
+					<?= $this->bundle_get_post_storage()->create_field() ?>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

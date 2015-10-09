@@ -1,0 +1,1 @@
+alter table shop_products add column price_rule_map_compiled text;

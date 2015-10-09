@@ -1,0 +1,9 @@
+<?= Phpr_Form::openTag(array('id'=>'invoices_form')) ?>
+	<div class="toolbar read_only_table">
+		<?= backend_ctr_button('Create invoice', 'new_document', url('/shop/orders/create/invoice/'.$form_model->id)) ?>
+		<? Backend::$events->fireEvent('shop:onExtendOrderInvoicesToolbar', $this) ?>
+		<div class="clear"></div>
+	</div>
+
+	<div id="order_invoice_list" class="relative"><? $this->renderPartial('order_invoices') ?></div>
+</form>

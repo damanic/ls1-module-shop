@@ -1,0 +1,29 @@
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>Method</th>
+			<th class="date">Date and Time</th>
+			<th>Message</th>
+			<th class="last">User</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?
+			foreach ($form_model->payment_attempts as $record):
+				$onClick = "new PopupForm('preview_onLoadPaymentDetailsPreview', {ajaxFields: {'record_id': '{$record->id}'}}); return false;";
+		?>
+		<tr class="<?= Backend_Html::zebra('order_payment_attempts') ?> <?= $record->is_successful ? 'success' : 'error' ?>">
+			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->payment_method_name) ?></a></td>
+			<td onclick="<?= $onClick ?>" class="date link"><a href="#" onclick="<?= $onClick ?>"><?= $record->displayField('created_at') ?></a></td>
+			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->message) ?></a></td>
+			<td onclick="<?= $onClick ?>" class="last link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->displayField('created_user_name')) ?></a></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+		
+		<? if (!$form_model->payment_attempts->count): ?>
+			<tr class="noData"><td colspan="4">No records found</td></tr>
+		<? endif ?>
+	</tbody>
+</table>

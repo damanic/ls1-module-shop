@@ -1,0 +1,38 @@
+<? $items = Shop_Cart::list_active_items(); ?>
+<table>
+	<thead>
+		<tr>
+			<th>Cart Items</th>
+			<th>Quantity</th>
+			<th>Price</th>
+			<th>Total</th>
+		</tr>
+	</thead>
+	<tbody>
+	<? 
+	foreach ($items as $item): 
+		$image_url = $item->product->image_url(0, 60, 'auto');
+		$options_str = $item->options_str();
+	?>
+	<tr>
+		<td>
+			<img src="<?= $image_url ?>"/>
+			<?= h($item->product->name) ?>
+			<? if (strlen($options_str)): ?><br/><?= h($options_str) ?>.<? endif ?>
+			<? if ($item->extra_options): ?>
+				<? foreach ($item->extra_options as $option): ?>
+					<br/>+ <?= h($option->description) ?>: 
+					<?= format_currency($option->price) ?>
+				<? endforeach ?>
+			<? endif ?>
+		</td>
+		<td>
+			<input type="text" name="item_quantity[<?= $item->key ?>]"
+			value="<?= $item->quantity ?>"/>
+		</td>
+		<td><?= format_currency($item->single_price()) ?></td>
+		<td><?= format_currency($item->total_price()) ?></td>
+	</tr>
+	<? endforeach ?>
+	</tbody>
+</table>

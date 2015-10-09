@@ -1,0 +1,22 @@
+<li class="field radio full reference" id="form_field_payment_method_idShop_Order">
+	<?
+		$payment_options = $this->getAvailablePaymentMethods($form_model);
+	?>
+
+	<div id="payment_method_selector">
+		<ul class="recordSelector">
+			<? if ($payment_options): ?>
+				<? foreach ($payment_options as $option): ?>
+					<li class="selectable <?= ((int)$form_model->payment_method_id == (int)$option->id) ? 'current' : null ?>" onclick="record_selector_click(this)">
+						<?= h($option->name) ?>
+						<input type="hidden" value="<?= $option->id ?>"/>
+					</li>
+				<? endforeach ?>
+			<? else: ?>
+				<li class="noData">No payment methods available for selected billing country.</li>
+			<? endif ?>
+		</ul>
+		
+		<input class="master" type="hidden" value="<?= $form_model->payment_method_id ?>" name="Shop_Order[payment_method_id]"/>
+	</div>
+</li>

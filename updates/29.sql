@@ -1,0 +1,1 @@
+update shop_tax_classes set rates='a:1:{i:0;a:8:{s:7:"country";s:1:"*";s:5:"state";s:1:"*";s:3:"zip";s:1:"*";s:4:"city";s:1:"*";s:4:"rate";s:1:"0";s:8:"priority";s:1:"1";s:8:"tax_name";s:0:"";s:8:"compound";s:0:"";}}';

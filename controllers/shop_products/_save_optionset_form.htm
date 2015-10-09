@@ -1,0 +1,38 @@
+<div id="save_option_set_form">
+	<h2>Save Option Set</h2>
+	<div class="content">
+		<div class="form300">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag() ?>
+					<? $this->formRender($obj) ?>
+
+					<script type="text/javascript">
+						$('save_option_set_form').addEvent('popupLoaded', function(){
+							$('<?= $this->formGetUniquePrefix()?>Shop_OptionSet_name').addEvent('keydown', function(){$('<?= $this->formGetUniquePrefix()?>Shop_OptionSet_existing_id').selectedIndex = 0});
+							$('<?= $this->formGetUniquePrefix()?>Shop_OptionSet_existing_id').addEvent('change', function(){$('<?= $this->formGetUniquePrefix()?>Shop_OptionSet_name').value = ''});
+						});
+					</script>
+
+					<?= backend_ajax_button('Save', 'onSaveOptionSet', array('id'=>'save_optset_btn', 'class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: function(){cancelPopup()},
+						preCheckFunction: function(){
+							if ($('".$this->formGetUniquePrefix()."Shop_OptionSet_existing_id').selectedIndex > 0)
+								return confirm('Do you really want to override the selected option set?');
+								
+							return true;
+						}
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+					<input type="hidden" name="product_session_key" value="<?= h($session_key) ?>"/>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,3 @@
+alter table shop_order_statuses add column admin_message_template_id int;
+update shop_order_statuses set admin_message_template_id = (select id from system_email_templates where code='shop:new_order_internal') where code='new';
+update shop_order_statuses set admin_message_template_id = (select id from system_email_templates where code='shop:order_status_update_internal') where code <> 'new' or code is null;

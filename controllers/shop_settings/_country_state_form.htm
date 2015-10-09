@@ -1,0 +1,32 @@
+<div id="state_form">
+	<h2>State</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($state) ?>
+
+					<?= backend_ajax_button('Save', 'onSaveCountryState', array(), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updateStates
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<script type="text/javascript">
+						$('state_form').addEvent('popupLoaded', function(){
+							$('Shop_CountryState_code').focus();
+						});
+					</script>
+
+					<div class="clear"></div>
+					<input type="hidden" name="country_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="state_id" value="<?= $state_id ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

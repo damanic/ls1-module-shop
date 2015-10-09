@@ -1,0 +1,10 @@
+<p>Hi!</p>
+
+<p>User <?= h($author->name) ?> posted a new note for the <a href="<?= $order_preview_url ?>">order # <?= $order_id ?></a>.</p>
+
+<blockquote>
+	<?= nl2br(h($note->note)) ?>
+</blockquote>
+
+<hr/>
+<p>You can view or reply to the note on the Order Preview page: <a href="<?= $order_preview_url ?>"><?= $order_preview_url ?></a>. Reply to this message to respond <?= h($author->name) ?> directly by email. If you respond by email, your message will not be added to the order note list.</p>

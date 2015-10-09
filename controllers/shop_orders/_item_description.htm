@@ -1,0 +1,32 @@
+<? 
+	$posted_options = post('product_options', array());
+	if ($posted_options)
+		$posted_options = $item->product->normalize_posted_options($posted_options);
+	else 
+		$posted_options = null;
+	
+	$images = $item->om('images', $posted_options);
+?>
+<? if ($images->count): ?>
+	<div class="product-preview-image">
+		<img src="<?= $images->first->getThumbnailPath('auto', 53) ?>"/>
+	</div>
+<? endif ?>
+
+<div class="scoreboardReport">
+	<ul>
+		<li class="last">
+			<h3>Product</h3>
+			<p><?= h(Phpr_Html::strTrimMiddle($item->product->name, 40)) ?></p>
+			<p class="description">
+				SKU: <?= h($item->om('sku', $posted_options)) ?>
+			</p>
+		</li>
+	</ul>
+</div>
+
+<? if ($item->product->om('is_out_of_stock', $posted_options)): ?>
+	<div class="hint">
+		<p class="last">This product is out of stock. Number of units in stock: <?= h($item->product->om('in_stock', $posted_options)) ?></p>
+	</div>
+<? endif ?>

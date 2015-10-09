@@ -1,0 +1,13 @@
+<?
+	$id = $type == 'billing_country_id' ? 'Shop_Customer_billing_state_id' : 'Shop_Customer_shipping_state_id';
+	$db_name = $type == 'billing_country_id' ?  'billing_state_id' : 'shipping_state_id';
+	$name = "Shop_Customer[$db_name]";
+?>
+
+<select id="<?= $id ?>" name="<?= $name ?>">
+	<? 
+		foreach ($states as $value=>$name): 
+	?>
+			<option value="<?= h($value) ?>"><?= h($name) ?></option>
+	<? endforeach ?>
+</select>

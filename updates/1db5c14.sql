@@ -1,0 +1,1 @@
+alter table shop_configuration add column search_in_option_matrix tinyint(4);

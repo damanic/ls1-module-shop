@@ -1,0 +1,40 @@
+<div class="scoreboardReport">
+	<ul>
+		<li>
+			<h3>Order</h3>
+			<p>
+				# <?= $order->id ?>
+				<? if ($order->deleted_at): ?> | Deleted <? endif ?>
+			</p>
+			<p class="description">
+				Created: <?= $order->order_datetime->format('%x') ?>
+			</p>
+		</li>
+		<li>
+			<h3>Status</h3>
+			<p>
+				<span class="order_status_marker" style="background-color: <?= $order->displayField('status_color') ?>"><?= h($order->displayField('status')) ?></span>
+				<?= h($order->displayField('status')) ?>
+			</p>
+			<p class="description">
+				Since: <?= $order->status_update_datetime->format('%x') ?>
+			</p>
+		</li>
+		<li>
+			<h3>Customer</h3>
+			<p><a href="<?= url('shop/customers/edit/'.$order->customer_id) ?>"><?= h($order->billing_first_name).' '.h($order->billing_last_name) ?></a></p>
+			<p class="description">
+				Email: <a href="mailto:<?= $order->billing_email ?>"><?= h($order->billing_email) ?></a>
+			</p>
+		</li>
+		<li class="last">
+			<h3>Total</h3>
+			<p><?= format_currency($order->total) ?></p>
+			<p class="description">
+				Tax: <?= format_currency($order->shipping_tax + $order->goods_tax) ?>,
+				shipping: <?= format_currency($order->shipping_quote) ?>
+			</p>
+		</li>
+	</ul>
+	<div class="clear"></div>
+</div>

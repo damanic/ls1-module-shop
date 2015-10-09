@@ -1,0 +1,115 @@
+<p>Please provide your credit card information.</p>
+
+<?= open_form() ?>
+	<?= flash_message() ?>
+	<ul class="form">
+		<li class="field text left">
+			<label for="FIRSTNAME">Cardholder First Name</label>
+			<div><input autocomplete="off" name="FIRSTNAME" value="" id="FIRSTNAME" type="text" class="text"/></div>
+		</li>		
+		
+		<li class="field text right">
+			<label for="LASTNAME">Cardholder Last Name</label>
+			<div><input autocomplete="off" name="LASTNAME" value="" id="LASTNAME" type="text" class="text"/></div>
+		</li>
+		
+		<li class="field select left">
+			<label for="CARD_TYPE">Card Type</label>
+			
+			<select autocomplete="off" name="CARD_TYPE" id="CARD_TYPE">
+				<option value="">&lt;please select&gt;</option>
+				<option value="VISA">VISA Credit</option>
+				<option value="DELTA">VISA Debit</option>
+				<option value="UKE">VISA Electron</option>
+				<option value="MC">MasterCard</option>
+				<option value="MAESTRO">Maestro</option>
+				<option value="AMEX">American Express</option>
+				<option value="DC">Diner's Club</option>
+				<option value="JCB">JCB Card</option>
+				<option value="LASER">Laser</option>
+				<option value="SOLO">Solo</option>
+			</select>
+		</li>
+
+		<li class="field text right">
+			<label for="ACCT">Credit Card Number</label>
+			<div><input autocomplete="off" name="ACCT" value="" id="ACCT" type="text" class="text"/></div>
+		</li>
+
+		<li class="field select left">
+			<label for="START_MONTH">Start Date - Month
+				<span class="comment">Please specify the card start month if available.</span>
+			</label>
+			<select autocomplete="off" name="START_MONTH" id="START_MONTH">
+				<option value="">&lt;not applicable&gt;</option>
+				<? for ($month=1; $month <= 12; $month++): ?>
+					<option value="<?= $month ?>"><?= $month ?></option>
+				<? endfor ?> 
+			</select>
+		</li>
+
+		<li class="field text right">
+			<label for="START_YEAR">
+				Start Date - Year
+				<span class="comment">Please specify the card start year if available.</span>
+			</label>
+
+			<select autocomplete="off" name="START_YEAR" id="START_YEAR">
+				<option value="">&lt;not applicable&gt;</option>
+				<?
+				  $startYear = Phpr_DateTime::now()->getYear();
+				  for ($year=$startYear-10; $year <= $startYear; $year++): ?>
+					<option value="<?= $year ?>"><?= $year ?></option>
+				<? endfor ?> 
+			</select>
+		</li>
+
+		<li class="field select left">
+			<label for="EXPDATE_MONTH">Expiration Date - Month</label>
+			<select autocomplete="off" name="EXPDATE_MONTH" id="EXPDATE_MONTH">
+				<? for ($month=1; $month <= 12; $month++): ?>
+					<option value="<?= $month ?>"><?= $month ?></option>
+				<? endfor ?> 
+			</select>
+		</li>
+
+		<li class="field text right">
+			<label for="EXPDATE_YEAR">Expiration Date - Year</label>
+
+			<select autocomplete="off" name="EXPDATE_YEAR" id="EXPDATE_YEAR">
+				<?
+				  $startYear = Phpr_DateTime::now()->getYear();
+				  for ($year=$startYear; $year <= $startYear + 10; $year++): ?>
+					<option value="<?= $year ?>"><?= $year ?></option>
+				<? endfor ?> 
+			</select>
+		</li>
+
+		<li class="field text left">
+			<label for="CVV2">
+				CVV2
+				<span class="comment">For MasterCard, Visa, and Discover - the last three digits in the signature area on the back of the card. For American Express - four digits on the front of the card.</span>
+			</label>
+			
+			<div><input autocomplete="off" name="CVV2" value="" id="CVV2" type="text" class="text"/></div>
+		</li>		
+		
+		<li class="field text right">
+			<label for="ISSUENUMBER">
+				Issue Number
+				<span class="comment">Older Switch cards only. 1 or 2 digits as printed on the card.</span>
+			</label>
+			
+			<div><input autocomplete="off" name="ISSUENUMBER" value="" id="ISSUENUMBER" type="text" class="text"/></div>
+		</li>
+
+		<!-- Uncomment this to include the Gift Aid checbox on the form
+		<li class="field checkbox">
+			<div><input type="checkbox" value="1" name="GiftAid" id="GiftAid"/></div>
+			<label for="GiftAid">Gift Aid</label>
+		</li>
+		-->
+	</ul>
+	<div class="clear"></div>
+	<input type="button" onclick="return $(this).getForm().sendRequest('shop:on_pay')" value="Submit"/>
+</form>

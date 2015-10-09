@@ -1,0 +1,42 @@
+<?
+	$dbName = $this->formGetFieldDbName($form_field->dbName, $this->viewData['form_model']);
+	$form_model_class = get_class($form_model);
+	$options = $this->formFieldGetOptions($form_field->dbName, $this->viewData['form_model']); 
+	$control_id = $this->formGetElementId($form_model_class.'_'.$dbName);
+?>
+
+	<select id="<?= $control_id ?>" name="<?= $form_model_class ?>[<?= $dbName ?>]">
+		<? if ($form_field->emptyOption !== null): ?>
+			<option value=""><?= h($form_field->emptyOption) ?></option>
+		<? endif ?>
+
+		<? 
+			$fieldName = $form_field->dbName;
+			foreach ($options as $value=>$name): 
+				if (is_array($name))
+				{
+					$keys = array_keys($name);
+					$name = !count($keys) ? $value : $keys[0];
+				}
+		?>
+			<option <?= Phpr_Form::optionState( $value, $form_model->$dbName ) ?> value="<?= h($value) ?>"><?= $form_field->optionsHtmlEncode ? h($name) : $name ?></option>
+		<? endforeach ?>
+	</select>
+
+	<script type="text/javascript">
+		window.addEvent('domready', function(){
+			$('<?= $control_id ?>').addEvent('change', function(){
+				$('<?= $control_id ?>').getForm().sendPhpr(
+					'onUpdateStatesList',
+					{
+						update: '<?= $dbName == 'shipping_country_id' ? 'form_field_container_shipping_state_idShop_Customer' : 'form_field_container_billing_state_idShop_Customer' ?>',
+						loadIndicator: {show: false},
+						extraFields: {
+							'type': '<?= $dbName ?>'
+						}
+					}
+				)
+			})
+		});
+	</script>
+

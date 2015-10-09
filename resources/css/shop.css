@@ -1,0 +1,439 @@
+/* @group HELPERS */
+.hide-underline {
+  text-decoration: none;
+}
+.hide-outline {
+  outline: none;
+}
+.margin-center {
+  margin: 0 auto;
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.float-right {
+  float: right;
+}
+.float-left {
+  float: left;
+}
+.clear-both {
+  clear: both;
+}
+.clear-left {
+  clear: left;
+}
+.clear-right {
+  clear: right;
+}
+.block {
+  display: block !important;
+}
+.padding-background-clip {
+  -moz-background-clip: padding;
+  -webkit-background-clip: padding-box;
+  background-clip: padding-box;
+}
+/* @end */
+/* @group MISC */
+.clear-fix:after {
+  visibility: hidden;
+  display: block;
+  font-size: 0;
+  content: " ";
+  clear: both;
+  height: 0;
+}
+.clear-fix {
+  display: inline-table;
+}
+/* Hides from IE-mac \*/
+* html .clear-fix {
+  height: 1%;
+}
+.clear-fix {
+  display: block;
+}
+/* End hide from IE-mac */
+/* @end *//*
+ * Color picker
+ */
+li.state_colors ul {
+  padding: 0 0;
+  margin-top: -8px;
+}
+li.state_colors ul li {
+  float: left;
+  text-indent: -10000em;
+  clear: none!important;
+  padding: 5px!important;
+  margin: 15px 14px 0 0;
+  cursor: pointer;
+}
+li.state_colors ul li span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(100, 100, 100, 0.2);
+}
+li.state_colors ul li.selected,
+li.state_colors ul li:hover {
+  background-color: #cecece;
+}
+li.state_colors ul li:nth-child(10n) {
+  margin-right: 0;
+}
+/*
+ * Order preview
+ */
+div.order_preview_left,
+div.customer_preview_left {
+  float: left;
+  margin-right: 30px;
+  margin-bottom: 2em;
+}
+div.order_preview_right,
+div.customer_preview_right {
+  float: left;
+  width: 500px;
+}
+a.invoice_separator {
+  display: inline-block;
+  padding-right: 15px;
+  background: transparent url(../images/invoice_separator.gif) no-repeat right 50%;
+}
+/*
+ * Product item preview
+ */
+div.top_offset {
+  margin-top: 1em;
+}
+div.product_item_preview img.product_image {
+  padding: 10px;
+  border: #ccc 1px solid;
+}
+div.product_item_preview .preview_left {
+  float: left;
+  width: 123px;
+  margin-right: 10px;
+}
+div.product_item_preview .preview_right {
+  width: 450px;
+  float: left;
+}
+div.product_item_preview .no_image {
+  float: none;
+  width: auto;
+}
+/*
+ * Bundle items
+ */
+table.simpleList td .bundle-item-container,
+table.print_table td .bundle-item-container {
+  position: relative;
+  padding-left: 25px;
+}
+table.print_table td .bundle-item-container,
+span.bundle-item-container {
+  background: transparent url(../images/plugin.png) no-repeat 3px top;
+  padding-bottom: 2px;
+}
+span.bundle-item-container {
+  display: inline-block;
+  padding-left: 25px;
+}
+table.simpleList td .bundle-item-container a.bundle-item {
+  background: transparent url(../images/plugin.png) no-repeat left top;
+  position: absolute;
+  left: 7px;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  text-indent: -100000em;
+}
+span.bundle-item-value {
+  display: inline-block;
+  background-color: #669933;
+  margin-top: -2px;
+  padding: 0 4px;
+  color: white;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+table.simpleList tbody tr.bundle-totals td,
+table.simpleList tbody tr.bundle-totals:hover td {
+  background: #999999!important;
+  color: white;
+  font-weight: bold;
+}
+.add-bundle-item {
+  background: transparent url('../images/plugin_add.png') no-repeat left top;
+}
+.add-bundle-item.disabled {
+  background: transparent url('../images/plugin_add_disabled.png') no-repeat left top;
+}
+/*
+ * Order setup
+ */
+table.product_attributes {
+  border-collapse: collapse;
+  font-size: 1.2em;
+  margin-bottom: 1em;
+}
+table.product_attributes th,
+table.product_attributes td {
+  text-align: left;
+  vertical-align: left;
+  font-weight: normal;
+  padding: 0 1em 0.5em 0;
+  color: #333;
+}
+table.product_attributes select,
+table.product_attributes input {
+  font-size: 1em;
+  width: 100%;
+}
+table.product_attributes th.extra_name {
+  padding-right: 0.5em;
+  padding-left: 0.5em;
+}
+div.extra_options {
+  clear: both;
+}
+div.extra_options h3 {
+  font-size: 1.3em;
+  font-weight: normal;
+  padding-bottom: 0.2em;
+  margin-bottom: 0.4em;
+  color: #333;
+  border-bottom: 1px dotted #333;
+}
+div.extra_options input.form_text_field {
+  width: 50px;
+  text-align: right;
+  padding: 0.3em 0.1em;
+}
+/*
+ * Transitions
+ */
+ul.status_transition {
+  margin-top: -10px;
+}
+ul.status_transition li {
+  margin-top: 15px;
+  position: relative;
+}
+ul.status_transition li div.container {
+  -webkit-border-top-left-radius: 5px;
+  -moz-border-radius-topleft: 5px;
+  border-top-left-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;
+  -moz-border-radius-bottomleft: 5px;
+  border-bottom-left-radius: 5px;
+  padding-left: 11px;
+}
+ul.status_transition li p {
+  background-color: #eee;
+  padding: 0.3em 0 0 0.5em;
+  border-right: 1px solid #DDDDDD;
+  border-top: 1px solid #DDDDDD;
+}
+ul.status_transition li p span {
+  font-style: italic;
+}
+ul.status_transition li div p.link {
+  padding-top: 0.1em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #DDDDDD;
+  border-right: 1px solid #DDDDDD;
+  border-top: medium none;
+}
+ul.status_transition li div p.link a {
+  color: #666666;
+}
+ul.status_transition li div p.link a:hover {
+  color: #0c4ea6;
+}
+/*
+ * Image links
+ */
+.calculator {
+  background: transparent url('../images/calculator.png') no-repeat left top;
+}
+.manual_input {
+  background: transparent url('../images/manual_input.png') no-repeat left top;
+}
+.sortProducts {
+  background: transparent url('../images/table_sort.png') no-repeat left top;
+}
+.copyProperties {
+  background: transparent url('../images/copy_properties.png') no-repeat left top;
+}
+.change_status {
+  background: transparent url('../images/change_status.png') no-repeat 5px 4px;
+}
+.new_message {
+  background: transparent url('../images/new_message.png') no-repeat 5px 4px;
+}
+.add_comment {
+  background: transparent url('../images/comment_add.png') no-repeat 5px 4px;
+}
+.new_from_template {
+  background: transparent url('../images/new_from_template.png') no-repeat 5px 4px;
+}
+.change_transaction_status {
+  background: transparent url('../images/transaction_change.png') no-repeat 5px 4px;
+}
+.load_transaction_status {
+  background: transparent url('../images/transaction_load.png') no-repeat 5px 4px;
+}
+.mark_deleted {
+  background: transparent url('../images/page_white_error.png') no-repeat 5px 4px;
+}
+.pay {
+  background: transparent url('../images/coins.png') no-repeat 5px 4px;
+}
+.product_types {
+  background: transparent url('../images/text_list_bullets.png') no-repeat 5px 4px;
+}
+.edit_record {
+  background: transparent url('../images/page_white_edit.png') no-repeat 5px 4px;
+}
+.convert_customer {
+  background: transparent url('../images/user.png') no-repeat 5px 4px;
+}
+.shipping_label {
+  background: transparent url('../images/package_green.png') no-repeat 5px 4px;
+}
+.group_products {
+  background: transparent url('../images/shape_group.png') no-repeat 5px 4px;
+}
+.ungroup_product {
+  background: transparent url('../images/shape_ungroup.png') no-repeat 5px 4px;
+}
+td.iconCell .ungroup_product {
+  background-position: left top;
+}
+/*
+ * Row controls
+ */
+div.row_controls ul li.icon_sort_items a {
+  background-image: url(../images/sort_items.png);
+}
+/*
+ * Row icons
+ */
+td.message {
+  background: transparent url(../images/email_go.png) no-repeat 5px 5px;
+}
+td.system_message {
+  background: transparent url(../images/email.png) no-repeat 5px 5px;
+}
+td.comment {
+  background: transparent url(../images/comment.png) no-repeat 5px 5px;
+}
+/*
+ * Order list
+ */
+tr.invoice td {
+  font-style: italic;
+}
+div.has_notes_column {
+  position: relative;
+  width: 100%;
+  min-width: 20px;
+  text-align: center;
+}
+div.has_notes_column a img {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+}
+/*
+ * Shipping option list
+ */
+table.shipping_option_list label {
+  font-weight: normal!important;
+  font-size: 11px!important;
+  margin-left: 25px;
+}
+/*
+ * Shipping label list
+ */
+ul.shipping_label_list li {
+  padding: 5px 0 5px 20px;
+  background: transparent url(../images/page_white_text.png) no-repeat left 2px;
+  font-size: 12px;
+  float: left;
+  width: 110px;
+}
+ul.shipping_label_list li.pdf {
+  background-image: url(../images/page_white_acrobat.png);
+}
+div.shipping_label_list_area {
+  margin-top: 10px;
+  border-top: #ccc 1px dotted;
+  padding-top: 10px;
+}
+/*
+ * Order status icons for the sidebar status selector
+ */
+.order-status-icons li.current span.status-icon {
+  border-color: #eee;
+}
+.order-status-icons li a {
+  padding-left: 33px!important;
+}
+.order-status-icons span.status-icon {
+  display: block;
+  position: absolute;
+  left: 8px;
+  top: 9px;
+  margin-right: 10px;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #333;
+  background-color: #fff;
+  text-indent: -1000000px;
+}
+.order-status-handle {
+  position: relative;
+  width: 0;
+}
+.order-status-handle a {
+  position: absolute;
+  width: 5px;
+  height: 39px;
+  top: 3px;
+  left: -15px;
+  text-indent: -100000em;
+  background: transparent url(../images/show_status_selector.png) no-repeat right top;
+}
+/*
+ * Product preview page
+ */
+div.product-performance-chart {
+  margin-top: 20px;
+  height: 200px;
+}
+div.product-preview-image {
+  float: left;
+  border: 1px solid #ccc;
+  padding: 5px;
+  margin-right: 10px;
+}
+div.product-preview-image img {
+  display: block;
+}
+/* Browser-specicic tweaks */
+.gecko .order-status-icons span.status-icon {
+  top: 10px!important;
+}

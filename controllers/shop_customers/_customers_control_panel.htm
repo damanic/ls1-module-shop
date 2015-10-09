@@ -1,0 +1,33 @@
+<div class="toolbar">
+	<?= Phpr_Form::openTag() ?>
+	<?= backend_ctr_button('Create customer', 'new_document', url('/shop/customers/create')) ?>
+	<div class="separator">&nbsp;</div>
+	<?= backend_ctr_button('Delete', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_selected()")) ?>
+	<?= backend_ctr_button('Restore', 'restore_document', array('href'=>'#', 'onclick'=>"return restore_selected()")) ?>
+
+	<div class="separator">&nbsp;</div>
+	
+	<?= backend_ctr_button('Merge', 'group_products', array(
+		'href'=>'#', 
+		'onclick'=>"return group_selected_customers()",
+		'class'=>'tooltip',
+		'title'=>'Merge selected customers'
+		)) ?>
+	
+	<? if ($this->currentUser->get_permission('shop', 'customers_export_import')): ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Import from CSV', 'document_import', url('/shop/customers/import_csv')) ?>
+		<?= backend_ctr_button('Export to CSV', 'document_export', array(
+			'class'=>'tooltip',
+			'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file',
+			'onclick'=>alt_click_link(url('/shop/customers/export_customers/iwork'), url('/shop/customers/export_customers')),
+			)) ?>
+	<? endif ?>
+		
+	<div class="separator">&nbsp;</div>
+	<?= backend_ctr_button('Manage customer groups', 'people', url('/shop/customer_groups')) ?>
+	
+	<? Backend::$events->fireEvent('shop:onExtendCustomersToolbar', $this) ?>
+	<div class="clear"></div>
+	</form>
+</div>

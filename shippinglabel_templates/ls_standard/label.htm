@@ -1,0 +1,23 @@
+<table>
+	<tr>
+		<td class="shipping_label_sender">
+			<?= h($company_info->name) ?><br>
+			<?= h($shipping_params->street_addr) ?><br>
+			<?= h($shipping_params->city) ?> <?= $origin_state ? h($origin_state->code).' ' : null ?><?= h($shipping_params->zip_code) ?><br>
+			<?= $origin_country->name ?>
+		</td>
+	</tr>
+	<tr>
+		<td class="shipping_label_customer">
+			<div class="shipping_label_address">
+				<?= h($order->shipping_first_name) ?> <?= h($order->shipping_last_name) ?><br>
+				<? if($order->shipping_company): ?>
+					<?= h($order->shipping_company)  ?><br>
+				<? endif ?>
+				<?= h($order->shipping_street_addr)  ?><br>
+				<?= h(mb_strtoupper($order->shipping_city))  ?> <?= $order->shipping_state ? h(mb_strtoupper($order->shipping_state->code)).' ' : null ?><?= h(mb_strtoupper($order->shipping_zip))  ?><br>
+				<?= h(mb_strtoupper($order->shipping_country->name))  ?>
+			</div>
+		</td>
+	</tr>
+</table>

@@ -1,0 +1,18 @@
+<?= flash() ?>
+
+<div class="minorPadding">
+	<div class="scoreboardReport">
+		<ul>
+			<li class="last">
+				<h3>Total number of products</h3>
+				<p><?= $this->evalProductNum() ?></p>
+				<p class="description">
+					Show all <a href="#" onclick="return $('FormElement').sendPhpr('index_onResetFilters', {loadIndicator: {show: false}});">(cancel filters)</a>
+				</p>
+			</li>
+		</ul>
+		<div class="clear"></div>
+	</div>
+</div>
+
+<?= $this->listRender(array('list_render_filters'=>true, 'list_control_panel'=>'products_control_panel')) ?>

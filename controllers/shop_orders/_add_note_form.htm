@@ -1,0 +1,35 @@
+<div id="order_note_form">
+	<h2>Add Order Note</h2>
+	<div class="content">
+		<div class="form400">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag(array('id'=>$this->listGetFormId())) ?>
+
+					<? $this->formRender($note) ?>
+					
+					<script type="text/javascript">
+						$('order_note_form').addEvent('popupLoaded', function(){
+							$('Shop_OrderNote_note').focus();
+						});
+						
+					</script>
+
+					<?= backend_ajax_button('Save', 'preview_onSaveNote', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: function(){
+							cancelPopup();
+						},
+						update: 'order_notes'
+					") ?>
+
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

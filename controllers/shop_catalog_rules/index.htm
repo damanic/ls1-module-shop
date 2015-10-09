@@ -1,0 +1,26 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script src="modules/shop/resources/javascript/catalog_rule_list.js" type="text/javascript"></script>	
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<div class="toolbar">
+		<?= backend_ctr_button('Add rule', 'new_document', url('/shop/catalog_rules/create')) ?>
+		<?= backend_ctr_button('Apply rules', 'apply', array('href'=>'#', 'onclick'=>"new PopupForm('index_onShowApplyForm', {closeByEsc: false, }); return false;")) ?>
+		<div class="separator">&nbsp;</div>
+		<p class="toolbar_text">
+			<? 
+				$footprint_info = Shop_CatalogPriceRule::get_footprint_info(); 
+				if ($footprint_info):
+			?>
+				The rules were last applied by <?= h($footprint_info->username) ?> at <?= $footprint_info->time->format('%x %X') ?>
+			<? else: ?>
+				The rules were never applied
+			<? endif ?>
+		</p>
+
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+
+	<? $this->rulesRender() ?>
+<? Phpr_View::endBlock() ?>

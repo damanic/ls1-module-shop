@@ -1,0 +1,1 @@
+alter table shop_manufacturers add column is_disabled tinyint(4);

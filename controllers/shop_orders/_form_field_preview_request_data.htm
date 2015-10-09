@@ -1,0 +1,29 @@
+<li class="field preview">
+	<p>Values posted to the payment gateway.</p>
+	<div class="scrollableList">
+		<table class="simpleList">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th class="last">Value</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?
+					foreach ($form_model->request_data as $name=>$value):
+				?>
+				<tr class="<?= Backend_Html::zebra('request_data') ?>">
+					<td><?= h($name) ?></td>
+					<td class="last"><?= h($value) ?></td>
+				</tr>
+				<?
+					endforeach;
+				?>
+		
+				<? if (!$form_model->request_data): ?>
+					<tr class="noData"><td colspan="2">No values</td></tr>
+				<? endif ?>
+			</tbody>
+		</table>
+	</div>
+</li>

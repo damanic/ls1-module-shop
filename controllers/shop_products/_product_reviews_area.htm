@@ -1,0 +1,46 @@
+<? $reviews = $form_model->list_all_reviews() ?>
+<div class="toolbar">
+	<?= backend_ctr_button('Approve selected', 'apply', array('href'=>'#', 'onclick'=>"return approve_selected_reviews()")) ?>
+	<?= backend_ctr_button('Delete selected', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_selected_reviews()")) ?>
+
+	<div class="clear"></div>
+</div>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="checkbox">
+				<input type="checkbox" onclick="$(this).findParent('table').getElements('tbody  input.list_cb').each(function(cb){cb.cb_update_state(this.checked)}, this)" value="1" class="list_head_cb"/>
+			</th>
+			<th>Status</th>
+			<th>Rating</th>
+			<th class="date current">Created At</th>
+			<th>Title</th>
+			<th>Author</th>
+			<th class="last">Author Email </th>
+		</tr>
+	</thead>
+	<tbody id="review_list_body">
+		<? if (!$reviews->count): ?>
+			<tr class="noData">
+				<td colspan="7">This product has no reviews</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($reviews as $review): 
+				$url = url('shop/reviews/edit/'.$review->id);
+			?>
+				<tr class="<?= Backend_Html::zebra('grouped_reviews') ?> <?= $review->prv_moderation_status == 'new' ? 'new' : null ?>">
+					<td class="checkbox">
+						<input type="checkbox" onclick="if (!this.checked) $(this).findParent('table').getElement('thead input.list_head_cb').cb_uncheck()" value="<?= $review->id ?>" class="list_cb" name="list_ids[]"/>
+					</td>
+					<td class="link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= h($review->review_status) ?></a></td>
+					<td <?= click_link($url) ?> class="text link"><span class="rating_stars <?= $review->rating ? 'stars_'.str_replace('.', '', $review->rating) : 'no_rating' ?>"><?= $review->rating ? $review->rating : 'no rating' ?></span></td>
+					<td <?= click_link($url) ?> class="link date current"><a href="<?= $url ?>"><?= h($review->displayField('created_at')) ?></a></td>
+					<td class="link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= h($review->review_title) ?></a></td>
+					<td class="link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= h($review->review_author_name) ?></a></td>
+					<td <?= click_link($url) ?> class="link last"><a href="<?= $url ?>"><?= h($review->review_author_email) ?></a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

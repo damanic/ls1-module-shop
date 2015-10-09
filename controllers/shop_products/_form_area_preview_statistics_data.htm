@@ -1,0 +1,63 @@
+<li>
+	<? $summary_data = Shop_ProductStatisticsData::sales_summary($form_model->id) ?>
+	<p class="minor-comment">The reports below include orders of all grouped products regardless of order statuses, during the full sales period. You can view more detailed data in the <a href="<?= url('shop/products_report') ?>">Products Report</a>.</p>
+	<div class="scoreboardReport no-offset-bottom">
+		<ul>
+			<li>
+				<h3>Total items ordered</h3>
+				<p><?= h($summary_data->quantity) ?></p>
+			</li>
+			<li class="last">
+				<h3>Total amount</h3>
+				<p><?= format_currency($summary_data->amount) ?></p>
+			</li>
+		</ul>
+		<div class="clear"></div>
+	</div>
+
+	<h4 class="offset-top-small">Overall orders statistics</h4>
+	<div id="flashcontent" class="flashcontent product-performance-chart">
+		<span>Please update your Flash player : <a href="http://get.adobe.com/flashplayer/">http://get.adobe.com/flashplayer/</a> </span>
+	</div>
+	
+	<? if ($form_model->grouped_products_all->count):?>
+		<h4>Grouped products statistics</h4>
+		<div id="grouped_flashcontent" class="flashcontent product-performance-chart">
+			<span>Please update your Flash player : <a href="http://get.adobe.com/flashplayer/">http://get.adobe.com/flashplayer/</a> </span>
+		</div>
+	<? endif ?>
+
+	<script type="text/javascript">
+		var so = new SWFObject("<?= root_url('/modules/backend/resources/swf/amline.swf') ?>", "amchart", "100%", "100%", "8", "#FFFFFF");
+		so.addVariable("path", escape("<?= root_url('/modules/backend/resources/swf/') ?>"));
+		so.addVariable("settings_file", 
+			encodeURIComponent("<?= root_url('/modules/backend/resources/xml/chart_common_settings.xml?').time() ?>")+',' +
+			encodeURIComponent("<?= root_url('/modules/backend/resources/xml/chart_line_settings.xml?'.time()) ?>")+','+ 
+			encodeURIComponent("<?= url('/shop/products/preview_sales_data/'.$form_model->id).'?'.time() ?>")
+		);
+		so.addParam("wmode", "transparent");
+
+		so.addVariable("loading_settings", "Loading chart settings...");
+		so.addVariable("loading_data", "Loading data...");
+		so.addVariable("chart_id", "amchart");
+
+		so.write("flashcontent");
+		
+		<? if ($form_model->grouped_products_all->count):?>
+			var so = new SWFObject("<?= root_url('/modules/backend/resources/swf/amcolumn.swf') ?>", "amchart_grouped", "100%", "100%", "8", "#FFFFFF");
+			so.addVariable("path", escape("<?= root_url('/modules/backend/resources/swf/') ?>"));
+			so.addVariable("settings_file", 
+				encodeURIComponent("<?= root_url('/modules/backend/resources/xml/chart_common_settings.xml?').time() ?>")+',' +
+				encodeURIComponent("<?= root_url('/modules/backend/resources/xml/chart_column_settings.xml?'.time()) ?>")+','+ 
+				encodeURIComponent("<?= url('/shop/products/preview_grouped_chart_data/'.$form_model->id).'?'.time() ?>")
+			);
+			so.addParam("wmode", "transparent");
+
+			so.addVariable("loading_settings", "Loading chart settings...");
+			so.addVariable("loading_data", "Loading data...");
+			so.addVariable("chart_id", "amchart_grouped");
+
+			so.write("grouped_flashcontent");
+		<? endif ?>
+	</script>
+</li>

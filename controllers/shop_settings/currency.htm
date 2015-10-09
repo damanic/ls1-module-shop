@@ -1,0 +1,19 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/system/settings') ?>">Settings</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<div class="form400">
+		<?= Phpr_Form::openTag(array('id'=>'settings_form')) ?>
+			<? $this->formRender($settings) ?>
+
+			<?= backend_ajax_button('Save', 'currency_onSave') ?>
+			<?= backend_button('Cancel', url('system/settings')) ?>
+			
+			<input type="hidden" id="prev_pageviews" value="<?= $settings->keep_pageviews ?>"/>
+
+			<div class="clear"></div>
+		</form>
+	</div>
+<? Phpr_View::endBlock() ?>

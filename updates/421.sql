@@ -1,0 +1,1 @@
+create index category_name on shop_categories(name);

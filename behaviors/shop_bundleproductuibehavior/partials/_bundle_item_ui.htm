@@ -1,0 +1,99 @@
+<div class="scoreboardReport">
+	<ul>
+		<li>
+			<h3>Required</h3>
+			<p><?= $item->is_required ? 'Yes' : 'No' ?></p>
+		</li>
+		<li class="last">
+			<h3>Control type</h3>
+			<p><?= $item->get_control_type_options($item->control_type) ?></p>
+		</li>
+	</ul>
+	<div class="clear"></div>
+</div>
+
+<? if ($item->description): ?>
+	<p><?= h($item->description) ?></p>
+<? endif ?>
+
+<?
+	$bundle_products = $item->list_related_records_deferred('item_products_all', $this->bundle_get_item_session_key($item->id));
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<? if ($bundle_products->count): ?>
+				<th class="iconCell">&nbsp;</th>
+				<th class="checkbox">
+					<input type="checkbox" onclick="$(this).findParent('table').getElements('tbody  input.list_cb').each(function(cb){cb.cb_update_state(this.checked)}, this)" value="1" class="list_head_cb"/>
+				</th>
+			<? endif ?>
+			<th>Product</th>
+			<th>SKU</th>
+			<th class="price-override">Price mode</th>
+			<th class="number minSize">Price or discount</th>
+			
+			<th class="number minSize">Default quantity</th>
+			<th class="center minSize">Manual quantity</th>
+			<th class="center minSize">Default</th>
+			<th class="center minSize last">Enabled</th>
+		</tr>
+	</thead>
+	<tbody id="bundle-item-products">
+		<? if ($bundle_products->count): ?>
+			<? 
+				foreach ($bundle_products as $index=>$product):
+					$is_active = $this->bundle_get_product_field($product->id, 'is_active', $product->is_active);
+					$is_default = $this->bundle_get_product_field($product->id, 'is_default', $product->is_default);
+					$price_override_mode = $this->bundle_get_product_field($product->id, 'price_override_mode', $product->price_override_mode);
+					$allow_manual_quantity = $this->bundle_get_product_field($product->id, 'allow_manual_quantity', $product->allow_manual_quantity);
+			?>
+				<tr id="<?= 'bundle-item-product-'.$product->id ?>" class="<?= Backend_Html::zebra('bundle-products') ?> <?= $is_active ? null : 'disabled' ?> <?= $is_default ? 'important' : null ?>">
+					<td class="iconCell">
+						<a href="#" class="row_drag_handle bundle-product-sort-handle" onclick="return false" title="Reorder products">Reorder products</a>
+						<input class="bundle-product-id" value="<?= $product->id ?>" type="hidden"/>
+						<input class="bundle-product-order" value="<?= $product->sort_order ?>" type="hidden"/>
+					</td>
+					<td class="checkbox">
+						<input type="checkbox" onclick="if (!this.checked) $(this).findParent('table').getElement('thead input.list_head_cb').cb_uncheck()" value="<?= $product->id ?>" class="list_cb" name="list_ids[]"/>
+					</td>
+					<td ><?= h($product->displayField('product_name', 'list')) ?></td>
+					<td><?= h($product->displayField('product_sku', 'list')) ?></td>
+					
+					<td class="noWrap price-override">
+						<span class="show-on-leave"><?= $product->get_price_ovirride_mode_name($price_override_mode) ?></span>
+						<select class="show-on-hover no-styling" onchange="update_bundle_price_override(this)" name="bundle_product_data[<?= $product->id ?>][price_override_mode]">
+							<? foreach (Shop_BundleItemProduct::$price_override_options as $key=>$name): ?>
+								<option value="<?= h($key) ?>" <?= Phpr_Form::optionState($key, $price_override_mode) ?>><?= h($name) ?></option>
+							<? endforeach ?>
+						</select>
+					</td>
+					<td class="number <?= $price_override_mode == Shop_BundleItemProduct::price_override_default ? 'disabled' : null ?> price-or-discount price_or_discount">
+						<input type="text" onkeydown="register_bundle_item_change()" onkeypress="register_bundle_item_change()" onchange="register_bundle_item_change()" class="inline <?= $price_override_mode == Shop_BundleItemProduct::price_override_default ? 'hidden' : null ?>" name="bundle_product_data[<?= $product->id ?>][price_or_discount]" value="<?= $this->bundle_get_product_field($product->id, 'price_or_discount', $product->price_or_discount) ?>"/>
+					</td>
+					
+					<td class="number inline_container default_quantity">
+						<input type="text" class="inline" onkeydown="register_bundle_item_change()" onkeypress="register_bundle_item_change()" onchange="register_bundle_item_change()" name="bundle_product_data[<?= $product->id ?>][default_quantity]" value="<?= $this->bundle_get_product_field($product->id, 'default_quantity', $product->default_quantity) ?>"/>
+					</td>
+					<td class="center">
+						<input type="hidden" value="0" name="bundle_product_data[<?= $product->id ?>][allow_manual_quantity]"/>
+						<input type="checkbox" onclick="register_bundle_item_change()" value="1" <?= Phpr_Form::checkboxState($allow_manual_quantity) ?> name="bundle_product_data[<?= $product->id ?>][allow_manual_quantity]"/>
+					</td>
+					<td class="center">
+						<input type="hidden" value="0" name="bundle_product_data[<?= $product->id ?>][is_default]"/>
+						<input type="checkbox" class="default-bundle-item-product" onclick="update_bundle_item_default_product(this)" value="1" <?= Phpr_Form::checkboxState($is_default) ?> name="bundle_product_data[<?= $product->id ?>][is_default]"/>
+					</td>
+					<td class="center last">
+						<input type="hidden" value="0" name="bundle_product_data[<?= $product->id ?>][is_active]"/>
+						<input type="checkbox" onclick="update_bundle_item_product_status(this)" value="1" <?= Phpr_Form::checkboxState($is_active) ?> name="bundle_product_data[<?= $product->id ?>][is_active]"/>
+					</td>
+				</tr>
+			<? endforeach ?>
+		<? else: ?>
+			<tr class="noData">
+				<td colspan="8">This bundle item has no products</td>
+			</tr>
+		<? endif ?>
+	</tbody>
+</table>

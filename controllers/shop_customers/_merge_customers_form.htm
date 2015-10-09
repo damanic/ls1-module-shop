@@ -1,0 +1,30 @@
+<div>
+	<h2>Merge Customers</h2>
+	<div class="content">
+		<div class="form800">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($model) ?>
+					
+					<?= backend_ajax_button('Apply', 'index_onMergeSelectedCustomers', array(), "
+						confirm: 'Are you sure?', 
+						loadIndicator: {injectInElement: true},
+						onSuccess: cancelPopup,
+						extraFields: $('listShop_Customers_index_list_body').getForm(),
+						onAfterUpdate: refresh_ui,
+						update: 'customers_page_content'") ?>
+						
+					<input type="hidden" name="Shop_MergeCustomersModel[customers]" value="<?= h($model->customers) ?>"/>
+
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+		
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,5 @@
+<li>
+	<p>Customer: <a href="<?= url('shop/customers/edit/'.$form_model->customer_id) ?>" target="_blank"><?= h($form_model->billing_first_name).' '.h($form_model->billing_last_name) ?></a>, 
+		Email: <a href="mailto:<?= $form_model->billing_email ?>"><?= h($form_model->billing_email) ?></a>
+	</p>
+</li>

@@ -1,0 +1,16 @@
+<?
+	$orders_statistics = $this->evalOrdersStatistics();
+	if (!strlen($orders_statistics->totals_current))
+		$orders_statistics->totals_current = 0;
+	  
+	if (!strlen($orders_statistics->totals_prev))
+		$orders_statistics->totals_prev = 0;
+?>
+
+<h3>Order Totals</h3>
+<p><?= format_currency($orders_statistics->totals_current) ?>
+	<?= Backend_Reports::scoreboardDiff($orders_statistics->totals_current, $orders_statistics->totals_prev) ?>
+</p>
+<p class="description">
+	previous: <?= format_currency($orders_statistics->totals_prev) ?>
+</p>

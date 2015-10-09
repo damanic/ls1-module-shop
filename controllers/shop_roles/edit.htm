@@ -1,0 +1,25 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/system/settings') ?>">Settings</a></li>
+		<li><a href="<?= url('/shop/roles') ?>">User Roles</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="form500">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Save', 'edit_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'edit_onCancel') ?>
+
+				<?= backend_ajax_button('Delete', 'edit_onDelete', array('class'=>"right"), "confirm: 'Do you really want to delete this role?'") ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+	<p><a href="<?= url('/shop/roles') ?>">Return to the roles list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

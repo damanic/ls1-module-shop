@@ -1,0 +1,37 @@
+<div class="toolbar">
+	<?= Phpr_Form::openTag() ?>
+		<?= backend_ctr_button('Refresh', 'refresh', array('href'=>'#', 'onclick'=>"return refresh_list()")) ?>
+		<? if ($this->currentUser->role->can_create_orders): ?>
+			<?= backend_ctr_button('Create order', 'new_document', url('/shop/orders/create')) ?>
+		<? endif ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Print docs', 'print', array('href'=>'#', 'onclick'=>"return print_docs()")) ?>
+		<?= backend_ctr_button('Print packing slip', 'lorry', array('href'=>'#', 'onclick'=>"return print_packing_slip()")) ?>
+		<?= backend_ctr_button('Print shipping label', 'shipping_label', array('href'=>'#', 'onclick'=>"return print_shipping_label()")) ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Change <u>s</u>tatus', 'change_status', array('href'=>'#', 'onclick'=>"return change_status()", 'class'=>'tooltip', 'title'=>'Change status for selected orders: <strong>ctrl+alt+s</strong>')) ?>
+		<?= backend_ctr_button('Delete', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_selected()")) ?>
+		<?= backend_ctr_button('Restore', 'restore_document', array('href'=>'#', 'onclick'=>"return restore_selected()")) ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Orders to CSV', 'document_export', array(
+			'class'=>'tooltip',
+			'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file',
+			'onclick'=>alt_click_link(url('/shop/orders/export_orders/iwork'), url('/shop/orders/export_orders')),
+			)) ?>
+		<?= backend_ctr_button('Orders and products to CSV', 'document_export_all', array(
+			'class'=>'tooltip',
+			'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file',
+			'onclick'=>alt_click_link(url('/shop/orders/export_orders_and_products/iwork'), url('/shop/orders/export_orders_and_products')),
+			)) ?>
+		<?= backend_ctr_button('Customers to CSV', 'people_export', array(
+			'class'=>'tooltip',
+			'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file',
+			'onclick'=>alt_click_link(url('/shop/orders/export_customers/iwork'), url('/shop/orders/export_customers')),
+			)) ?>
+		<?= backend_ctr_button('Import from CSV', 'document_import', url('/shop/orders/import_csv')) ?>
+
+		<? Backend::$events->fireEvent('shop:onExtendOrdersToolbar', $this) ?>
+
+		<div class="clear"></div>
+	</form>
+</div>

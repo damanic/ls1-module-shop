@@ -1,0 +1,37 @@
+<div id="delete_orders_form" class="critical_message">
+	<h2>Delete or Mark As Deleted?</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<p>Orders selected: <?= $order_count ?></p>
+					
+					<p>Do you want to <strong>delete</strong> selected orders, or just <strong>mark them as deleted</strong>? Deleted orders cannot be restored. Orders, marked as deleted, can be restored.</p>
+					
+					<?= backend_ajax_button('Mark As Deleted', 'index_onDeleteSelected', array(), "
+						confirm: 'Do you really want to mark selected order(s) as deleted?', 
+						loadIndicator: {injectInElement: true},
+						onSuccess: cancelPopup,
+						extraFields: $('listShop_Orders_index_list_body').getForm(),
+						onAfterUpdate: update_scrollable_toolbars,
+						update: 'orders_page_content'") ?>
+
+					<?= backend_ajax_button('Delete Permanently', 'index_onDeleteSelectedPermanently', array(), "
+						confirm: 'Do you really want to DELETE selected order(s) PERMANENTLY?', 
+						loadIndicator: {injectInElement: true},
+						onSuccess: cancelPopup,
+						extraFields: $('listShop_Orders_index_list_body').getForm(),
+						onAfterUpdate: update_scrollable_toolbars,
+						update: 'orders_page_content'") ?>
+
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()', 'class'=>'right')) ?>
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

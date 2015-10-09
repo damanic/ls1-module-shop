@@ -1,0 +1,42 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Language" content="en-us">
+<style type="text/css" media="screen">
+	<? include PATH_APP.'/modules/core/mailviews/_mail_styles.htm' ?>
+</style>
+</head>
+<body>
+<p>Hi!</p>
+
+<p>
+	<? if ($customer): ?>
+		Customer <?= h($customer->get_display_name()) ?> (<a href="mailto:<?= h($customer->email) ?>"><?= h($customer->email) ?></a>) 
+	<? else: ?>
+		Visitor <?= h($review->review_author_name) ?>
+		<? if ($review->review_author_email): ?>
+			(<a href="mailto:<?= h($review->review_author_email) ?>"><?= h($review->review_author_email) ?></a>) 
+		<? endif ?>
+	<? endif ?>
+	
+	posted a review for the <strong><?= ($product->name) ?></strong> product:
+</p>
+
+<blockquote>
+	<?= nl2br(h($review->review_text)) ?>
+</blockquote>
+
+<p>Product rating:
+	<? if ($review->prv_rating): ?>
+		<?= $review->get_rating_name() ?>
+	<? else: ?>
+		no rating information provided.
+	<? endif ?>
+</p>
+
+<p>You can approve or delete the review on <a href="<?= Phpr::$request->getRootUrl().url('shop/reviews/edit/'.$review->id.'?'.uniqid()) ?>">this page</a>.</p>
+
+<hr/>
+<p>This is an automatic message. Do not reply to it.</p>
+</body>
+</html>

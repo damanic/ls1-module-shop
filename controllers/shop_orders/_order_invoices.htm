@@ -1,0 +1,38 @@
+<? $invoices = $form_model->list_invoices(); ?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="order_status">
+			</th>
+			<th>#</th>
+			<th class="date">Date and Time</th>
+			<th>Status</th>
+			<th class="last">Total</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?
+			foreach ($invoices as $record):
+				$href = url('shop/orders/preview/'.$record->id);
+				$record->init_columns_info();
+				$record->define_form_fields('preview');
+		?>
+		<tr class="<?= Backend_Html::zebra('order_invoices') ?> <?= $record->deleted_at ? 'deleted' : null ?>">
+			<td class="order_status">
+				<span style="background-color: <?= $record->displayField('status_color') ?>">&nbsp;</span>
+			</td>
+			<td <?= click_link($href) ?> class="link"><a href="<?= $href ?>"><?= $record->id ?></a></td>
+			<td <?= click_link($href) ?> class="date link"><a href="<?= $href ?>"><?= $record->order_datetime->format('%x') ?></a></td>
+			<td <?= click_link($href) ?> class="link"><a href="<?= $href ?>"><?= h($record->displayField('status')) ?></a></td>
+			<td <?= click_link($href) ?> class="last link"><a href="<?= $href ?>"><?= format_currency($record->total) ?></a></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+
+		<? if (!$invoices->count): ?>
+			<tr class="noData"><td colspan="5">No invoices found</td></tr>
+		<? endif ?>
+	</tbody>
+</table>

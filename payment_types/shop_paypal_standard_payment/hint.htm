@@ -1,0 +1,17 @@
+<li>
+	<div class="hint">
+		<p>Please configure <strong>Payment Data Transfer</strong> in your PayPal account:</p>
+
+		<? $autoreturn_url = root_url('/ls_paypal_autoreturn', true); ?>
+		<ol class="simpleList">
+			<li>Log in to your PayPal account.</li>
+			<li>Click the Profile subtab.</li>
+			<li>Click Website Payment Preferences in the Seller Preferences column.</li>
+			<li>Under Auto Return for Website Payments, click the <strong>On</strong> radio button.</li>
+			<li>For the Return URL, enter <a href="<?= $autoreturn_url ?>" onclick="return false"><?= h($autoreturn_url) ?></a>.</li>
+			<li>Under Payment Data Transfer, click the <strong>On</strong> radio button.</li>
+			<li>Click Save. After saving the configuration you will see the Payment Data Transfer token which you must specify in the field below.</li>		</ol>
+	</div>
+</li>
+
+

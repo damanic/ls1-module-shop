@@ -1,0 +1,22 @@
+<? 
+	$exras = $form_model->get_extra_options();
+	if ($exras):
+?>
+	<? foreach ($exras as $value): 
+		$extra_key = md5($value[1]);
+		$option = Shop_ExtraOption::find_product_extra_option($form_model->product, $extra_key);
+		$group_name = $option ? $option->group_name : null;
+	?>
+		<li class="field checkbox full preview">
+			<label>
+				<? if ($group_name): ?>
+					<strong><?= h($group_name) ?></strong> - 
+				<? endif ?>
+				<?= h($value[1]) ?> (<?= format_currency($value[0]) ?>)
+			</label>
+
+			<div class="previewContainer"><div class="checkbox on"></div></div>
+			<div class="clear"></div>
+		</li>
+	<? endforeach ?>
+<? endif ?>

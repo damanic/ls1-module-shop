@@ -1,0 +1,19 @@
+<li class="field last">
+	<label>Email notifications
+		<span class="comment">Please select users you want to be notified about the note by email. Only users who have permissions to work with orders are displayed.</span>
+	</label>
+	
+	<ul class="simpleList checkboxes noOffsetBottom">
+		<? foreach ($users as $user): 
+			if ($user->id == $this->currentUser->id)
+				continue;
+		?>
+			<li>
+				<input <?= Phpr_Form::checkboxState($user->id == $reply_user_id) ?> name="notification_users[]" type="checkbox" value="<?= $user->id ?>" id="<?= 'user_'.$user->id ?>"/>
+				<label for="<?= 'user_'.$user->id ?>"><?= h($user->name) ?></label>
+			</li>
+		<? endforeach ?>
+	</ul>
+
+	<div class="clear"></div>
+</li>

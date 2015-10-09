@@ -1,0 +1,7 @@
+<?= Phpr_Form::openTag(array('id'=>'tracking_codes_form')) ?>
+	<div class="hint"><p class="last">Some shipping methods, for example USPS can generate shipping tracking codes automatically when you print the shipping label.</p></div>
+
+	<div id="tracking_code_list" class="relative">
+		<? $this->renderPartial('tracking_code_list') ?>
+	</div>
+</form>

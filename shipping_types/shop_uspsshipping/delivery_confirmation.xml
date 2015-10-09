@@ -1,0 +1,28 @@
+<DeliveryConfirmationV3.0Request USERID="<?= $user_id ?>">
+	<Option>1</Option>
+	<ImageParameters />
+	<FromName><?= h($shipping_params->sender_first_name) ?> <?= h($shipping_params->sender_last_name) ?></FromName>
+	<FromFirm><?= h($company_info->name) ?></FromFirm>
+	<FromAddress1 />
+	<FromAddress2><?= h($shipping_params->street_addr) ?></FromAddress2>
+	<FromCity><?= h($shipping_params->city) ?></FromCity>
+	<FromState><?= h($from_state) ?></FromState>
+	<FromZip5><?= h($shipping_params->zip_code) ?></FromZip5>
+	<FromZip4 />
+	<ToName><?= h($order->shipping_first_name.' '.$order->shipping_last_name) ?></ToName>
+	<ToFirm><?= h($order->shipping_company) ?></ToFirm>
+	<ToAddress1><?= h($address_1) ?></ToAddress1>
+	<ToAddress2><?= h($address_2) ?></ToAddress2>
+	<ToCity><?= h($order->shipping_city)  ?></ToCity>
+	<ToState><?= $to_state ?></ToState>
+	<ToZip5><?= h($zip_code) ?></ToZip5>
+	<ToZip4 />
+	<WeightInOunces><?= $weight_in_ounces ?></WeightInOunces>
+	<ServiceType><?= h($service_type) ?></ServiceType>
+	<? if($separate_receipt): ?>
+		<SeparateReceiptPage>TRUE</SeparateReceiptPage>
+	<? endif ?>
+	<POZipCode />
+	<ImageType><?= $image_type ?></ImageType>
+	<LabelDate><?= $label_date ?></LabelDate>
+</DeliveryConfirmationV3.0Request>

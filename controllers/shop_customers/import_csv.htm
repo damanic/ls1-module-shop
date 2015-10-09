@@ -1,0 +1,52 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/customer_csv_import.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/customers') ?>">Customers</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<div class="form700">
+		<?= Phpr_Form::openTag() ?>
+			<h4 class="secondary">1. Upload a CSV file</h4>
+
+			<? $this->csvImportRenderCsvUploader() ?>
+	
+			<h4 class="secondary">2. Match the LemonStand customer fields to the CSV file's columns</h4>
+		
+			<? if ($this->isHintVisible('csv_import_columns_hint')): ?>
+				<div class="hint">
+					<p>Drag columns from the right list to the left list, matching columns in your CSV file to LemonStand customer fields. You can hide file columns which you do not want to be imported using the X icons in the left list.</p>
+					<p class="last">Click a column title in the File Columns list to preview the column data.</p>
+					<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('csv_import_columns_hint', this)">Close</a>
+				</div>
+			<? endif ?>
+
+			<? $this->csvImportRenderColumnConfiguration() ?>
+			
+			<div class="form">
+				<h4 class="secondary">3. Set customer import options</h4>
+
+				<ul class="formElements secondary_field">
+					<? $this->formRenderField('update_existing_emails'); ?>
+					<? $this->formRenderField('default_country'); ?>
+
+					<? $this->formRenderField('auto_create_groups'); ?>
+				</ul>
+
+				<ul class="formElements csv_cb_feature" id="group_list">
+					<? $this->formRenderField('group'); ?>
+				</ul>
+			</div>
+
+			<input type="hidden" name="import_csv_flag" value="1"/>
+			
+			<?= backend_button('Import customers', array('onclick'=>'return import_manager.import_data()', 'href'=>'javascript:;')) ?>
+			<div class="clear"></div>
+		</form>
+	</div>
+<? Phpr_View::endBlock() ?>

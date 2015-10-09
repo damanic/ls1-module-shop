@@ -1,0 +1,63 @@
+<div id="product_list" class="clear">
+	<? $this->renderPartial('product_list') ?>
+</div>
+
+<p class="last">
+	<a class="imageLink addDocument img_noBottomPading" href="#" onclick="new PopupForm('onLoadAddProductForm', {closeByEsc: false, ajaxFields: $('product_id').getForm()}); return false;">Add product(s) to the group</a>
+	<a class="imageLink sortProducts img_noBottomPading" href="#" onclick="return $('product_list').getForm().sendPhpr('onSortAlphabetically', {
+		update: 'product_list',
+		loadIndicator: {
+			show: true,
+			element: 'product_list',
+			hideOnSuccess: true,
+			src: 'phproad/resources/images/form_load_30x30.gif'
+		},
+		confirm: 'Do you really want to sort product alphabetically?',
+		onAfterUpdate: make_products_sortable
+	})">Sort alphabetically</a>
+	<a class="imageLink deleteDocument img_noBottomPading" href="#" onclick="return $('product_list').getForm().sendPhpr(
+		'onRemoveSelectedProducts',
+		{
+			update: 'product_list',
+			loadIndicator: {
+				show: true,
+				element: 'product_list',
+				hideOnSuccess: true,
+				src: 'phproad/resources/images/form_load_30x30.gif'
+			},
+			confirm: 'Do you really want to remove products from the group?',
+			onAfterUpdate: make_products_sortable,
+			preCheckFunction: function(){ 
+				if (!$('product_list').getElements('input.list_cb').some(function(element){return element.checked}))
+				{
+					alert('Please select product(s) to remove.');
+					return false;
+				}
+				return true;
+			}
+		}
+	)">Remove selected</a>
+</p>
+
+<input type="hidden" name="product_id" id="product_id" value=""/>
+
+<script type="text/javascript">
+	function updateProductList()
+	{
+		cancelPopup();
+		
+		$('product_list').getForm().sendPhpr(
+			'onUpdateProductList',
+			{
+				update: 'product_list',
+				loadIndicator: {
+					show: true,
+					element: 'product_list',
+					hideOnSuccess: true,
+					src: 'phproad/resources/images/form_load_30x30.gif'
+				},
+				onAfterUpdate: make_products_sortable
+			}
+		)
+	}
+</script>

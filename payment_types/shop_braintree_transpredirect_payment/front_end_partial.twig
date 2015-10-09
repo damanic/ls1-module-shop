@@ -1,0 +1,46 @@
+<p>Please provide your credit card information.</p>
+
+<form action="{{ payment_method_obj.get_form_action(payment_method, order) }}" method="post">
+  {{ flash_message() }}
+  <ul class="form">
+    <li class="field text left">
+      <label for="CNAME">Cardholder Name</label>
+      <div><input autocomplete="off" name="transaction[credit_card][cardholder_name]" value="{{ payment_method_obj.get_field_value('transaction[credit_card][cardholder_name]') }}" id="CNAME" type="text" class="text"/></div>
+    </li>    
+    
+    <li class="field text right">
+      <label for="ACCT">Credit Card Number</label>
+      <div><input autocomplete="off" name="transaction[credit_card][number]" value="{{ payment_method_obj.get_field_value('transaction[credit_card][number]') }}" id="ACCT" type="text" class="text"/></div>
+    </li>
+
+    <li class="field text left">
+      <label for="EXPDATE">Expiration Date (MM/YY)</label>
+      <div><input autocomplete="off" name="transaction[credit_card][expiration_date]" value="{{ payment_method_obj.get_field_value('transaction[credit_card][expiration_date]') }}" id="EXPDATE" type="text" class="text" maxchars=4/></div>
+    </li>
+
+    <li class="field text right">
+      <label for="CVV">
+        Card Verification Value (CVV)
+      </label>
+      
+      <div><input autocomplete="off" name="transaction[credit_card][cvv]" value="{{ payment_method_obj.get_field_value('transaction[credit_card][cvv]') }}" id="CVV" type="text" class="text"/></div>
+    </li>
+    
+    <!-- Uncomment this code if you want to support customer payment profiles
+    {% if payment_method.supports_payment_profiles() and this.customer %}
+      <li class="field checkbox">
+        <div><input type="checkbox" name="transaction[options][store_in_vault_on_success]" value="true" id="create_customer_profile" /></div>
+        <label for="create_customer_profile">Save my credit card</label>
+      </li>
+    {% endif %}
+    -->
+  </ul>
+  <div class="clear"></div>
+  
+  {% set hidden_fields = payment_method_obj.get_hidden_fields(payment_method, order) %}
+  {% for name, value in hidden_fields %}
+    <input type="hidden" name="{{ name }}" value="{{ value }}"/>
+  {% endfor %}
+
+  <input type="submit" value="Submit"/>
+</form>

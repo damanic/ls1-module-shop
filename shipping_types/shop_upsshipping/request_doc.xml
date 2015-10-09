@@ -1,0 +1,81 @@
+<RatingServiceSelectionRequest>
+	<Request>
+		<TransactionReference>
+			<CustomerContext>Rating and Service</CustomerContext>
+			<XpciVersion>1.0</XpciVersion>
+		</TransactionReference>
+		<RequestAction>Rate</RequestAction>
+		<RequestOption>Shop</RequestOption>
+	</Request>
+	<PickupType>
+		<Code><?= $settings_obj->pickup_type ?></Code>
+	</PickupType>
+	<Shipment>
+		<Shipper>
+			<Address>
+				<City><![CDATA[<?= $shipping_params->city ?>]]></City>
+				<PostalCode><![CDATA[<?= $shipping_params->zip_code ?>]]></PostalCode>
+				<CountryCode><![CDATA[<?= $shipping_params->country->code ?>]]></CountryCode>
+				<? if ($shipping_params->state): ?>
+				<StateProvinceCode><![CDATA[<?= $shipping_params->state->code ?>]]></StateProvinceCode>
+				<? endif ?>
+			</Address>
+			<? if($settings_obj->shipper_number): ?>
+			<ShipperNumber><?= $settings_obj->shipper_number ?></ShipperNumber>
+			<? endif ?>
+		</Shipper>
+		<ShipTo>
+			<Address>
+				<City><![CDATA[<?= $city ?>]]></City>
+				<PostalCode><![CDATA[<?= $zip ?>]]></PostalCode>
+				<CountryCode><![CDATA[<?= $country->code ?>]]></CountryCode>
+				<? if ($state): ?>
+				<StateProvinceCode><![CDATA[<?= $state->code ?>]]></StateProvinceCode>
+				<? endif ?>
+				<? if(!$is_business): ?>
+					<ResidentialAddressIndicator><?= $is_business ? 0 : 1 ?></ResidentialAddressIndicator>
+				<? endif ?>
+			</Address>
+		</ShipTo>
+		<ShipFrom>
+			<Address>
+				<City><![CDATA[<?= $shipping_params->city ?>]]></City>
+				<PostalCode><![CDATA[<?= $shipping_params->zip_code ?>]]></PostalCode>
+				<CountryCode><![CDATA[<?= $shipping_params->country->code ?>]]></CountryCode>
+				<? if ($shipping_params->state): ?>
+				<StateProvinceCode><![CDATA[<?= $shipping_params->state->code ?>]]></StateProvinceCode>
+				<? endif ?>
+			</Address>
+		</ShipFrom>
+		<TotalCharges>
+			<CurrencyCode><?= $currency->code ?></CurrencyCode>
+			<MonetaryValue>0</MonetaryValue>
+		</TotalCharges>
+		<Package>
+			<PackagingType>
+				<Code><?= $settings_obj->container ?></Code>
+			</PackagingType>
+			<Description>Rate</Description>
+			<PackageWeight>
+				<UnitOfMeasurement>
+					<Code><?= h($shipping_params->weight_unit) ?></Code>
+				</UnitOfMeasurement>
+				<Weight><?= h($weight) ?></Weight>
+			</PackageWeight>
+			<? if($settings_obj->add_insured_value): ?>
+			<PackageServiceOptions>
+				<InsuredValue>
+					<CurrencyCode><?= h($currency->code) ?></CurrencyCode>
+					<MonetaryValue><?= h($total_price) ?></MonetaryValue>
+				</InsuredValue>
+			</PackageServiceOptions>
+			<? endif ?>
+		</Package>
+		<? if($settings_obj->use_negotiated_rates): ?>
+		<RateInformation>
+			<NegotiatedRatesIndicator/>
+		</RateInformation>
+		<? endif ?>
+		<ShipmentServiceOptions/>
+	</Shipment>
+</RatingServiceSelectionRequest>

@@ -1,0 +1,40 @@
+<div>
+	<h2>Add Payment Method</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<div class="scrollableList thickBorder height-400">
+						<ul class="selectable_list">
+						<? 
+							$last_index = count($type_list)-1;
+							foreach ($type_list as $index=>$info): 
+								$name = $info['name'];
+								$description = isset($info['description']) ? $info['description'] : null;
+								$url = url('/shop/payment/create/'.$info['class_name']);
+						?>
+							<li <? if ($index == $last_index): ?>class="last"<? endif ?>>
+								<a href="<?= $url ?>">
+									<span class="title"><?= h($name) ?></span>
+									<? if ($description): ?>
+										<span class="description">
+											<?= h($description) ?>
+										</span>
+									<? endif ?>
+								</a>
+							</li>
+						<? endforeach ?>
+						</ul>
+					</div>
+				
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

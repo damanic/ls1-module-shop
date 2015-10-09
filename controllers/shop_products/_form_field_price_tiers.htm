@@ -1,0 +1,28 @@
+<li>
+	<div id="price_tier_list<?= $this->formGetEditSessionKey() ?>" class="clear">
+		<? $this->renderPartial('price_tier_list') ?>
+	</div>
+
+	<p class="addDocument img_noBottomPading"><a href="#" onclick="$('price_tier_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadPriceTierForm', {ajaxFields: $('price_tier_id<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Add tier</a></p>
+	<input type="hidden" name="price_tier_id" id="price_tier_id<?= $this->formGetEditSessionKey() ?>" value=""/>
+
+	<script type="text/javascript">
+		function updatePriceTiers(session_key)
+		{
+			cancelPopup();
+
+			$('price_tier_list'+session_key).getForm().sendPhpr(
+				'onUpdatePriceTierList',
+				{
+					update: 'price_tier_list'+session_key,
+					loadIndicator: {
+						show: true,
+						element: 'price_tier_list'+session_key,
+						hideOnSuccess: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					}
+				}
+			)
+		}
+	</script>
+</li>

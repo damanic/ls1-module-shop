@@ -1,0 +1,80 @@
+<settings>
+	<data>
+		<chart>
+			<series>
+				<? 
+					$graphs = array();
+					$series = array();
+					foreach ($chart_data as $record)
+					{
+						$this->addToArray($graphs, $record->graph_code, $record, $record, $record->series_id);
+					
+						if (Backend_Reports::unique('series', $record->series_id)) 
+							$series[] = $record;
+					}
+
+					$lastIndex = count($series)-1;
+					foreach ($chart_series as $index=>$record):
+				?>
+					<value xid="<?= h($record->series_id) ?>"><?= Phpr_DateTime::parse($record->series_id, Phpr_DateTime::universalDateFormat)->format('%b %d, %Y') ?></value>
+				<? endforeach ?>
+				
+				<? if (!count($chart_data)): ?>
+					<value xid="0">0</value>
+				<? endif ?>
+			</series>
+			<graphs>
+				<? 
+				$index = 1;
+				foreach ($graphs as $code=>$data):
+					if (!strlen($code))
+						continue;
+					
+					$values = $data->values;
+					$params = $data->params;
+				?>
+					<graph gid="<?= 'graph_'.$index ?>" balloon_text="{description}" title="<?= h($code) ?>">
+						<? 
+							foreach ($chart_series as $serie):
+								if (array_key_exists($serie->series_id, $values)):
+									$value = $values[$serie->series_id];
+
+								$value->record_value = strlen($value->record_value) ? $value->record_value : 0;
+						?>
+							<value bullet_size="<?= $value->record_value > 0 ? 5 : 0 ?>" description="<?= format_currency($value->record_value) ?>" xid="<?= h($value->series_id) ?>"><?= strlen($value->record_value) ? 	$this->addMaxValue($value->record_value) : 0 ?></value>
+						<? else: ?>
+							<value bullet_size="0" description="<?= format_currency(0) ?>" xid="<?= h($serie->series_id) ?>">0</value>
+							<? endif ?>
+						<? endforeach ?>
+						
+					</graph>
+				<? 
+				$index++;
+				endforeach ?>
+			</graphs>
+		</chart>
+	</data>
+	
+	<graphs>
+		<graph gid="graph_1">
+			<line_width>2</line_width>
+			<color>#0d8ecf</color>
+			<color_hover>#0D8ECF</color_hover>
+			<bullet>round</bullet>
+			<fill_alpha>12</fill_alpha>
+		</graph>
+	</graphs>
+
+	<plot_area>
+		<margins>
+			<left><?= $this->getValuesAxisMargin() ?></left>
+		</margins>
+	</plot_area>
+	
+	<legend>
+		<enabled>false</enabled>
+	</legend>
+	
+	<? $this->chartNoData($chart_data) ?>
+	
+</settings>

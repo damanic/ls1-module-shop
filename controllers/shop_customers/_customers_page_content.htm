@@ -1,0 +1,26 @@
+<?= flash() ?>
+
+<div class="minorPadding">
+	<div class="scoreboardReport">
+		<ul>
+			<li>
+				<h3>Total number of customers</h3>
+				<p><?= $this->evalCustomerNum() ?></p>
+				<p class="description">
+					Show all <a href="#" onclick="return $('FormElement').sendPhpr('index_onResetFilters', {loadIndicator: {show: false}});">(cancel filters)</a>
+				</p>
+			</li>
+			<li>
+				<h3>Guests</h3>
+				<p><?= $this->evalGuestCustomerNum() ?></p>
+			</li>
+			<li class="last">
+				<h3>Registered</h3>
+				<p><?= $this->evalRegisteredCustomerNum() ?></p>
+			</li>
+		</ul>
+		<div class="clear"></div>
+	</div>
+</div>
+
+<?= $this->listRender(array('list_render_filters'=>true, 'list_control_panel'=>'customers_control_panel')) ?>

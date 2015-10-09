@@ -1,0 +1,10 @@
+<p class="description">The shop:orders action is designed for creating the customer order list page. The action loads a list of a currently logged in customer orders and prepares a corresponding PHP variable.</p>
+
+<p class="description">Please note that the action requires a logged in customer, so a page, the action is assigned to, must has the <strong>Customers Only</strong> security mode enabled.</p>
+
+<h4 class="separated">Variables</h4>
+<ul>
+	<li><strong>$orders</strong> - a collection of customer orders. An object of the <a href="http://lemonstand.com/wiki/class_db_datacollection" target="_blank">Db_DataCollection class</a>. Each element in the collection is an object of the <a target="_blank" href="http://lemonstand.com/wiki/class_shop_order">Shop_Order class</a>. This variable can be NULL in case if there is no currently logged in customer. Always check the value of the variable before displaying a list of products.</li>
+</ul>
+
+<p class="description last"><a href="http://lemonstand.com/wiki/action_shop_order/" target="_blank">Read more...</a></p>

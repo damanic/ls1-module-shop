@@ -1,0 +1,85 @@
+<?
+	$serieValueAltered = false;
+?>
+<settings>
+	<? if ($chart_type == Backend_ChartController::rt_column): ?>
+		<data>
+			<chart>
+				<series>
+					<? 
+						$graphs = array();
+						foreach ($chart_data as $record):
+							$this->addToArray($graphs, $record->graph_code, $record, $record);
+					
+						if (!Backend_Reports::unique('series', $record->series_id)) 
+							continue;
+					?>
+						<value xid="<?= h($record->series_id) ?>"><?= h($record->series_value) ?></value>
+					<? endforeach ?>
+				</series>
+				<graphs>
+					<? 
+						$index = -1;
+						foreach ($graphs as $code=>$data):
+						$values = $data->values;
+						$params = $data->params;
+						$index++;
+					?>
+						<graph <?= $this->chartColor($index) ?> title="<?= h($params->graph_name) ?>" balloon_text="{title}">
+							<? foreach ($values as $value): ?>
+								<value description="<?= 'Units ordered: '.$value->record_value ?>" xid="<?= h($value->series_id) ?>"><?= $this->addMaxValue($value->record_value) ?></value>
+							<? endforeach ?>
+						</graph>
+					<? endforeach ?>
+				</graphs>
+			</chart>
+		</data>
+	<? elseif ($chart_type == Backend_ChartController::rt_pie): ?>
+		<data>
+			<pie>
+				<?
+					foreach ($chart_data as $index=>$record):
+						if (!strlen($record->graph_name))
+							continue;
+				?>
+					<slice <?= $this->chartColor($index) ?> description="<?= h($record->graph_name).': '.("Units ordered: ".$record->record_value) ?>" title="<?= h($record->graph_name) ?>"><?= $record->record_value ?></slice>
+				<? endforeach ?>
+			</pie>
+		</data>
+	<? endif ?>
+	
+	<? if ($chart_type != Backend_ChartController::rt_pie): ?>
+		<plot_area>
+			<margins>
+				<left><?= $this->getValuesAxisMargin() ?></left>
+				<? if (count($graphs) > 6): ?>
+					<bottom>34</bottom>
+				<? endif ?>
+			</margins>
+		</plot_area>
+	
+		<values>
+			<category>
+				<enabled>false</enabled>
+			</category>
+		</values>
+		<? if (count($graphs) > 6): ?>
+			<legend>
+				<enabled>false</enabled>
+			</legend>
+		<? endif ?>
+	<? else: ?>
+		<balloon>
+			<enabled>false</enabled>
+		</balloon>
+		<legend>
+			<enabled>false</enabled>
+		</legend>
+		<data_labels>
+			<show>{description}</show>
+		</data_labels>
+	<? endif ?>
+
+	<? $this->chartNoData($chart_data) ?>
+	
+</settings>

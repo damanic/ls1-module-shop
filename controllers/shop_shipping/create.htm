@@ -1,0 +1,38 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/shipping_option.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/shipping') ?>">Shipping Options</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+	
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+
+		<div class="scoreboardReport">
+			<ul>
+				<li class="last">
+					<h3>Shipping type</h3>
+					<p><?= h($form_model->eval_shipping_type_name()) ?></p>
+				</li>
+			</ul>
+			<div class="clear"></div>
+		</div>
+	
+		<div class="">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Create', 'create_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'create_onCancel') ?>
+
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/shipping') ?>">Return to the shipping options list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

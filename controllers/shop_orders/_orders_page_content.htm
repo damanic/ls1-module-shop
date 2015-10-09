@@ -1,0 +1,34 @@
+<?= flash() ?>
+
+<div class="minorPadding">
+	<div class="scoreboardReport">
+		<?
+			$lastOrder = Shop_OrderHelper::findLastOrder();
+		?>
+		<ul>
+			<li <? if (!$lastOrder): ?>class="last"<? endif ?>>
+				<h3>Total number of orders</h3>
+				<p><?= $this->evalOrderNum() ?></p>
+				<p class="description">
+					Show all <a href="#" onclick="return $('FormElement').sendPhpr('index_onResetFilters', {loadIndicator: {show: false}});">(cancel filters)</a>
+				</p>
+			</li>
+			<? if ($lastOrder): ?>
+				<li class="last">
+					<h3>Last order</h3>
+					<p><a href="<?= url('shop/orders/preview/'.$lastOrder->id.'?'.uniqid()) ?>"># <?= $lastOrder->id ?></a></p>
+					<p class="description">
+						Created <?= $lastOrder->order_datetime->format('%x') ?>, status: 
+						<span class="order_status_marker" style="background-color: <?= $lastOrder->displayField('status_color') ?>"><?= h($lastOrder->displayField('status')) ?></span>
+						<strong><?= h($lastOrder->displayField('status')) ?></strong>
+					</p>
+				</li>
+			<? endif ?>
+		</ul>
+		<div class="clear"></div>
+	</div>
+</div>
+
+<div class="<?= $this->orderStatusSelectorVisible() ? null : 'sidebar_hidden' ?>">
+	<?= $this->listRender(array('list_render_filters'=>true, 'list_control_panel'=>'orders_control_panel', 'list_sidebar_panel'=>'order_status_selector')) ?>
+</div>

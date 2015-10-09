@@ -1,0 +1,59 @@
+div.shipping_label_print
+{
+	float:left;
+	line-height: 110%;
+	/*margin-right:1mm;*/
+	border-bottom: none;
+	padding-bottom: 0;
+	margin-bottom: 0;
+}
+
+.add_page_break
+{
+	page-break-after:always !important;
+	padding-bottom:1px;
+}
+
+.shipping_label_border
+{
+	border:1px solid black !important;
+    border-style:dotted !important;
+}
+
+div.shipping_label_prints
+{
+	float:none;
+}
+
+.shipping_label_print table
+{
+	height:100%;
+	width:100%;
+}
+
+.shipping_label_print table tr td
+{
+	height:50%;
+	width:100%;
+}
+
+td.shipping_label_sender
+{
+	vertical-align: top;
+	font-size:0.8em;
+}
+
+td.shipping_label_customer
+{
+	vertical-align: top;
+	text-align:center;
+}
+
+.shipping_label_address
+{
+	display:inline-block;
+	width:auto;
+	text-align:left;
+	border:1px solid black;
+	padding:3%;
+}

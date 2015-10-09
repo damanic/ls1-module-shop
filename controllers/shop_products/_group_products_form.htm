@@ -1,0 +1,28 @@
+<div id="disable_products_form">
+	<h2>Group Products</h2>
+	<div class="content">
+		<div class="form600">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($model) ?>
+					
+					<?= backend_ajax_button('Apply', 'index_onGroupSelectedProducts', array(), "
+						confirm: 'Are you sure?', 
+						loadIndicator: {injectInElement: true},
+						onSuccess: cancelPopup,
+						extraFields: $('listShop_Products_index_list_body').getForm(),
+						onAfterUpdate: refresh_ui,
+						update: 'products_page_content'") ?>
+
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+		
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

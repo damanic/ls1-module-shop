@@ -1,0 +1,26 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css" type="text/css"/>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/orders') ?>">Order List</a></li>
+		<li><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Order Preview</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="form700">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRenderPreview() ?>
+
+				<?= backend_button('Return to the order preview', url('/shop/orders/preview/'.$order_id)) ?>
+				<?= backend_button('Re-send message', array('href'=>url('/shop/customer_notifications/create/'.$order_id.'/no/'.$form_model->id), 'class'=>'right')) ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+		<?= flash() ?>
+		<p><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Return to the order preview page</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

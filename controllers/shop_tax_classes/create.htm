@@ -1,0 +1,22 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/tax_classes') ?>">Tax Classes</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Save', 'create_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'create_onCancel') ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/tax_classes') ?>">Return to the tax classes list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

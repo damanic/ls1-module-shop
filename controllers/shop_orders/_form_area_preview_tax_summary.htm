@@ -1,0 +1,53 @@
+<?
+	$item_taxes = $form_model->list_item_taxes();
+	$shipping_taxes = $form_model->list_shipping_taxes();
+?>
+
+<? if ($item_taxes || $shipping_taxes): ?>
+	<script type="text/javascript">
+		window.addEvent('domready', function(){
+			var tax_summary_slide = new Fx.Slide('order_tax_summary');
+			tax_summary_slide.hide();
+		
+			$('display_taxes_trigger').addEvent('click', function(){
+				tax_summary_slide.slideIn().chain(function(){
+					$('display_taxes_trigger').hide();
+					var slider_element = $('order_tax_summary').getParent();
+					slider_element.setStyle('height', (slider_element.getSize().y + 1) + 'px');
+				});
+			})
+		})
+	</script>
+	<div id="order_tax_summary" class="formReportLayoutOffsetTop">
+		<h3 class="formReportLayoutHeader described">
+			Tax Summary
+			<span class="comment">A list of taxes applied to order items and shipping.</span>
+		</h3>
+
+		<table class="simpleList">
+			<thead>
+				<tr>
+					<th>Tax Name</th>
+					<th class="number last">Total</th>
+				</tr>
+			</thead>
+			<tbody>
+				<? foreach ($item_taxes as $tax): ?>
+					<tr class="<?= Backend_Html::zebra('order_taxes') ?>">
+						<td><?= h($tax->name) ?></td>
+						<td class="number last"><?= format_currency($tax->total) ?></td>
+					</tr>
+				<? endforeach ?>
+
+				<? foreach ($shipping_taxes as $tax): ?>
+					<tr class="<?= Backend_Html::zebra('order_taxes') ?>">
+						<td>Shipping tax (<?= h($tax->name) ?>)</td>
+						<td class="number last"><?= format_currency($tax->total) ?></td>
+					</tr>
+				<? endforeach ?>
+			</tbody>
+		</table>
+	</div>
+	<p class="last"><a href="javascript:;" id="display_taxes_trigger">Display tax summary</a></p>
+	<div class="clear"></div>
+<? endif ?>

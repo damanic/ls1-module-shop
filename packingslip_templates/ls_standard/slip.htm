@@ -1,0 +1,111 @@
+<? $logo = $company_info->get_logo_url(600, 'auto'); ?>
+<table class="print_layout_table border_bottom">
+	<tr>
+		<? if ($logo): ?>
+			<td class="logo">
+				<img src="<?= $logo ?>" alt="<?= h($company_info->name) ?>"/>
+			</td>
+		<? endif ?>
+		<td class="company_info">
+			<h3><?= h($company_info->name) ?></h3>
+		
+			<p><?= nl2br(h($company_info->address_contacts)) ?></p>
+		</td>
+		<td class="slip_number last">
+			<div>
+				<h3>Packing slip # <?= $order_id ?></h3>
+			</div>
+		</td>
+	</tr>
+</table>
+
+<table class="print_layout_table">
+	<tr>
+		<td class="client_info">
+			<div class="data_column">
+				<h3>Bill to</h3>
+				<p>
+					<?= strlen($order->billing_company) ? h($order->billing_company).'<br/>' : null ?>
+					<?= h($order->billing_first_name.' '.$order->billing_last_name) ?><br/>
+
+					<?= nl2br(trim(h($order->billing_street_addr))) ?><br/>
+					<?= $order->billing_city ?>, 
+					<?= $order->billing_country ? h($order->billing_country->name) : null ?>
+					<?= $order->billing_state ? h($order->billing_state->name) : null ?>
+					<?= h($order->billing_zip) ?><br/>
+					<?= h($order->billing_email) ?>
+					
+					<? if ($order->billing_phone): ?>
+						<br/>Phone: <?= h($order->billing_phone) ?>
+					<? endif ?>
+				</p>
+			</div>
+			
+			<div class="data_column">
+				<h3>Ship to</h3>
+				<p>
+					<?= strlen($order->shipping_company) ? h($order->shipping_company).'<br/>' : null ?>
+					<?= h($order->shipping_first_name.' '.$order->shipping_last_name) ?><br/>
+
+					<?= nl2br(trim(h($order->shipping_street_addr))) ?><br/>
+					<?= $order->shipping_city ?>, 
+					<?= $order->shipping_country ? h($order->shipping_country->name) : null ?>
+					<?= $order->shipping_state ? h($order->shipping_state->name) : null ?>
+					<?= h($order->shipping_zip) ?>
+					
+					<? if ($order->shipping_phone): ?>
+						<br/>Phone: <?= h($order->shipping_phone) ?>
+					<? endif ?>
+				</p>
+			</div>
+
+			<div class="data_column">
+				<h3>Shipping method</h3>
+				<p>
+					<? $shipping_method = $order->columnValue('shipping_method') ?>
+					
+					<? if (strlen($shipping_method)): ?>
+						<?= h($shipping_method) ?>
+						<br/><?= h($order->columnValue('shipping_sub_option')) ?>
+					<? else: ?>
+						Unknown shipping method
+					<? endif ?>
+				</p>
+			</div>
+			<div class="clear"></div>
+		</td>
+	</tr>
+</table>
+
+<table class="print_table">
+	<thead>
+		<tr>
+			<td>Order Item</td>
+			<td>SKU</td>
+			<td class="number">Total Quantity</td>
+			<? if ($has_bundles): ?>
+				<td class="number">Quantity in Bundle</td>
+			<? endif ?>
+		</tr>
+	</thead>
+	<tbody>
+		<? foreach ($order->items as $item): ?>
+			<tr class="<?= Backend_Html::zebra('order_items_'.$order->id) ?>">
+				<td>
+					<div class="<?= $item->bundle_master_order_item_id ? 'bundle-item-container' : null ?>">
+						<?= $item->output_product_name() ?>
+					</div>
+				</td>
+				<td><?= $item->product_sku ?></td>
+				<td class="number"><?= $item->quantity ?></td>
+				<? if ($has_bundles): ?>
+					<td class="number">
+						<? if ($item->bundle_master_order_item_id): ?>
+							<?= $item->get_bundle_item_quantity() ?>
+						<? endif ?>
+					</td>
+				<? endif ?>
+			</tr>
+		<? endforeach ?>
+	</tbody>
+</table>

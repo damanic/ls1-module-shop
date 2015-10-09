@@ -1,0 +1,31 @@
+<div class="toolbar">
+	<a class="imageLink add_comment img_noBottomPading" href="#" onclick="new PopupForm('preview_onLoadNoteForm'); return false">New note</a>
+	<div class="clear"></div>
+</div>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="iconCell"></th>
+			<th>Note</th>
+			<th>Created</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?
+			foreach ($form_model->notes as $note):
+				$preview_handler = "new PopupForm('preview_onLoadNotePreview', {ajaxFields: {note_id: '{$note->id}'}}); return false";
+		?>
+		<tr class="<?= Backend_Html::zebra('order_notes') ?>">
+			<td class="iconCell comment"></td>
+			<td class="link" onclick="<?= $preview_handler ?>"><a href="#" onclick="<?= $preview_handler ?>"><?= h(Phpr_Html::strTrim($note->note, 100)) ?></a></td>
+			<td class="link" onclick="<?= $preview_handler ?>"><a href="#" onclick="<?= $preview_handler ?>"><?= $note->displayField('created_at') ?> by <?= h($note->displayField('created_user_name')) ?></a></td>
+		</tr>
+		<? endforeach;?>
+		<? if (!$form_model->notes->count): ?>
+			<tr class="noData">
+				<td colspan="3">No order notes found</td>
+			</tr>
+		<? endif ?>
+	</tbody>
+</table>

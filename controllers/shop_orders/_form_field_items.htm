@@ -1,0 +1,9 @@
+<li class="field text">
+	<label>Items</label>
+	
+	<div id="item_list" class="clear">
+		<? $this->renderPartial('item_list') ?>
+	</div>
+	
+	<p class="addDocument img_noBottomPading"><a href="#" onclick="new PopupForm('onLoadFindProductForm', {ajaxFields: $(this).getForm()}); return false;">Add item</a></p>
+</li>

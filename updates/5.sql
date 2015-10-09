@@ -1,0 +1,1 @@
+alter table shop_products add column grouped_attribute_name varchar(100) null;

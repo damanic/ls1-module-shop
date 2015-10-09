@@ -1,0 +1,202 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+	<script type="text/javascript" src="modules/shop/resources/javascript/preview.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= $this->getRefererUrl() ?>"><?= h($this->getRefererName()) ?></a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="scoreboardReport">
+			<ul>
+				<li>
+					<h3>
+						<? if (!$form_model->parent_order_id): ?>
+							Order
+						<? else: ?>
+							Invoice
+						<? endif ?>
+					</h3>
+					<p>
+						<? if (!$form_model->parent_order_id): ?>
+							# <?= $form_model->id ?>
+						<? else: ?>
+							# 
+							<a class="invoice_separator tooltip" title="Return to the parent order" href="<?= url('shop/orders/preview/'.$form_model->parent_order_id) ?>"><?= $form_model->parent_order_id ?></a> 
+							<span title="Invoice number"><?= $form_model->id ?></span>
+						<? endif ?>
+						<? if ($form_model->deleted_at): ?> | Deleted <? endif ?>
+					</p>
+					<p class="description">
+						Created: <?= $form_model->order_datetime->format('%x') ?>
+					</p>
+				</li>
+				<li>
+					<h3>Status</h3>
+					<p>
+						<span class="order_status_marker" style="background-color: <?= $form_model->displayField('status_color') ?>"><?= h($form_model->displayField('status')) ?></span>
+						<?= h($form_model->displayField('status')) ?>
+					</p>
+					<p class="description">
+						Since: <?= $form_model->status_update_datetime->format('%x') ?>
+					</p>
+				</li>
+				<li>
+					<h3>Customer</h3>
+					<p><a href="<?= url('shop/customers/preview/'.$form_model->customer_id) ?>"><?= h($form_model->billing_first_name).' '.h($form_model->billing_last_name) ?></a></p>
+					<p class="description">
+						Email: <a href="mailto:<?= $form_model->billing_email ?>"><?= h($form_model->billing_email) ?></a>
+					</p>
+				</li>
+				<li>
+					<h3>Total</h3>
+					<p><?= format_currency($form_model->total) ?></p>
+					<p class="description">
+						Tax: <?= format_currency($form_model->shipping_tax + $form_model->goods_tax) ?>,
+						shipping: <?= format_currency($form_model->shipping_quote) ?>
+					</p>
+				</li>
+
+				<li class="last">
+					<h3>Payment Status</h3>
+					<div id="order_payment_status"><? $this->renderPartial('order_payment_status') ?></div>
+				</li>
+			</ul>
+			<div class="clear"></div>
+		</div>
+		
+		<? Backend::$events->fireEvent('shop:onExtendOrderPreviewHeader', $this, $form_model) ?>
+		<div class="clear"></div>
+		
+		<?= Phpr_Form::openTag(array('id'=>'toolbar_form')) ?>
+			<div class="toolbar">
+				<a class="imageLink go_back img_noBottomPading" href="<?= $this->getRefererUrl() ?>">Return to the <?= mb_strtolower($this->getRefererName()) ?></a>
+
+				<div class="separator"></div>
+				<a class="imageLink print img_noBottomPading" href="<?= url('shop/orders/orderdoc/'.$form_model->id) ?>">Print docs</a>
+				<a class="imageLink lorry img_noBottomPading" href="<?= url('shop/orders/packing_slip/'.$form_model->id) ?>">Print packing slip</a>
+				
+				<? if ($form_model->shipping_method->supports_shipping_labels()): ?>
+					<a class="imageLink shipping_label img_noBottomPading" href="#" onclick="new PopupForm('preview_onLoadShippingLabelForm', {closeByEsc: false}); return false;">Print shipping label</a>
+				<? else: ?>
+					<a class="imageLink shipping_label img_noBottomPading" href="<?= url('shop/orders/shipping_label/'.$form_model->id) ?>">Print shipping label</a>
+				<? endif ?>
+
+				<? if (!$form_model->deleted_at && !$form_model->payment_processed() && $form_model->payment_method->has_payment_form()): ?>
+					<div class="separator"></div>
+					<a class="imageLink pay img_noBottomPading" href="<?= url('/shop/orders/pay/'.$form_model->id.'?'.uniqid()) ?>">Pay</a>
+				<? endif ?>
+
+				<div class="separator"></div>
+				<? if (!$form_model->deleted_at): ?>
+					<a class="imageLink change_status img_noBottomPading" href="<?= url('shop/orders/change_status/'.$form_model->id.'?'.uniqid()) ?>">Update status</a>
+					<a class="imageLink edit_record" href="<?= url('shop/orders/edit/'.$form_model->id) ?>" >Edit</a>
+					<div class="separator"></div>
+					<a class="imageLink mark_deleted" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrder', {confirm: 'Do you really want to mark this order as deleted? You will be able to restore the order if needed.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Mark as deleted</a>
+					<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+				<? else: ?>
+					<a class="imageLink enable" onclick="return $(this).getForm().sendPhpr('preview_onRestoreOrder', {confirm: 'Do you really want to restore this order?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Restore</a>
+
+					<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+				<? endif ?>
+				
+				<? Backend::$events->fireEvent('shop:onExtendOrderPreviewToolbar', $this, $form_model) ?>
+				<div class="clear"></div>
+			</div>
+		</form>
+		
+		<?= flash() ?>
+		
+		<div class="tabs formReportLayout">
+			<ul id="order_tabs" class="tabs_tabs">
+				<li class="round active"><a href="#order" onclick="return false">Order</a></li>
+				<li class="round"><a href="#history" onclick="return false">History</a></li>
+				<li class="round"><a href="#payment_attempts" onclick="return false">Payment Attempts</a></li>
+				<li class="round"><a href="#payment_transactions" onclick="return false">Payment Transactions</a></li>
+				<li class="round"><a href="#notifications" onclick="return false">Customer Notifications</a></li>
+				<li class="round"><a href="#notes" onclick="return false">Notes</a></li>
+				<li class="round  "><a href="#shipping" onclick="return false">Shipping Tracking Codes</a></li>
+				
+				<? if ($form_model->invoices_supported()): ?>
+					<li class="round  "><a href="#invoices" onclick="return false">Invoices</a></li>
+				<? endif ?>
+				
+				<? $custom_module_tabs = Backend::$events->fireEvent('shop:onExtendOrderPreviewTabs', $this, $form_model); ?>
+				<? 
+					$index = 1;
+					foreach ($custom_module_tabs as $custom_tabs): 
+						if (!is_array($custom_tabs))
+							continue;
+					
+						foreach ($custom_tabs as $custom_tab_caption=>$custom_tab_partial):
+				?>
+					<li class="round"><a href="#<?= 'custom_tab_'.$index ?>" onclick="return false"><?= $custom_tab_caption ?></a></li>
+				<? 
+						$index++;
+						endforeach;
+					endforeach;
+				?>
+			</ul>
+			<div class="clear tab_separator"></div>
+			<ul class="tabs_pages" id="order_tab_pages">
+				<li class="form_page_preview" id="order">
+					<?= Phpr_Form::openTag() ?>
+						<? $this->formRenderReportPreview() ?>
+						<div class="clear"></div>
+						
+						<? $this->renderPartial('form_field_preview_items') ?>
+						<? $this->renderPartial('form_area_preview_tax_summary') ?>
+					</form>
+				</li>
+				<li class="form_page_preview" id="history">
+					<? $this->renderPartial('order_history') ?>
+				</li>
+				<li class="form_page_preview" id="payment_attempts">
+					<? $this->renderPartial('form_area_preview_payment_attempts') ?>
+				</li>
+				<li class="form_page_preview" id="payment_transactions">
+					<? $this->renderPartial('form_area_preview_payment_transactions') ?>
+				</li>
+				<li class="form_page_preview" id="notifications">
+					<? $this->renderPartial('order_customer_notifications') ?>
+				</li>
+				<li class="form_page_preview" id="notes">
+					<div id="order_notes"><? $this->renderPartial('order_notes') ?></div>
+				</li>
+				<li class="form_page_preview" id="shipping">
+					<? $this->renderPartial('form_area_preview_tracking_codes') ?>
+				</li>
+				
+				<? if ($form_model->invoices_supported()): ?>
+					<li class="form_page_preview" id="invoices">
+						<? $this->renderPartial('form_area_preview_invoices') ?>
+					</li>
+				<? endif ?>
+				
+				<? 
+					$index = 1;
+					foreach ($custom_module_tabs as $custom_tabs): 
+						if (!is_array($custom_tabs))
+							continue;
+
+						foreach ($custom_tabs as $custom_tab_caption=>$custom_tab_partial):
+				?>
+					<li class="form_page_preview" id="<?= 'custom_tab_'.$index ?>">
+						<? $this->renderPartial($custom_tab_partial) ?>
+					</li>
+				<? 
+						$index++;
+						endforeach;
+					endforeach;
+				?>
+			</ul>
+			<div class="clear"></div>
+		</div>
+	<? else: ?>
+		<?= flash() ?>
+		<p><a href="<?= url('/shop/orders') ?>">Return to the order list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

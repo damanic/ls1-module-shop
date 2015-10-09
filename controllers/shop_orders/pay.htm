@@ -1,0 +1,99 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css" type="text/css"/>
+	<script type="text/javascript" src="modules/shop/resources/javascript/pay.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/orders') ?>">Orders</a></li>
+		<li><a href="<?= url('/shop/orders/preview/'.$form_record_id.'?'.uniqid()) ?>">Order Preview</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<? $this->renderPartial('payment_header') ?>
+		
+		<? if (!$order->payment_processed()): ?>
+			<? 
+				$method_info = $payment_method_obj->get_info();
+				if (isset($method_info['custom_payment_form'])): 
+			?>
+					<? 
+						$profile = $payment_method->supports_payment_profiles() ? $payment_method->find_customer_profile($order->customer) : null;
+						if ($profile):
+					?>
+					<?= Phpr_Form::openTag() ?>
+						<div class="form400">
+							<div class="form">
+								<ul class="formElements">
+									<li class="field checkbox">
+										<label for="use_profile">
+											Use the stored credit card (<?= 'xxxx'.h($profile->cc_four_digits_num) ?>)
+											<span class="comment">Use this checkbox if you want to use the customer payment profile stored on the payment gateway. Alternatively you can enter the payment details in the form below.</span>
+										</label>
+										<div class="fieldContainer ">
+											<input type="checkbox" name="pay_from_profile" id="use_profile" class="checkbox" value="1"/>
+										</div>
+										<div class="clear"></div>
+									</li>
+								</ul>
+
+								<div id="pay_from_profile_buttons" class="hidden">
+									<?= backend_ajax_button('Submit', 'pay_onPayFromProfile', array(), 'onFailure: popupAjaxError') ?>
+									<?= backend_button('Cancel', url('/shop/orders/preview/'.$order->id.'?'.uniqid())) ?>
+									<div class="clear"></div>
+								</div>
+							</div>
+						</div>
+					</form>
+				<? endif ?>
+		
+				<div id="payment_form">
+					<? $this->renderPartial($payment_method->get_partial_path($method_info['custom_payment_form'])) ?>
+					<?= backend_button('Cancel', url('/shop/orders/preview/'.$order->id.'?'.uniqid())) ?>
+				</div>
+		
+				<div class="clear"></div>
+			<? else: ?>
+				<div class="form400">
+					<?= Phpr_Form::openTag() ?>
+						<? 
+							$profile = $payment_method->supports_payment_profiles() ? $payment_method->find_customer_profile($order->customer) : null;
+							if ($profile):
+						?>
+							<div class="form">
+								<ul class="formElements">
+									<li class="field checkbox">
+										<label for="use_profile">
+											Use the stored credit card (<?= 'xxxx'.h($profile->cc_four_digits_num) ?>)
+											<span class="comment">Use this checkbox if you want to use the customer payment profile stored on the payment gateway. Alternatively you can enter the payment details in the form below.</span>
+										</label>
+										<div class="fieldContainer ">
+											<input type="checkbox" name="pay_from_profile" id="use_profile" class="checkbox" value="1"/>
+										</div>
+										<div class="clear"></div>
+									</li>
+								</ul>
+							</div>
+						<? endif ?>
+
+						<div id="payment_form">
+							<? $this->formRender($payment_method) ?>
+
+							<?= backend_ajax_button('Submit', 'pay_onSubmit', array()) ?>
+							<?= backend_button('Cancel', url('/shop/orders/preview/'.$order->id.'?'.uniqid())) ?>
+						</div>
+						<div class="clear"></div>
+					</form>
+				</div>
+			<? endif ?>
+		<? else: ?>
+			<p>This order is already paid.</p>
+			<?= backend_button('Close', url('/shop/orders/preview/'.$order->id.'?'.uniqid())) ?>
+		<? endif ?>
+	<? else: ?>
+		<p><a href="<?= url('/shop/orders') ?>">Return to the order list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

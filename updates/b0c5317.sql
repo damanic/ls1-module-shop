@@ -1,0 +1,2 @@
+alter table shop_customer_payment_profiles add column updated_at datetime;
+alter table shop_customer_payment_profiles add column created_at datetime;

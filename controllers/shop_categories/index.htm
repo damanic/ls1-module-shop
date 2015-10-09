@@ -1,0 +1,20 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/category_list.js?<?= module_build('shop') ?>"></script>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css" type="text/css"/>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<? if ($this->isHintVisible('categories_list_order')): ?>
+		<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
+			<div class="hint minor_margin">
+				<p>You can sort the category list by clicking column titles in the table below. The order of categories on this page will not be reflected on the front-end website.</p>
+				<p class="last">If you need to manage the ordering of categories on the front-end, please click the <strong>Manage category order</strong> button. After setting the category order on the Manage category order page, you can sort the table below by the Sort Order column. Then the table will be sorted in accordance with the front-end category order.</p>
+				<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('categories_list_order', this)">Close</a>
+			</div>
+		</form>
+	<? endif ?>
+
+	<div id="categories_page_content">
+		<? $this->renderPartial('categories_page_content') ?>
+	</div>
+<? Phpr_View::endBlock() ?>

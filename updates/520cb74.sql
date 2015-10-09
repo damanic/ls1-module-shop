@@ -1,0 +1,1 @@
+create index status_code on shop_order_statuses(code);

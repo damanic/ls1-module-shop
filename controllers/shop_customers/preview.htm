@@ -1,0 +1,128 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+	<script type="text/javascript" src="modules/shop/resources/javascript/customer_preview.js?<?= module_build('shop') ?>"></script>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/customers') ?>">Customers</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="scoreboardReport">
+			<ul>
+				<li>
+					<h3>Customer</h3>
+					<p>
+						<?= h($form_model->first_name).' '.h($form_model->last_name) ?>
+					</p>
+					<p class="description">
+						Email: <a href="mailto:<?= $form_model->email ?>"><?= h($form_model->email) ?></a>
+					</p>
+				</li>
+				<li <? if (!$form_model->deleted_at): ?>class="last"<? endif ?>>
+					<h3>Type</h3>
+					<p><?= $form_model->guest ? 'Guest' : 'Registered' ?></p>
+					<p class="description">
+						Added: <?= $form_model->displayField('created_at') ?>
+					</p>
+				</li>
+				<? if ($form_model->deleted_at): ?>
+				<li class="last">
+					<h3>Marked as deleted</h3>
+					<p><?= $form_model->displayField('deleted_at') ?></p>
+				</li>
+				<? endif ?>
+			</ul>
+			<div class="clear"></div>
+		</div>
+	
+		<?= Phpr_Form::openTag(array('id'=>'toolbar_form')) ?>
+			<div class="toolbar">
+				<a class="imageLink go_back img_noBottomPading" href="<?= url('/shop/customers') ?>">Return to the Customer List</a>
+
+				<? if ($form_model->guest): ?>
+					<div class="separator"></div>
+					<a class="imageLink convert_customer img_noBottomPading" href="#" onclick="new PopupForm('preview_onShowConvertForm'); return false;">Convert to Registered</a>
+				<? endif ?>
+				
+				<? if (!$form_model->is_new_record): ?>
+					<div class="separator"></div>
+					<a class="imageLink new_document" href="<?= url('/shop/orders/create/for-customer/'.$form_model->id.'?'.uniqid()) ?>" >Create Order</a>
+				<? endif ?>
+
+				<div class="separator"></div>
+
+				<? if (!$form_model->deleted_at): ?>
+					<a class="imageLink edit_record" href="<?= url('/shop/customers/edit/'.$form_model->id.'?'.uniqid()) ?>" >Edit</a>
+					<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('edit_onDelete', {confirm: 'Do you really want to delete this customer?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+				<? else: ?>
+					<a class="imageLink enable" onclick="return $(this).getForm().sendPhpr('preview_onRestoreCustomer', {confirm: 'Do you really want to restore this customer?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Restore</a>
+				<? endif ?>
+			
+				<? Backend::$events->fireEvent('shop:onExtendCustomerPreviewToolbar', $this, $form_model) ?>
+				<div class="clear"></div>
+			</div>
+		</form>
+		
+		<?= flash() ?>
+
+		<div class="tabs formReportLayout">
+			<ul id="customer_tabs" class="tabs_tabs">
+				<li class="round active"><a href="#customer" onclick="return false">Customer</a></li>
+				<li class="round active"><a href="#orders" onclick="return false">Orders</a></li>
+				
+				<? $custom_module_tabs = Backend::$events->fireEvent('shop:onExtendCustomerPreviewTabs', $this, $form_model); ?>
+				<? 
+					$index = 1;
+					foreach ($custom_module_tabs as $custom_tabs): 
+						if (!is_array($custom_tabs))
+							continue;
+					
+						foreach ($custom_tabs as $custom_tab_caption=>$custom_tab_partial):
+				?>
+					<li class="round"><a href="#<?= 'custom_tab_'.$index ?>" onclick="return false"><?= $custom_tab_caption ?></a></li>
+				<? 
+						$index++;
+						endforeach;
+					endforeach;
+				?>
+			</ul>
+			<div class="clear tab_separator"></div>
+			<ul class="tabs_pages" id="customer_tab_pages">
+				<li class="form_page_preview" id="order">
+					<?= Phpr_Form::openTag() ?>
+						<? $this->formRenderReportPreview() ?>
+					</form>
+				</li>
+				<li class="form_page_preview" id="orders">
+					<? $this->renderPartial('customer_orders') ?>
+				</li>
+				
+				<? 
+					$index = 1;
+					foreach ($custom_module_tabs as $custom_tabs): 
+						if (!is_array($custom_tabs))
+							continue;
+
+						foreach ($custom_tabs as $custom_tab_caption=>$custom_tab_partial):
+				?>
+					<li class="form_page_preview" id="<?= 'custom_tab_'.$index ?>">
+						<? $this->renderPartial($custom_tab_partial) ?>
+					</li>
+				<? 
+						$index++;
+						endforeach;
+					endforeach;
+				?>
+			</ul>
+		</div>
+
+		<div class="clear"></div>
+
+	<? else: ?>
+		<?= flash() ?>
+		<p><a href="<?= url('/shop/customers') ?>">Return to the customer list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

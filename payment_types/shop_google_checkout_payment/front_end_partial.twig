@@ -1,0 +1,12 @@
+<p class="top_offset">
+  Please click the button to pay with Google Checkout
+</p>
+<form action="{{ payment_method_obj.get_form_action(payment_method, order) }}" method="post">
+  {{ flash_message() }}
+  
+  {% set hidden_fields = payment_method_obj.get_hidden_fields(payment_method, order) %}
+  {% for name, value in hidden_fields %}
+    <input type="hidden" name="{{ name }}" value="{{ value }}"/>
+  {% endfor %}
+  <input type="submit" value="Pay with Google Checkout"/>
+</form>

@@ -1,0 +1,9 @@
+<div class="toolbar">
+	<?= Phpr_Form::openTag() ?>
+		<?= backend_ctr_button('Add country', 'new_document', url('/shop/settings/create_country')) ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Enable or disable', 'enable', array('href'=>'#', 'onclick'=>"return enable_disable_selected()")) ?>
+
+		<div class="clear"></div>
+	</form>
+</div>	

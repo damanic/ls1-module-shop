@@ -1,0 +1,1 @@
+alter table shop_order_items add column tax decimal(15,2);

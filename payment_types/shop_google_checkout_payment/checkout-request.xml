@@ -1,0 +1,58 @@
+<checkout-shopping-cart xmlns="<?= $self->schema_url ?>">
+	<shopping-cart>
+		<merchant-private-data>
+			<order-hash><?= $order->order_hash ?></order-hash>
+		</merchant-private-data>
+		<items>
+			<? foreach($order->items as $item): ?>
+			<item>
+				<item-name><![CDATA[<?= $item->output_product_name(true, true) ?>]]></item-name>
+				<item-description><![CDATA[<?= h($item->product->short_description) ?>]]></item-description>
+				<unit-price currency="<?= Shop_CurrencySettings::get()->code ?>"><?= round($item->unit_total_price, 2) ?></unit-price>
+				<quantity><?= $item->quantity ?></quantity>
+			</item>
+			<? endforeach ?>
+		</items>
+	</shopping-cart>
+	<checkout-flow-support>
+		<merchant-checkout-flow-support>
+			<continue-shopping-url><?= $return_url ?></continue-shopping-url>
+			<tax-tables>
+				<default-tax-table> 
+					<tax-rules> 
+						<default-tax-rule> 
+							<shipping-taxed>true</shipping-taxed> 
+							<rate><?= ($order->total / ($order->total - $order->tax_total)) - 1 ?></rate> 
+							<tax-area> 
+								<postal-area> 
+									<country-code>GB</country-code> 
+								</postal-area> 
+							</tax-area> 
+						</default-tax-rule>
+						<default-tax-rule> 
+							<shipping-taxed><?= $order->shipping_tax ? 'true' : 'false' ?></shipping-taxed> 
+							<rate><?= ($order->total / ($order->total - $order->tax_total)) - 1 ?></rate> 
+							<tax-area> 
+								<postal-area> 
+									<country-code>US</country-code> 
+								</postal-area> 
+							</tax-area> 
+						</default-tax-rule> 
+					</tax-rules>
+				</default-tax-table> 
+			</tax-tables>
+			<shipping-methods>
+				<flat-rate-shipping name="<?= h($order->shipping_method->name) ?>">
+					<price currency="<?= Shop_CurrencySettings::get()->code ?>"><?= $order->shipping_quote ?></price>
+					<shipping-restrictions>
+						<allowed-areas>
+							<postal-area>
+								<country-code><?= $order->shipping_country->code ?></country-code>
+							</postal-area>
+						</allowed-areas>
+					</shipping-restrictions>
+				</flat-rate-shipping>
+			</shipping-methods>
+		</merchant-checkout-flow-support>
+	</checkout-flow-support>
+</checkout-shopping-cart>

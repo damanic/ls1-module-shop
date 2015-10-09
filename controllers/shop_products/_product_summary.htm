@@ -1,0 +1,49 @@
+<div class="info-header">
+	<p>Product</p>
+	<h3><?= $form_model->name ? h($form_model->name) : 'untitled' ?></h3>
+</div>
+
+<div class="info-area">
+	<table class="name-value-report title-width-80">
+		<tr>
+			<th>URL Name</th>
+			<td><?= $form_model->url_name ? h($form_model->url_name) : '-' ?></td>
+		</tr>
+		<tr>
+			<th>SKU</th>
+			<td><?= $form_model->sku ? h($form_model->sku) : '-' ?></td>
+		</tr>
+		<tr>
+			<th>Type</th>
+			<td><?= $form_model->product_type ? h($form_model->product_type->name) : '-' ?></td>
+		</tr>
+		<? if ($form_model->manufacturer): ?>
+			<tr>
+				<th>Manufacturer</th>
+				<td><?= h($form_model->manufacturer->name) ?></td>
+			</tr>
+		<? endif ?>
+		<tr>
+			<th>Base Price</th>
+			<td><?= format_currency($form_model->price) ?></td>
+		</tr>
+		<? if ($form_model->track_inventory): ?>
+		<tr>
+			<th>In Stock</th>
+			<td><?= $form_model->in_stock ?></td>
+		</tr>
+		<? endif ?>
+		<tr>
+			<th>Last update</th>
+			<td>
+				<? if ($form_model->updated_at): ?>
+					<?= $form_model->displayField('updated_at') ?> by <?= h($form_model->updated_user_name) ?>
+				<? elseif ($form_model->created_user_name): ?>
+					<?= $form_model->displayField('created_at') ?> by <?= h($form_model->created_user_name) ?></td>
+				<? else: ?>
+					-
+				<? endif ?>
+			</td>
+		</tr>
+	</table>
+</div>

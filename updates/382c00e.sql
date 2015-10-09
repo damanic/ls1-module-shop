@@ -1,0 +1,1 @@
+alter table shop_price_rule_conditions add column condition_control_type varchar(100);

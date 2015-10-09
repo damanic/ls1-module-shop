@@ -1,0 +1,11 @@
+<p class="description">The shop:pay action is designed for creating the Pay page. The action loads an order by an order hash string, specified in the page URL.</p>
+
+<h4 class="separated">Variables</h4>
+<ul>
+	<li><strong>$order</strong> - an order object, loaded from the LemonStand database. An object of the <a href="http://lemonstand.com/wiki/class_shop_order" target="_blank">Shop_Order</a> class.</li>
+	<li><strong>$payment_method</strong> – a payment method, selected by the customer. An object of the <a href="http://lemonstand.com/wiki/class_shop_paymentmethod" target="_blank">Shop_PaymentMethod</a> class.
+	</li>
+	<li><strong>$payment_method_obj</strong> – an instance of a specific payment method class (for example the Shop_PayPal_Pro_Payment). This variable is usually needed for the payment method partials.</li>
+</ul>
+
+<p class="description last"><a href="http://lemonstand.com/wiki/action_shop_pay/" target="_blank">Read more...</a></p>

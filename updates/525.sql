@@ -1,0 +1,1 @@
+alter table shop_paymentmethods_countries add primary key (shop_payment_method_id, shop_country_id);

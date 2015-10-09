@@ -1,0 +1,19 @@
+<?
+	$listId =  $form_model_class.'_'.$form_field->dbName.'_list';
+	$fieldId = $form_model_class.'_'.$form_field->dbName;
+?>
+<ul id="<?= $listId ?>">
+	<? 
+		$selectedColor = $form_model->displayField($form_field->dbName);
+	
+		foreach (Shop_OrderStatus::$colors as $index=>$color): 
+	?>
+		<li class="<?= !($index%10) ? 'nextLine' : null ?> <?= $color == $selectedColor ? 'selected' : null ?>"><span style="background-color: <?= $color ?>"><?= $color ?></span></li>
+	<? endforeach ?>
+</ul>
+
+<input value="<?= $selectedColor ?>" type="hidden" id="<?= $fieldId ?>" name="<?= $form_model_class ?>[<?= $form_field->dbName ?>]"/>
+
+<script type="text/javascript">
+	window.addEvent('domready', function(){new ColorPicker('<?= $listId ?>', '<?= $fieldId ?>')})
+</script>

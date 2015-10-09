@@ -1,0 +1,158 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+	<script type="text/javascript" src="modules/shop/resources/javascript/product_preview.js?<?= module_build('shop') ?>"></script>
+
+    <script type="text/javascript" src="modules/backend/resources/javascript/swfobject.js"></script>
+
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('shop/products') ?>">Product List</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<? if (!isset($fatalError)): ?>
+		<? if ($form_model->images->count): ?>
+			<div class="product-preview-image">
+				<img src="<?= $form_model->images->first->getThumbnailPath('auto', 53) ?>"/>
+			</div>
+		<? endif ?>
+	
+		<div class="scoreboardReport">
+			<ul>
+				<li>
+					<h3>Product</h3>
+					<p><?= h(Phpr_Html::strTrimMiddle($form_model->name, 30)) ?></p>
+					<p class="description">
+						type: <?= h($form_model->product_type->name) ?>
+					</p>
+				</li>
+				<li class="<?= $form_model->updated_user_name ? null : 'last' ?>">
+					<h3>Status</h3>
+					<p>
+						<? if ($form_model->disable_completely): ?>
+							Disabled completely
+						<? elseif (!$form_model->enabled): ?>
+							Disabled
+						<? else: ?>
+							Enabled
+						<? endif ?>
+					</p>
+					<p class="description">
+						<? if ($form_model->disable_completely): ?>
+							All grouped products are disabled
+						<? else:
+							$num_disabled = 0;
+							foreach ($form_model->grouped_products_all as $grouped)
+							{
+								if (!$grouped->enabled)
+									$num_disabled++;
+							}
+							if (!$form_model->grouped_products_all->count):
+						?>
+							Grouped products are enabled
+							<? elseif ($form_model->grouped_products_all->count == $num_disabled): ?>
+								All grouped products are disabled
+							<? elseif ($num_disabled): ?>
+								Some grouped products are disabled
+							<? else: ?>
+								All grouped products are enabled
+							<? endif ?>
+						<? endif ?>
+					</p>
+				</li>
+				
+				<? if ($form_model->updated_user_name): ?>
+					<li class="last">
+						<h3>Last update by</h3>
+						<p><?= h($form_model->updated_user_name) ?></p>
+						<p class="description">
+							at: <?= $form_model->displayField('updated_at') ?>
+						</p>
+					</li>
+				<? endif ?>
+			</ul>
+			<div class="clear"></div>
+		</div>
+		
+		<? Backend::$events->fireEvent('shop:onExtendProductPreviewHeader', $this, $form_model) ?>
+		<div class="clear"></div>
+		
+		<?= Phpr_Form::openTag(array('id'=>'toolbar_form')) ?>
+			<div class="toolbar">
+				<a class="imageLink go_back img_noBottomPading" href="<?= url('shop/products') ?>">Return to the product list</a>
+				<div class="separator"></div>
+				<a class="imageLink edit_record" href="<?= url('shop/products/edit/'.$form_model->id) ?>" >Edit</a>
+				<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteProduct', {confirm: 'Do you really want to delete this product? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+
+				<? Backend::$events->fireEvent('shop:onExtendProductPreviewToolbar', $this, $form_model) ?>
+				<div class="clear"></div>
+			</div>
+		</form>
+		
+		<?= flash() ?>
+		
+		<div class="tabs formReportLayout">
+			<ul id="product_tabs" class="tabs_tabs">
+				<li class="round active"><a href="#product" onclick="return false">Product</a></li>
+				<li class="round"><a href="#reviews" onclick="return false">Reviews</a></li>
+				<li id="bundle_tab" class="round"><a href="#bundle" onclick="return false">Bundle</a></li>
+				
+				<? 
+					$custom_module_tabs = Backend::$events->fireEvent('shop:onExtendProductPreviewTabs', $this, $form_model);
+					$index = 1;
+					foreach ($custom_module_tabs as $custom_tabs): 
+						if (!is_array($custom_tabs))
+							continue;
+					
+						foreach ($custom_tabs as $custom_tab_caption=>$custom_tab_partial):
+				?>
+					<li class="round"><a href="#<?= 'custom_tab_'.$index ?>" onclick="return false"><?= $custom_tab_caption ?></a></li>
+				<? 
+						$index++;
+						endforeach;
+					endforeach;
+				?>
+			</ul>
+			<div class="clear tab_separator"></div>
+			<ul class="tabs_pages" id="product_tab_pages">
+				<li class="form_page_preview" id="product">
+					<?= Phpr_Form::openTag() ?>
+						<? $this->formRenderReportPreview() ?>
+						<div class="clear"></div>
+					</form>
+				</li>
+				<li class="form_page_preview" id="reviews">
+					<?= Phpr_Form::openTag(array('id'=>'reviews_form')) ?>
+						<div id="product_reviews_area"><? $this->renderPartial('product_reviews_area') ?></div>
+					</form>
+				</li>
+				<li class="form_page_preview" id="bundle">
+					<?= $this->bundle_render($form_model) ?>
+				</li>
+				
+				<? 
+					$index = 1;
+					foreach ($custom_module_tabs as $custom_tabs): 
+						if (!is_array($custom_tabs))
+							continue;
+
+						foreach ($custom_tabs as $custom_tab_caption=>$custom_tab_partial):
+				?>
+					<li class="form_page_preview" id="<?= 'custom_tab_'.$index ?>">
+						<? $this->renderPartial($custom_tab_partial) ?>
+					</li>
+				<? 
+						$index++;
+						endforeach;
+					endforeach;
+				?>
+			</ul>
+			<div class="clear"></div>
+		</div>
+	<? else: ?>
+		<?= flash() ?>
+		<p><a href="<?= url('/shop/products') ?>">Return to the product list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

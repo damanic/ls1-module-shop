@@ -1,0 +1,93 @@
+<?
+	$products = $form_model->list_related_records_deferred('grouped_products_all', $this->formGetEditSessionKey());
+
+	$products->objectArray[] = $form_model;
+	
+	$new_product_sort_order = post('new_product_sort_order', -1);
+	$form_model->grouped_sort_order = !$form_model->grouped_sort_order ? $new_product_sort_order : $form_model->grouped_sort_order;
+	
+	usort($products->objectArray, array('Shop_Product', 'sort_grouped_products'));
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<? if ($products->count): ?>
+				<th class="iconCell">&nbsp;</th>
+			<? endif ?>
+			<th>Option</th>
+			<th>Name</th>
+			<th>SKU</th>
+			<th class="float">Price</th>
+			<th class="float">In Stock</th>
+			<th class="bool <?= !$products->count ? 'last' : null ?>">Enabled</th>
+			<? if ($products->count): ?>
+				<th class="iconCell">&nbsp;</th>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody id="grouped_products_list_body">
+		<? if (!$products->count): ?>
+			<tr class="noData">
+				<td colspan="6" class="last">There are no grouped products.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($products as $product): 
+				$parent_session_key = $this->formGetEditSessionKey();
+				$onClick = "$('grouped_product_id{$parent_session_key}').value = '{$product->id}'; new PopupForm('onLoadGroupedProductForm', {closeByEsc: false, ajaxFields: $('grouped_product_list{$parent_session_key}').getForm()}); return false;";
+				$rowOnClick = $product->grouped ? 'onclick="'.$onClick.'"' : null;
+				$rowLinkClass = $product->grouped ? "link" : null;
+			?>
+				<tr class="<?= Backend_Html::zebra('product_grouped') ?> <?= $product->enabled ? null : 'disabled' ?> <?= !$product->grouped ? 'grouped_ghost important' : null ?>">
+					<td class="iconCell">
+						<a href="#" class="row_drag_handle grouped_sort_handle" onclick="return false" title="Reorder grouped products">Reorder options</a>
+						<input class="grouped_id" value="<?= $product->id ? $product->id : -1 ?>" type="hidden"/>
+						<input class="grouped_order" value="<?= $product->grouped_sort_order ? $product->grouped_sort_order : -1 ?>" type="hidden"/>
+					</td>
+					<td class="<?= $rowLinkClass ?>" <?= $rowOnClick ?>>
+						<? if ($product->grouped): ?><a href="#" onclick="<?= $onClick ?>"><? endif ?>
+						<span class="grouped_option_name"><?= h($product->displayField('grouped_option_desc', 'list')) ?></span>
+						<? if ($product->grouped): ?></a><? endif ?>
+					</td>
+					<td class="<?= $rowLinkClass ?>" <?= $rowOnClick ?>>
+						<? if ($product->grouped): ?><a href="#" onclick="<?= $onClick ?>"><? endif ?>
+						<span class="grouped_product_name"><?= h($product->displayField('name', 'list')) ?></span>
+						<? if ($product->grouped): ?></a><? endif ?>
+					</td>
+					<td class="<?= $rowLinkClass ?>" <?= $rowOnClick ?>>
+						<? if ($product->grouped): ?><a href="#" onclick="<?= $onClick ?>"><? endif ?>
+						<span class="grouped_sku"><?= h($product->displayField('sku', 'list')) ?></span>
+						<? if ($product->grouped): ?></a><? endif ?>
+					</td>
+					<td class="float <?= $rowLinkClass ?>" <?= $rowOnClick ?>>
+						<? if ($product->grouped): ?><a href="#" onclick="<?= $onClick ?>"><? endif ?>
+						<span class="grouped_price"><?= h($product->displayField('price', 'list')) ?></span>
+						<? if ($product->grouped): ?></a><? endif ?>
+					</td>
+					<td class="number inline_container">
+						<span class="grouped_in_stock"><input type="text" class="inline in_stock_value" name="in_stock_values[<?= $product->id ?>]" value="<?= 
+						trim(h(post_array_item('in_stock_values', $product->id, $product->displayField('in_stock', 'list')))) ?>"/></span>
+					</td>
+					<td class="bool <?= $rowLinkClass ?>" <?= $rowOnClick ?>>
+						<? if ($product->grouped): ?><a href="#" onclick="<?= $onClick ?>"><? endif ?>
+						<span class="grouped_enabled"><span class="<?= $product->enabled ? 'on' : null ?>"><?= $product->enabled ? 'Yes' : 'No' ?></span></span>
+						<? if ($product->grouped): ?></a><? endif ?>
+					</td>
+					<td class="iconCell">
+						<? if ($product->grouped): ?>
+							<a onclick="$('grouped_product_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $product->id ?>'; return $(this).getForm().sendPhpr('onUngroupProduct', {confirm: 'Do you really want to convert this product to a regular product?', extraFields: {'new_product_sort_order': $('grouped_sort_order').value}, onSuccess: function(){ alert('The grouped product has been successfully converted to a regular product.'); }, onAfterUpdate: function(){make_grouped_sortable();copy_grouped_ghost_params();}, onFailure: popupAjaxError, update: 'grouped_product_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Ungroup - convert grouped product to a regular product." class="ungroup_product" href="#">Ungroup</a>
+						<? endif ?>
+					</td>
+					<td class="iconCell last">
+						<? if ($product->grouped): ?>
+							<a onclick="$('grouped_product_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $product->id ?>'; return $(this).getForm().sendPhpr('onDeleteGroupedProduct', {confirm: 'Do you really want to delete this product?', extraFields: {'new_product_sort_order': $('grouped_sort_order').value}, onAfterUpdate: function(){make_grouped_sortable();copy_grouped_ghost_params();}, onFailure: popupAjaxError, update: 'grouped_product_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Delete product" class="deleteDocument" href="#">Delete</a>
+						<? endif ?>
+					</td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>
+<input type="hidden" name="grouped_product_id" id="grouped_product_id<?= $this->formGetEditSessionKey() ?>" value=""/>

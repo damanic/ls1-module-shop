@@ -1,0 +1,95 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+
+	<? if (!isset($fatalError)): ?>
+		<? foreach ($label_template_css as $src=>$media): ?>
+			<? if (strpos($src, '/') === false): ?>
+				<link rel="stylesheet" href="<?= root_url('modules/shop/shippinglabel_templates/'.$template_id.'/resources/css/'.$src) ?>" type="text/css" media="<?= $media ?>"/>
+			<? else: ?>
+				<link rel="stylesheet" href="<?= $src ?>" type="text/css" media="<?= $media ?>"/>
+			<? endif ?>
+		<? endforeach ?>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<? if (!isset($fatalError)): ?>
+		<ul class="breadcrumbs">
+			<li><a href="<?= $this->getRefererUrl() ?>"><?= h($this->getRefererName()) ?></a></li>
+			<? if (count($orders) == 1): ?>
+				<li><a href="<?= url('shop/orders/preview/'.$orders[0]->id) ?>">Order Preview</a></li>
+			<? endif ?>
+			<li><?= $this->app_page_title ?></li>
+		</ul>
+
+		<style type="text/css" media="all">
+			div.shipping_label_print
+			{
+				height: <?= $company_info->shipping_label_height ?><?= $company_info->shipping_label_css_units ?>;
+				width: <?= $company_info->shipping_label_width ?><?= $company_info->shipping_label_css_units ?>;
+				font-size: <?= $company_info->shipping_label_font_size_factor ?>em;
+			}
+			div.shipping_label_container
+			{
+				padding: <?= $company_info->shipping_label_padding ?><?= $company_info->shipping_label_css_units ?>;
+				width:<?= $company_info->shipping_label_width-2*$company_info->shipping_label_padding ?><?= $company_info->shipping_label_css_units ?>;
+				height:<?= $company_info->shipping_label_height-2*$company_info->shipping_label_padding ?><?= $company_info->shipping_label_css_units ?>;
+			}
+		</style>
+
+		<? if ($this->isHintVisible('invoice_hint')): ?>
+			<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
+				<div class="hint">
+					<p class="last">You can specify your company name and customize shipping labels on the <a href="<?= url('shop/company_info/') ?>">System/Settings/Company Information and Settings</a> page.</p>
+					<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('invoice_hint', this)">Close</a>
+				</div>
+			</form>
+		<? endif ?>
+
+		<div class="toolbar">
+			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="window.print()">Print</a>
+			<div class="clear"></div>
+		</div>
+
+		<div class="shipping_label_prints">
+			<? 
+				$counter=1;
+				$split_to_pages = false;
+			?>
+			<div class="add_page_break">
+			<? foreach ($orders as $order): ?>
+				<? if($split_to_pages): ?>
+					</div>
+					<div class="add_page_break">
+				<? endif ?>
+				
+				<?	
+					if ($counter % $company_info->shipping_label_labels_per_page == 0)
+						$split_to_pages = true;
+					else
+						$split_to_pages = false;
+					$counter++;
+				?>
+				<div class="shipping_label_print <?= $company_info->shipping_label_print_border ? 'shipping_label_border' : null ?>">
+					<div class="shipping_label_container">
+						<?
+							$this->renderPartial(PATH_APP.'/modules/shop/shippinglabel_templates/'.$template_id.'/label.htm', array(
+								'order_id'=>$order->id,
+								'order'=>$order
+							));
+						?>
+					</div>
+				</div>
+			<? endforeach ?>
+			</div>
+		</div>
+	<? else: ?>
+		<?= flash() ?>
+			<? if(isset($order_id)):?>
+				<p><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Return to the order preview page</a></p>
+			<? else: ?>
+				<p><a href="<?= url('/shop/orders/') ?>">Return to the orders page</a></p>
+			<? endif ?>
+		<input type="hidden" id="no_print_layout" value="1"></input>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

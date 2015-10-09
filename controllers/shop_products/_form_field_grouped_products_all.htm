@@ -1,0 +1,49 @@
+<li class="field">
+	<? if ($this->isHintVisible('grouped_drag_stock')): ?>
+		<div class="hint">
+			<p class="last">You can manage the order of the grouped products in the front-end drop-down list, by dragging the arrow icons up and down. The In Stock column value is editable.</p>
+			<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('grouped_drag_stock', this)">Close</a>
+	    </div>
+	<? endif ?>
+	
+	<div class="toolbar listToolbar">
+		<a href="#" class="imageLink new_document img_noBottomPading" onclick="$('grouped_product_id<?= $this->formGetEditSessionKey() ?>').value = ''; phprTriggerSave(); if (!checkGroupedCreation()) return false; new PopupForm('onLoadGroupedProductForm', {closeByEsc: false, ajaxFields: $('grouped_product_list<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Add grouped product</a>
+		<a class="imageLink duplicate img_noBottomPading" href="#" onclick="new PopupForm('onShopCopyPropsForm', {ajaxFields: $('extra_options_list<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Copy properties to grouped products</a>
+		<div class="clear"></div>
+	</div>
+	
+	<div id="grouped_product_list<?= $this->formGetEditSessionKey() ?>" class="clear">
+		<? $this->renderPartial('grouped_product_list') ?>
+	</div>
+
+	<input type="hidden" name="new_grouped_sort_order" id="grouped_sort_order" value="<?= $form_model->grouped_sort_order ? $form_model->grouped_sort_order : -1 ?>"/>
+
+	<script type="text/javascript">
+		function updateGroupedProductList(session_key, options)
+		{
+			cancelPopup();
+
+			$('grouped_product_list' + session_key).getForm().sendPhpr(
+				'onUpdateGroupedProductList',
+				{
+					update: 'grouped_product_list' + session_key,
+					extraFields: $merge({
+						'new_product_sort_order': $('grouped_sort_order').value,
+					}, options),
+					loadIndicator: {
+						show: true,
+						element: 'grouped_product_list' + session_key,
+						hideOnSuccess: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					},
+					onAfterUpdate: function(){
+						make_grouped_sortable();
+						copy_grouped_ghost_params();
+						init_grouped_stock_handlers();
+					}
+				}
+			)
+		}
+	</script>
+	
+</li>

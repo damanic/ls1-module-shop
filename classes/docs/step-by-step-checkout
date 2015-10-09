@@ -1,0 +1,21 @@
+Note that there is another action - {@link action@shop:checkout}, which incorporates all steps of the checkout process 
+and allows to build the {@link http://lemonstand.com/docs/checkout_page AJAX-driven checkout page}, where all steps of the
+checkout process are displayed one by one on a single page. That sort of checkout process is implemented in our 
+{@link http://demo.lemonstand.com/basic/ Demo Store}. As contrasted with the {@link action@shop:checkout} action, 
+the step-by-step checkout actions allows you to build a checkout process with separate pages. Also, using these 
+actions you can customize the checkout process. For example, it is possible to skip some checkout steps and implement 
+simplified checkout scenarios. Please refer to the Creating the {@link http://lemonstand.com/docs/custom_checkout_scenario_the_one_step_checkout One-Step Checkout} 
+article for the example of customizing the checkout process.
+
+<h3>Watching the cart content changes</h3>
+It is possible that a customer can change the content of the shopping cart during the checkout process. 
+It can be done in a separate browser window. It is recommended to check whether the shopping content has not been changed after the 
+checkout process started. LemonStand automatically saves the cart content identifier to the memory on the Billing address information 
+step (the first step in the checkout process). You can place the following code in the <em>Pre Action Code</em> field of the <em>Action</em> 
+tab of all your checkout pages, excluding the billing address information step.
+<pre>
+if (Shop_CheckoutData::get_cart_id() != Shop_Cart::get_content_id())
+  Phpr::$response->redirect('/checkout_billing_information');
+</pre>
+The code compares the saved cart content identifier with a current identifier, and if they do not match, redirects the browser 
+to the first step of the checkout process. Please use an actual value for the URL of the first checkout step of your online store.

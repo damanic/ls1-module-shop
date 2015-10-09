@@ -1,0 +1,1 @@
+alter table shop_products add column grouped tinyint null;

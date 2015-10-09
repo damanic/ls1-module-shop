@@ -1,0 +1,61 @@
+<div id="delete_orders_form">
+	<h2>Convert to Registered</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<div class="form">
+						<div class="form_page">
+							<ul class="formElements">
+								<li class="field dropdown full reference">
+									<label for="customer_group">
+										Group
+										<span class="comment">Please select a customer group.</span>
+									</label>
+
+									<div class="fieldContainer" >
+										<select name="customer_group" id="customer_group" autocomplete="off">
+											<? foreach ($groups as $group): ?>
+												<option value="<?= $group->id ?>" <?= Phpr_Form::optionState($group->code, Shop_CustomerGroup::registered_group) ?>><?= h($group->name) ?></option>
+											<? endforeach ?>
+										</select>
+									</div>
+
+									<div class="clear"></div>
+								</li>
+								
+								<li class="field checkbox full">
+									<label for="send_registration_notification">
+										Send registration notification
+										<span class="comment">Use this checkbox to generate new random password for the customer and send the registration notification email.</span>
+									</label>
+
+									<div class="fieldContainer">
+										<input type="hidden" class="checkbox" value="" name="send_registration_notification">
+										<input type="checkbox" class="checkbox" value="1" name="send_registration_notification" id="send_registration_notification"/>
+									</div>
+
+									<div class="clear"></div>
+								</li>
+							</ul>
+						</div>
+					</div>
+					
+					<?= backend_ajax_button('Convert', 'preview_onConvert', array(), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: cancelPopup
+					") ?>
+
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					
+					
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

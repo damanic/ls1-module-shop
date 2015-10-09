@@ -1,0 +1,9 @@
+<div class="toolbar">
+	<?= Phpr_Form::openTag() ?>
+		<?= backend_ctr_button('Return to the Category List', 'go_back', url('/shop/categories')) ?>
+		<div class="separator"></div>
+		<?= backend_ctr_button('Add top product(s)', 'new_document', array('href'=>'/shop/categories/create', 'onclick'=>"new PopupForm('manage_top_products_onLoadAddProductForm', {closeByEsc: false}); return false;")) ?>
+		<?= backend_ctr_button('Remove selected', 'delete_document', array('href'=>'#', 'onclick'=>"return remove_selected_products()")) ?>
+		<div class="clear"></div>
+	</form>
+</div>

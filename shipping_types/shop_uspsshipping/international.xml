@@ -1,0 +1,25 @@
+<IntlRateV2Request USERID="<?= h($user_id) ?>">
+	<Package ID="PACKAGE">
+		<Pounds><?= h($pounds) ?></Pounds>
+		<Ounces><?= h($ounces) ?></Ounces>
+		<Machinable><?= $machinable ? 'true' : 'false' ?></Machinable>
+		<MailType>Package</MailType>
+		<ValueOfContents><?= $total_price ?></ValueOfContents>
+		<Country><?= $country ?></Country>
+		<? if (strlen($container)): ?>
+			<Container><?= $container ?></Container>
+		<? else: ?>
+			<Container>RECTANGULAR</Container>
+		<? endif ?>
+		<Size>REGULAR</Size>
+		<Width><?= $dimension ?></Width>
+		<Length><?= $dimension ?></Length>
+		<Height><?= $dimension ?></Height>
+		<? if($container == 'NONRECTANGULAR'): ?>
+			<Girth><?= $dimension ?></Girth>
+		<? else: ?>
+			<Girth></Girth>
+		<? endif ?>
+		<CommercialFlag>Y</CommercialFlag>
+	</Package>
+</IntlRateV2Request>

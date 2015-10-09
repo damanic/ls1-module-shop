@@ -1,0 +1,99 @@
+<li>
+	<? 
+		$item = $form_model;
+	
+		$options_arr = unserialize($item->options);
+		$extras_arr = unserialize($item->extras);
+		$deleted_options = $item->get_deleted_options();
+	?>
+
+	<table class="name_value_list">
+		<? if (strlen($item->product->short_description)): ?>
+			<tr>
+				<th>Description</th>
+				<td><?= h(Phpr_Html::strTrim($item->product->short_description, 200)) ?></td>
+			</tr>
+		<? endif ?>
+		
+		<? if ($item->product->grouped_products->count): ?>
+			<tr>
+				<th <? if (!post('edit_mode', $this->viewDataElement('edit_mode'))): ?>class="align-middle"<? endif ?>><?= h($item->product->grouped_menu_label) ?></th>
+				<td>
+					<? if (!post('edit_mode', $this->viewDataElement('edit_mode'))): ?>
+						<select name="shop_product_id" onchange="$(this).getForm().sendPhpr('onUpdateProductId', 
+							{update: 'item_form',
+							onSuccess: realignPopups,
+							loadIndicator: {
+								show: true,
+								element: 'item_form',
+								hideOnSuccess: true
+							},
+							extraFields: {'customer_id': $('Shop_Order_customer_id') ? $('Shop_Order_customer_id').value : -1},
+							onAfterUpdate: track_itemp_price_change
+							})">
+							<? foreach ($item->product->grouped_products as $grouped_product): ?>
+							<option <?= option_state(post('shop_product_id', $item->product->id), $grouped_product->id) ?> value="<?= $grouped_product->id ?>">
+								<?= h($grouped_product->grouped_option_desc) ?>
+							</option>
+							<? endforeach ?>
+						</select>
+					<? else: ?>
+						<?= h($item->product->grouped_option_desc) ?>
+					<? endif ?>
+				</td>
+			</tr>
+		<? endif ?>
+		<? foreach ($item->product->properties as $attribute): ?>
+			<tr>
+				<th><?= h($attribute->name) ?></th>
+				<td><?= h($attribute->value) ?></td>
+			</tr>
+		<? endforeach ?>
+
+		<? foreach ($item->product->options as $option): 
+			$control_name = 'product_options['.$option->option_key.']';
+			$posted_options = post('product_options', array());
+			if ($posted_options)
+				$posted_options = $item->product->normalize_posted_options($posted_options);
+			
+			$item_option_value = $item->option_value($option->name);
+			$posted_value = isset($posted_options[$option->option_key]) ? $posted_options[$option->option_key] : $item_option_value;
+		?>
+		<tr>
+			<th class="align-middle"><?= h($option->name) ?></th>
+			<td class="product_option-selector-container">
+				<select name="<?= $control_name ?>">
+					<?
+					$values = $option->list_values();
+					$value_found = false;
+					foreach ($values as $value):
+						if ($value == $item_option_value)
+							$value_found = true;
+					?>
+					<option <?= option_state($posted_value, $value) ?> value="<?= h($value) ?>"><?= h($value) ?></option>
+					<? endforeach ?>
+
+					<? if (!$value_found): ?>
+					<option <?= option_state($posted_value, $item_option_value) ?> value="<?= h($item_option_value) ?>"><?= h($item_option_value) ?></option>
+					<? endif ?>
+				</select>
+				<input type="hidden" name="product_option_name[<?= $option->option_key ?>]" value="<?= h($option->name) ?>"/>
+			</td>
+		</tr>
+		<? endforeach ?>
+
+		<? foreach ($deleted_options as  $name=>$value): 
+			$option_key = md5($name);
+		?>
+		<tr>
+			<th><?= h($name) ?></th>
+			<td>
+				<?= h($value) ?>
+				<input type="hidden" name="product_option_name[<?= $option_key ?>]" value="<?= h($name) ?>"/>
+				<input type="hidden" name="product_options[<?= $option_key ?>]" value="<?= h($value) ?>"/>
+			</td>
+		</tr>
+		<? endforeach ?>
+
+	</table>
+</li>

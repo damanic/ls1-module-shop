@@ -1,0 +1,45 @@
+<?
+	$options = $form_model->list_related_records_deferred('product_extra_options', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<? if ($options->count): ?>
+				<th class="iconCell">&nbsp;</th>
+			<? endif ?>
+			<th>Option</th>
+			<th>Group</th>
+			<th class="float <?= !$options->count ? 'last' : null ?>">Price</th>
+			<? if ($options->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody id="extra_options_list_body<?= $this->formGetEditSessionKey() ?>">
+		<? if (!$options->count): ?>
+			<tr class="noData">
+				<td colspan="3" class="last">There are no extra options.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($options as $option): 
+				$parent_session_key = $this->formGetEditSessionKey();
+				$onClick = "$('extra_option_id{$parent_session_key}').value = '{$option->id}'; new PopupForm('onLoadExtraOptionForm', {ajaxFields: $('extra_option_id{$parent_session_key}').getForm(), closeByEsc: false}); return false;";
+			?>
+				<tr class="<?= Backend_Html::zebra('extra_option') ?>">
+					<td class="iconCell">
+						<a href="#" class="row_drag_handle extra_sort_handle" onclick="return false" title="Reorder extra options">Reorder extra options</a>
+						<input class="extra_id" value="<?= $option->id ?>" type="hidden"/>
+						<input class="extra_order" value="<?= $option->extra_option_sort_order ?>" type="hidden"/>
+					</td>
+
+					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($option->displayField('description', 'list')) ?></a></td>
+					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($option->displayField('group_name', 'list')) ?></a></td>
+					<td onclick="<?= $onClick ?>" class="float link"><a href="#" onclick="<?= $onClick ?>"><?= h($option->displayField('price', 'list')) ?></a></td>
+					<td class="iconCell last"><a onclick="$('extra_option_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $option->id ?>'; return $(this).getForm().sendPhpr('onDeleteExtraOption', {confirm: 'Do you really want to delete this option?', update: 'extra_options_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Delete option" class="deleteDocument" href="#">Delete</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

@@ -1,0 +1,42 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/system/settings') ?>">Settings</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+	
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Save', 'index_onSave') ?>
+				<?= backend_ajax_button('Cancel', 'index_onCancel') ?>
+				<div class="clear"></div>
+			</form>
+			
+			<script type="text/javascript">
+				window.addEvent('domready', function(){
+					$('Shop_AutoBillingParams_enabled').addEvent('toggle', function(state){
+						if (state)
+							$('form_field_enabledShop_AutoBillingParams').addClass('separatedField');
+						else
+							$('form_field_enabledShop_AutoBillingParams').removeClass('separatedField');
+
+						var fields = ['form_field_billing_periodShop_AutoBillingParams', 'form_field_payment_method_idShop_AutoBillingParams', 'form_field_success_notification_idShop_AutoBillingParams', 'form_field_failed_notification_idShop_AutoBillingParams', 'cron_hint'];
+						fields.each(function(element){
+							if (state) 
+								$(element).show(); 
+							else
+								$(element).hide();
+						})
+					})
+				})
+			</script>
+
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/system/settings') ?>">Return to the settings page</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

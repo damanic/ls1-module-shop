@@ -1,0 +1,26 @@
+<div>
+	<h2>Shipping Tracking Code</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+
+					<? $this->formRender($tracking_code) ?>
+
+					<?= backend_ajax_button('Save', 'preview_onSaveTrackingNumber', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: cancelPopup,
+						update: 'tracking_code_list'
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

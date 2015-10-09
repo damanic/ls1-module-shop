@@ -1,0 +1,38 @@
+<li class="field full">
+	<div class="toolbar listToolbar">
+		<a class="imageLink new_document" href="#" onclick="$('extra_option_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadExtraOptionForm', {closeByEsc: false, ajaxFields: $('extra_options_list<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Add extra option</a>
+		
+		<a class="imageLink group img_noBottomPading" href="#" onclick="$('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadLoadExtraOptionsForm', {ajaxFields: $('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Load options from a global set</a>
+		<div class="clear"></div>
+	</div>
+
+	<div id="extra_options_list<?= $this->formGetEditSessionKey() ?>" class="clear relative">
+		<? $this->renderPartial('extra_option_list') ?>
+	</div>
+
+	<input type="hidden" name="extra_option_id" id="extra_option_id<?= $this->formGetEditSessionKey() ?>" value=""/>
+
+	<script type="text/javascript">
+		function updateExtraOptionsList(session_key)
+		{
+			cancelPopup();
+
+			$('extra_options_list'+session_key).getForm().sendPhpr(
+				'onUpdateExtraOptionList',
+				{
+					update: 'extra_options_list'+session_key,
+					loadIndicator: {
+						show: true,
+						element: 'extra_options_list'+session_key,
+						hideOnSuccess: true,
+						injectInElement: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					},
+					onSuccess: function(){
+						make_extras_sortable(session_key)
+					}
+				}
+			)
+		}
+	</script>
+</li>

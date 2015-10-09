@@ -1,0 +1,61 @@
+<div>
+	<h2>Find Product</h2>
+	<div class="content">
+		<div class="form500">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag(array('id'=>'find_bundle_product_form')) ?>
+					<div class="formFlash"></div>
+
+					<div class="form">
+						<div class="form_page">
+							<ul class="formElements">
+								<li class="field dropdown full reference">
+									<label for="Shop_OrderStatusLog_status_id">
+										Bundle Item
+									</label>
+
+									<div class="fieldContainer">
+										<select id="bundle_item_id" name="bundle_item_id"autocomplete="off" onchange="update_bundle_item_products()" onkeyup="update_bundle_item_products()">
+											<option value="">&lt;please select&gt;</option>
+											<? foreach ($bundle_items as $bundle_item): ?>
+												<option value="<?= $bundle_item->id ?>"><?= h($bundle_item->name) ?></option>
+											<? endforeach ?>
+										</select>
+									</div>
+
+									<div class="clear"></div>
+								</li>
+								
+								<li class="field dropdown full reference">
+									<label for="Shop_OrderStatusLog_status_id">
+										Product
+									</label>
+									
+									<div class="fieldContainer" id="bundle_item_products">
+										<? $this->renderPartial('bundle_item_products') ?>
+									</div>
+
+									<div class="clear"></div>
+								</li>
+
+							</ul>
+							<div class="clear"></div>
+						</div>
+					</div>
+					
+					<?= backend_button('Add', array('href'=>'#', 'onclick'=>"return add_bundle_product('".$edit_session_key."')")) ?>
+					
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+			
+					<div class="clear"></div>
+					<input type="hidden" name="edit_session_key" value="<?= h($edit_session_key) ?>"/>
+					<input type="hidden" name="bundle_master_order_item_id" id="bundle_master_order_item_id" value="<?= h($bundle_master_order_item_id) ?>"/>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

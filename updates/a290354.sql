@@ -1,0 +1,1 @@
+update shop_countries set code_3='PHP' where code_iso_numeric=608;

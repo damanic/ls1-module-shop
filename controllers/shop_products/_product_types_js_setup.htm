@@ -1,0 +1,16 @@
+<script type="text/javascript">
+	var product_type_settings = new Hash();
+
+	<?
+		$product_types = Shop_ProductType::create()->find_all();
+		foreach ($product_types as $type):
+		$tab_visibility = array();
+	?>
+		product_type_settings.set(<?= $type->id ?>, new Hash({
+			<? foreach ($type->fetched as $field=>$value)
+				$tab_visibility[] = 'tab_'.$field.': '.($type->$field ? 1 : 0);
+			?>
+			<?= implode(',', $tab_visibility) ?>
+		}));
+	<? endforeach ?>
+</script>

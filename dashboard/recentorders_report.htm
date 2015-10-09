@@ -1,0 +1,49 @@
+<h2>Recent Orders</h2>
+
+<? 
+	$orders = Shop_Orders_Report::getRecentOrders();
+	$total = 0;
+	
+	$orders_found = $orders->count;
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="order_status"></th>
+			<th>#</th>
+			<th class="current date">Date</th>
+			<th class="float">Total</th>
+			<th class="last">Status</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? if (!$orders_found): ?>
+			<tr class="noData"><td colspan="5">&lt;no data&gt;</td></tr>
+		<? else: ?>
+			<? foreach ($orders as $index=>$order): 
+				$url = url('shop/orders/preview/'.$order->id.'?'.uniqid());
+				$total += $order->total;
+			?>
+				<tr class="<?= Backend_Html::zebra('orders') ?> <?= $index == $orders->count-1 ? 'last' : null ?>">
+					<td class="order_status">
+						<span style="background-color: <?= $order->displayField('status_color') ?>;">&nbsp;</span>
+					</td>
+					<td class="link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= $order->id ?></a></td>
+					<td class="link current date" <?= click_link($url) ?>><a href="<?= $url ?>"><?= $order->order_datetime->format('%x') ?></a></td>
+					<td class="float link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= format_currency($order->total) ?></a></td>
+					<td class="last link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= h($order->displayField('status')) ?></a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan="3">
+				<a href="<?= url('/shop/orders_report') ?>">View orders report</a>
+			</td>
+			<td class="float total"><?= $orders_found ? format_currency($total) : null ?></td>
+			<td class="last"></td>
+		</tr>
+	</tfoot>
+</table>

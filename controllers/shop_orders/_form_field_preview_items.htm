@@ -1,0 +1,96 @@
+	<h3 class="formReportLayoutHeader described">
+		Order Items
+		<span class="comment">Click an item for details</span>
+	</h3>
+	
+	<?
+		$has_bundle_items = false;
+		foreach ($form_model->items as $item)
+		{
+			if ($item->bundle_master_bundle_item_name)
+			{
+				$has_bundle_items = true;
+				break;
+			}
+		}
+	
+		if ($has_bundle_items):
+	?>
+		<? if ($this->isHintVisible('test')): ?>
+			<div class="hint offset-top">
+				<p class="last">This order contains bundle products. Bundle items are marked with <span class="bundle-item-container">sign</span>. Bundle item products have two quantities: the total quantity and the quantity of that bundle item in the parent bundle. Latter value is marked with green background: <span class="bundle-item-value">5</span></p>
+				<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('test', this)">Close</a>
+			</div>
+		<? endif ?>
+	<? endif ?>
+
+	<table class="simpleList">
+		<thead>
+			<tr>
+				<th>Item</th>
+				<th>SKU</th>
+				<? if ($has_bundle_items): ?>
+					<th>Bundle item</th>
+				<? endif ?>
+				<th class="number">Price</th>
+				<th class="number">Discount</th>
+				<th class="number">Quantity</th>
+				<th class="number last">Total</th>
+			</tr>
+		</thead>
+		<tbody>
+			<?
+				$prev_bundle_item = false;
+				$last_index = $form_model->items->count-1;
+				foreach ($form_model->items as $index=>$item):
+					$onClick = "new PopupForm('preview_onLoadItemPreview', {ajaxFields: {'item_id': '{$item->id}'}}); return false;";
+			?>
+			<tr class="<?= Backend_Html::zebra('order_items') ?>">
+				<td onclick="<?= $onClick ?>" class="link">
+					<div class="<?= $item->bundle_master_order_item_id ? 'bundle-item-container' : null ?>">
+						<? if ($item->bundle_master_order_item_id): ?>
+							<a  href="#" onclick="<?= $onClick ?>" class="tooltip bundle-item" title="Bundle item - <strong><?= h($item->bundle_master_bundle_item_name) ?></strong>">Bundle item - <?= h($item->bundle_master_bundle_item_name) ?></a>
+						<? endif ?>
+						<a href="#" onclick="<?= $onClick ?>"><?= $item->output_product_name(true, false, true, true) ?></a>
+					</div>
+				</td>
+				<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= $item->product_sku ? h($item->product_sku) : h('<product not found>') ?></a></td>
+				<? if ($has_bundle_items): ?>
+					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($item->bundle_master_bundle_item_name) ?></a></td>
+				<? endif ?>
+				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency($item->single_price) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency($item->discount) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number link">
+					<a href="#" onclick="<?= $onClick ?>">
+						<?= h($item->quantity) ?>
+						<? if ($item->bundle_master_order_item_id): ?>
+							<span title="Quantity of the bundle<br/>item in each bundle" class="tooltip bundle-item-value"><?= $item->get_bundle_item_quantity() ?></span>
+						<? endif ?>
+					</a>
+				</td>
+				<td onclick="<?= $onClick ?>" class="number last link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency(($item->single_price - $item->discount)*$item->quantity) ?></a></td>
+			</tr>
+			
+			<? if (($item->bundle_master_order_item_id && $index == $last_index) || ($item->bundle_master_order_item_id && !$form_model->items[$index+1]->bundle_master_order_item_id)): 
+				$master_item = $item->get_master_bundle_order_item();
+				if ($master_item):
+			?>
+				<tr class="bundle-totals">
+					<td colspan="3"><?= h($master_item->product->name) ?> bundle totals</td>
+					<td class="number"><?= format_currency($master_item->get_bundle_single_price()) ?></td>
+					<td class="number"><?= format_currency($master_item->get_bundle_discount()) ?></td>
+					<td class="number"><?= $master_item->quantity ?></td>
+					<td class="number last"><?= format_currency($master_item->get_bundle_total_price()) ?></td>
+				</tr>
+			<? 
+					endif;
+				endif ?>
+			
+			<?
+				$prev_bundle_item = $item->bundle_master_order_item_id;
+				endforeach;
+			?>
+		</tbody>
+	</table>
+
+	<div class="clear"></div>

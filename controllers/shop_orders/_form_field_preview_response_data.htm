@@ -1,0 +1,29 @@
+<li class="field preview">
+	<p>Values received from the payment gateway.</p>
+	<div class="scrollableList">
+		<table class="simpleList">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th class="last">Value</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?
+					foreach ($form_model->response_data as $name=>$value):
+				?>
+				<tr class="<?= Backend_Html::zebra('response_data') ?>">
+					<td title="<?= h($name) ?>"><?= h(Phpr_Html::strTrimMiddle($name, 30)) ?></td>
+					<td class="last"><?= h($value) ?></td>
+				</tr>
+				<?
+					endforeach;
+				?>
+
+				<? if (!$form_model->response_data): ?>
+					<tr class="noData"><td colspan="2">No values</td></tr>
+				<? endif ?>
+			</tbody>
+		</table>
+	</div>
+</li>

@@ -1,0 +1,78 @@
+<? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
+
+	<? if (!isset($fatalError)): ?>
+		<? foreach ($slip_template_css as $src=>$media): ?>
+			<? if (strpos($src, '/') === false): ?>
+				<link rel="stylesheet" href="<?= root_url('modules/shop/packingslip_templates/'.$template_id.'/resources/css/'.$src) ?>" type="text/css" media="<?= $media ?>"/>
+			<? else: ?>
+				<link rel="stylesheet" href="<?= $src ?>" type="text/css" media="<?= $media ?>"/>
+			<? endif ?>
+		<? endforeach ?>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<? if (!isset($fatalError)): ?>
+		<ul class="breadcrumbs">
+			<li><a href="<?= $this->getRefererUrl() ?>"><?= h($this->getRefererName()) ?></a></li>
+			<? if (count($orders) == 1): ?>
+				<li><a href="<?= url('shop/orders/preview/'.$orders[0]->id) ?>">Order Preview</a></li>
+			<? endif ?>
+			<li><?= $this->app_page_title ?></li>
+		</ul>
+
+		<? if ($this->isHintVisible('invoice_hint')): ?>
+			<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
+				<div class="hint">
+					<p class="last">You can specify your company name and customize packing slips on the <a href="<?= url('shop/company_info/') ?>">System/Settings/Company Information and Settings</a> page.</p>
+					<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('invoice_hint', this)">Close</a>
+				</div>
+			</form>
+		<? endif ?>
+
+		<div class="toolbar">
+			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="window.print()">Print</a>
+			<div class="clear"></div>
+		</div>
+
+		<div class="print_sheets">
+			<? foreach ($orders as $order):
+				$split_to_pages = false;
+				if ($page_breaks_rule == 'breaks')
+					$split_to_pages = true;
+				elseif ($page_breaks_rule == 'no_breaks')
+					$split_to_pages = false;
+				else
+					$split_to_pages = $company_info->packing_slip_separate_pages;
+					
+				$has_bundles = false;
+				foreach ($order->items as $item)
+				{
+					if ($item->bundle_master_order_item_id) {
+						$has_bundles = true;
+						break;
+					}
+				}
+			?>
+				<div class="print_sheet <?= $split_to_pages ? null : 'no_page_breaks' ?>">
+				<?
+					$this->renderPartial(PATH_APP.'/modules/shop/packingslip_templates/'.$template_id.'/slip.htm', array(
+						'order_id'=>$order->id,
+						'order'=>$order,
+						'has_bundles'=>$has_bundles
+					));
+				?>
+				</div>
+			<? endforeach ?>
+		</div>
+	<? else: ?>
+		<?= flash() ?>
+		<? if(isset($order_id)):?>
+			<p><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Return to the order preview page</a></p>
+		<? else: ?>
+			<p><a href="<?= url('/shop/orders/') ?>">Return to the orders page</a></p>
+		<? endif ?>
+		<input type="hidden" id="no_print_layout" value="1"></input>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

@@ -1,0 +1,24 @@
+<div id="load_csv_form">
+	<h2>Grid help</h2>
+	<div class="content">
+		<div class="form400">
+			<h4>Adding and deleting rows</h4>
+			
+			<p>
+				New row: <strong>ctrl+i</strong> or navigate down in the last row.<br/>
+				Delete current row: <strong>ctrl+d</strong>. Alternatively you can delete a row by hovering it with the mouse and clicking the delete icon.
+			</p>
+			
+			<h4>Navigation</h4>
+			
+			<p>Use arrow and tab (<strong>tab</strong> or <strong>shift+tab</strong>) keys to navigate between cells.</p>
+
+			<h4>Search</h4>
+
+			<p>The live search feature allows to filter grid records with a search term. Empty the search field to cancel filtering.</p>
+			
+			<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+			<div class="clear"></div>
+		</div>
+	</div>
+</div>

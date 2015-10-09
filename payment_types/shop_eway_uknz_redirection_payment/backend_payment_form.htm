@@ -1,0 +1,10 @@
+<p>
+	Please click the button to pay with eWay
+</p>
+
+<form action="<?= $payment_method_obj->get_form_action($payment_method, $order, true) ?>" method="post">
+	<?= flash() ?>
+	
+	<input type="hidden" name="action" value="payment"/>
+	<?= backend_button('Pay with eWay', array('href'=>"#", 'onclick'=>'$(this).getForm().submit(); return false;')) ?>
+</form>

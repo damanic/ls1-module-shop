@@ -1,0 +1,9 @@
+<p class="top_offset">
+  Please click the button for the secure payment form
+</p>  
+
+{{ open_form() }}
+  {{ flash_message() }}
+
+  <input type="button" onclick="return $(this).getForm().sendRequest('shop:on_pay')" value="Continue"/>
+</form>

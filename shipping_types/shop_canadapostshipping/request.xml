@@ -1,0 +1,26 @@
+<eparcel>
+	<language>en</language>
+	<ratesAndServicesRequest>
+		<merchantCPCID><?= h($settings_obj->cpcid) ?></merchantCPCID>
+		<fromPostalCode><?= h($shipping_params->zip_code) ?></fromPostalCode>
+		<turnAroundTime><![CDATA[<?= $settings_obj->turn_around_time ? $settings_obj->turn_around_time : 0 ?>]]></turnAroundTime>
+		<itemsPrice><?= $total_price ?></itemsPrice>
+		<lineItems>
+			<? foreach($item_list as $item): ?>
+			<item>
+				<quantity><?= $item->quantity ?></quantity>
+				<weight><?= $item->product->weight ? $item->product->weight : 0 ?></weight>
+				<length><?= $item->product->depth ? $item->product->depth : 0 ?></length>
+				<width><?= $item->product->width ? $item->product->width : 0 ?></width>
+				<height><?= $item->product->height ? $item->product->height : 0 ?></height>
+				<description><![CDATA[<?= h($item->product->name) ?> <?= $item instanceof Shop_CartItem ? h($item->options_str()) : h($item->output_product_name(false, true)) ?>]]></description>
+				<? /*<readyToShip/>*/ ?>
+			</item>
+			<? endforeach ?>
+		</lineItems>
+		<city><![CDATA[<?= $city ?>]]></city>
+		<provOrState><?= $state ? h($state->code) : null ?></provOrState>
+		<country><?= h($country->code) ?></country>
+		<postalCode><![CDATA[<?= $zip ?>]]></postalCode>
+	</ratesAndServicesRequest>
+</eparcel>

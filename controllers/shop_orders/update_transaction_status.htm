@@ -1,0 +1,111 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/orders') ?>">Orders</a></li>
+		<li><a href="<?= url('/shop/orders/preview/'.$order_id.'?'.uniqid()) ?>">Order Preview</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+	
+	<?= flash() ?>
+	
+	<? if (!isset($fatalError)): ?>
+		<div class="scoreboardReport">
+			<ul>
+				<li>
+					<h3>Order</h3>
+					<p># <?= $order->id ?></p>
+					<p class="description">
+						Created: <?= $order->order_datetime->format('%x') ?>
+					</p>
+				</li>
+				<li>
+					<h3>Order Status</h3>
+					<p>
+						<span class="order_status_marker" style="background-color: <?= $order->displayField('status_color') ?>"><?= h($order->displayField('status')) ?></span>
+						<?= h($order->displayField('status')) ?>
+					</p>
+					<p class="description">
+						Since: <?= $order->status_update_datetime->format('%x') ?>
+					</p>
+				</li>
+				<li>
+					<h3>Transaction Id</h3>
+					<p>
+						<?= h($current_transaction->transaction_id) ?>
+					</p>
+					<p class="description">Created/Updated: <?= $current_transaction->displayField('created_at') ?></p>
+				</li>
+				<li class="last">
+					<h3>Transaction Status</h3>
+					<p>
+						<?= h($current_transaction->transaction_status_name) ?>
+					</p>
+					<p class="description">Payment method: <?= h($current_transaction->displayField('payment_method')) ?></p>
+				</li>
+			</ul>
+			<div class="clear"></div>
+		</div>
+
+		<div class="form300">
+			<?
+				$statuses = $current_transaction->list_available_transitions();
+				
+				if (!count($statuses)):
+			?>
+				<p>
+					The current transaction status (<?= h($current_transaction->transaction_status_name) ?>) cannot be changed.
+				</p>
+
+				<?= backend_button('Return to the Order Preview', url('/shop/orders/preview/'.$order_id.'?'.uniqid())) ?>
+				<div class="clear"></div>
+			<? else: ?>
+				<?= Phpr_Form::openTag(array('id'=>'settings_form')) ?>
+					<div class="formFlash"></div>
+					<div class="form">
+						<ul class="formElements">
+							<li class="field dropdown full">
+								<label for="new_transaction_status">New transaction status <span class="required">*</span></label>
+								<div class="fieldContainer">
+									<select name="new_transaction_status" id="new_transaction_status" autocomplete="off">
+										<option value="">&lt;please select new transaction status&gt;</option>
+
+										<? foreach ( $statuses as $status_id=>$status_name ): ?>
+											<option value="<?= $status_id ?>"><?= h($status_name) ?></option>
+										<? endforeach ?>
+									</select>
+								</div>
+								<div class="clear"></div>
+							</li>
+							
+							<li class="field dropdown full">
+								<label for="new_order_status">New order status</label>
+								<div class="fieldContainer">
+									<select name="new_order_status" id="new_order_status" autocomplete="off">
+										<option value="">&lt;do not change order status&gt;</option>
+
+										<? foreach ( $order_transitions as $transition ): ?>
+											<option value="<?= $transition->to_state_id ?>"><?= h($transition->to_name) ?></option>
+										<? endforeach ?>
+									</select>
+								</div>
+								<div class="clear"></div>
+							</li>
+							
+							<li class="field textarea full">
+								<label for="user_note">Transition comment</label>
+								<div class="fieldContainer"><textarea id="user_note" class="small" name="user_note"></textarea></div>
+								<div class="clear"></div>
+							</li>
+						</ul>
+					</div>
+					<input type="hidden" name="transaction_record_id" value="<?= $current_transaction->id ?>"/>
+					
+					<?= backend_ajax_button('Submit', 'update_transaction_status_onUpdate', array(), "confirm: 'Are you sure?'") ?>
+					<?= backend_button('Cancel', url('/shop/orders/preview/'.$order_id.'?'.uniqid()).'#tab_5') ?>
+					<div class="clear"></div>
+				</form>
+			<? endif ?>
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/orders') ?>">Return to the order list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

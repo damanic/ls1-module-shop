@@ -1,0 +1,32 @@
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/customers') ?>">Customers</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<? if (!($lock = Db_RecordLock::lock_exists($form_model))): ?>
+			<div class="form500">
+				<?= Phpr_Form::openTag() ?>
+					<? $this->formRender() ?>
+
+					<?= backend_ajax_button('Save', 'edit_onSave', array('class'=>'default')) ?>
+					<?= backend_ajax_button('Cancel', 'edit_onCancel') ?>
+
+					<?= backend_ajax_button('Delete', 'edit_onDelete', array('class'=>"right"), "confirm: 'Do you really want to delete this customer?'") ?>
+					<div class="clear"></div>
+				</form>
+				<? $this->formAddLockCode() ?>
+			</div>
+		<? else: ?>
+			<? $this->renderPartial(PATH_APP.'/modules/backend/controllers/partials/_record_locked.htm', array(
+				'record_name'=>'customer',
+				'lock'=>$lock
+			)) ?>
+		<? endif ?>
+	<? else: ?>
+		<p><a href="<?= url('/shop/customers') ?>">Return to the customer list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

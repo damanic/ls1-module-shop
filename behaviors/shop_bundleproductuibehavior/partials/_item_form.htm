@@ -1,0 +1,44 @@
+<div id="bundle_item_form">
+	<h2>Bundle Item</h2>
+	<div class="content">
+		<div class="form500">
+			<?= Phpr_Form::openTag(array('id'=>'bundle_itemform_element')) ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($item) ?>
+
+					<?= backend_ajax_button('Save', 'preview_on_save_bundle_item', array('id'=>'bundle_item_save_btn', 'class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: function(){
+							refresh_bundle_ui({
+								cancel_popup: true,
+								config_updated : ".($item->id ? 0 : 1).",
+								bundle_navigate_to_latest: ".($item->id ? 0 : 1)."
+							});
+						}
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					
+					<script type="text/javascript">
+						$('bundle_item_form').addEvent('popupLoaded', function(){
+							if ($('Shop_ProductBundleItem_name'))
+								$('Shop_ProductBundleItem_name').focus();
+						});
+					</script>
+
+					<input type="hidden" name="item_id" value="<?= $item->id ?>"/>
+					<input type="hidden" name="product_session_key" value="<?= $product_session_key ?>"/>
+					
+					<input type="hidden" name="phpr_uploader_model_class" value="<?= get_class($item) ?>"/>
+					<input type="hidden" name="phpr_uploader_model_id" value="<?= $item->id ?>"/>
+
+					<?= $this->bundle_get_post_storage()->create_field() ?>
+					<div class="clear"></div>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,76 @@
+<PriorityMailIntlRequest USERID="<?= $user_id ?>">
+	<Option/>
+	<Revision>2</Revision>
+	<ImageParameters/>
+	<FromFirstName><?= h($shipping_params->sender_first_name) ?></FromFirstName>
+	<FromMiddleInitial></FromMiddleInitial>
+	<FromLastName><?= h($shipping_params->sender_last_name) ?></FromLastName>
+	<FromFirm><?= h($shipping_params->sender_company) ?></FromFirm>
+	<FromAddress1><?= h($from_address_1) ?></FromAddress1>
+	<FromAddress2><?= h($from_address_2) ?></FromAddress2>
+	<FromCity><?= h($shipping_params->city) ?></FromCity>
+	<FromState><?= h($from_state) ?></FromState>
+	<FromZip5><?= h($shipping_params->zip_code) ?></FromZip5>
+	<FromPhone><?= h($shipping_params->sender_phone) ?></FromPhone>
+	
+	<ToName><?= h($order->shipping_first_name.' '.$order->shipping_last_name) ?></ToName>
+	<ToFirm><?= h($order->shipping_company) ?></ToFirm>
+	<ToAddress1><?= h($address_1) ?></ToAddress1>
+	<ToAddress2><?= h($address_2) ?></ToAddress2>
+	<ToAddress3></ToAddress3>
+	<ToCity><?= h($order->shipping_city)  ?></ToCity>
+	<ToProvince><?= $to_state ?></ToProvince>
+	<ToCountry><?= h($order->shipping_country->name)  ?></ToCountry>
+	<ToPostalCode><?= h($order->shipping_zip) ?></ToPostalCode>
+	<ToPOBoxFlag>N</ToPOBoxFlag>
+	<ToPhone><?= h($order->shipping_phone) ?></ToPhone>
+	<ToFax></ToFax>
+	<ToEmail><?= h($order->billing_email) ?></ToEmail>
+
+	<NonDeliveryOption>Return</NonDeliveryOption>
+	<Container><?= $container_type ?></Container>
+	<ShippingContents>
+		<? foreach ($order->items as $item): 
+			$weight = $item->total_weight();
+			
+			if ($shipping_params->weight_unit == 'KGS')
+				$weight = Core_Number::kg_to_lb($weight);
+				
+			$pounds = floor($weight);
+			$ounces = round(($weight - $pounds)*16, 2);
+			
+			$country = null;
+			if ($item->product->manufacturer && $item->product->manufacturer->country)
+				$country = $item->product->manufacturer->country->name;
+		?>
+		<ItemDetail>
+			<Description><?= h(Phpr_Html::strTrim($item->product->name, 56)) ?></Description>
+			<Quantity><?= $item->quantity ?></Quantity>
+			<Value><?= $item->subtotal ?></Value>
+			<NetPounds><?= $pounds ?></NetPounds>
+			<NetOunces><?= $ounces ?></NetOunces>
+			<HSTariffNumber></HSTariffNumber>
+			<CountryOfOrigin><?= $country ?></CountryOfOrigin>
+		</ItemDetail>
+		<? endforeach ?>
+	</ShippingContents>
+	<Insured><?= $insured ?></Insured>
+	<InsuredAmount><?= $insured_amount ?></InsuredAmount>
+	<Postage><?= $postage ?></Postage>
+	<GrossPounds><?= $total_pounds ?></GrossPounds>
+	<GrossOunces><?= $total_ounces ?></GrossOunces>
+	<ContentType>Merchandise</ContentType>
+	<Agreement>Y</Agreement>
+	<Comments><?= h($comments) ?></Comments>
+	<ImageType><?= $image_type ?></ImageType>
+	<ImageLayout><?= $image_layout ?></ImageLayout>
+	<POZipCode></POZipCode>
+	<LabelDate><?= $label_date ?></LabelDate>
+	<HoldForManifest>N</HoldForManifest>
+	<EELPFC></EELPFC>
+	<Size>REGULAR</Size>
+	<Length></Length>
+	<Width></Width>
+	<Height></Height>
+	<Girth></Girth>
+</PriorityMailIntlRequest>

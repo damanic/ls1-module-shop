@@ -1,0 +1,22 @@
+<? 
+	$options = $this->formFieldGetOptions($form_field->dbName, $this->viewData['form_model']); 
+	$dbName = $this->formGetFieldDbName($form_field->dbName, $this->viewData['form_model']);
+?>
+
+<select <? if ($form_field->disabled) echo 'disabled="disabled"' ?> id="<?= $this->formGetElementId($form_model_class.'_'.$dbName) ?>" name="<?= $form_model_class ?>[<?= $dbName ?>]">
+	<? if ($form_field->emptyOption !== null): ?>
+		<option value=""><?= h($form_field->emptyOption) ?></option>
+	<? endif ?>
+	
+	<? 
+		$fieldName = $form_field->dbName;
+		foreach ($options as $value=>$name): 
+			if (is_array($name))
+			{
+				$keys = array_keys($name);
+				$name = !count($keys) ? $value : $keys[0];
+			}
+	?>
+		<option <?= Phpr_Form::optionState( $value, $form_model->$dbName ) ?> value="<?= h($value) ?>"><?= $form_field->optionsHtmlEncode ? h($name) : $name ?></option>
+	<? endforeach ?>
+</select>

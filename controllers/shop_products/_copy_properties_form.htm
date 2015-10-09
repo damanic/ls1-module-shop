@@ -1,0 +1,128 @@
+<div id="copy_properties_form">
+	<h2>Copy Properties</h2>
+	<div class="content">
+		<div class="form500">
+			<? if (!isset($fatalError)): ?>
+				<?= Phpr_Form::openTag(array('id'=>'copy_properties_form')) ?>
+					<div class="formFlash"></div>
+					
+					<?
+						$products = $form_model->list_related_records_deferred('grouped_products_all', $this->formGetEditSessionKey());
+
+						usort($products->objectArray, array('Shop_Product', 'sort_grouped_products'));
+						
+						if ($products->count):
+					?>
+						<p>Please select products you want to copy properties to.</p>
+						
+						<? if ($products->count > 6): ?>
+							<div class="scrollableList">
+						<? endif ?>
+
+						<table class="simpleList">
+							<thead>
+								<tr>
+									<th class="checkbox">
+										<input type="checkbox" class="list_head_cb" value="1" onclick="$(this).findParent('table').getElements('tbody input.list_cb').each(function(cb){cb.cb_update_state(this.checked)}, this)"/>
+									</th>
+								
+									<th>Option</th>
+									<th>Name</th>
+									<th class="last">SKU</th>
+								</tr>
+							</thead>
+							<tbody>
+								<? foreach ($products as $product): ?>
+									<tr class="<?= Backend_Html::zebra('product_grouped_copy') ?>">
+										<td class="checkbox">
+											<input value="<?= $product->id ?>" class="list_cb" type="checkbox" name="list_ids[]" onclick="if (!this.checked) $(this).findParent('table').getElement('thead input.list_head_cb').cb_uncheck()"/>
+										</td>
+										<td><?= h($product->displayField('grouped_option_desc', 'list')) ?></td>
+										<td><?= h($product->displayField('name', 'list')) ?></td>
+										<td class="last"><?= h($product->displayField('sku', 'list')) ?></td>
+									</tr>
+								<? endforeach ?>
+							</tbody>
+						</table>
+
+						<? if ($products->count > 6): ?>
+							</div>
+						<? endif ?>
+
+						<p class="<? if ($products->count <= 6): ?>offsetTop<? endif ?>">Please select properties you want to copy to the selected products.</p>
+
+						<div class="scrollableList">
+							<table class="simpleList">
+								<thead>
+									<tr>
+										<th class="checkbox">
+											<input type="checkbox" class="list_head_cb" value="1" onclick="$(this).findParent('table').getElements('tbody input.list_cb').each(function(cb){cb.cb_update_state(this.checked)}, this)"/>
+										</th>
+										<th class="last">Property</th>
+									</tr>
+								</thead>
+								<tbody>
+									<? 
+										$index = 0;
+										foreach ($properties as $id=>$name): ?>
+										<tr class="<?= Backend_Html::zebra('copy_property') ?> <?= $index == count($properties)-1 ? 'last' : null ?>">
+											<td class="checkbox">
+												<input value="<?= $id ?>" id="<?= 'grouped_property_'.$id ?>" class="list_cb" type="checkbox" name="properties[]" onclick="if (!this.checked) $(this).findParent('table').getElement('thead input.list_head_cb').cb_uncheck()"/>
+											</td>
+											<td class="last"><?= h($name) ?></td>
+										</tr>
+									<? 
+										$index++;
+										endforeach ?>
+								</tbody>
+							</table>
+						</div>
+						
+						<?= backend_ajax_button('Copy', 'onCopyPropertiesProducts', array('id'=>'copy_btn'), "
+							loadIndicator: {injectInElement: true},
+							extraFields: $('grouped_sort_order').getForm(),
+							prepareFunction: function(){phprTriggerSave();},
+							onSuccess: function(){
+								updateGroupedProductList('".$edit_session_key."', {'copy_properties_data': \$('copy_properties_form').toQueryString()});
+								alert('The selected properties have been successfully copied to the grouped products.');
+								cancelPopup();
+							}
+						") ?>
+						
+						<script type="text/javascript">
+							$('copy_properties_form').addEvent('popupLoaded', function(){
+								$('copy_properties_form').bindKeys({'enter': function(){
+									$('copy_btn').getForm().sendPhpr('onCopyPropertiesProducts', {
+										loadIndicator: {injectInElement: true}, 
+										extraFields: $('grouped_sort_order').getForm(),
+										prepareFunction: function(){phprTriggerSave();}, 
+										onSuccess: function(){
+											updateGroupedProductList(
+											    '<?= $edit_session_key ?>',
+											    {'copy_properties_data': $('copy_properties_form').toQueryString()}
+											);
+											alert('The selected properties have been successfully copied to the grouped products.');
+											cancelPopup();
+										}
+									});
+								}});
+							});
+						</script>
+
+					<? else: ?>
+						<p>Grouped products not found.</p>
+					<? endif ?>
+
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+			
+					<div class="clear"></div>
+					<input type="hidden" name="edit_session_key" value="<?= h($edit_session_key) ?>"/>
+				</form>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+		</div>
+	</div>
+</div>

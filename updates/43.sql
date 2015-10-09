@@ -1,0 +1,1 @@
+alter table shop_currency_settings add column rate_to_usd float;

@@ -1,0 +1,17 @@
+<li class="first">
+	<p><a href="#" class="imageLink pasteDocument" onclick="
+		return $('Shop_Order_shipping_first_name').getForm().sendPhpr(
+			'onCopyBillingAddress',
+			{
+				loadIndicator: {show: true, element: $('Shop_Order_shipping_first_name').getForm(), hideOnSuccess: true},
+				onSuccess: function(){ 
+					shipping_info_changed = true; 
+					assign_shipping_country_handler.delay(500); 
+					assign_shipping_state_handler.delay(500); 
+					assign_shipping_city_handler.delay(500); 
+					updateTotals.delay(500);
+				}
+			}
+		)
+	">Copy billing address</a></p>
+</li>

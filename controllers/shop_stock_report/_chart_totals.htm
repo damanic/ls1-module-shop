@@ -1,0 +1,16 @@
+<div class="scoreboardReport">
+	<ul>
+		<li>
+			<h3>Number of items sold</h3>
+			<p>
+				<?= $totals_data->items_sold ?>
+			</p>
+		</li>
+		<li class="last">
+			<h3>Subtotal</h3>
+			<p>
+				<?= format_currency($totals_data->amount) ?>
+			</p>
+		</li>
+	</ul>
+</div>

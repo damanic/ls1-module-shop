@@ -1,0 +1,30 @@
+<? $include_tax = Shop_CheckoutData::display_prices_incl_tax($order); ?>
+
+<table class="simpleList" style="font: normal 11px/150% Arial, Verdana, sans-serif; width: 100%">
+	<thead style="text-align: left; background: #e5e5e5">
+		<tr>
+			<th>Item</th>
+			<th>SKU</th>
+			<th class="number">Price</th>
+			<th class="number">Discount</th>
+			<th class="number">Quantity</th>
+			<th class="number last">Total</th>
+		</tr>
+	</thead>
+	<tbody style="text-align: left; background: white">
+		<?
+			foreach ($items as $item):
+		?>
+		<tr>
+			<td><?= $item->output_product_name() ?></td>
+			<td><?= $item->product_sku ? h($item->product_sku) : h('<product not found>') ?></td>
+			<td class="number"><?= $include_tax ? format_currency($item->price_tax_included) : format_currency($item->single_price) ?></td>
+			<td class="number"><?= $include_tax ? format_currency($item->discount_tax_included) : format_currency($item->discount) ?></td>
+			<td class="number"><?= h($item->quantity) ?></td>
+			<td class="number last"><?= $include_tax ? format_currency($item->subtotal_tax_incl) : format_currency($item->subtotal) ?></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+	</tbody>
+</table>

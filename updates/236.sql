@@ -1,0 +1,1 @@
+alter table shop_payment_transactions change column transaction_status_code transaction_status_code varchar(100);

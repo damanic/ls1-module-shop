@@ -1,0 +1,47 @@
+<div id="extra_option_form">
+	<h2>Extra Option</h2>
+	<div class="content">
+		<div class="form600">
+			<?= Phpr_Form::openTag(array('id'=>'extra_option_form_element')) ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($option) ?>
+
+					<?= backend_ajax_button('Save', 'onAddExtraOption', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updateExtraOptionsList.pass('$session_key'),
+						prepareFunction: function(){phprTriggerSave();}
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<script type="text/javascript">
+						$('extra_option_form').addEvent('popupLoaded', function(){
+							if ($('extra_option_form').getElement('textarea'))
+								$('extra_option_form').getElement('textarea').focus();
+
+							var group_selector = $('extra_option_form').getElement('select');
+							if (group_selector)
+							{
+								group_selector.addEvent('change', function(){
+									if (group_selector.get('value') == -1)
+										new PopupForm('onLoadExtraOptionGroupForm', {ajaxFields: $('extra_option_form_element').getForm()});
+								});
+							}
+						});
+						
+					</script>
+
+					<div class="clear"></div>
+					<input type="hidden" name="product_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="option_id" value="<?= $option_id ?>"/>
+					<input type="hidden" name="phpr_uploader_model_class" value="<?= get_class($option) ?>"/>
+					<input type="hidden" name="phpr_uploader_model_id" value="<?= $option->id ?>"/>
+					<input type="hidden" name="form_prefix" value="<?= $this->formGetUniquePrefix() ?>">
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

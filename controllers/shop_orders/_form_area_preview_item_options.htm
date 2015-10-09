@@ -1,0 +1,12 @@
+<? 
+	$options = $form_model->get_options();
+	if ($options):
+?>
+	<? foreach ($options as $option_name=>$option_value): ?>
+		<li class="field text preview">
+			<label for="Shop_OrderItem_discount"><?= h($option_name) ?></label>
+			<? $this->formRenderPartial('form_preview_value', array('value'=>$option_value, 'type'=>db_varchar)) ?>
+			<div class="clear"></div>
+		</li>
+	<? endforeach ?>
+<? endif ?>

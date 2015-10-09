@@ -1,0 +1,18 @@
+<?
+	$transitions = $form_model->list_related_records_deferred('outcoming_transitions', $this->formGetEditSessionKey());
+?>
+
+<? if ($transitions->count): ?>
+	<ul class="status_transition">
+		<? foreach ($transitions as $transition): ?>
+			<li>
+				<div class="container" style="background-color: <?= $transition->to_color ?>">
+					<p>To status: <span><?= h($transition->to_name) ?></span> <br/>Role: <span><?= h($transition->role_name) ?></span></p>
+					<p class="link"><a href="#" onclick="return $(this).getForm().sendPhpr('onDeleteTransition', {extraFields: {transitionId: '<?= $transition->id ?>'}, confirm: 'Do you really want to delete this transition?', update: 'status_transition_list', loadIndicator: {show: false}});" class="hiddenLink" title="Delete transition">Delete transition</a></p>
+				</div>
+			</li>
+		<? endforeach ?>
+	</ul>
+<? else: ?>
+	<p class="noData">No transitions defined</p>
+<? endif ?>

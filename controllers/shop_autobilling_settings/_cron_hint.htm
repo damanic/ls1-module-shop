@@ -1,0 +1,6 @@
+<li class="<?= !$form_model->enabled ? 'hidden' : null ?>" id="cron_hint">
+	<div class="hint">
+		<? $url = root_url('/ls_shop_auto_billing', true) ?>
+		<p class="last">In order the automated billing feature to work properly please setup a cron job invoking the following URL daily: <a onclick="return false" href="<?= $url ?>"><?= $url ?></a>.</p>
+	</div>
+</li>

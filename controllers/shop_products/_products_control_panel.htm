@@ -1,0 +1,30 @@
+<div class="toolbar">
+	<?= Phpr_Form::openTag() ?>
+		<?= backend_ctr_button('Add product', 'new_document', url('/shop/products/create')) ?>
+		<?= backend_ctr_button('Duplicate', 'duplicate', array('href'=>'#', 'onclick'=>"return duplicate_selected()")) ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Import from CSV', 'document_import', url('/shop/products/import_csv')) ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Enable or disable', 'enable', array('href'=>'#', 'onclick'=>"return enable_disable_selected()")) ?>
+		<? if (!Phpr::$config->get('DISABLE_GROUPED_PRODUCTS')): ?>
+			<?= backend_ctr_button('Group', 'group_products', array(
+				'href'=>'#',
+				'onclick'=>"return group_selected_products()",
+				'class'=>'tooltip',
+				'title'=>'Convert selected products to grouped products'
+				)) ?>
+		<? endif ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Delete', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_selected()")) ?>
+		<div class="separator">&nbsp;</div>
+		<?= backend_ctr_button('Product groups', 'group', url('/shop/groups')) ?>
+		<?= backend_ctr_button('Product types', 'product_types', url('/shop/product_types')) ?>
+		<?= backend_ctr_button('Extra option sets', 'table_multiple', url('/shop/extras_sets')) ?>
+		<?= backend_ctr_button('Manufacturers', 'manufacturer', url('/shop/manufacturers')) ?>
+		<?= backend_ctr_button('Reviews', 'star', url('/shop/reviews')) ?>
+
+		<? Backend::$events->fireEvent('shop:onExtendProductsToolbar', $this) ?>
+
+		<div class="clear"></div>
+	</form>
+</div>

@@ -1,0 +1,139 @@
+<?
+	$serieValueAltered = false;
+	$displayType = $this->getReportParameter('product_report_display_type', 'amount');
+?>
+<settings>
+	<? if ($chart_type == Backend_ChartController::rt_column): ?>
+		<data>
+			<chart>
+				<series>
+					<? 
+						$graphs = array();
+						foreach ($chart_data as $record):
+							$this->addToArray($graphs, $record->graph_code, $record, $record);
+					
+						if (!Backend_Reports::unique('series', $record->series_id)) 
+							continue;
+					?>
+						<value xid="<?= h($record->series_id) ?>"><?= h($record->series_value) ?></value>
+					<? endforeach ?>
+				</series>
+				<graphs>
+					<? 
+						$index = -1;
+						foreach ($graphs as $code=>$data):
+						$values = $data->values;
+						$params = $data->params;
+						$index++;
+					?>
+						<graph  <?= $this->chartColor($index) ?> title="<?= h($params->graph_name) ?>" balloon_text="{title}">
+							<? foreach ($values as $value): ?>
+								<value description="<?= $displayType == 'amount' ? format_currency($value->record_value) : $value->record_value ?>" xid="<?= h($value->series_id) ?>"><?= $this->addMaxValue($value->record_value) ?></value>
+							<? endforeach ?>
+						</graph>
+					<? endforeach ?>
+				</graphs>
+			</chart>
+		</data>
+	<? elseif ($chart_type == Backend_ChartController::rt_line): ?>
+		<data>
+			<chart>
+				<series>
+					<? 
+						$graphs = array();
+						$series = array();
+						foreach ($chart_data as $record)
+						{
+							$this->addToArray($graphs, $record->graph_code, $record, $record, $record->series_id);
+					
+							if (Backend_Reports::unique('series', $record->series_id)) 
+								$series[] = $record;
+						}
+
+						$lastIndex = count($series)-1;
+						foreach ($chart_series as $index=>$record):
+					?>
+						<value xid="<?= h($record->series_id) ?>"><?= Phpr_DateTime::parse($record->series_id, Phpr_DateTime::universalDateFormat)->format('%b %d, %Y') ?></value>
+					<? endforeach ?>
+				
+					<? if (!count($chart_data)): ?>
+						<value xid="0">0</value>
+					<? endif ?>
+				</series>
+				<graphs>
+					<? 
+					$index = 1;
+					foreach ($graphs as $code=>$data):
+						if (!strlen($code))
+							continue;
+					
+						$values = $data->values;
+						$params = $data->params;
+					?>
+						<graph <?= $this->chartColor($index-1) ?> fill_color="#0D8ECF" fill_alpha="6" bullet="round" line_width="2" color_hover="#FF0000" bullet_size="6" gid="<?= 'graph_'.$index ?>" balloon_text="{description}" title="<?= h($params->graph_name) ?>">
+							<? 
+								foreach ($chart_series as $serie):
+									if (array_key_exists($serie->series_id, $values)):
+										$value = $values[$serie->series_id];
+
+									$value->record_value = strlen($value->record_value) ? $value->record_value : 0;
+							?>
+								<value bullet_size="<?= $value->record_value > 0 ? 5 : 0 ?>" description="<?= h($params->graph_name).': '.($displayType == 'amount' ? format_currency($value->record_value) : $value->record_value) ?>" xid="<?= h($value->series_id) ?>"><?= $this->addMaxValue($value->record_value) ?></value>
+							<? else: ?>
+								<value bullet_size="0" description="<?= h($params->graph_name).': '.($displayType == 'amount' ? format_currency(0) : 0) ?>" xid="<?= h($serie->series_id) ?>">0</value>
+								<? endif ?>
+							<? endforeach ?>
+						</graph>
+					<? 
+					$index++;
+					endforeach ?>
+				</graphs>
+			</chart>
+		</data>
+	<? elseif ($chart_type == Backend_ChartController::rt_pie): ?>
+		<data>
+			<pie>
+				<? 
+					foreach ($chart_data as $index=>$record):
+				?>
+					<slice <?= $this->chartColor($index) ?> description="<?= h($record->graph_name).': '.($displayType == 'amount' ? format_currency($record->record_value) : $record->record_value) ?>" title="<?= h($record->graph_name) ?>"><?= $record->record_value ?></slice>
+				<? endforeach ?>
+			</pie>
+		</data>
+	<? endif ?>
+
+	<? if ($chart_type != Backend_ChartController::rt_pie): ?>
+		<plot_area>
+			<margins>
+				<left><?= $this->getValuesAxisMargin() ?></left>
+				<? if (count($graphs) > 6): ?>
+					<bottom>34</bottom>
+				<? endif ?>
+			</margins>
+		</plot_area>
+	
+		<values>
+			<category>
+				<enabled>false</enabled>
+			</category>
+		</values>
+		<? if (count($graphs) > 6): ?>
+			<legend>
+				<enabled>false</enabled>
+			</legend>
+		<? endif ?>
+	<? else: ?>
+		<balloon>
+			<enabled>false</enabled>
+		</balloon>
+		<legend>
+			<enabled>false</enabled>
+		</legend>
+		<data_labels>
+			<show>{description}</show>
+		</data_labels>
+	<? endif ?>
+	
+	<? $this->chartNoData($chart_data) ?>
+	
+</settings>

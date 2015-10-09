@@ -1,0 +1,26 @@
+<?
+	$total = 0;
+?>
+<div class="scoreboardReport">
+	<ul>
+		<? if (isset($totals_data) && $totals_data): ?>
+			<? 
+				foreach($totals_data as $tax_name => $tax_total): 
+					$total += $tax_total['value'];
+			?>
+				<li>
+					<h3><?= $tax_name ?></h3>
+					<p>
+						<?= format_currency($tax_total['value']) ?>
+					</p>
+				</li>
+			<? endforeach ?>
+		<? endif ?>
+		<li class="last">
+			<h3>Tax total</h3>
+			<p>
+				<?= format_currency($total) ?>
+			</p>
+		</li>
+	</ul>
+</div>

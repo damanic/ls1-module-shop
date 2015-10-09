@@ -1,0 +1,33 @@
+<div>
+	<h2>Order Item</h2>
+	<div class="content">
+		<div class="form600 product_item_preview">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? 
+						$options_arr = unserialize($item->options);
+						$extras_arr = unserialize($item->extras);
+
+						$image_url = $item->product->image_url(0, 100, 100); 
+						if ($image_url):
+					?>
+						<div class="preview_left">
+							<img class="product_image" src="<?= $image_url ?>" alt=""/>
+						</div>
+					<? endif ?>
+
+					<div class="preview_right <?= !$image_url ? 'no_image' : null ?>">
+						<? $this->formRenderPreview($item) ?>
+					</div>
+
+					<div class="clear"></div>
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Close', array('onclick'=>'return cancelPopup()')) ?>
+				<? endif ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,25 @@
+<div id="status_transition_list">
+	<? $this->renderPartial('transition_list') ?>
+</div>
+
+<p class="last"><a class="imageLink addDocument img_noBottomPading" href="#" onclick="new PopupForm('onLoadTransitionForm', {ajaxFields: {sessionKey: $('form_session_keyShop_OrderStatus').get('value')}}); return false;">Add transition</a></p>
+
+<script type="text/javascript">
+	function updateStates()
+	{
+		cancelPopup();
+
+		$('status_transition_list').getForm().sendPhpr(
+			'onUpdateTransitionList',
+			{
+				update: 'status_transition_list',
+				loadIndicator: {
+					show: true,
+					element: 'status_transition_list',
+					src: 'phproad/resources/images/form_load_30x30.gif',
+					hideOnSuccess: true
+				}
+			}
+		)
+	}
+</script>

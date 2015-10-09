@@ -1,0 +1,33 @@
+<li class="field text full preview">
+	<label>Grouped Products</label>
+
+	<? $products = $form_model->grouped_products_all ?>
+	<table class="simpleList">
+		<thead>
+			<tr>
+				<th>Option</th>
+				<th>Name</th>
+				<th>SKU</th>
+				<th class="number">Price</th>
+				<th class="bool">Enabled</th>
+				<th class="number last">In Stock</th>
+			</tr>
+		</thead>
+		<tbody>
+			<? foreach ($products as $product): ?>
+				<tr class="<?= Backend_Html::zebra('grouped_products') ?> <?= $product->enabled ? null : 'disabled' ?>">
+					<td><?= h($product->grouped_option_desc) ?></td>
+					<td><?= h($product->name) ?></td>
+					<td><?= h($product->sku) ?></td>
+					<td class="number"><?= format_currency($product->price) ?></td>
+					<td class="bool">
+						<span class="<?= $product->enabled ? 'on' : null ?>"><?= $product->enabled ? 'Yes' : 'No' ?></span>
+					</td>
+					<td class="number last"><?= h($product->in_stock) ?></td>
+				</tr>
+			<? endforeach ?>
+		</tbody>
+	</table>
+
+	<div class="clear"></div>
+</li>

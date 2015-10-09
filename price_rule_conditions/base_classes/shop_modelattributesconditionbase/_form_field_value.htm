@@ -1,0 +1,72 @@
+<?
+	$columnDefinition = $form_field->getColDefinition();
+	$columnInfo = $columnDefinition->getColumnInfo();
+
+	$attribute = $form_model->subcondition;
+	
+	$condition_obj = $form_model->get_condition_obj();
+	$control_type = $condition_obj->get_value_control_type($form_model);
+	
+	$this->conditionsRregisterViewPaths($form_model);
+?>
+<input name="prev_control_type" value="<?= h($control_type) ?>" type="hidden" />
+<input name="prev_attribute" value="<?= h($attribute) ?>" type="hidden" />
+<? if ($control_type == 'text'): ?>
+	<input value="<?= h($form_model->displayField($form_field->dbName)) ?>" class="<?= $columnDefinition->type ?>" type="text" id="<?= $this->formGetElementId($form_model_class.'_'.$form_field->dbName) ?>" name="<?= $form_model_class ?>[<?= $form_field->dbName ?>]"/>
+<? elseif ($control_type == 'dropdown'): 
+	$options = $condition_obj->get_value_dropdown_options($form_model, $this);
+	$dbName = $this->formGetFieldDbName($form_field->dbName, $this->viewData['form_model']);
+?>
+	<select id="<?= $this->formGetElementId($form_model_class.'_'.$form_field->dbName) ?>" name="<?= $form_model_class ?>[<?= $form_field->dbName ?>]">
+		<? 
+			foreach ($options as $value=>$name): 
+				if (is_array($name))
+				{
+					$keys = array_keys($name);
+					$name = !count($keys) ? $value : $keys[0];
+				}
+		?>
+			<option <?= Phpr_Form::optionState( $value, $form_model->$dbName ) ?> value="<?= h($value) ?>"><?= $name ?></option>
+		<? endforeach ?>
+	</select>
+<? elseif ($control_type == 'multi_value'): ?>
+	<?
+		$reference_info = $condition_obj->prepare_reference_list_info($form_model);
+		
+		$this->formRenderPartial('multi_select_control', array('model'=>$reference_info->reference_model, 'columns'=>$reference_info->columns, 'attribute'=>$form_model->subcondition, 'condition_id'=>$form_model->id, 'condition_obj'=>$condition_obj));
+	?>
+
+	<h4>Selected Records</h4>
+	<div class="added_filter_list">
+		<table class="simpleList">
+			<?
+				$selected_records = $condition_obj->list_selected_reference_records($form_model);
+
+				$reference_column_name = $reference_info->columns[0]
+			?>
+			
+			<tbody id="added_filter_list">
+				<? if (!isset($selected_records) || !$selected_records->count): ?>
+					<tr class="noData">
+						<td>No records added</td>
+					</tr>
+				<? else: ?>
+					<? foreach ($selected_records as $record): ?>
+						<tr class="<?= Backend_Html::zebra('condition_settings_reference_record') ?>">
+							<td class="iconCell">
+								<a class="filter_control" href="#" onclick="return conditions_delete_record(this)"><img src="phproad/modules/db/behaviors/db_filterbehavior/resources/images/remove_record.gif" alt="Remove record" title="Remove record" width="16" height="16"/></a>
+							</td>
+							<td class="last">
+								<?= h($record->$reference_column_name) ?>
+								<input type="hidden" name="condition_reference_ids[]" class="record_id" value="<?= $record->id ?>"/>
+							</td>
+						</tr>
+					<? endforeach ?>
+				<? endif ?>
+			</tbody>
+		</table>
+	</div>
+	
+	<input value="<?= h($form_model->displayField($form_field->dbName)) ?>" id="Shop_PriceRuleCondition_value" type="hidden" name="<?= $form_model_class ?>[<?= $form_field->dbName ?>]"/>
+	<input value="1" type="hidden" name="multiselect_control"/>
+<? endif ?>

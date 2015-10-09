@@ -1,0 +1,14 @@
+<li>
+	<? $silent_post_url = root_url('/ls_authorize_net_silent_post', true); ?>
+	
+	<div class="hint">
+		<p>Please set the <strong>Silent Post URL</strong> value in the Authorize.Net Merchant Interface:</p>
+		<ol class="simpleList">
+			<li>Log into the Merchant Interface at https://secure.authorize.net (or https://test.authorize.net/)</li>
+			<li>Click Settings under Account in the main menu on the left</li>
+			<li>Click Silent Post URL in the Transaction Format Settings section</li>
+			<li>Enter the following URL into the text field: <a href="<?= $silent_post_url ?>" onclick="return false"><?= $silent_post_url ?></a></li>
+			<li>Click Submit</li>
+		</ol>
+	</div>
+</li>

@@ -1,0 +1,60 @@
+<? Phpr_View::beginBlock("view") ?>
+
+	<?= flash() ?>
+
+	<div id="products_export">
+		<div class="form600">
+			<?= open_form(array('action' => url('/shop/export/export_csv'))) ?>
+				<div class="form">
+					<div class="formFlash"></div>
+					<div class="tabs">
+						<ul class="tabs_page">
+							<li class="form_page">
+								<ul class="formElements">
+									<li class="field dropdown full">
+										<label for="export_format">Export Format</label>
+										<div class="fieldContainer">
+											<select id="export" name="export[format]">
+												<option value="regular">LemonStand 1</option>
+												<option value="ls2">LemonStand Cloud</option>
+											</select>
+										</div>
+									</li>
+									<li class="field checkbox full">
+										<label for="export_images">
+											Export Image Archive (May take some time)
+											<span class="comment">
+												Please note: Exporting the image archive will require additional server resources.
+												<? if ($low_resources): ?>
+													<br>Your PHP setting for <strong>memory_limit</strong> is quite low.  If you encounter issues while trying to export an image archive, please increase it to <strong>768M</strong> or larger and try again.
+												<? endif ?>
+											</span>
+										</label>
+										<div class="fieldContainer">
+											<input type="hidden" name="export[images]" value="">
+											<input type="checkbox" name="export[images]" id="export_images" value="1">
+										</div>
+									</li>
+									<li class="field checkbox full">
+										<label for="export_iwork">
+											Export with iWork-compatible format (Regular format only)
+										</label>
+										<div class="fieldContainer">
+											<input type="hidden" name="export[iwork]" value="">
+											<input type="checkbox" name="export[iwork]" id="export_iwork" value="1">
+										</div>
+									</li>
+									<div class="clear"></div>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="button">
+					<a href="#" onclick="$(this).getForm().submit(); return false;">Export CSV</a>
+				</div>
+				<div class="clear"></div>
+			<?= close_form() ?>
+		</div>
+	</div>
+<? Phpr_View::endBlock() ?>

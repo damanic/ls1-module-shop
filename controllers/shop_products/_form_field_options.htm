@@ -1,0 +1,45 @@
+<li class="field">
+	<div class="toolbar listToolbar">
+		<a class="imageLink new_document img_noBottomPading" href="#" onclick="$('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadCustomAttributeForm', {ajaxFields: $('custom_attribute_list<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Add option</a>
+		
+		<a class="imageLink document_import img_noBottomPading" href="#" onclick="$('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadSaveOptionsForm', {ajaxFields: $('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Save option set</a>
+		
+		<a class="imageLink group img_noBottomPading" href="#" onclick="$('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadLoadOptionsForm', {ajaxFields: $('custom_attribute_id<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Load option set</a>
+		
+		<div class="separator"></div>
+		
+		<a class="imageLink table_gear img_noBottomPading" href="#" onclick="new PopupForm('onLoadOptionMatrixPopup', {autoCenter: false, closeByEsc: false, ajaxFields: $merge($('custom_attribute_list<?= $this->formGetEditSessionKey() ?>').getForm().fieldsToHash(), {height: jQuery(window).height(), width: jQuery(window).width()})}); return false;">Option Matrix</a>
+
+		<div class="clear"></div>
+	</div>
+	
+	<div id="custom_attribute_list<?= $this->formGetEditSessionKey() ?>" class="clear relative">
+		<? $this->renderPartial('option_list') ?>
+	</div>
+	
+	<input type="hidden" name="custom_attribute_id" id="custom_attribute_id<?= $this->formGetEditSessionKey() ?>" value=""/>
+
+	<script type="text/javascript">
+		function updateCustomAttributeList(session_key)
+		{
+			cancelPopup();
+
+			$('custom_attribute_list'+session_key).getForm().sendPhpr(
+				'onUpdateCustomAttributeList',
+				{
+					update: 'custom_attribute_list'+session_key,
+					loadIndicator: {
+						show: true,
+						element: 'custom_attribute_list'+session_key,
+						hideOnSuccess: true,
+						injectInElement: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					},
+					onSuccess: function(){
+						make_options_sortable(session_key);
+					}
+				}
+			)
+		}
+	</script>
+</li>

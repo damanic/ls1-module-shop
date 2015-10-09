@@ -1,0 +1,1 @@
+alter table shop_product_price_index add column is_on_sale tinyint(4);

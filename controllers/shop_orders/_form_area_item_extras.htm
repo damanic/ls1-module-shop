@@ -1,0 +1,73 @@
+<li>
+	<? 
+		$item = $form_model;
+
+		$options_arr = unserialize($item->options);
+		$extras_arr = unserialize($item->extras);
+		$deleted_extras = $item->get_deleted_extra_options();
+		
+		$existing_options = $item->product->extra_options->objectArray;
+		uasort($existing_options, array('Shop_ExtraOption', 'sort_extra_options_by_group'));
+
+	?>
+	<div class="extra_options">
+		<table class="simpleList">
+			<thead class="noTopBorder">
+				<tr>
+					<th class="center minSize">Add to product</th>
+					<th>Option</th>
+					<th>Option group</th>
+					<th class="number last">Price</th>
+				</tr>
+			</thead>
+			<tbody>
+				<? if ($item->product->extra_options->count || $deleted_extras): ?>
+					<? foreach ($existing_options as $option): 
+						$control_name = 'product_extra_options['.$option->option_key.']';
+						$posted_options = post('product_extra_options', array());
+
+						$checked_price = $item->extra_checked_price($option->description);
+						$is_checked = post('item_postback') ? array_key_exists($option->option_key, $posted_options) : $checked_price !== false;
+
+						if ($checked_price === false)
+							$checked_price = $option->get_price_no_tax($item->product);
+
+						$price = post('item_postback') ? $option->get_price($item->product, false) : $checked_price;
+					?>
+					<tr class="<?= Backend_Html::zebra('bundle-products') ?>">
+						<td class="checkbox center">
+							<input onclick="if ($(this).checked) $('extra_option_price_<?= $option->option_key ?>').focus()" class="list_cb" name="<?= $control_name ?>" <?= checkbox_state($is_checked) ?> id="extra_option_<?= $option->option_key ?>" value="1" type="checkbox"/>
+						</td>
+						<td><label for="extra_option_<?= $option->option_key ?>"><?= h($option->description) ?></label></td>
+						<td><label for="extra_option_<?= $option->option_key ?>"><?= h($option->group_name ) ?></label></td>
+						<td class="number inline_container last">
+							<input id="extra_option_price_<?= $option->option_key ?>" type="text" class="inline" name="<?= 'product_extra_option_price['.$option->option_key.']' ?>" value="<?= h($price) ?>"/>
+							<input type="hidden" name="<?= 'product_extra_option_name['.$option->option_key.']' ?>" value="<?= h($option->description) ?>"/>
+						</td>
+					</tr>
+					<? endforeach ?>
+
+					<? foreach ($deleted_extras as $option): 
+						$option_key = md5($option[1]);
+					?>
+						<tr class="<?= Backend_Html::zebra('bundle-products') ?>">
+							<td><input name="<?= 'product_extra_options['.$option_key.']' ?>" checked="checked" id="extra_option_<?= $option_key ?>" value="1" type="checkbox"/></td>
+							<td>
+								<label for="extra_option_<?= $option_key ?>"><?= h($option[1]) ?></label>
+							</td>
+							<td></td>
+							<td class="number inline_container last">
+								<input type="text" class="inline" name="<?= 'product_extra_option_price['.$option_key.']' ?>" value="<?= h($option[0]) ?>"/>
+								<input type="hidden" name="<?= 'product_extra_option_name['.$option_key.']' ?>" value="<?= h($option[1]) ?>"/>
+							</td>
+						</tr>
+					<? endforeach ?>
+				<? else: ?>
+					<tr class="noData">
+						<td colspan="4 last">This product has no extra options.</td>
+					</tr>
+				<? endif ?>
+			</tbody>
+		</table>
+	</div>
+</li>

@@ -1,0 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">  
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head></head>
+<body>
+	<form name="form" id="3d_form" action="<?=Phpr::$request->getField('ACSURL')?>" method="POST">
+		<input type="hidden" name="PaReq" value="<?=Phpr::$request->getField('PAReq')?>" />
+		<input type="hidden" name="TermUrl" value="<?=Phpr::$request->getField('TermUrl')?>" />
+		<input type="hidden" name="MD" value="<?=Phpr::$request->getField('MD')?>" />
+		<noscript>
+		<p>Please click button below to Authenticate your card</p><input type="submit" value="Go" /></p>
+		</noscript>
+	</form>
+	<script type="text/javascript">setTimeout(function() { document.getElementById('3d_form').submit(); }, 50);</script>
+</body>
+</html>

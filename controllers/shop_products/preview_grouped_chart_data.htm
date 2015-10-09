@@ -1,0 +1,63 @@
+<?
+	function addToArray(&$arr, $key, &$value, $keyParams = array())
+	{
+		if (!array_key_exists($key, $arr))
+			$arr[$key] = (object)array('values'=>array(), 'params'=>$keyParams);
+		
+		$arr[$key]->values[] = $value;
+	}
+	
+	function chartColor($index)
+	{
+		$chartColors = array(
+			'#0D8ECF', '#FCD202', '#B0DE09', '#FF6600', '#2A0CD0', '#CD0D74', '#CC0000', '#00CC00', '#0000CC'
+		);
+
+		return array_key_exists($index, $chartColors) ? 'color="'.$chartColors[$index].'"' : null;
+	}
+
+?>
+
+<settings>
+	<data>
+		<chart>
+			<series>
+				<? 
+					$graphs = array();
+					foreach ($chart_data as $record):
+						addToArray($graphs, $record->graph_code, $record, $record);
+				
+					if (!Backend_Reports::unique('series', $record->series_id)) 
+						continue;
+				?>
+					<value xid="<?= h($record->series_id) ?>"><?= h($record->series_value) ?></value>
+				<? endforeach ?>
+			</series>
+			<graphs>
+				<? 
+					$index = -1;
+					foreach ($graphs as $code=>$data):
+					$values = $data->values;
+					$params = $data->params;
+					$index++;
+				?>
+					<graph <?= chartColor($index) ?> title="Product: <?= h($params->name) ?> (<?= h($params->graph_name) ?>)&lt;br&gt;SKU: <?= h($params->sku) ?>" balloon_text="{title}">
+						<? foreach ($values as $value): ?>
+							<value description="Total amount: <?= format_currency($value->record_value) ?>&lt;br&gt;Items ordered: <?= $params->items_sold ?>" xid="<?= h($value->series_id) ?>"><?= $value->record_value ?></value>
+						<? endforeach ?>
+					</graph>
+				<? endforeach ?>
+			</graphs>
+		</chart>
+	</data>
+	
+	<legend>
+		<enabled>false</enabled>
+	</legend>
+	
+	<plot_area>
+		<margins>
+			<bottom>0</bottom>
+		</margins>
+	</plot_area>
+</settings>

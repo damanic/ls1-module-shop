@@ -1,0 +1,5 @@
+<notification-history-request xmlns="<?= $self->schema_url ?>">
+  <order-numbers>                                                              
+    <google-order-number><?= $order_number ?></google-order-number>                 
+  </order-numbers>
+</notification-history-request>

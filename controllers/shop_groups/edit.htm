@@ -1,0 +1,30 @@
+<? Phpr_View::beginBlock("head") ?>
+	<script type="text/javascript" src="modules/shop/resources/javascript/custom_group.js"></script>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css" type="text/css"/>
+<? Phpr_View::endBlock() ?>
+
+<? Phpr_View::beginBlock("view") ?>
+	<ul class="breadcrumbs">
+		<li><a href="<?= url('/shop/products') ?>">Products</a></li>
+		<li><a href="<?= url('/shop/groups') ?>">Custom Groups</a></li>
+		<li><?= $this->app_page_title ?></li>
+	</ul>
+
+	<?= flash() ?>
+
+	<? if (!isset($fatalError)): ?>
+		<div class="form800">
+			<?= Phpr_Form::openTag() ?>
+				<? $this->formRender() ?>
+
+				<?= backend_ajax_button('Save', 'edit_onSave', array('class'=>'default')) ?>
+				<?= backend_ajax_button('Cancel', 'edit_onCancel') ?>
+
+				<?= backend_ajax_button('Delete', 'edit_onDelete', array('class'=>"right"), "confirm: 'Do you really want to delete this group?'") ?>
+				<div class="clear"></div>
+			</form>
+		</div>
+	<? else: ?>
+		<p><a href="<?= url('/shop/groups') ?>">Return to the custom group list</a></p>
+	<? endif ?>
+<? Phpr_View::endBlock() ?>

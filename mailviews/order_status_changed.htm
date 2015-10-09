@@ -1,0 +1,65 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Content-Language" content="en-us">
+<style type="text/css" media="screen">
+	<? include PATH_APP.'/modules/core/mailviews/_mail_styles.htm' ?>
+</style>
+</head>
+<body>
+<p>Hi!</p>
+
+<? if ($status->code != Shop_OrderStatus::status_new): 
+	$prev_status = Shop_OrderStatus::create()->find($order->status_id);
+?>
+<p>This message is to inform you that order #<strong><?= $order->id ?></strong> has changed its status from <strong><?= h($prev_status->name) ?></strong> to <strong><?= h($status->name) ?></strong>. <? if ($user): ?><br/>
+The status was changed by user <?= h(trim($user->name)) ?>.<? endif ?></p>
+
+<? if ($comment): ?><blockquote><?= h($comment) ?></blockquote><? endif ?>
+<? else: ?>
+<p>This message is to inform you about new order order #<strong><?= $order->id ?></strong>. <? if ($user): ?><br/>
+The order was created by user <?= h(trim($user->name)) ?>.<? endif ?></p>
+<? endif ?>
+
+<p><strong>Order Details</strong></p>
+<p>Order <strong>#<?= $order->id ?></strong>, created <strong><?= $order->order_datetime->format('%x') ?></strong><br/>
+Subtotal: <strong><?= format_currency($order->subtotal) ?></strong><br/>
+Shipping: <strong><?= format_currency($order->shipping_quote) ?></strong><br/>
+Tax: <strong><?= format_currency($order->shipping_tax + $order->goods_tax) ?></strong><br/>
+Cart discount: <strong><?= format_currency($order->discount) ?></strong><br/>
+Total: <strong><?= format_currency($order->total) ?></strong></p>
+
+<? if ($coupon): ?>
+	<p>Coupon: <strong><?= h($coupon->code) ?></strong></p>
+<? else: ?>
+	<p>Coupon: <?= h('<not specified>') ?></strong></p>
+<? endif ?>
+
+<p><strong>Customer notes</strong></p> 
+<blockquote><?= strlen($order->customer_notes) ? nl2br(h($order->customer_notes)) : h('<not specified>') ?></blockquote>
+
+<p><strong>Order Items</strong></p>
+
+<? 
+	$items = Shop_OrderItem::create()->where('shop_order_id=?', $order->id)->find_all();
+	include PATH_APP.'/modules/shop/mailviews/_order_content.htm';
+?>
+
+<p><strong>Customer details</strong></p>
+
+<p>Billing name: <strong><?= h($order->billing_first_name.' '.$order->billing_last_name) ?></strong><br/>
+Billing address: <strong><?= nl2br(h($order->billing_street_addr)) ?>, <?= h($order->billing_city) ?></strong><br/>
+<? if ($order->billing_state): ?><strong><?= h($order->billing_state->name) ?></strong>, <? endif ?>
+<strong><?= h($order->billing_zip) ?></strong>,
+<strong><?= h($order->billing_country->name) ?></strong></p>
+
+<p>Shipping name: <strong><?= h($order->shipping_first_name.' '.$order->shipping_last_name) ?></strong><br/>
+Shipping address: <strong><?= nl2br(h($order->shipping_street_addr)) ?>, <?= h($order->shipping_city) ?></strong><br/>
+<? if ($order->shipping_state): ?><strong><?= h($order->shipping_state->name) ?></strong>, <? endif ?>
+<strong><?= h($order->shipping_zip) ?></strong>,
+<strong><?= h($order->shipping_country->name) ?></strong>, </p>
+
+<hr/>
+<p>This is an automatic message. Do not reply to it.</p>
+</body>
+</html>

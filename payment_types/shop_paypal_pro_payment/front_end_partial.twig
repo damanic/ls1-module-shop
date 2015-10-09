@@ -1,0 +1,104 @@
+<div id="paypal_pro_payment_form_div-{{order.payment_method.id}}">
+  <p>Please provide your credit card information.</p>
+  {% set id = 'paypal_pro_payment_form-'~order.payment_method.id %}
+  {% set array = {'id': id} %}
+  {{ open_form(array) }}
+    {{ flash_message() }}
+    <ul class="form">
+      <li class="field radio_horizontal">
+        <label>Credit Card Type</label>
+        <div>
+            <label for="cc_visa"><input autocomplete="off" type="radio" name="CREDITCARDTYPE" id="cc_visa" value="Visa"/> Visa</label>
+        </div>
+        <div>
+            <label for="cc_mc"><input autocomplete="off" type="radio" name="CREDITCARDTYPE" id="cc_mc" value="MasterCard"/> Master Card</label>
+        </div>
+        <div>
+            <label for="cc_discover"><input autocomplete="off" type="radio" name="CREDITCARDTYPE" id="cc_discover" value="Discover"/> Discover</label>
+        </div>
+        <div>
+            <label for="cc_amex"><input autocomplete="off" type="radio" name="CREDITCARDTYPE" id="cc_amex" value="Amex"/> American Express</label>
+        </div>
+      </li>
+      
+      <li class="field text left">
+        <label for="FIRSTNAME">Cardholder First Name</label>
+        <div><input autocomplete="off" name="FIRSTNAME" value="" id="FIRSTNAME" type="text" class="text"/></div>
+      </li>
+      
+      <li class="field text right">
+        <label for="LASTNAME">Cardholder Last Name</label>
+        <div><input autocomplete="off" name="LASTNAME" value="" id="LASTNAME" type="text" class="text"/></div>
+      </li>
+
+      <li class="field text">
+        <label for="ACCT">Credit Card Number</label>
+        <div><input autocomplete="off" name="ACCT" value="" id="ACCT" type="text" class="text"/></div>
+      </li>
+      
+      <li class="field select left">
+       <label for="EXPDATE_MONTH">Expiration Date - Month</label>
+       <select autocomplete="off" name="EXPDATE_MONTH" id="EXPDATE_MONTH">
+         {% for month in 1..12 %}
+           <option value="{{ month }}">{{ month }}</option>
+         {% endfor %}
+       </select>
+     </li>
+
+      <li class="field text right">
+       <label for="EXPDATE_YEAR">Expiration Date - Year</label>
+
+       <select autocomplete="off" name="EXPDATE_YEAR" id="EXPDATE_YEAR">
+         {% set startYear = method('Phpr_DateTime', 'now').getYear() %}
+         {% for year in startYear..(startYear+10) %}
+           <option value="{{ year }}">{{ year }}</option>
+         {% endfor %}
+       </select>
+     </li>
+
+      <li class="field text">
+        <label for="CVV2">
+          CVV2
+          <span class="comment">For MasterCard, Visa, and Discover, the CSC is the last three digits in the signature area on the back of your card. For American Express, it's the four digits on the front of the card.</span>
+        </label>
+        
+        <div><input autocomplete="off" name="CVV2" value="" id="CVV2" type="text" class="text"/></div>
+      </li>
+    </ul>
+    <div class="clear"></div>
+
+    <!-- Additional information displayed if 3D secure is enabled -->
+    {% if order.payment_method.enable_3d_secure %}
+      <span id="paypal_3DSecure_info">
+        <p>Your card may be eligible or enrolled in Verified by Visa or MasterCard SecureCode payer authentication programs. After clicking the 'Submit' button, your Card Issuer may prompt you for your payer authentication password to complete your purchase.</p>
+      </span>
+    {% endif %}
+
+    <input type="hidden" id="complete_payment_text" value="Complete Payment">
+    {% set url = root_url('/ls_paypal_pro_redirect_3d/'~order.order_hash) %}
+    <input type="button" id="paypal_submit_button" onclick="return $(this).getForm().sendRequest('shop:on_pay', {
+      onSuccess: function(){
+        document.getElementById('paypal_pro_payment_form_div-{{order.payment_method.id}}').style.display='none';
+        document.getElementById('paypal_submit_button').disabled = true;
+        document.getElementById('paypal_3DSecure_head').innerHTML = '<p>For your security, please fill out the form below to complete your order. Do not click the refresh or back button or this transaction may be interrupted or cancelled.</p>';
+        var ifrm = document.createElement('IFRAME'); 
+        ifrm.setAttribute('src', '{{ url }}'); 
+        ifrm.style.width = 460+'px';
+        ifrm.style.height = 400+'px';
+        document.getElementById('paypal_3DSecure_iframe').innerHTML = '';
+        document.getElementById('paypal_3DSecure_iframe').appendChild(ifrm);
+        document.getElementById('paypal_3DSecure').style.display = '';
+        document.getElementById('paypal_3DSecure_result').innerHTML = '';
+      },
+      onAfterError: function(){
+        document.getElementById('paypal_submit_button').disabled = false;
+      }
+    })" value="Submit"/>
+  </form>
+</div>
+
+<div id="paypal_3DSecure" style="display:none">
+  <div id="paypal_3DSecure_head"></div>
+  <div id="paypal_3DSecure_iframe"></div>
+  <div id="paypal_3DSecure_result"></div>
+</div>

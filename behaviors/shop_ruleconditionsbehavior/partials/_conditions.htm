@@ -1,0 +1,6 @@
+<div class="rules_container">
+	<div class="main_conditions_container">
+		<? $this->conditionsRenderPartial('conditions_container', array('condition'=>$pricerule_rule_set)) ?>
+	</div>
+	<input type="hidden" name="conditions_root_id[<?= $pricerule_rule_set->host_rule_set ?>]" value="<?= $pricerule_rule_set->id ?>"/>
+</div>
