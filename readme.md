@@ -3,7 +3,7 @@
 This updated module can be installed using the updatecenter module: https://github.com/damanic/ls1-module-updatecenter
 
 ####Variant Invoice Templates
-Allows for quotes, proforma-invoice, invoice or any number of print variants. Example config in '/invoice_templates/ls_variant'
+Allows for any number of 'invoice' variants to be selected for print (eg. quotes, refund, proforma-invoice, invoice). Example config in `/invoice_templates/ls_variant`
 
 ####Updates
 - 1.30.0 Invoice templates updated to support variant commercial document templates (eg. quote, proforma-invoice) and some render override events (eg. pass html to a PDF renderer).
