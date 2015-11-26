@@ -44,7 +44,7 @@
 						<? if ($item->bundle_master_order_item_id): ?>
 							<a  href="#" onclick="<?= $onClick ?>" class="tooltip bundle-item" title="Bundle item - <strong><?= h($item->bundle_master_bundle_item_name) ?></strong>">Bundle item - <?= h($item->bundle_master_bundle_item_name) ?></a>
 						<? endif ?>
-						
+
 						<a href="#" onclick="<?= $onClick ?>"><?= $item->output_product_name(true, false, true, true) ?></a>
 					</div>
 				</td>
@@ -57,7 +57,7 @@
 				<td onclick="<?= $onClick ?>" class="number link">
 					<a href="#" onclick="<?= $onClick ?>">
 						<?= h($item->quantity) ?>
-						
+
 						<? if ($item->bundle_master_order_item_id): ?>
 							<span title="Quantity of the bundle<br/>item in each bundle" class="tooltip bundle-item-value"><?= $item->get_bundle_item_quantity() ?></span>
 						<? endif ?>
@@ -73,9 +73,9 @@
 				</td>
 				<td class="iconCell last">
 					<a onclick="return $(this).getForm().sendPhpr('onDeleteItem', {
-					extraFields: {item_id: '<?= $item->id ?>'}, 
-					confirm: 'Do you really want to delete this item?', 
-					update: 'multi', 
+					extraFields: {item_id: '<?= $item->id ?>'},
+					confirm: 'Do you really want to delete this item?',
+					update: 'multi',
 					onAfterUpdate: update_tooltips,
 					onSuccess: function(){
 						shipping_info_changed = true;

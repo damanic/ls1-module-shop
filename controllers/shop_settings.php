@@ -148,8 +148,11 @@
 			try
 			{
 				$country = $this->init_country();
+
+				Backend::$events->fireEvent('core:onBeforeFormRecordCreate', $this, $country);
 				$country->save(post('Shop_Country', array()), $this->formGetEditSessionKey());
-			
+				Backend::$events->fireEvent('core:onAfterFormRecordCreate', $this, $country);
+
 				Phpr::$session->flash['success'] = 'Country has been successfully added';
 				Phpr::$response->redirect(url('/shop/settings/countries'));
 			}
@@ -183,8 +186,12 @@
 		{
 			try
 			{
+
 				$country = $this->init_country($id);
+
+				Backend::$events->fireEvent('core:onBeforeFormRecordUpdate', $this, $country);
 				$country->save(post('Shop_Country', array()), $this->formGetEditSessionKey());
+				Backend::$events->fireEvent('core:onAfterFormRecordUpdate',$this, $country);
 
 				Phpr::$session->flash['success'] = 'Country has been successfully saved';
 				Phpr::$response->redirect(url('/shop/settings/countries'));

@@ -926,3 +926,4 @@
 #1.30.1 Minor improvement in the API. Added new API event: shop:onCustomerBeforeCreate
 #1.30.2 Minor improvement in the API. Added new API event: shop:onBeforeCheckoutStepPay
 #1.30.3 Minor improvement in internal classes. Shop_OrderHelper deprecated some methods in Shop_Orders controller
+#1.30.4 Minor improvement. Shop_Settings controller triggers form record events (core:onBeforeFormRecordUpdate|core:onAfterFormRecordUpdate).
