@@ -749,6 +749,11 @@
 		{
 			Backend::$events->fireEvent('shop:onCustomerCreated', $this);
 		}
+
+		public function after_save()
+		{
+			Backend::$events->fireEvent('shop:onCustomerSaved', $this);
+		}
 		
 		/*
 		 * Customer CSV import functions
