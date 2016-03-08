@@ -1,5 +1,6 @@
 <? Phpr_View::beginBlock("view") ?>
 	<?= flash() ?>
 
-	<?= $this->listRender(array('list_control_panel'=>'shipping_control_panel')) ?>
+
+	<?= $this->listRender(array('list_render_filters'=>true, 'list_control_panel'=>'shipping_control_panel')) ?>
 <? Phpr_View::endBlock() ?>

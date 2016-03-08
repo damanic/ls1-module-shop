@@ -2,7 +2,8 @@
 
 	class Shop_Shipping extends Backend_Controller
 	{
-		public $implement = 'Db_ListBehavior, Db_FormBehavior';
+		public $implement = 'Db_ListBehavior, Db_FormBehavior, Db_FilterBehavior';
+
 		public $list_model_class = 'Shop_ShippingOption';
 		public $list_record_url = null;
 		public $list_reuse_model = false;
@@ -21,6 +22,18 @@
 		public $form_grid_csv_export_url = null;
 
 		protected $required_permissions = array('shop:manage_shop_settings');
+
+
+		public $list_render_filters = false;
+
+		public $filter_onApply = 'listReload();';
+		public $filter_onRemove = 'listReload();';
+		public $filter_list_title = 'Filter options';
+
+		public $filter_switchers = array(
+			'hide_disabled'=>array('name'=>'Hide disabled options', 'class_name'=>'Shop_HideDisabledShippingSwitcher')
+		);
+
 
 		public function __construct()
 		{
@@ -92,6 +105,14 @@
 		{
 			return $model->enabled ? null : 'disabled';
 		}
+
+		public function listPrepareData()
+		{
+			$obj = new Shop_ShippingOption();
+			$this->filterApplyToModel($obj);
+			return $obj;
+		}
+
 		
 		public static function shipping_option_cmp( $a, $b )
 		{
