@@ -13,3 +13,4 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.30.4 Minor improvement. Shop_Settings controller triggers form record events (core:onBeforeFormRecordUpdate|core:onAfterFormRecordUpdate).
 - 1.30.5 Minor improvement. Added shop:onCustomerSaved event to Customer Model. This is fired on both model create and update.
 - 1.30.6 Minor improvement. Added filter to hide disabled shipping options in list view.
+- 1.30.7 New Event: Added shop:onOrderSetAppliedCartRules

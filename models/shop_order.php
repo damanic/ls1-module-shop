@@ -1145,6 +1145,7 @@
 				$bind['rule_id'] = $rule_id;
 				Db_DbHelper::query('insert into shop_order_applied_rules(shop_order_id, shop_cart_rule_id) values (:id, :rule_id)', $bind);
 			}
+			Backend::$events->fireEvent('shop:onOrderSetAppliedCartRules', $this);
 		}
 		
 		/**
