@@ -72,7 +72,7 @@
 					'serie' as series_id, 
 					'serie' as series_value, 
 					shop_coupons.code as graph_name, 
-					sum($amountField) as record_value
+					sum($amountField * shop_orders.shop_currency_rate) as record_value
 				from 
 					shop_order_statuses,
 					report_dates
@@ -102,7 +102,7 @@
 						shop_coupons.code as graph_name,
 						{$seriesIdField} as series_id,
 						{$seriesValueField} as series_value,
-						sum($amountField) as record_value
+						sum($amountField * shop_orders.shop_currency_rate) as record_value
 					from 
 						shop_order_statuses,
 						report_dates
@@ -156,10 +156,10 @@
 
 			$query = "
 				select (select count(*) $query_str) as order_num,
-				(select sum(total) $query_str) as total,
-				(select sum(total - goods_tax - shipping_tax - shipping_quote) $query_str) as revenue,
-				(select sum(goods_tax + shipping_tax) $query_str) as tax,
-				(select sum(shipping_quote) $query_str) as shipping
+				(select sum(total * shop_orders.shop_currency_rate) $query_str) as total,
+				(select sum((total - goods_tax - shipping_tax - shipping_quote) * shop_orders.shop_currency_rate) $query_str) as revenue,
+				(select sum((goods_tax + shipping_tax) * shop_orders.shop_currency_rate) $query_str) as tax,
+				(select sum(shipping_quote * shop_orders.shop_currency_rate) $query_str) as shipping
 			";
 			
 			$this->viewData['totals_data'] = Db_DbHelper::object($query);

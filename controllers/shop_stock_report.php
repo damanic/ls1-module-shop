@@ -147,7 +147,7 @@
 
 			$displayType = $this->getReportParameter('product_report_display_type', 'num_of_items');
 			if ($displayType == 'amount')
-				$amountField = 'sum((shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)*shop_order_items.quantity)';
+				$amountField = 'sum(((shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)*shop_order_items.quantity) * shop_orders.shop_currency_rate)';
 			else
 				$amountField = 'sum(shop_order_items.quantity)';
 
@@ -194,7 +194,7 @@
 
 			$query = "
 				select ifnull((select sum(shop_order_items.quantity) $query_str), 0) as items_sold,
-				(select sum((shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)*shop_order_items.quantity) $query_str) as amount
+				(select sum(((shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)*shop_order_items.quantity) * shop_orders.shop_currency_rate) $query_str) as amount
 			";
 
 			$this->viewData['totals_data'] = Db_DbHelper::object($query);

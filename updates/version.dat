@@ -930,3 +930,4 @@
 #1.30.5 Minor improvement. Added shop:onCustomerSaved event to Customer Model. This is fired on both model create and update.
 #1.30.6 Minor improvement. Added filter to hide disabled shipping options in list view.
 #1.30.7 New Event: Backend::$events->fireEvent('shop:onOrderSetAppliedCartRules', $this);
+#1.30.8 Added hidden order currency fields, updated reports to convert totals to shop/base currency if order in different currency.

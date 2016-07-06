@@ -63,7 +63,7 @@
 					'amount' as graph_name,
 					{$seriesIdField} as series_id,
 					{$seriesValueField} as series_value,
-					sum($amountField) as record_value
+					sum($amountField * shop_orders.shop_currency_rate) as record_value
 					$frameFields
 				from 
 					shop_order_statuses,
@@ -100,6 +100,32 @@
 			$this->viewData['chart_data'] = Db_DbHelper::objectArray($query, $bind);
 			$this->viewData['chart_series'] = Db_DbHelper::objectArray($series_query, $bind);
 		}
+
+		protected function renderReportTotals()
+		{
+			$intervalLimit = $this->intervalQueryStrOrders();
+			$filterStr = $this->filterAsString();
+
+			$paidFilter = $this->getOrderPaidStatusFilter();
+			if ($paidFilter)
+				$paidFilter = 'and '.$paidFilter;
+
+			$query_str = "from shop_orders, shop_order_statuses, shop_customers
+			where shop_customers.id=customer_id and shop_orders.deleted_at is null and shop_order_statuses.id = shop_orders.status_id and $intervalLimit $filterStr $paidFilter";
+
+			$query = "
+				select (select count(*) $query_str) as order_num,
+				(select sum(total*shop_orders.shop_currency_rate) $query_str) as total,
+				(select sum((total - goods_tax - shipping_tax - shipping_quote - ifnull(total_cost, 0))* shop_orders.shop_currency_rate) $query_str) as revenue,
+				(select sum(total_cost* shop_orders.shop_currency_rate) $query_str) as cost,
+				(select sum((goods_tax + shipping_tax)* shop_orders.shop_currency_rate) $query_str) as tax,
+				(select sum(shipping_quote* shop_orders.shop_currency_rate) $query_str) as shipping
+			";
+
+			$this->viewData['totals_data'] = Db_DbHelper::object($query);
+			$this->renderPartial('chart_totals');
+		}
+
 		
 		public static function get_totals_chart_data($start, $end)
 		{
@@ -116,7 +142,7 @@
 					'amount' as graph_name,
 					report_date as series_id,
 					report_dates.report_date as series_value,
-					sum(shop_orders.total) as record_value
+					sum(shop_orders.total * shop_orders.shop_currency_rate) as record_value
 				from 
 					report_dates
 				left join shop_orders on report_date = shop_orders.order_date and shop_orders.deleted_at is null $status_filter
@@ -140,8 +166,8 @@
 			
 			return Db_DbHelper::object('
 				select 
-				(select sum(total) from shop_orders where shop_orders.order_date >= :current_start and shop_orders.order_date <= :current_end and deleted_at is null) as totals_current,
-				(select sum(total) from shop_orders where shop_orders.order_date >= :prev_start and shop_orders.order_date <= :prev_end and deleted_at is null) as totals_prev
+				(select sum(total * shop_orders.shop_currency_rate) from shop_orders where shop_orders.order_date >= :current_start and shop_orders.order_date <= :current_end and deleted_at is null) as totals_current,
+				(select sum(total * shop_orders.shop_currency_rate) from shop_orders where shop_orders.order_date >= :prev_start and shop_orders.order_date <= :prev_end and deleted_at is null) as totals_prev
 			', array(
 				'current_start'=>$start,
 				'current_end'=>$end,
@@ -159,8 +185,8 @@
 
 			$result = Db_DbHelper::object('
 				select 
-				(select sum(total) from shop_orders where shop_orders.order_date >= :current_start and shop_orders.order_date <= :current_end and deleted_at is null '.$status_filter.') as totals_current,
-				(select sum(total) from shop_orders where shop_orders.order_date >= :prev_start and shop_orders.order_date <= :prev_end and deleted_at is null '.$status_filter.') as totals_prev
+				(select sum(total * shop_orders.shop_currency_rate) from shop_orders where shop_orders.order_date >= :current_start and shop_orders.order_date <= :current_end and deleted_at is null '.$status_filter.') as totals_current,
+				(select sum(total * shop_orders.shop_currency_rate) from shop_orders where shop_orders.order_date >= :prev_start and shop_orders.order_date <= :prev_end and deleted_at is null '.$status_filter.') as totals_prev
 			', array(
 				'current_start'=>$start,
 				'current_end'=>$end,

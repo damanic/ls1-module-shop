@@ -78,7 +78,7 @@
 
 			'registered_customer'=>array('class_name'=>'Shop_Customer', 'foreign_key'=>'customer_id'),
 			'customer'=>array('class_name'=>'Shop_Customer', 'foreign_key'=>'customer_id'),
-			'coupon'=>array('class_name'=>'Shop_Coupon', 'foreign_key'=>'coupon_id')
+			'coupon'=>array('class_name'=>'Shop_Coupon', 'foreign_key'=>'coupon_id'),
 		);
 		
 		public $has_many = array(
@@ -185,7 +185,10 @@
 
 			$this->define_column('override_shipping_quote', 'Override shipping quote')->invisible();
 			$this->define_column('manual_shipping_quote', 'Shipping quote')->invisible();
-			
+
+			$this->define_column('currency_code', 'currency_code', 'Currency')->invisible();
+			$this->define_column('shop_currency_rate', 'shop_currency_rate', 'Currency Exchange Rate')->invisible();
+
 			$has_notes_column = $this->define_column('has_notes', 'Has Notes')->listNoTitle()->defaultInvisible();
 			if($context == 'list_settings')
 				$has_notes_column->listTitle('Has Notes');
@@ -1178,6 +1181,7 @@
 				
 			return null;
 		}
+
 
 		/**
 		 * Sets values for common order email template variables

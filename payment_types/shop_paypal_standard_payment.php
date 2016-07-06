@@ -372,6 +372,10 @@
 								$this->log_payment_attempt($order, 'Successful payment', 1, array(), $_POST, $response);
 								if(isset($transaction_id) && strlen($transaction_id))
 									$this->update_transaction_status($order->payment_method, $order, $transaction_id, 'Processed', 'processed');
+
+								if(post('mc_currency')){
+									$this->update_currency_data($order, post('mc_currency',null), post('exchange_rate',null));
+								}
 							}
 						} else
 							$this->log_payment_attempt($order, 'Invalid payment notification', 0, array(), $_POST, $response);
@@ -467,6 +471,7 @@
 							$transaction_id = Phpr::$request->getField('tx');
 							if(strlen($transaction_id))
 								$this->update_transaction_status($order->payment_method, $order, $transaction_id, 'Processed', 'processed');
+
 						}
 					}
 				}

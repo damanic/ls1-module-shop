@@ -276,6 +276,26 @@
 		}
 
 		/**
+		 * If the order is in a foreign currency, you can have the payment gateway update
+		 * the order with an exchange rate which can be used by reports to convert order totals
+		 * back to the shops assigned/default currency.
+		 *
+		 * @param $order ActiveRecord object Shop_Order
+		 * @param string $currency_code ISO currency code
+		 * @param string $exchange_rate Exchange rate from given currency code to shops base currency
+		 */
+		public function update_currency_data($order, $currency_code, $exchange_rate){
+			if(!empty($currency_code)) {
+				$currency             = Shop_CurrencySettings::create()->where( 'code = :code || iso_4217_code = :code' )->limit(1)->find_all();
+				if($currency) {
+					$order->currency_code = $currency_code->code;
+				}
+			}
+			$order->shop_currency_rate = is_numeric($exchange_rate) ? $exchange_rate : 1;
+			$order->save();
+		}
+
+		/**
 		 * This method should return TRUE if the payment gateway supports requesting a status of a specific transaction.
 		 * The payment module must implement the request_transaction_status() method if this method returns true..
 		 */
