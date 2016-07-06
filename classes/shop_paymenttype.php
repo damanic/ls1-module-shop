@@ -286,7 +286,8 @@
 		 */
 		public function update_currency_data($order, $currency_code, $exchange_rate){
 			if(!empty($currency_code)) {
-				$currency             = Shop_CurrencySettings::create()->where( 'code = :code || iso_4217_code = :code' )->limit(1)->find_all();
+				$currency = new Shop_CurrencySettings();
+				$currency             = $currency->where( 'code = :code || iso_4217_code = :code', array('code' => $currency_code) )->limit(1)->find_all();
 				if($currency) {
 					$order->currency_code = $currency_code->code;
 				}
