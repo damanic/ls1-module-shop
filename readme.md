@@ -14,3 +14,6 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.30.5 Minor improvement. Added shop:onCustomerSaved event to Customer Model. This is fired on both model create and update.
 - 1.30.6 Minor improvement. Added filter to hide disabled shipping options in list view.
 - 1.30.7 New Event: Added shop:onOrderSetAppliedCartRules
+- 1.30.8 Minor improvement. Hidden order currency fields, updated reports to convert totals to shop/base currency if order in different currency.
+- 1.30.9 Fix: Shop_PaymentType::update_currency_data()
+- 1.30.10 New Event: shop:onGetOptionMatrixProduct
