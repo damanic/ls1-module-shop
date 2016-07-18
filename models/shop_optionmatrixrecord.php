@@ -494,6 +494,15 @@
 		 */
 		public function get_price($product, $quantity = 1, $customer_group_id = null, $no_tax = false)
 		{
+			$override_product = Backend::$events->fireEvent('shop:onGetOptionMatrixProduct', $this);
+			foreach ($override_product as $use_product)
+			{
+				if (is_a($use_product,'Shop_Product')) {
+					$product = $use_product;
+					break;
+				}
+			}
+
 			if ($customer_group_id === null)
 				$customer_group_id = Cms_Controller::get_customer_group_id();
 				
@@ -1158,6 +1167,17 @@
 		 * Otherwise $options keys are considered to be plain option name.
 		 */
 		private function event_onAfterOptionMatrixRecordFound($model, $options, $product, $option_keys) {}
+
+		/**
+		 * Triggered when a price look up is called on an Option Matrix record.
+		 * Use it to return a product from which the price should be determined.
+		 * Useful when a matrix option should fetch its price from a linked product.
+		 * @event shop:onGetOptionMatrixProduct
+		 * @package shop.events
+		 * @author githib:damanic
+		 * @param Shop_OptionMatrixRecord $model Specifies the loaded Option Matrix model
+		 */
+		private function event_onGetOptionMatrixProduct($model){}
 	}
 
 ?>
