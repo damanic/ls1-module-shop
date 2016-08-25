@@ -1003,13 +1003,13 @@
 
 				$this->viewData['orders'] = $orders;
 				$this->viewData['order_id_string'] = $order_id_string;
-				$this->viewData['company_info'] = Shop_CompanyInformation::get();
+				$company_info = $this->viewData['company_info'] = Shop_CompanyInformation::get();
 				$this->viewData['template_info'] = $this->viewData['company_info']->get_invoice_template();
 				$this->viewData['active_variant'] = empty($variant) ? Shop_OrderDocsHelper::get_default_variant($orders,$this->viewData['template_info']): $variant;
 //				$this->viewData['template_css'] = array();
 //				$this->viewData['template_id'] = isset($invoice_info['template_id']) ? $invoice_info['template_id'] : null;
 //				$this->viewData['invoice_template_css'] = isset($invoice_info['css']) ? $invoice_info['css'] : array();
-//				$this->viewData['display_due_date'] = strlen($company_info->invoice_due_date_interval);
+				$this->viewData['display_due_date'] = strlen($company_info->invoice_due_date_interval);
 			}
 			catch (exception $ex)
 			{

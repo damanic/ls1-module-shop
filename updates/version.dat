@@ -933,3 +933,5 @@
 #1.30.8 Added hidden order currency fields, updated reports to convert totals to shop/base currency if order in different currency.
 #1.30.9 Fixed issue with Shop_PaymentType::update_currency_data()
 #1.30.10 Added new API event: shop:onGetOptionMatrixProduct.
+#1.30.11 Added new API event: shop:onApplyOrderEmailVars
+#1.30.12 Fixed issue with order document/invoice templates

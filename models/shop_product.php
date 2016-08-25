@@ -1600,7 +1600,7 @@
 			$index_values = array();
 			foreach ($groups as $group_id=>$group)
 			{
-				$price = $this->get_discounted_price_no_tax(1, $group_id);
+				$price = $this->get_sale_price_no_tax(1, $group_id);
 				$min_price = null;
 				$max_price = null;
 				$is_on_sale = $price < $this->price_no_tax(1, $group_id);

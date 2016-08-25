@@ -1273,6 +1273,14 @@
 				$message_text = str_replace('{shipping_codes}', $codes_str, $message_text);
 			}
 
+			$var_values = Backend::$events->fireEvent('shop:onApplyOrderEmailVars', $this, $status_comment, $status );
+			foreach ($var_values as $value_set)
+			{
+				foreach($value_set as $var => $value){
+					$message_text = str_replace('{'.$var.'}', $value, $message_text);
+				}
+			}
+
 			return $message_text;
 		}
 
@@ -2772,6 +2780,25 @@
 		 * @param Shop_OrderTrackingCode $code Specifies the tracking code
 		 */
 		private function event_onBeforeDeleteShippingTrackingCode($order_id, $code) {}
+
+		/**
+		 * Triggered when apply vars to order email.
+		 * The event handler should return an array of var name and values to apply to the order email content
+		 * <pre>
+		 * 	return array(
+		 *     'custom_orderid_var' => 'A2031022',
+		 *  );
+		 * </pre>
+		 * @event shop:event_onApplyOrderEmailVars
+		 * @triggered /modules/shop/models/shop_order.php
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 *
+		 * @param Shop_Order , the order email relates to
+		 * @param string $status_comment, if given on status change
+		 * @param $status current order status, if given on status change
+		 */
+		private function event_onApplyOrderEmailVars($order, $status_comment, $status) {}
 	}
 
 ?>

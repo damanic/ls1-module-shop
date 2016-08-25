@@ -43,12 +43,12 @@ class Shop_OrderDocsHelper{
 	public static function get_applicable_variants($orders, $template_info){
 		$orders = is_array($orders) ? $orders : array($orders);
 		$variants = array();
-
-		foreach($template_info['variants'] as $variant => $params){
-
-			foreach($orders as $order) {
-				if ( self::can_show_template_variant( $order, $template_info, $variant ) ) {
-					$variants[$variant] = $params;
+		if(isset($template_info['variants'])) {
+			foreach ( $template_info['variants'] as $variant => $params ) {
+				foreach ( $orders as $order ) {
+					if ( self::can_show_template_variant( $order, $template_info, $variant ) ) {
+						$variants[$variant] = $params;
+					}
 				}
 			}
 		}
@@ -56,8 +56,8 @@ class Shop_OrderDocsHelper{
 	}
 
 	public static function can_show_template_variant($order,$template_info,$variant){
-		$show_on_status_code = $template_info['variants'][$variant]['on_status'];
-		$show_if_has_status_code =  $template_info['variants'][$variant]['has_status'];
+		$show_on_status_code = isset($template_info['variants'][$variant]['on_status']) ? $template_info['variants'][$variant]['on_status'] : false;
+		$show_if_has_status_code =  isset($template_info['variants'][$variant]['has_status']) ? $template_info['variants'][$variant]['has_status'] : false ;
 
 		if($show_on_status_code){
 			$show_on_status_code = is_array($show_on_status_code) ? $show_on_status_code : array($show_on_status_code);
@@ -105,7 +105,9 @@ class Shop_OrderDocsHelper{
 			'template_info'=>$controller->viewData['template_info'] = $template_info,
 			'display_tax_included'=>$controller->viewData['display_tax_included'] = Shop_CheckoutData::display_prices_incl_tax($order),
 			'has_bundles'=>$controller->viewData['has_bundles'] = $has_bundles,
-			'invoice_date'=> $controller->viewData['invoice_date'] =$invoice_date,
+			'invoice_date'=> $controller->viewData['invoice_date'] = $invoice_date,
+			'display_due_date' => strlen($company_info->invoice_due_date_interval),
+			'due_date'=>$company_info->get_invoice_due_date($invoice_date),
 		));
 		$html = ob_get_contents();
 		ob_end_clean();
