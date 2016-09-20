@@ -560,164 +560,161 @@
 				
 			return in_array($customer_group_id, self::$customer_group_filter_cache[$option_id]);
 		}
-		
-		public static function list_applicable($country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $include_tax = 1, $return_disabled = false, $order_items = array(), $customer_group_id = null, $customer = null, $shipping_option_id = null, $is_business = false, $backend_only = false)
-		{
+
+		public static function list_applicable( $country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $include_tax = 1, $return_disabled = false, $order_items = array(), $customer_group_id = null, $customer = null, $shipping_option_id = null, $is_business = false, $backend_only = false ) {
 			$display_prices_including_tax = Shop_CheckoutData::display_prices_incl_tax();
-			if ($include_tax !== 1)
+			if ( $include_tax !== 1 ) {
 				$display_prices_including_tax = $include_tax;
-			
+			}
+
 			$shipping_info = Shop_CheckoutData::get_shipping_info();
 
 			$result = array();
-			
-			$shipping_options = Shop_ShippingOption::create();
-			if (!$backend_only && !$return_disabled)
-				$shipping_options->where('enabled = 1');
-			if($backend_only && !$return_disabled)
-				$shipping_options->where('backend_enabled = 1');
-				
-			if ($shipping_option_id)
-				$shipping_options->where('shop_shipping_options.id = ?', $shipping_option_id);
-				
-			$apply_customer_group_filter = strlen($customer_group_id);
 
-			$shipping_options->where('(min_weight_allowed is null or min_weight_allowed <= ?)', $total_weight);
-			$shipping_options->where('(max_weight_allowed is null or max_weight_allowed >= ?)', $total_weight);
-				
-			$total_per_product_cost = 0;
-			foreach ($order_items as $item)
-			{
-				$product = $item->product;
-				if ($product)
-					$total_per_product_cost += $product->get_shipping_cost($country_id, $state_id, $zip)*$item->quantity;
+			$shipping_options = Shop_ShippingOption::create();
+			if ( !$backend_only && !$return_disabled ) {
+				$shipping_options->where( 'enabled = 1' );
 			}
-			
+			if ( $backend_only && !$return_disabled ) {
+				$shipping_options->where( 'backend_enabled = 1' );
+			}
+
+			if ( $shipping_option_id ) {
+				$shipping_options->where( 'shop_shipping_options.id = ?', $shipping_option_id );
+			}
+
+			$apply_customer_group_filter = strlen( $customer_group_id );
+
+			$shipping_options->where( '(min_weight_allowed is null or min_weight_allowed <= ?)', $total_weight );
+			$shipping_options->where( '(max_weight_allowed is null or max_weight_allowed >= ?)', $total_weight );
+
+			$total_per_product_cost = 0;
+			foreach ( $order_items as $item ) {
+				$product = $item->product;
+				if ( $product ) {
+					$total_per_product_cost += $product->get_shipping_cost( $country_id, $state_id, $zip ) * $item->quantity;
+				}
+			}
+
 			$shipping_options = $shipping_options->find_all();
 
-			foreach ($shipping_options as $option)
-			{
-				if ($apply_customer_group_filter && !self::option_visible_for_customer_group($option->id, $customer_group_id))
+			foreach ( $shipping_options as $option ) {
+				if ( $apply_customer_group_filter && !self::option_visible_for_customer_group( $option->id, $customer_group_id ) ) {
 					continue;
-				
+				}
+
 				$option->define_form_fields();
 
-				try
-				{
-					$quote = $option->get_quote($country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $order_items, $customer, $is_business);
-				}
-				catch (exception $ex)
-				{
-					$option->error_hint = $ex->getMessage();
+				try {
+					$quote = $option->get_quote( $country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $order_items, $customer, $is_business );
+				} catch ( exception $ex ) {
+					$option->error_hint  = $ex->getMessage();
 					$result[$option->id] = $option;
 					continue;
 				}
 
-				if ($quote !== null)
-				{
-					if (!is_array($quote))
-					{
+
+				//FETCH SHIPPING DISCOUNTS
+				$payment_method     = Shop_CheckoutData::get_payment_method();
+				$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
+				$discount_info      = Shop_CartPriceRule::evaluate_discount(
+					$payment_method_obj,
+					$option,
+					$order_items,
+					$shipping_info,
+					Shop_CheckoutData::get_coupon_code(),
+					$customer,
+					$total_price );
+
+
+				//calculate quote
+				if ( $quote !== null ) {
+					if ( !is_array( $quote ) ) {
 						$quote += $total_per_product_cost;
-						
-						$option->quote_no_tax = $quote;
-						$option->quote = $quote;
+						$discounted = $quote - $discount_info->shipping_discount;
+						$quote = ($discounted < 0) ? 0 : $discounted;
+
+						$option->quote_no_tax   = $quote;
+						$option->quote          = $quote;
 						$option->quote_tax_incl = $quote;
 
-						$shiping_taxes = Shop_TaxClass::get_shipping_tax_rates($option->id, $shipping_info, $quote);
-						if ($display_prices_including_tax)
-							$option->quote += Shop_TaxClass::eval_total_tax($shiping_taxes);
+						$shiping_taxes = Shop_TaxClass::get_shipping_tax_rates( $option->id, $shipping_info, $quote );
+						if ( $display_prices_including_tax ) {
+							$option->quote += Shop_TaxClass::eval_total_tax( $shiping_taxes );
+						}
 
-						$option->quote_tax_incl += Shop_TaxClass::eval_total_tax($shiping_taxes);
-					}
-					else
-					{
+						$option->quote_tax_incl += Shop_TaxClass::eval_total_tax( $shiping_taxes );
+					} else {
 						$option->multi_option = true;
-						$option->sub_options = array();
-						
-						foreach ($quote as $name=>$rate)
-						{
-							$suboption_id = $option->id.'_'.md5($name);
-							
+						$option->sub_options  = array();
+
+						foreach ( $quote as $name => $rate ) {
+							$suboption_id = $option->id . '_' . md5( $name );
+
 							$rate['quote'] += $total_per_product_cost;
+							$discounted = $rate['quote'] - $discount_info->shipping_discount;
+							$rate['quote'] = ($discounted < 0) ? 0 : $discounted;
 
 							$quote_tax_incl = $quote_no_tax = $quote = $rate['quote'];
-							$shiping_taxes = Shop_TaxClass::get_shipping_tax_rates($option->id, $shipping_info, $quote);
+							$shiping_taxes  = Shop_TaxClass::get_shipping_tax_rates( $option->id, $shipping_info, $quote );
 
-							if ($display_prices_including_tax)
-								$quote += Shop_TaxClass::eval_total_tax($shiping_taxes);
-							
-							$quote_tax_incl += Shop_TaxClass::eval_total_tax($shiping_taxes);
-							
-							$suboption_obj = array_merge($rate, array('name'=>$name, 'quote_tax_incl'=>$quote_tax_incl, 'quote_no_tax'=>$quote_no_tax, 'quote'=>$quote, 'id'=>$suboption_id, 'suboption_id'=>$rate['id'], 'is_free'=>false));
-							$option->sub_options[] = (object)$suboption_obj;
+							if ( $display_prices_including_tax ) {
+								$quote += Shop_TaxClass::eval_total_tax( $shiping_taxes );
+							}
+
+							$quote_tax_incl += Shop_TaxClass::eval_total_tax( $shiping_taxes );
+
+							$suboption_obj         = array_merge( $rate, array( 'name' => $name, 'quote_tax_incl' => $quote_tax_incl, 'quote_no_tax' => $quote_no_tax, 'quote' => $quote, 'id' => $suboption_id, 'suboption_id' => $rate['id'], 'is_free' => false ) );
+							$option->sub_options[] = (object) $suboption_obj;
+						}
+					}
+
+					//apply free options
+					if ( $option->multi_option ) {
+						foreach ( $option->sub_options as $sub_option ) {
+							$sub_option_id = $option->id . '_' . $sub_option->suboption_id;
+
+							if ( array_key_exists( $sub_option_id, $discount_info->free_shipping_options ) || $sub_option->quote == 0 ) {
+								$sub_option->is_free = true;
+								traceLog('set free1');
+							}
+						}
+					} else {
+						if ( array_key_exists( $option->id, $discount_info->free_shipping_options ) || $option->quote == 0 ) {
+							$option->is_free = true;
+							traceLog('set free2');
+							traceLog($option->id);
+							traceLog($discount_info->free_shipping_options );
 						}
 					}
 
 					$result[$option->id] = $option;
 				}
 			}
-			
-			/*
-			 * Find free shipping options (provided by shopping cart price rules)
-			 */
 
-			$cart_subtotal = $total_price;
-			$payment_method = Shop_CheckoutData::get_payment_method();
-			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id($payment_method->id) : null;
-			
-			foreach ($result as $option)
-			{
-				$discount_info = Shop_CartPriceRule::evaluate_discount(
-					$payment_method_obj, 
-					$option, 
-					$order_items,
-					$shipping_info,
-					Shop_CheckoutData::get_coupon_code(), 
-					$customer,
-					$cart_subtotal);
 
-				if ($option->multi_option)
-				{
-					foreach ($option->sub_options as $sub_option)
-					{
-						$sub_option_id = $option->id.'_'.$sub_option->suboption_id;
+			uasort( $result, 'phpr_sort_order_shipping_options' );
 
-						if (array_key_exists($sub_option_id, $discount_info->free_shipping_options) || $sub_option->quote == 0)
-							$sub_option->is_free = true;
-					}
-				} else
-				{
-					if (array_key_exists($option->id, $discount_info->free_shipping_options) || $option->quote == 0)
-						$option->is_free = true;
-				}
-				// 			
-				// if ($discount_info->free_shipping)
-				// 	$option->is_free = true;
-			}
-			
-			uasort($result, 'phpr_sort_order_shipping_options');
-			
 			/*
 			 * Trigger the shop:onFilterShippingOptions event
 			 */
-			
+
 			$event_params = array(
-				'options'=>$result,
-				'country_id'=>$country_id,
-				'state_id'=>$state_id,
-				'zip'=>$zip,
-				'city'=>$city,
-				'total_price'=>$total_price,
-				'total_volume'=>$total_volume,
-				'total_weight'=>$total_weight,
-				'total_item_num'=>$total_item_num,
-				'order_items'=>$order_items,
-				'customer_group_id'=>$customer_group_id
+				'options'           => $result,
+				'country_id'        => $country_id,
+				'state_id'          => $state_id,
+				'zip'               => $zip,
+				'city'              => $city,
+				'total_price'       => $total_price,
+				'total_volume'      => $total_volume,
+				'total_weight'      => $total_weight,
+				'total_item_num'    => $total_item_num,
+				'order_items'       => $order_items,
+				'customer_group_id' => $customer_group_id
 			);
-			
-			$updated_options = Backend::$events->fireEvent('shop:onFilterShippingOptions', $event_params);
-			foreach ($updated_options as $updated_option_list) 
-			{
+
+			$updated_options = Backend::$events->fireEvent( 'shop:onFilterShippingOptions', $event_params );
+			foreach ( $updated_options as $updated_option_list ) {
 				$result = $updated_option_list;
 				break;
 			}

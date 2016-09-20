@@ -17,3 +17,6 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.30.8 Minor improvement. Hidden order currency fields, updated reports to convert totals to shop/base currency if order in different currency.
 - 1.30.9 Fix: Shop_PaymentType::update_currency_data()
 - 1.30.10 New Event: shop:onGetOptionMatrixProduct
+- 1.30.11 Added new API event: shop:onApplyOrderEmailVars
+- 1.30.12 Fixed issue with order document/invoice templates
+- 1.30.13 Added discount action 'Discount the shipping cost by fixed amount'

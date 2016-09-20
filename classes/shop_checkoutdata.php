@@ -387,10 +387,24 @@
 				throw new Cms_Exception($ex->getMessage()); 
 			}
 
+			//GET DISCOUNT INFO
+			$payment_method = Shop_CheckoutData::get_payment_method();
+			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::create()->find($payment_method->id) : null;
+
+			$discount_info = Shop_CartPriceRule::evaluate_discount(
+				$payment_method_obj,
+				$option,
+				Shop_Cart::list_active_items($cart_name),
+				$shipping_info,
+				Shop_CheckoutData::get_coupon_code(),
+				Cms_Controller::get_customer(),
+				Shop_Cart::total_price_no_tax($cart_name, false));
+
 			if (!is_array($quote))
 			{
 				$quote += $total_per_product_cost;
-				
+				$discounted = $quote - $discount_info->shipping_discount;
+				$quote = ($discounted < 0) ? 0 : $discounted;
 				$method->quote_no_tax = $quote;
 				$method->quote = $quote;
 				$method->sub_option_id = null;
@@ -405,6 +419,8 @@
 						$sub_option_found = true;
 
 						$rate_obj['quote'] += $total_per_product_cost;
+						$discounted = $rate_obj['quote'] - $discount_info->shipping_discount;
+						$rate_obj['quote'] = ($discounted < 0) ? 0 : $discounted;
 
 						$method->quote = $rate_obj['quote'];
 						$method->quote_no_tax = $rate_obj['quote'];
@@ -423,18 +439,6 @@
 			$method->id = $option->id;
 			$method->name = $option->name;
 			$method->ls_api_code = $option->ls_api_code;
-
-			$payment_method = Shop_CheckoutData::get_payment_method();
-			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::create()->find($payment_method->id) : null;
-
-			$discount_info = Shop_CartPriceRule::evaluate_discount(
-				$payment_method_obj, 
-				$option, 
-				Shop_Cart::list_active_items($cart_name),
-				$shipping_info,
-				Shop_CheckoutData::get_coupon_code(), 
-				Cms_Controller::get_customer(),
-				Shop_Cart::total_price_no_tax($cart_name, false));
 
 			$method->is_free = array_key_exists($method->internal_id, $discount_info->free_shipping_options);
 			if ($method->is_free)
