@@ -20,3 +20,10 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.30.11 Added new API event: shop:onApplyOrderEmailVars
 - 1.30.12 Fixed issue with order document/invoice templates
 - 1.30.13 Added discount action 'Discount the shipping cost by fixed amount'
+- 1.30.14 New methods and events to enable integration of custom order references:
+    - New Shop_Order Methods:
+        - get_order_reference() 
+        - find_by_order_reference()
+    - New Shop_Order Events: 
+         - shop:onOrderFindByOrderReference
+         - shop:onGetOrderReference

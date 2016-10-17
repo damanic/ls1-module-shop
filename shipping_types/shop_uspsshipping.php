@@ -414,6 +414,10 @@
 				$postages = $xPath->query('//IntlRateV2Response/Package/Service');
 				foreach ($postages as $postage)
 				{
+					if ( $xPath->query('SvcDescription', $postage)->length == 0 ) {
+						continue;
+					}
+					
 					$class_id = $postage->getAttribute('ID');
 					if (!in_array($class_id, $allowed_services_classes))
 						continue;

@@ -1033,6 +1033,35 @@
 				
 			Db_DbHelper::query('ALTER TABLE shop_orders AUTO_INCREMENT='.$new_id);
 		}
+
+		/**
+		 * Can be used to return a foreign/custom reference code for the order
+		 * @return string Returns the order reference.
+		 */
+		public function get_order_reference(){
+			$lookup = Backend::$events->fireEvent('shop:onGetOrderReference', $this);
+			foreach ($lookup as $result) {
+				if(!empty($result) && (is_string($result) || is_numeric($result))) {
+					return $result;
+				}
+			}
+			return $this->id;
+		}
+
+		/**
+		 * Used to find an order using foreign/custom reference code
+		 * @return Shop_Order Returns the order if found or FALSE otherwise.
+		 */
+		public static function find_by_order_reference($order_ref){
+			$lookup = Backend::$events->fireEvent('shop:onOrderFindByOrderReference', $order_ref);
+			foreach ($lookup as $order) {
+				if ( $order && is_a($order,'Shop_Order') ) {
+					return $order;
+				}
+			}
+			$order = Shop_Order::create()->find($order_ref);
+			return $order ? $order : false;
+		}
 		
 		public function set_api_fields($fields)
 		{
@@ -1194,6 +1223,7 @@
 
 			$message_text = str_replace('{order_total}', format_currency($this->total), $message_text);
 			$message_text = str_replace('{order_id}', $this->id, $message_text);
+			$message_text = str_replace('{order_reference}', $this->get_order_reference(), $message_text);
 			$message_text = str_replace('{order_date}', $this->order_datetime->format('%x'), $message_text);
 			$message_text = str_replace('{order_subtotal}', $include_tax ? format_currency($this->subtotal_tax_incl) : format_currency($this->subtotal), $message_text);
 			
@@ -2799,6 +2829,28 @@
 		 * @param $status current order status, if given on status change
 		 */
 		private function event_onApplyOrderEmailVars($order, $status_comment, $status) {}
+
+		/**
+		 * Triggered when call for order reference
+		 * The event handler should return the order reference string
+		 * @event shop:onGetOrderReference
+		 * @triggered /modules/shop/models/shop_order.php
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param Shop_Order , the order email relates to
+		 */
+		private function event_onGetOrderReference($order) {}
+
+		/**
+		 * Triggered when attempt to find order using an order reference string
+		 * The event handler should return the Shop_Order if found
+		 * @event shop:onOrderFindByOrderReference
+		 * @triggered /modules/shop/models/shop_order.php
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param string , the order reference
+		 */
+		private function event_onOrderFindByOrderReference($order_ref) {}
 	}
 
 ?>

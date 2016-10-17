@@ -596,7 +596,7 @@
 				$fields['SHIPTOPHONENUM'] = $order->shipping_phone;
 				$fields['SHIPTOZIP'] = $order->shipping_zip;
 				
-				$fields['INVNUM'] = $order->id;
+				$fields['INVNUM'] = $order->get_order_reference();
 				$fields['ButtonSource'] = 'LemonStand_Cart_DP';
 
 				$response = $this->post_data($endpoint, $fields);
@@ -828,7 +828,7 @@
 				$centinelClient->Add("CardNumber", $validation->fieldValues['ACCT']);
 				$centinelClient->Add("CardExpMonth", $expMonth);
 				$centinelClient->Add("CardExpYear", $validation->fieldValues['EXPDATE_YEAR']);
-				$centinelClient->Add("OrderNumber", h($order->id));
+				$centinelClient->Add("OrderNumber", h($order->get_order_reference()));
 				$centinelClient->sendHTTP($cc_endpoint, "10", "20");
 				return $centinelClient;
 			}

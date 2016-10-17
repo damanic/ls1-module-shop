@@ -186,7 +186,7 @@
 			
 			if ($host_obj->skip_itemized_data)
 			{
-				$result['item_name_1'] = 'Order #'.$order->id;
+				$result['item_name_1'] = 'Order #'.$order->get_order_reference();
 				$result['amount_1'] = round($order->total, 2);
 				$result['quantity_1'] = 1;
 			} else {
@@ -230,7 +230,7 @@
 			$result['upload'] = 1;
 			if (!$host_obj->skip_itemized_data)
 				$result['tax_cart'] = number_format($order->goods_tax, 2, '.', '');
-			$result['invoice'] = $order->id;
+			$result['invoice'] = $order->get_order_reference();
 			$result['business'] = $host_obj->business_email;
 			$result['currency_code'] = Shop_CurrencySettings::get()->code;
 			if (!$host_obj->skip_itemized_data)
@@ -455,7 +455,7 @@
 						if (!preg_match('/^invoice=([0-9]*)/m', $response, $matches))
 							throw new Phpr_ApplicationException('Invalid response.');
 
-						if ($matches[1] != $order->id)
+						if ($matches[1] != $order->get_order_reference())
 							throw new Phpr_ApplicationException('Invalid invoice number.');
 							
 						if (!preg_match('/^mc_gross=([0-9\.]+)/m', $response, $matches))

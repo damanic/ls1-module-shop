@@ -936,3 +936,4 @@
 #1.30.11 Added new API event: shop:onApplyOrderEmailVars
 #1.30.12 Fixed issue with order document/invoice templates
 #1.30.13 Added discount action 'Discount the shipping cost by fixed amount'
+#1.30.14 Added events: shop:onOrderFindByOrderReference, shop:onGetOrderReference
