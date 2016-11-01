@@ -223,6 +223,7 @@
 			}
 
 			$obj->save($review_data);
+			return $obj;
 		}
 		
 		public function validate_author_name($name, $value)

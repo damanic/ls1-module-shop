@@ -937,3 +937,4 @@
 #1.30.12 Fixed issue with order document/invoice templates
 #1.30.13 Added discount action 'Discount the shipping cost by fixed amount'
 #1.30.14 Added events: shop:onOrderFindByOrderReference, shop:onGetOrderReference
+#1.30.15 Shop_ProductReview::create_review() returns created review
