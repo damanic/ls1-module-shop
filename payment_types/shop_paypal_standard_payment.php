@@ -452,7 +452,7 @@
 					{
 						$matches = array();
 
-						if (!preg_match('/^invoice=([0-9]*)/m', $response, $matches))
+						if (!preg_match('/^invoice=(.*)/m', $response, $matches))
 							throw new Phpr_ApplicationException('Invalid response.');
 
 						if ($matches[1] != $order->get_order_reference())
