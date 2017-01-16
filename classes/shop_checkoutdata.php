@@ -783,6 +783,7 @@
 				'subtotal_tax_incl'=>$subtotal_tax_incl,
 				'discount'=>$discount_info->cart_discount,
 				'discount_tax_incl'=>$discount_info->cart_discount_incl_tax,
+				'discount_info'=>$discount_info,
 				'shipping_tax'=>$shipping_tax,
 				'shipping_quote'=>$shipping_quote,
 				'shipping_quote_tax_incl'=>$shipping_quote + $shipping_tax,
@@ -952,6 +953,7 @@
 			$options = array();
 			if ($register_customer)
 				$options['customer_password'] = $customer_password;
+
 
 			$order = Shop_Order::place_order($customer, $register_customer, $cart_name, $options);
 

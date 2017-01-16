@@ -676,15 +676,11 @@
 
 							if ( array_key_exists( $sub_option_id, $discount_info->free_shipping_options ) || $sub_option->quote == 0 ) {
 								$sub_option->is_free = true;
-								traceLog('set free1');
 							}
 						}
 					} else {
 						if ( array_key_exists( $option->id, $discount_info->free_shipping_options ) || $option->quote == 0 ) {
 							$option->is_free = true;
-							traceLog('set free2');
-							traceLog($option->id);
-							traceLog($discount_info->free_shipping_options );
 						}
 					}
 

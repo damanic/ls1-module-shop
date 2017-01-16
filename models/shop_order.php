@@ -998,8 +998,14 @@
 
 			if (!$this->customer_id && !$this->create_guest_customer)
 				$this->validation->setError('Please select customer or create new guest customer.', 'create_guest_customer', true);
-				
+
+
 			Backend::$events->fireEvent('shop:onBeforeOrderRecordCreate', $this, $deferred_session_key);
+
+			/*
+			 * Add default currency if not already set
+			 */
+			$this->set_currency_code();
 		}
 		
 		public function before_update($session_key = null) 
@@ -1046,6 +1052,59 @@
 				}
 			}
 			return $this->id;
+		}
+
+		/**
+		 * Get the currency code that applies to totals stored on the order
+		 * @return string Returns the currency code in alpha ISO-4217.
+		 */
+		public function get_currency_code($alpha=true){
+			$code = null;
+			if ( $this->currency_code && strlen( $this->currency_code ) == 3 ) {
+				$code = $this->currency_code;
+			} else {
+				$lookup = Backend::$events->fireEvent( 'shop:onGetOrderCurrencyCode', $this );
+				foreach ( $lookup as $result ) {
+					if ( !empty( $result ) && is_string( $result ) && !is_numeric( $result ) && ( strlen( $result ) == 3 ) ) {
+						$code = $result;
+					}
+				}
+			}
+
+			if($code && $alpha && is_numeric($code)){
+				$currency = new Shop_CurrencySettings();
+				$currency = $currency->where( 'iso_4217_code = :code', array('code' => $code) )->limit(1)->find_all();
+				$code = $currency->code;
+			}
+
+			return $code ? $code : Shop_CurrencySettings::get()->code;
+		}
+
+		public function get_currency(){
+			$currency = new Shop_CurrencySettings();
+			$currency = $currency->where( 'code = :code', array('code' => $this->currency_code) )->limit(1)->find_all();
+			return $currency;
+		}
+
+		/**
+		 * Get the currency code that applies to totals stored on the order
+		 * @return string Returns the currency code in alpha ISO-4217.
+		 */
+		public function set_currency_code($code=null){
+			if(empty($code)){
+				$code = $this->get_currency_code();
+			}
+
+			if ( strlen( $code ) !== 3 ) {
+				throw new Phpr_ApplicationException( 'Must provide correct code in ISO-4217 alpha or numerical' );
+			}
+			$currency = new Shop_CurrencySettings();
+			$currency = $currency->where( 'code = :code || iso_4217_code = :code', array( 'code' => $code ) )->limit( 1 )->find_all();
+			if ( !$currency ) {
+				throw new Phpr_ApplicationException( 'Invalid currency code given' );
+			}
+			$this->currency_code = $currency->code;
+
 		}
 
 		/**

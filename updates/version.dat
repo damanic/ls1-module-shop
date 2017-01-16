@@ -939,3 +939,4 @@
 #1.30.14 Added events: shop:onOrderFindByOrderReference, shop:onGetOrderReference
 #1.30.15 Shop_ProductReview::create_review() returns created review
 #1.30.16 Removed numerical restriction from invoice preg_match in paypal standard payment type
+#1.30.17 Added get_currency method to Shop_Order
