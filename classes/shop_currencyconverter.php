@@ -66,6 +66,13 @@
 			{
 				$rate = $converter_obj->get_exchange_rate($converter, $from_currency, $to_currency);
 
+				$result = Backend::$events->fireEvent('shop:onAdjustCurrencyConverterRate', $from_currency, $to_currency, $rate);
+				foreach ($result as $new_rate) {
+					if (is_numeric($new_rate)){
+						$rate = $new_rate;
+					}
+				}
+
 				$record = Shop_CurrencyRateRecord::create();
 				$record->from_currency = $from_currency;
 				$record->to_currency = $to_currency;
