@@ -941,3 +941,4 @@
 #1.30.16 Removed numerical restriction from invoice preg_match in paypal standard payment type
 #1.30.17 Added get_currency method to Shop_Order
 #1.30.18 Added event: shop:onAdjustCurrencyConverterRate
+#1.30.19 Added new API event: shop:onOptionMatrixGetPrice

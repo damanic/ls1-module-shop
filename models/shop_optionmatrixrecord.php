@@ -494,19 +494,33 @@
 		 */
 		public function get_price($product, $quantity = 1, $customer_group_id = null, $no_tax = false)
 		{
+			$price = false;
+
 			$override_product = Backend::$events->fireEvent('shop:onGetOptionMatrixProduct', $this);
-			foreach ($override_product as $use_product)
-			{
+			foreach ($override_product as $use_product) {
 				if (is_a($use_product,'Shop_Product')) {
+					traceLog('WARNING: frequent response to shop:onGetOptionMatrixProduct can be resource intensive');
 					$product = $use_product;
 					break;
 				}
 			}
 
-			if ($customer_group_id === null)
+			if ( $customer_group_id === null ) {
 				$customer_group_id = Cms_Controller::get_customer_group_id();
-				
-			$price = $this->eval_tier_price($product, $customer_group_id, $quantity);
+			}
+
+
+			$prices = Backend::$events->fireEvent('shop:onOptionMatrixGetPrice', $this , $product, $quantity, $customer_group_id);
+			foreach ($prices as $use_price) {
+				if (is_numeric($use_price)) {
+					$price = $use_price;
+				}
+			}
+
+			if(!$price) {
+				$price = $this->eval_tier_price( $product, $customer_group_id, $quantity );
+			}
+
 			if ($no_tax)
 				return $price;
 
@@ -1172,12 +1186,39 @@
 		 * Triggered when a price look up is called on an Option Matrix record.
 		 * Use it to return a product from which the price should be determined.
 		 * Useful when a matrix option should fetch its price from a linked product.
+		 *
+		 * WARNING:
+		 * loading a Shop_Product object every time get_price() is called can be resource intensive
+		 * Using this event to redirect price look ups on all matrix records is not advised,
+		 * especially if you have a large product catalog with many matrix entries
+		 *
 		 * @event shop:onGetOptionMatrixProduct
 		 * @package shop.events
 		 * @author githib:damanic
 		 * @param Shop_OptionMatrixRecord $model Specifies the loaded Option Matrix model
 		 */
 		private function event_onGetOptionMatrixProduct($model){}
+
+		/**
+		 * Triggered when a price look up is called on an Option Matrix record.
+		 * Use it to return an alternative price for a matrix option.
+		 * Price returned should be pre tax
+		 *
+		 * ADVICE:
+		 * Avoid loading Db_ActiveRecords when subscribing to this event,
+		 * derive an alternative price from a cached data source or
+		 * efficient database query.
+		 *
+		 * @event shop:onOptionMatrixGetPrice
+		 * @package shop.events
+		 * @author githib:damanic
+		 * @param Shop_OptionMatrixRecord $model Specifies the loaded Option Matrix model
+		 * @param Shop_Product Specifies parent product
+		 * @param int $quantity units of product in cart/consideration.
+		 * @param int $customer_group_id customer group for price consideration.
+		 * @param boolean $no_tax
+		 */
+		private function event_onOptionMatrixGetPrice($model, $product, $quantity, $customer_group_id, $no_tax){}
 	}
 
 ?>
