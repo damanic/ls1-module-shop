@@ -27,3 +27,8 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
     - New Shop_Order Events: 
          - `shop:onOrderFindByOrderReference`
          - `shop:onGetOrderReference`
+- 1.30.15 Shop_ProductReview::create_review() returns created review
+- 1.30.16 Removed numerical restriction from invoice preg_match in paypal standard payment type
+- 1.30.17 Added get_currency method to Shop_Order
+- 1.30.18 Added event: shop:onAdjustCurrencyConverterRate
+- 1.30.19 Added new API event: shop:onOptionMatrixGetPrice
