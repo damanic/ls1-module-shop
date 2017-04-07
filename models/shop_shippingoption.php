@@ -255,8 +255,32 @@
 
 		public function get_quote($country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $cart_items, $customer = null, $is_business = false)
 		{
+			$request_params = array(
+				'host_obj'=>$this,
+				'country_id'=>$country_id,
+				'state_id'=>$state_id,
+				'zip'=>$zip,
+				'city'=>$city,
+				'total_price'=>$total_price,
+				'total_volume'=>$total_volume,
+				'total_weight'=>$total_weight,
+				'total_item_num'=>$total_item_num,
+				'cart_items'=>$cart_items,
+				'is_business'=>$is_business,
+				'customer_id'=>is_object($customer) ? $customer->id : $customer
+			);
+
 			$global_cache_key = '_'.$country_id.'_'.$state_id.'_'.$zip.'_'.$city.'_'.$total_price.'_'.$total_volume.'_'.$total_weight.'_'.$total_item_num.'_'.$is_business.'_'.count($cart_items);
 			$cache_key = $this->id.$global_cache_key;
+
+			$event_results = Backend::$events->fireEvent('shop:onAppendShippingQuoteCacheKey', $request_params);
+			// Add external considerations to cache key
+			foreach($event_results as $string) {
+				if(!empty($string) && is_string($string)) {
+					$cache_key .= $string;
+				}
+			}
+
 			if (array_key_exists($cache_key, self::$quote_cache))
 				return self::$quote_cache[$cache_key];
 				
@@ -1140,6 +1164,58 @@
 		 * @return array Returns updated list of shipping options.
 		 */
 		private function event_onFilterShippingOptions($params) {}
+
+		/**
+		 * Allows to add to the CACHE_SHIPPING_METHODS cache key.
+		 * The event handler should accept 2 parameters - the Shop_ShippingOption object and an array of shipping parameters.
+		 * The event handler should return a string to append to the cache key.
+		 * <ul>
+		 *   <li><em>host_obj</em> - the shipping option {@link Shop_ShippingOption} object.</li>
+		 *   <li><em>country_id</em> - {@link Shop_Country shipping country} identifier.</li>
+		 *   <li><em>state_id</em> - {@link Shop_CountryState shipping state} identifier.</li>
+		 *   <li><em>zip</em> - shipping ZIP/Postal code.</li>
+		 *   <li><em>city</em> - shipping city.</li>
+		 *   <li><em>total_price</em> - total price of all order items.</li>
+		 *   <li><em>total_volume</em> - total volume of all order items.</li>
+		 *   <li><em>total_weight</em> - total weight of all order items.</li>
+		 *   <li><em>total_item_num</em> - total number of order items.</li>
+		 *   <li><em>order_items</em> - a list of order items ({@link Shop_OrderItem} or {@link Shop_CartItem} objects, depending on the caller context).</li>
+		 *   <li><em>customer_id</em> - identifier for customer {@link Shop_Customer customer}.</li>
+		 *
+		 * </ul>
+		 * The handler can return a string to append to the cache key.
+		 * This is useful when using the shop:onUpdateShippingQuote event to update a quote based on external considerations.
+		 * example: a quote updated based on currency, customer account, session considerations would not work on
+		 *          websites configured to CACHE_SHIPPING_METHODS, unless you append these considerations to the cache key.
+		 *
+		 * Usage example:
+		 * <pre>
+		 * public function subscribeEvents()
+		 * {
+		 *   Backend::$events->addEvent('shop:onAppendShippingQuoteCacheKey', $this, 'update_shipping_quote_cache_key');
+		 * }
+		 *
+		 * public function update_shipping_quote_cache_key($params)
+		 * {
+		 *   if(Phpr::$session->get('external_shipping_consideration'))
+		 *   {
+		 * 		return 'external_shipping_consideration';
+		 *	 }
+		 * }
+		 * </pre>
+		 * @event shop:onAppendShippingQuoteCacheKey
+		 * @package shop.events
+		 * @author LemonStand eCommerce Inc.
+		 * @see shop:onBeforeShippingQuote
+		 * @see shop:onUpdateShippingQuote
+		 * @see http://lemonstand.com/docs/extending_existing_models Extending existing models
+		 * @see http://lemonstand.com/docs/creating_and_updating_database_tables Creating and updating database tables
+		 *
+		 * @param array $params Specifies the method parameters.
+		 *
+		 * @return string Returns string to append to the cache key
+		 */
+		private function event_onAppendShippingQuoteCacheKey($params) {}
 	}
 	
 	function phpr_sort_order_shipping_options($a, $b)
