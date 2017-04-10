@@ -102,6 +102,12 @@
 			Backend::$events->addEvent('onLogin', $this, 'backendLogin');
 			Backend::$events->addEvent('cms:onRegisterTwigExtension', $this, 'register_twig_extension');
 		}
+
+		public function subscribe_crontab(){
+			return array(
+				'update_currency_rates' => array( 'method' => 'update_currency_rates', 'interval' => 3600 ),
+			);
+		}
 		
 		public function register_twig_extension($environment)
 		{
@@ -163,6 +169,12 @@
 				$result = Shop_AutoBilling::create()->process();
 				echo Shop_AutoBilling::format_result($result);
 			}
+		}
+
+		public function update_currency_rates(){
+			$converter = Shop_CurrencyConverter::create();
+			$converter->update_all_rates($cron=true);
+			return true;
 		}
 		
 		public function listShippingTypes()

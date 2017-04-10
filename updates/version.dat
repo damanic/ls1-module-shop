@@ -942,4 +942,5 @@
 #1.30.17 Added get_currency method to Shop_Order
 #1.30.18 Added event: shop:onAdjustCurrencyConverterRate
 #1.30.19 Added new API event: shop:onOptionMatrixGetPrice
-#1.30.20 Added ne API event: shop:onAppendShippingQuoteCacheKey
+#1.30.20 Added new API event: shop:onAppendShippingQuoteCacheKey
+#1.30.21 Allow exchange rates to be updated by CRON

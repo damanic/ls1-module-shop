@@ -23,7 +23,6 @@
 		 * @return number 
 		 */
 		abstract public function get_exchange_rate($host_obj, $from_currency, $to_currency);
-		
 		/**
 		 * Builds the converter configuration user interface 
 		 * For drop-down and radio fields you should also add methods returning 

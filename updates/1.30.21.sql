@@ -1,0 +1,1 @@
+alter table shop_currency_converter_params add column enable_cron_updates TINYINT(4);

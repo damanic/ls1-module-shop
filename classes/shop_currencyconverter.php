@@ -41,15 +41,29 @@
 
 			$interval = $converter->refresh_interval;
 
-			$record = Shop_CurrencyRateRecord::create();
-			$record->where('from_currency=?', $from_currency);
-			$record->where('to_currency=?',  $to_currency);
-			$record->where('DATE_ADD(created_at, interval '.$interval.' hour) >= ?', Phpr_DateTime::now());
-			$record = $record->find();
-			
-			if ($record)
-				return self::$rate_cache[$key] = $record->rate;
-				
+			if($converter->enable_cron_updates){
+				/*
+				* Get most recent rate, cron process keeps them up to date
+				*/
+				$record = $this->get_most_recent_record($from_currency, $to_currency);
+				if($record){
+					return self::$rate_cache[$key] = $record->rate;
+				}
+			} else {
+				/*
+				 * Look for a rate that has not expired the interval
+				 */
+				$record = Shop_CurrencyRateRecord::create();
+				$record->where('from_currency=?', $from_currency);
+				$record->where('to_currency=?',  $to_currency);
+				$record->where('DATE_ADD(created_at, interval '.$interval.' hour) >= ?', Phpr_DateTime::now());
+				$record = $record->find();
+
+				if ($record)
+					return self::$rate_cache[$key] = $record->rate;
+			}
+
+
 			/*
 			 * Evaluate rate using a currency rate converter
 			 */
@@ -62,39 +76,41 @@
 
 			$converter_obj = new $class_name();
 
-			try
-			{
+			try {
 				$rate = $converter_obj->get_exchange_rate($converter, $from_currency, $to_currency);
-
-				$result = Backend::$events->fireEvent('shop:onAdjustCurrencyConverterRate', $from_currency, $to_currency, $rate);
-				foreach ($result as $new_rate) {
-					if (is_numeric($new_rate)){
-						$rate = $new_rate;
-					}
-				}
-
-				$record = Shop_CurrencyRateRecord::create();
-				$record->from_currency = $from_currency;
-				$record->to_currency = $to_currency;
-				$record->rate = $rate;
-				$record->save();
-
+				$rate = $this->update_rate($from_currency,$to_currency,$rate);
 				return self::$rate_cache[$key] = $rate;
-			} catch (Exception $ex)
-			{
-				/*
-				 * Load the most recent rate from the cache
-				 */
-				$record = Shop_CurrencyRateRecord::create();
-				$record->where('from_currency=?', $from_currency);
-				$record->where('to_currency=?',  $to_currency);
-				$record->order('created_at desc');
-				$record = $record->find();
+			} catch (Exception $ex) {
+				$record = $this->get_most_recent_record($from_currency, $to_currency);
 				if (!$record)
 					throw $ex;
 
 				return self::$rate_cache[$key] = $record->rate;
 			}
+		}
+
+		public function update_rate($from_currency, $to_currency, $rate){
+			$result = Backend::$events->fireEvent('shop:onAdjustCurrencyConverterRate', $from_currency, $to_currency, $rate);
+			foreach ($result as $new_rate) {
+				if (is_numeric($new_rate)){
+					$rate = $new_rate;
+				}
+			}
+			$record = Shop_CurrencyRateRecord::create();
+			$record->from_currency = $from_currency;
+			$record->to_currency = $to_currency;
+			$record->rate = $rate;
+			$record->save();
+			return $record->rate;
+		}
+
+		protected function get_most_recent_record($from_currency, $to_currency){
+			$record = Shop_CurrencyRateRecord::create();
+			$record->where('from_currency=?', $from_currency);
+			$record->where('to_currency=?',  $to_currency);
+			$record->order('created_at desc');
+			$record = $record->find();
+			return $record;
 		}
 		
 		/**
@@ -122,6 +138,66 @@
 		{
 			$result = $value*$this->get_rate($from_currency, Shop_CurrencySettings::get()->code);
 			return $round === null ? $result : round($result, $round);
+		}
+
+		public function update_all_rates($cron=false){
+			$converter = Shop_CurrencyConversionParams::create()->get();
+			if ( !$converter ) {
+				return false;
+			}
+			if ( $cron  ) {
+				if(!$converter->enable_cron_updates) {
+					return false;
+				}
+			}
+			$class_name = $converter->class_name;
+			if ( !class_exists( $class_name ) ) {
+				throw new Phpr_ApplicationException( "Currency converter class $class_name not found." );
+			}
+
+			$converter->define_form_fields();
+			$converter_obj = new $class_name();
+			$interval = $converter->refresh_interval ? $converter->refresh_interval : 24;
+			$now = Phpr_DateTime::now()->toSqlDateTime();
+
+			$sql = "SELECT from_currency, to_currency
+					FROM shop_currency_exchange_rates
+					GROUP BY from_currency, to_currency";
+
+			$currencies = Db_DbHelper::queryArray($sql);
+
+			if(!$currencies){
+				return;
+			}
+
+			$sql_vars = array(
+				'interval' =>$interval,
+				'now' => Phpr_DateTime::now()->toSqlDateTime()
+			);
+
+			foreach($currencies as $data){
+				$from_currency = $sql_vars['from_currency'] = $data['from_currency'];
+				$to_currency = $sql_vars['to_currency']  = $data['to_currency'];
+
+				$sql = "SELECT count(id)
+						FROM shop_currency_exchange_rates
+						WHERE from_currency = :from_currency
+						AND to_currency = :to_currency
+						AND DATE_ADD(created_at, interval :interval hour) >= :now";
+
+				$result = Db_DbHelper::scalar($sql,$sql_vars);
+
+				if(!$result) {
+					try {
+						$rate = $converter_obj->get_exchange_rate( $converter, $from_currency, $to_currency );
+						$this->update_rate( $from_currency, $to_currency, $rate );
+					} catch ( Exception $ex ) {
+						traceLog( 'Failed to get exchange rate ' . $ex->getMessage() );
+					}
+				}
+			}
+
+			return true;
 		}
 	}
 

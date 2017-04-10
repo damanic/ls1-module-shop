@@ -35,6 +35,7 @@
 		{
 			$this->define_column('class_name', 'Converter');
 			$this->define_column('refresh_interval', 'Update Interval');
+			$this->define_column('enable_cron_updates', 'Enable Cron Updates');
 		}
 
 		public function define_form_fields($context = null)
@@ -42,12 +43,16 @@
 			$this->add_form_field('class_name')->renderAs(frm_dropdown)->tab('Converter');
 			$this->add_form_field('refresh_interval')->renderAs(frm_dropdown)->comment('Select update period of the internal currency rate cache.', 'above')->tab('Converter');
 
+			$this->add_form_partial(PATH_APP.'/modules/shop/currency_converters/partials/_cron.htm')->tab('Converter');
+			$this->add_form_field('enable_cron_updates')->renderAs(frm_onoffswitcher)->tab('Converter');
+
+
 			$obj = $this->get_converter_object();
 			if ($obj)
 				$obj->build_config_ui($this);
 				
 			if (!$this->added_fields)
-				$this->add_form_section('The selected currency converter has no configuration parameters.')->tab('Configuration');
+				$this->add_form_section('The selected currency converter has no additional configuration parameters.')->tab('Configuration');
 
 			$this->load_xml_data();
 		}
