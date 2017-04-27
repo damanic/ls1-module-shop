@@ -1278,6 +1278,16 @@
 		 */
 		public function set_order_email_vars($message_text, $status_comment = null, $status = null)
 		{
+
+			$var_values = Backend::$events->fireEvent('shop:onApplyOrderEmailVars', $this, $status_comment, $status );
+			foreach ($var_values as $value_set)
+			{
+				foreach($value_set as $var => $value){
+					$message_text = str_replace('{'.$var.'}', $value, $message_text);
+				}
+			}
+
+
 			$include_tax = Shop_CheckoutData::display_prices_incl_tax($this);
 
 			$message_text = str_replace('{order_total}', format_currency($this->total), $message_text);
@@ -1360,14 +1370,6 @@
 				}
 
 				$message_text = str_replace('{shipping_codes}', $codes_str, $message_text);
-			}
-
-			$var_values = Backend::$events->fireEvent('shop:onApplyOrderEmailVars', $this, $status_comment, $status );
-			foreach ($var_values as $value_set)
-			{
-				foreach($value_set as $var => $value){
-					$message_text = str_replace('{'.$var.'}', $value, $message_text);
-				}
 			}
 
 			return $message_text;
