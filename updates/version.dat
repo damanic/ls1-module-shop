@@ -945,3 +945,4 @@
 #1.30.20 Added new API event: shop:onAppendShippingQuoteCacheKey
 #1.30.21 Allow exchange rates to be updated by CRON
 #1.30.22 Allow API Event shop:onApplyOrderEmailVars to overwrite existing email vars
+#1.30.23 Added new API event: shop:onUpdateShippingOptions

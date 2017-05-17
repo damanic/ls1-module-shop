@@ -733,10 +733,16 @@
 				'customer_group_id' => $customer_group_id
 			);
 
+
 			$updated_options = Backend::$events->fireEvent( 'shop:onFilterShippingOptions', $event_params );
 			foreach ( $updated_options as $updated_option_list ) {
 				$result = $updated_option_list;
 				break;
+			}
+
+			$updated_options = Backend::$events->fire_event(array('name' => 'shop:onUpdateShippingOptions', 'type' => 'update_result'), $result, $event_params);
+			if($updated_options){
+				$result = $updated_options;
 			}
 
 			return $result;
@@ -1114,6 +1120,9 @@
 		private function event_onUpdateShippingQuote($shipping_option, $params) {}
 		
 		/**
+		 * Deprecated: 'shop:onFilterShippingOptions' is not a true filter event. It will only return a result from the first module to reply.
+		 * Use `shop:onUpdateShippingOptions` instead
+		 *
 		 * Allows to filter the shipping option list before it is displayed on the checkout pages. 
 		 * The event handler should accept a single parameter - the options array. The array contains the following fields:
 		 * <ul>
@@ -1164,6 +1173,66 @@
 		 * @return array Returns updated list of shipping options.
 		 */
 		private function event_onFilterShippingOptions($params) {}
+
+		/**
+		 * NOTE: Requires latest version of 'core' module from github:damanic
+		 *
+		 * Allows to updatethe shipping option list before it is displayed on the checkout pages.
+		 * The event handler should accept two parameters - the options array AND event parameters array.
+		 *
+		 * The options array contains an array of {@link Shop_ShippingOption} objects
+		 *
+		 * The event parameters array contains the following fields:
+		 * <ul>
+		 *   <li><em>country_id</em> - {@link Shop_Country shipping country} identifier.</li>
+		 *   <li><em>state_id</em> - {@link Shop_CountryState shipping state} identifier.</li>
+		 *   <li><em>zip</em> - shipping ZIP/Postal code.</li>
+		 *   <li><em>city</em> - shipping city.</li>
+		 *   <li><em>total_price</em> - total price of all order items.</li>
+		 *   <li><em>total_volume</em> - total volume of all order items.</li>
+		 *   <li><em>total_weight</em> - total weight of all order items.</li>
+		 *   <li><em>total_item_num</em> - total number of order items.</li>
+		 *   <li><em>order_items</em> - a list of order items ({@link Shop_OrderItem} or {@link Shop_CartItem} objects, depending on the caller context).</li>
+		 *   <li><em>customer_group_id</em> - identifier of the {@link Shop_CustomerGroup customer group}.</li>
+		 * </ul>
+		 *
+		 *
+		 * The handler should return an updated options array. Note, that for multi-option shipping methods
+		 * (like USPS) you may need to update the <em>{@link Shop_ShippingOption::$sub_options $sub_options}</em> property.
+		 *
+		 * Usage example:
+		 * <pre>
+		 * public function subscribeEvents()
+		 * {
+		 *   Backend::$events->addEvent('shop:onUpdateShippingOptions', $this, 'update_shipping_options');
+		 * }
+		 *
+		 * public function update_shipping_options($shipping_options,$event_params)
+		 * {
+		 *   // Remove option with the "post" API key
+		 *
+		 *   $result = array();
+		 *   foreach ($shipping_options as $option)
+		 *   {
+		 *     if ($option->ls_api_code != 'post')
+		 *       $result[$option->id] = $option;
+		 *   }
+		 *
+		 *   return $result;
+		 * }
+		 * </pre>
+		 * @event shop:onUpdateShippingOptions
+		 * @package shop.events
+		 * @author LemonStand eCommerce Inc.
+		 * @see shop:onBeforeShippingQuote
+		 * @see shop:onUpdateShippingQuote
+		 * @see http://lemonstand.com/docs/extending_existing_models Extending existing models
+		 * @see http://lemonstand.com/docs/creating_and_updating_database_tables Creating and updating database tables
+		 * @param array $options An array of shipping options
+		 * @param array $event_params An array of parameters used to determine the list of shipping options
+		 * @return array Returns updated list of shipping options.
+		 */
+		private function event_onUpdateShippingOptions($options, $event_params) {}
 
 		/**
 		 * Allows to add to the CACHE_SHIPPING_METHODS cache key.
