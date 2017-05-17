@@ -32,3 +32,7 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.30.17 Added get_currency method to Shop_Order
 - 1.30.18 Added event: shop:onAdjustCurrencyConverterRate
 - 1.30.19 Added new API event: shop:onOptionMatrixGetPrice
+- 1.30.20 Added new API event: shop:onAppendShippingQuoteCacheKey
+- 1.30.21 Allow exchange rates to be updated by CRON
+- 1.30.22 Allow API Event shop:onApplyOrderEmailVars to overwrite existing email vars
+- 1.30.23 Added new API event: shop:onUpdateShippingOptions
