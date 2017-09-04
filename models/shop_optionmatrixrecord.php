@@ -781,6 +781,11 @@
 				
 			return self::$record_cache[$record_id] = self::create();
 		}
+
+		public function before_save($session_key = null)
+		{
+			Backend::$events->fireEvent('shop:onOptionMatrixRecordBeforeUpdate', $this, $session_key);
+		}
 		
 		public function before_delete($id=null)
 		{
