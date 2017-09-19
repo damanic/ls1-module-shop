@@ -101,15 +101,15 @@ class Shop_OrderHelper{
 			$methods = self::getAvailableShippingMethods($order, $deferred_session_key);
 
 			$shipping_method_id = $order->shipping_method_id;
-			$sub_option_id = null;
+			$sub_option_hash = null;
 
 			if (strpos($shipping_method_id, '_') !== false)
 			{
 				$parts = explode('_', $shipping_method_id);
 				$shipping_method_id = $parts[0];
-				$sub_option_id = $parts[1];
+				$sub_option_hash = $parts[1];
 			} else
-				$sub_option_id = md5($order->shipping_sub_option);
+				$sub_option_hash = self::getShippingSubOptionHash($order);
 
 			$order->shipping_method_id = $shipping_method_id;
 
@@ -128,7 +128,7 @@ class Shop_OrderHelper{
 				{
 					foreach ($shipping_method->sub_options as $sub_option)
 					{
-						if ($sub_option->id == $order->shipping_method_id.'_'.$sub_option_id)
+						if ($sub_option->id == $order->shipping_method_id.'_'.$sub_option_hash)
 						{
 							$order->shipping_quote = !$order->override_shipping_quote ? round($sub_option->quote_no_tax, 2) : $manual_shipping_quote;
 							$order->shipping_sub_option = $sub_option->name;
@@ -368,6 +368,23 @@ class Shop_OrderHelper{
 	{
 		$obj = Shop_Order::create();
 		return $obj->where('parent_order_id is null')->order('id desc')->find();
+	}
+
+	public static function getShippingSubOptionHash($order){
+		$string = (isset($order->shipping_sub_option_id) && !empty($order->shipping_sub_option_id)) ? $order->shipping_sub_option_id : $order->shipping_sub_option;
+
+		if (strpos($string, '_') !== false) {
+			$parts = explode('_', $string);
+			$string = $parts[1];
+		}
+
+
+		if(strlen($string) == 32 && ctype_xdigit($string)){
+			$hash = $string;
+		} else {
+			$hash =  md5($string);
+		}
+		return $hash;
 	}
 
 }
