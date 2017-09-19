@@ -106,7 +106,7 @@
 			'manual_shipping_quote'=>db_float
 		);
 
-		public $shiping_sub_option_id;
+		public $shipping_sub_option_id;
 		public $internal_shipping_suboption_id;
 		
 		protected $api_added_columns = array();

@@ -13,8 +13,8 @@
 		}
 		
 		$selected_shipping_option = $form_model->shipping_method_id;
-		if ($form_model->shiping_sub_option_id)
-			$selected_shipping_option = $form_model->shiping_sub_option_id;
+		if ($form_model->shipping_sub_option_id)
+			$selected_shipping_option = $form_model->shipping_sub_option_id;
 	?>
 	
 	<div id="shipping_option_selector">
@@ -37,7 +37,7 @@
 				<li class="header"><?= h($option->name) ?></li>
 				<? if (!$option->error_hint): ?>
 					<? foreach ($option->sub_options as $sub_option): ?>
-						<li class="selectable <?= ($option->id == $form_model->shipping_method_id && $sub_option->id == $form_model->shiping_sub_option_id) ? 'current' : null ?>" onclick="record_selector_click(this)">
+						<li class="selectable <?= ($option->id == $form_model->shipping_method_id && $sub_option->id == $form_model->shipping_sub_option_id) ? 'current' : null ?>" onclick="record_selector_click(this)">
 							<?= h($sub_option->name) ?>
 							<span class="right"><?= format_currency($sub_option->quote) ?></span>
 							<input type="hidden" value="<?= $sub_option->id ?>"/>

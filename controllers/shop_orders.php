@@ -1329,7 +1329,7 @@
 		
 		public function edit_formBeforeRender($model)
 		{
-			$model->shiping_sub_option_id = $model->shipping_method_id.'_'.md5($model->shipping_sub_option);
+			$model->shipping_sub_option_id = $model->shipping_method_id.'_'.md5($model->shipping_sub_option);
 			$model->manual_shipping_quote = $model->shipping_quote;
 		}
 
@@ -1902,7 +1902,7 @@
 			if (strpos($shipping_method_id, '_') !== false)
 			{
 				$parts = explode('_', $order->shipping_method_id);
-				$order->shiping_sub_option_id = $shipping_method_id;
+				$order->shipping_sub_option_id = $shipping_method_id;
 				$order->shipping_method_id = $parts[0];
 			}
 
@@ -1979,7 +1979,7 @@
 			if (strpos($order->shipping_method_id, '_') !== false)
 			{
 				$parts = explode('_', $order->shipping_method_id);
-				$order->shiping_sub_option_id = $order->shipping_method_id;
+				$order->shipping_sub_option_id = $order->shipping_method_id;
 				$order->shipping_method_id = $parts[0];
 			}
 			
