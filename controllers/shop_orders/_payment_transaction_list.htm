@@ -1,9 +1,19 @@
+
+<?
+$payment_type= $form_model->payment_method->get_paymenttype_object();
+if($payment_type && $payment_type->supports_multiple_payments()){
+	$this->renderPartial('payment_transaction_list_report', array('payment_type' => $payment_type ));
+}
+?>
+
 <table class="simpleList toolbar_control">
 	<thead>
 		<tr>
 			<th>Method</th>
+			<th>Transaction ID</th>
 			<th class="date">Date and Time</th>
 			<th>Status</th>
+			<th>Value</th>
 			<th class="last">User</th>
 		</tr>
 	</thead>
@@ -15,8 +25,10 @@
 		?>
 		<tr class="<?= Backend_Html::zebra('order_transactions') ?>">
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->displayField('payment_method')) ?></a></td>
+			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_id) ?></a></td>
 			<td onclick="<?= $onClick ?>" class="date link"><a href="#" onclick="<?= $onClick ?>"><?= $record->displayField('created_at') ?></a></td>
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_status_name) ?></a></td>
+			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_value) ?></a></td>
 			<td onclick="<?= $onClick ?>" class="last link"><a href="#" onclick="<?= $onClick ?>"><?= h($user_name) ?></a></td>
 		</tr>
 		<?

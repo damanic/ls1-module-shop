@@ -41,7 +41,7 @@
 			Coupon: <?= h($coupon ? $coupon->code : '<no coupon used>') ?>
 		</p>
 	</li>
-	<li class="last">
+	<li>
 		<h3>Total</h3>
 		<p><?= format_currency($form_model->total ? $form_model->total : 0) ?></p>
 		<p class="description">
@@ -51,5 +51,15 @@
 			Total tax: <?= format_currency($tax_total ? $tax_total : 0) ?>
 		</p>
 	</li>
+	<? if($payment_due = $form_model->get_payment_due()):?>
+	<li class="last">
+		<h3>Payment Due</h3>
+		<p><?= format_currency($payment_due) ?></p>
+		<p class="description">
+			<a href="<?= url('/shop/orders/preview/'.$form_model->id).'#payment_transactions'; ?>">View Transactions</a>
+		</p>
+	</li>
+	<? endif;?>
+
 </ul>
 <div class="clear"></div>

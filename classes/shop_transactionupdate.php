@@ -29,13 +29,65 @@
 		 * @documentable
 		 */
 		public $data_1;
-		
-		public function __construct($transaction_status_code, $transaction_status_name, $data_1 = null)
+
+
+		/**
+		 * @var string Specifies the transaction value.
+		 * The value is the amount paid or refunded by the transaction
+		 * @documentable
+		 */
+		public $transaction_value;
+
+		/**
+		 * @var int Settlement complete flag
+		 * indicates if transaction has settled funds into an account
+		 * @documentable
+		 */
+		public $transaction_complete;
+
+		/**
+		 * @var int Is refund flag
+		 * indicates if transaction is for a refund
+		 * @documentable
+		 */
+		public $transaction_refund;
+
+		/**
+		 * @var int Is void flag
+		 * indicates if transaction should be ignored
+		 * @documentable
+		 */
+		public $transaction_void;
+
+		public function __construct($transaction_status_code=null, $transaction_status_name=null, $data_1 = null, $value = null, $complete = null, $refund = null, $void=null)
 		{
 			$this->transaction_status_code = $transaction_status_code;
 			$this->transaction_status_name = $transaction_status_name;
+			$this->transaction_value = $value;
+			$this->transaction_complete = $complete;
+			$this->transaction_refund = $refund;
+			$this->transaction_void = $void;
 			$this->data_1 = $data_1;
 		}
+
+		public function is_same_status($old_status){
+			$relevant_fields = array(
+				'transaction_status_code',
+				'transaction_value',
+				'transaction_complete',
+				'transaction_refund',
+				'transaction_void'
+			);
+
+			foreach($relevant_fields as $field){
+				if($this->$field != $old_status->$field){
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 	}
 
 ?>

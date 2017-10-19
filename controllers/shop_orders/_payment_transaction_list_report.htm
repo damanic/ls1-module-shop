@@ -1,0 +1,45 @@
+
+<div class="scoreboardReport">
+	<ul>
+		<li>
+			<h3>
+				Total Paid
+			</h3>
+
+			<p><?= format_currency($payment_type->get_total_paid($form_model)) ?></p>																</p>
+			<p class="description">Includes payments in process</p>
+		</li>
+		<li>
+			<h3>Total Received</h3>
+			<p><?= format_currency($payment_type->get_total_paid($form_model, false)) ?></p>
+			<p class="description">Payments confirmed as settled/received</p>
+		</li>
+		<li>
+			<h3>Total Refunded</h3>
+			<p><?= format_currency($payment_type->get_total_paid($form_model, $include_pending=true, $in_refunds=true)) ?></p>
+			<p class="description">Includes refunds in process</p>
+		</li>
+		<li>
+			<h3>Refunds Complete</h3>
+			<p><?= format_currency($payment_type->get_total_paid($form_model, $include_pending=false, $in_refunds=true)) ?></p>
+			<p class="description">Refunds confirmed as settled</p>
+		</li>
+		<li>
+			<?
+			$due = $form_model->get_payment_due();
+			if($due >= 0){
+				$title = 'Amount Due';
+				$description = 'Customer still needs to pay';
+			} else {
+				$title = 'Refund Due';
+				$description = 'Customer is due a refund';
+			}
+			?>
+			<h3><?= $title ?></h3>
+			<p><?= format_currency($form_model->get_payment_due()) ?></p>
+			<p class="description"><?= $description ?></p>
+			</p>
+		</li>
+	</ul>
+	<div class="clear"></div>
+</div>

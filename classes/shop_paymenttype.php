@@ -276,6 +276,23 @@
 		}
 
 		/**
+		 * Adds payment transaction to order history. Use in place of update_transaction_status when confirming a settled or refunded payment value
+		 * @param $host_obj ActiveRecord object containing configuration fields values
+		 * @param $order Order object
+		 * @param string $transaction_id Specifies a transaction identifier returned by the payment gateway. Example: kjkls
+		 * @param object Shop_TransactionUpdate $transaction_data
+		 */
+		public function add_transaction($host_obj, $order, $transaction_id, $transaction_data)
+		{
+			Shop_PaymentTransaction::add_transaction(
+				$order,
+				$host_obj->id,
+				$transaction_id,
+				$transaction_data
+			);
+		}
+
+		/**
 		 * If the order is in a foreign currency, you can have the payment gateway update
 		 * the order with an exchange rate which can be used by reports to convert order totals
 		 * back to the shops assigned/default currency.
@@ -304,6 +321,48 @@
 		{
 			return false;
 		}
+
+		/**
+		 * This method should return TRUE if the payment method logs successful payment/refund values that can be used
+		 * to calculate payment due and assist in refunds. For example: situations where products added/removed from order change the order total after initial payment.
+		 */
+		public function supports_multiple_payments()
+		{
+			return false;
+		}
+
+		public function get_total_paid($order, $include_pending=true, $in_refunds = false){
+			if($this->supports_multiple_payments()){
+				$total_received = 0;
+				$total_refunded = 0;
+				$sql_where = 'id in (SELECT MAX(id)
+							 	     FROM shop_payment_transactions
+							 		 WHERE order_id = ?
+							 		 GROUP BY transaction_id,transaction_refund DESC)';
+				$transactions = Shop_PaymentTransaction::create()->where($sql_where, $order->id)->find_all();
+				if($transactions){
+					foreach($transactions as $transaction){
+						if($transaction->transaction_value && !$transaction->transaction_void ){
+							if($transaction->transaction_complete || $include_pending){
+								if($transaction->transaction_refund){
+									$total_refunded += $transaction->transaction_value;
+								} else {
+									$total_received += $transaction->transaction_value;
+								}
+							}
+						}
+
+					}
+				}
+				if($in_refunds){
+					return $total_refunded;
+				}
+				return $total_received - $total_refunded;
+			}
+			throw new Phpr_SystemException('Tracking total paid across multiple payments is not supported by this payment module.');
+		}
+
+
 		
 		/**
 		 * Returns a list of available transitions from a specific transaction status

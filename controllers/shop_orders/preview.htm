@@ -60,10 +60,20 @@
 					</p>
 				</li>
 
+				<? if(($payment_due = $form_model->get_payment_due()) && ($payment_due !== $form_model->total)):?>
 				<li class="last">
-					<h3>Payment Status</h3>
+					<h3>Payment Due</h3>
+					<p><?= format_currency($payment_due) ?></p>
+					<p class="description">
+						Check Payment Transactions
+					</p>
+				</li>
+				<? else:?>
+				<li class="last">
+					<h3>Last Payment Status</h3>
 					<div id="order_payment_status"><? $this->renderPartial('order_payment_status') ?></div>
 				</li>
+				<? endif; ?>
 			</ul>
 			<div class="clear"></div>
 		</div>

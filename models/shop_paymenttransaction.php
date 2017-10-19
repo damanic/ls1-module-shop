@@ -28,6 +28,10 @@
 			$this->define_column('user_note', 'User Notes')->validation();
 			$this->define_relation_column('payment_method', 'payment_method', 'Payment Method ', db_varchar, '@name');
 			$this->define_column('actual_user_name', 'Created/Update By');
+			$this->define_column('transaction_value', 'Value');
+			$this->define_column('transaction_complete', 'Settled');
+			$this->define_column('transaction_refund', 'Is Refund');
+			$this->define_column('transaction_void', 'Is Void');
 		}
 
 		public function define_form_fields($context = null)
@@ -53,6 +57,49 @@
 
 			$obj->save();
 		}
+
+		public static function add_transaction($order, $payment_method_id, $transaction_id, $transaction_data, $user_note = null){
+			traceLog($transaction_data);
+			$obj = new self();
+			$obj->order_id = $order->id;
+			$obj->payment_method_id = $payment_method_id;
+			$obj->user_note = $user_note;
+			$obj->transaction_id = $transaction_id;
+			$obj->transaction_status_name = $transaction_data->transaction_status_name;
+			$obj->transaction_status_code = $transaction_data->transaction_status_code;
+			$obj->transaction_value = isset($transaction_data->transaction_value) ? $transaction_data->transaction_value : null;
+			$obj->transaction_complete = isset($transaction_data->transaction_complete) ? $transaction_data->transaction_complete : null;
+			$obj->transaction_refund =  isset($transaction_data->transaction_refund) ? $transaction_data->transaction_refund : null;
+			$obj->transaction_void =  isset($transaction_data->transaction_void) ? $transaction_data->transaction_void : null;
+			$obj->data_1 = isset($transaction_data->data_1) ? $transaction_data->data_1 : null;
+			$obj->save();
+			return $obj;
+		}
+
+		public static function get_unique_transactions($order){
+			$transactions = array();
+			$log_transactions = array();
+			foreach($order->payment_transactions as $transaction){
+				if($transaction->payment_method_id) {
+					if(!isset($log_transactions[$transaction->payment_method_id][$transaction->transaction_id] )){
+						$log_transactions[$transaction->payment_method_id][$transaction->transaction_id] = $transactions[] = $transaction;
+					}
+				}
+			}
+			return array_reverse($transactions);
+		}
+
+		public static function request_transactions_update($order, $unique_transactions = null){
+			if(!$unique_transactions){
+				$unique_transactions = self::get_unique_transactions($order);
+			}
+			foreach($unique_transactions as $transaction) {
+				if($transaction->payment_method && $transaction->payment_method->supports_transaction_status_query()) {
+					$transaction->request_transaction_status( $order );
+				}
+			}
+		}
+
 		
 		public function list_available_transitions()
 		{   
@@ -106,13 +153,11 @@
 
 			try
 			{
-				self::update_transaction($order, 
+				self::add_transaction($order,
 					$this->payment_method_id, 
 					$this->transaction_id, 
-					$transaction_update_result->transaction_status_name,
-					$transaction_update_result->transaction_status_code,
-					$comment,
-					$transaction_update_result->data_1);
+					$transaction_update_result,
+					$comment);
 			} catch (Exception $ex)
 			{
 				$message = Core_String::finalize($ex->getMessage());
@@ -155,19 +200,13 @@
 			if (!$transaction_update_result || !is_object($transaction_update_result) || !($transaction_update_result instanceof Shop_TransactionUpdate))
 				throw new Phpr_ApplicationException('Transaction status has not been updated.');
 
-			if ($transaction_update_result->transaction_status_code != $this->transaction_status_code)
-			{
-				$obj = new self();
-				$obj->order_id = $order->id;
-				$obj->transaction_id = $this->transaction_id;
-				$obj->transaction_status_name = $transaction_update_result->transaction_status_name;
-				$obj->transaction_status_code = $transaction_update_result->transaction_status_code;
-				$obj->payment_method_id = $this->payment_method_id;
-				$obj->fetched_from_gateway = 1;
-
-				$obj->save();
+			if(!$transaction_update_result->is_same_status($this)){
+				$transaction = self::add_transaction($order,$this->payment_method_id,$this->transaction_id,$transaction_update_result);
+				$transaction->fetched_from_gateway = 1;
+				$transaction->save();
 			}
 		}
+
 	}
 
 ?>

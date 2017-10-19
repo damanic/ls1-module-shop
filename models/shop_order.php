@@ -1160,9 +1160,14 @@
 		 */
 		public function delete_order()
 		{
+			$this->before_delete($db_delete = false);
 			$this->deleted_at = Phpr_DateTime::now();
 			$this->save();
 			Backend::$events->fireEvent('shop:onOrderMarkedDeleted', $this);
+		}
+
+		public function before_delete($db_delete = true){
+			Backend::$events->fireEvent('shop:onOrderBeforeDelete', $this, $db_delete);
 		}
 		
 		public function after_delete()
@@ -1532,20 +1537,34 @@
 		/**
 		 * Returns true if payment transaction operations (changing transaction status, 
 		 * requesting transaction status) are allowed.
-		 * The operations are allowed if there are any transaction registered for the order
-		 * and a payment gateway registered the most recent transaction matches the current
-		 * order payment gateway.
+		 * The operations are allowed if there are any transactions registered for the order
 		 */
 		public function transaction_operations_allowed()
 		{
-			if (!$this->payment_transactions->count)
+			$has_transactions = $this->payment_transactions->count;
+			if (!$has_transactions)
 				return false;
 				
 			if (!$this->payment_method)
 				return false;
 				
-			$last_transaction = $this->payment_transactions[0];
-			return $last_transaction->payment_method_id == $this->payment_method_id;
+			return true;
+		}
+
+		public function get_payment_due(){
+			if($this->id){
+				if($this->payment_method){
+					$payment_type = $this->payment_method->get_paymenttype_object();
+					if($payment_type && $payment_type->supports_multiple_payments()){
+						return  $this->total - $payment_type->get_total_paid($this);
+					}
+				}
+				if ($this->is_paid()){
+					return 0;
+				}
+			}
+
+			return $this->total ? $this->total : 0;
 		}
 		
 		/**

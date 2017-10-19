@@ -13,7 +13,7 @@ window.addEvent('domready', function(){
 	{
 		new TabManager('order_tabs', 
 		  	'order_tab_pages', 
-		  	{trackTab: false});
+		  	{trackTab: true});
 	}
 })
 

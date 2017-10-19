@@ -1207,9 +1207,14 @@
 
 			try
 			{
+
 				$order = Shop_Order::create()->find($order_id);
 				if (!$order)
 					throw new Phpr_ApplicationException('Order not found');
+
+				//fetch latest transaction statuses
+				$unique_transactions = Shop_PaymentTransaction::get_unique_transactions($order);
+				Shop_PaymentTransaction::request_transactions_update($order,$unique_transactions);
 
 				$current_transaction = $order->payment_transactions[0];
 				if (!$current_transaction)
@@ -1218,6 +1223,7 @@
 				$order_transitions = Shop_StatusTransition::listAvailableTransitions($this->currentUser->shop_role_id, $order->status_id);
 
 				$this->viewData['current_transaction'] = $current_transaction;
+				$this->viewData['unique_transactions'] = $unique_transactions;
 				$this->viewData['order'] = $order;
 				$this->viewData['order_transitions'] = $order_transitions;
 			}
@@ -1235,17 +1241,54 @@
 				if (!$order)
 					throw new Phpr_ApplicationException('Order not found');
 
-				$current_transaction = $order->payment_transactions[0];
-				if (!$current_transaction)
-					throw new Phpr_ApplicationException('Current order transaction status not found');
+				$transaction_id = post('transaction_record_id', false);
+				if (!is_numeric($transaction_id))
+					throw new Phpr_ApplicationException('Please select a transaction');
 
-				if ($current_transaction->id != post('transaction_record_id'))
-					throw new Phpr_ApplicationException('The transaction status has been updated since this page has been loaded.');
+				$transaction = Shop_PaymentTransaction::create()->find($transaction_id);
+				if (!$transaction)
+					throw new Phpr_ApplicationException('Selected transaction not found');
 
-				$current_transaction->update_transaction_status($order, post('new_transaction_status'), post('new_order_status'), post('user_note'));
+				$new_transaction_status = post('new_transaction_status', false);
+				if (!$transaction)
+					throw new Phpr_ApplicationException('Please select a transaction status');
+
+				$transaction->update_transaction_status($order, $new_transaction_status, post('new_order_status'), post('user_note'));
 
 				Phpr::$session->flash['success'] = 'Transaction status has been successfully changed';
 				Phpr::$response->redirect(url('/shop/orders/preview/'.$order_id).'#tab_5');
+			}
+			catch (Exception $ex)
+			{
+				Phpr::$response->ajaxReportException($ex, true, true);
+			}
+		}
+
+		protected function update_transaction_status_onTransactionChange($order_id)
+		{
+			try
+			{
+				$order = Shop_Order::create()->find($order_id);
+				if (!$order)
+					throw new Phpr_ApplicationException('Order not found');
+
+				$transaction_id = post('transaction_record_id', false);
+				if (!is_numeric($transaction_id))
+					throw new Phpr_ApplicationException('Please select a transaction');
+
+				$transaction = Shop_PaymentTransaction::create()->find($transaction_id);
+				if (!$transaction)
+					throw new Phpr_ApplicationException('Selected transaction not found');
+
+				$order_transitions = Shop_StatusTransition::listAvailableTransitions($this->currentUser->shop_role_id, $order->status_id);
+
+				$this->viewData['order_id'] = $order_id;
+				$this->viewData['current_transaction'] = $transaction;
+				$this->viewData['order'] = $order;
+				$this->viewData['order_transitions'] = $order_transitions;
+				$this->renderMultiple(array(
+					'transaction_update_fields'=>'@_form_area_update_transaction_status',
+				));
 			}
 			catch (Exception $ex)
 			{
@@ -1261,11 +1304,11 @@
 				if (!$order)
 					throw new Phpr_ApplicationException('Order not found');
 					
-				$current_transaction = $order->payment_transactions[0];
-				if (!$current_transaction)
-					throw new Phpr_ApplicationException('Current order transaction status not found');
+				$has_transactions = $order->payment_transactions[0];
+				if (!$has_transactions)
+					throw new Phpr_ApplicationException('No transactions found');
 
-				$current_transaction->request_transaction_status($order);
+				Shop_PaymentTransaction::request_transactions_update($order);
 
 				$order = Shop_Order::create()->find($order_id);
 				$this->viewData['form_model'] = $order;
