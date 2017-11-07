@@ -59,7 +59,6 @@
 		}
 
 		public static function add_transaction($order, $payment_method_id, $transaction_id, $transaction_data, $user_note = null){
-			traceLog($transaction_data);
 			$obj = new self();
 			$obj->order_id = $order->id;
 			$obj->payment_method_id = $payment_method_id;

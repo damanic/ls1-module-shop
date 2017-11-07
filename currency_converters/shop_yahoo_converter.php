@@ -16,8 +16,8 @@
 		public function get_info()
 		{
 			return array(
-				'name'=>'Yahoo',
-				'description'=>'This converter uses the free currency exchange rate service provided by Yahoo (yahoo.com)'
+				'name'=>'Yahoo (Discontinued)',
+				'description'=>'The service has been discontinued. For all future markets and equities data research, please refer to finance.yahoo.com.'
 			);
 		}
 		
@@ -53,7 +53,11 @@
 			$data = explode(',', $feed_content);
 			if (count($data) < 2)
 				throw new Phpr_SystemException('Yahoo currency exchange rate service has returned invalid data');
-				
+
+			$rate = $data[0];
+			if(!is_numeric($rate) || $rate <= 0){
+				throw new Phpr_SystemException('Yahoo currency exchange rate service has returned invalid data');
+			}
 			return $data[0];
 		}
 	}
