@@ -36,3 +36,7 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.30.21 Allow exchange rates to be updated by CRON
 - 1.30.22 Allow API Event shop:onApplyOrderEmailVars to overwrite existing email vars
 - 1.30.23 Added new API event: shop:onUpdateShippingOptions
+- 1.30.24 Added new API event: shop:onOptionMatrixRecordBeforeUpdate
+- 1.30.25 Minor change: shiping_sub_option_id, renamed to shipping_sub_option_id
+- 1.30.26 Fixed issue with shipping multi-option hash on backend form submits. Shop_OrderHelper::getShippingSubOptionHash
+- 1.31.0 Payment gateways can be set up to record and manage multiple transactions per order keeping track of amount paid/refunded/still-due
