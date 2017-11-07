@@ -77,13 +77,15 @@
 
 				$to_rate = $to_rate->item(0)->getAttribute('rate');
 			}
-			
-			if (!strlen($from_rate) || !$from_rate)
-				throw new Phpr_SystemException('Invalid currency rate for '.$from_currency);
 
-			if (!strlen($to_rate) || !$to_rate)
-				throw new Phpr_SystemException('Invalid currency rate for '.$to_currency);
-			
+			if(!is_numeric($to_rate) || !is_numeric($from_rate)){
+				throw new Phpr_SystemException('Invalid currency rates received');
+			}
+
+			if(($to_rate <= 0) || ($from_rate <= 0)){
+				throw new Phpr_SystemException('Invalid currency rates received');
+			}
+
 			return $to_rate/$from_rate;
 		}
 	}
