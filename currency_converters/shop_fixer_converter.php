@@ -4,9 +4,9 @@
 	 * Currency converter based on Yahoo 
 	 * free currency exchange rate service
 	 */
-	class Shop_Yahoo_Converter extends Shop_CurrencyConverterBase
+	class Shop_Fixer_Converter extends Shop_CurrencyConverterBase
 	{
-		const feed_address = 'http://finance.yahoo.com/d/quotes.csv?f=l1d1t1&s=%s%s=X';
+		const feed_address = 'https://api.fixer.io/latest?base=%s&symbols=%s';
 		
 		/**
 		 * Returns information about the currency converter.
@@ -16,8 +16,8 @@
 		public function get_info()
 		{
 			return array(
-				'name'=>'Yahoo (Discontinued)',
-				'description'=>'The service has been discontinued. For all future markets and equities data research, please refer to finance.yahoo.com.'
+				'name'=>'Fixer.io',
+				'description'=>'Fixer.io is a free API for current and historical foreign exchange rates published by the European Central Bank.'
 			);
 		}
 		
@@ -48,16 +48,25 @@
 			} catch (Exception $ex) {}
 
 			if (!strlen($feed_content))
-				throw new Phpr_SystemException('Error loading Yahoo currency exchange feed.');
+				throw new Phpr_SystemException('Error loading Fixer.io currency exchange feed.');
 
-			$data = explode(',', $feed_content);
-			if (count($data) < 2)
-				throw new Phpr_SystemException('Yahoo currency exchange rate service has returned invalid data');
+			$data = json_decode($feed_content,true);
 
-			$rate = $data[0];
-			if(!is_numeric($rate) || $rate <= 0){
-				throw new Phpr_SystemException('Yahoo currency exchange rate service has returned invalid data');
+			if(!$data || !isset($data['base'])){
+				throw new Phpr_SystemException('Fixer.io currency exchange rate service has returned invalid data');
 			}
+
+			$result_from_currency = trim(strtoupper($data['base']));
+			if($result_from_currency !== $from_currency){
+				throw new Phpr_SystemException('Fixer.io currency exchange rate service has returned invalid data');
+			}
+
+			$rate = isset($data['rates'][$to_currency]) ? $data['rates'][$to_currency] : false;
+
+			if(!is_numeric($rate) || ($rate <= 0)){
+				throw new Phpr_SystemException('Fixer.io currency exchange rate service has returned invalid data');
+			}
+
 			return $rate;
 		}
 	}

@@ -1,4 +1,5 @@
 #Shop Module
+
 ###Lemonstand Version 1
 This updated module can be installed using the updatecenter module: https://github.com/damanic/ls1-module-updatecenter
 
@@ -40,3 +41,4 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.30.25 Minor change: shiping_sub_option_id, renamed to shipping_sub_option_id
 - 1.30.26 Fixed issue with shipping multi-option hash on backend form submits. Shop_OrderHelper::getShippingSubOptionHash
 - 1.31.0 Payment gateways can be set up to record and manage multiple transactions per order keeping track of amount paid/refunded/still-due
+- 1.31.1 Discontinued Yahoo currency converter. Added fixer.io currency converter.
