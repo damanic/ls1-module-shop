@@ -75,8 +75,8 @@
 
 											<? foreach ( $unique_transactions as $transaction ): ?>
 											<option value="<?= $transaction->id ?>" selected="<?= ($transaction->transaction_id == $current_transaction->transaction_id) ? 'selected' : null ?>">
-												<? $trans_value = (isset($transaction->transaction_value) && is_numeric($transaction->transaction_value)) ? $transaction->transaction_value : null;
-												<?= h($transaction->displayField('payment_method').' | '.$transaction->transaction_id.' | '.$trans_value.' | '.$transaction->transaction_status_name) ?>
+												<? $trans_value = (isset($transaction->transaction_value) && is_numeric($transaction->transaction_value)) ? $transaction->transaction_value : null; ?>
+												<?= h($transaction->displayField('payment_method').' | '.$transaction->transaction_id.' | '.$trans_value.' | '.$transaction->transaction_status_name); ?>
 											</option>
 											<? endforeach ?>
 										</select>
