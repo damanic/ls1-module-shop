@@ -282,13 +282,14 @@
 		 * @param string $transaction_id Specifies a transaction identifier returned by the payment gateway. Example: kjkls
 		 * @param object Shop_TransactionUpdate $transaction_data
 		 */
-		public function add_transaction($host_obj, $order, $transaction_id, $transaction_data)
+		public function add_transaction($host_obj, $order, $transaction_id, $transaction_data, $user_note = null)
 		{
 			Shop_PaymentTransaction::add_transaction(
 				$order,
 				$host_obj->id,
 				$transaction_id,
-				$transaction_data
+				$transaction_data,
+				$user_note
 			);
 		}
 
