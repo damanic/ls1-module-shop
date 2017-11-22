@@ -356,9 +356,10 @@
 					}
 				}
 				if($in_refunds){
-					return $total_refunded;
+					return round($total_refunded,2);
 				}
-				return $total_received - $total_refunded;
+				$total_paid = $total_received - $total_refunded;
+				return round($total_paid, 2);
 			}
 			throw new Phpr_SystemException('Tracking total paid across multiple payments is not supported by this payment module.');
 		}

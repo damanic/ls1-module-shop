@@ -1556,7 +1556,8 @@
 				if($this->payment_method){
 					$payment_type = $this->payment_method->get_paymenttype_object();
 					if($payment_type && $payment_type->supports_multiple_payments()){
-						return  $this->total - $payment_type->get_total_paid($this);
+						$payment_due = $this->total - $payment_type->get_total_paid($this);
+						return  round($payment_due,2);
 					}
 				}
 				if ($this->is_paid()){
