@@ -13,11 +13,20 @@
 	 * @author LemonStand eCommerce Inc.
 	 * @param string $num specifies a value to format.
 	 * @param integer $decimals specifies a number of decimal digits. Optional parameter, the default value is 2.
+	 * @param string $currency_code specifies an alternative currency format to display, if null system currency format is used.
 	 * @return string returns the formatted currency value.
 	 */
-	function format_currency($num, $decimals = 2)
+	function format_currency($num, $decimals = 2, $currency_code=null)
 	{
-		return Shop_CurrencySettings::format_currency($num, $decimals);
+		traceLog('format_currency');
+		if(empty($currency_code)){
+			traceLog('format_currency old');
+			return Shop_CurrencySettings::format_currency($num, $decimals);
+		} else {
+			//not a conversion
+			traceLog('format_currency new '.$currency_code);
+			return Shop_CurrencyHelper::format_currency($num,$decimals,$currency_code);
+		}
 	}
 	
 	/**
