@@ -18,13 +18,10 @@
 	 */
 	function format_currency($num, $decimals = 2, $currency_code=null)
 	{
-		traceLog('format_currency');
 		if(empty($currency_code)){
-			traceLog('format_currency old');
 			return Shop_CurrencySettings::format_currency($num, $decimals);
 		} else {
 			//not a conversion
-			traceLog('format_currency new '.$currency_code);
 			return Shop_CurrencyHelper::format_currency($num,$decimals,$currency_code);
 		}
 	}
