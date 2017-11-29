@@ -952,4 +952,4 @@
 #1.31.0 Payment gateways can be set up to record and manage multiple transactions per order keeping track of amount paid/refunded/still-due
 #1.31.1 Discontinued Yahoo currency converter. Added fixer.io currency converter.
 #1.31.2 Minor Fix for get_payment_due()
-#1.31.3 Add indices to payment_transactions
+#1.31.3 Minor improvement. DB Indexes, extends format_currency(), adds new function to Shop_PaymentTypes
