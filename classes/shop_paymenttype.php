@@ -459,6 +459,22 @@
 		public function extend_transaction_preview($host_obj, $controller, $transaction)
 		{
 		}
+
+		/**
+		 * Returns payment methods that use this payment type
+		 * @param boolean $active_only Determines if only active backend/frontend payment methods should be returned
+		 */
+		public static function get_host_instances($active_only = true){
+			$instances = Shop_PaymentMethod::create();
+			if($active_only){
+				$instances->where('(enabled = 1 OR backend_enabled = 1)');
+			}
+			$called_class = function_exists('get_called_class') ? get_called_class() : get_class(self);
+			if($called_class !== 'Shop_PaymentType'){
+				$instances->where('class_name = ?',$called_class);
+			}
+			return $instances->find_all();
+		}
 	}
 
 ?>
