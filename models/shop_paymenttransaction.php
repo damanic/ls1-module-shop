@@ -71,6 +71,10 @@
 			$obj->transaction_refund =  isset($transaction_data->transaction_refund) ? $transaction_data->transaction_refund : null;
 			$obj->transaction_void =  isset($transaction_data->transaction_void) ? $transaction_data->transaction_void : null;
 			$obj->data_1 = isset($transaction_data->data_1) ? $transaction_data->data_1 : null;
+			if(isset($transaction_data->created_at) && !empty($transaction_data->created_at)){
+				$obj->auto_create_timestamps  = array(); //use gateway timestamp
+				$obj->created_at              = $transaction_data->created_at;
+			}
 			$obj->save();
 			return $obj;
 		}
