@@ -452,6 +452,17 @@
 		{
 			return null;
 		}
+
+		/**
+		 * Request all status transitions for a transaction
+		 * The method must return an array containing instances of the Shop_TransactionUpdate class
+		 * @param $host_obj ActiveRecord object containing configuration fields values
+		 * @param string $transaction_id Specifies a transaction identifier returned by the payment gateway. Example: kjkls
+		 * @return array Returns an array of {@link Shop_TransactionUpdate} objects.
+		 */
+		public function request_transaction_history($host_obj, $transaction_id) {
+			return null;
+		}
 		
 		/**
 		 * This method should return TRUE if the payment module supports customer payment profiles.

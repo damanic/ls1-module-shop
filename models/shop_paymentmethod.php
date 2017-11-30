@@ -634,6 +634,23 @@
 			return $obj->request_transaction_status($this, $transaction_id);
 		}
 
+		/**
+		 * Returns entire status transition history for a transaction.
+		 * This method contacts the payment gateway and retrieves a all records of status change.
+		 * @documentable.
+		 * @return array of (@link Shop_TransactionUpdate).
+		 */
+		public function request_transaction_history($transaction_id)
+		{
+			$obj = $this->get_paymenttype_object();
+			if (!$obj)
+				return null;
+
+			return $obj->request_transaction_history($this, $transaction_id);
+		}
+
+
+
 		public function extend_transaction_preview($controller, $transaction)
 		{
 			$obj = $this->get_paymenttype_object();

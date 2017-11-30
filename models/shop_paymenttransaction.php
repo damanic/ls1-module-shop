@@ -210,6 +210,42 @@
 			}
 		}
 
+		public function refresh_transaction_history($order){
+			if (!$this->payment_method)
+				throw new Phpr_ApplicationException('Payment method not found');
+			$this->payment_method->define_form_fields();
+			$transaction_updates = $this->payment_method->request_transaction_history($this->transaction_id);
+			if(!$transaction_updates || !is_array($transaction_updates) || !count($transaction_updates)){
+				throw new Phpr_ApplicationException('Transaction status has not been updated.');
+			}
+			$old_history = $this->get_transaction_history($order);
+			foreach($transaction_updates as $transaction_update){
+				if (!$transaction_update || !is_object($transaction_update) || !($transaction_update instanceof Shop_TransactionUpdate)){
+					throw new Phpr_ApplicationException('Transaction status has not been updated.');
+				}
+			}
+			$history_updated = false;
+			foreach($transaction_updates as $transaction_update){
+				$transaction_update->fetched_from_gateway=1;
+				$transaction = self::add_transaction($order,$this->payment_method_id,$this->transaction_id,$transaction_update);
+				$history_updated = true;
+			}
+			if($old_history && $history_updated){
+				foreach($old_history as $transaction){
+					$transaction->delete();
+				}
+			}
+		}
+
+		protected function get_transaction_history($order){
+			$bind = array(
+				'trans_id'=>$this->transaction_id,
+				'order_id' =>$order->id
+			);
+			return self::create()->where('transaction_id = :trans_id AND order_id = :order_id', $bind)->find_all();
+		}
+
+
 	}
 
 ?>
