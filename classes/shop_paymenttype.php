@@ -332,36 +332,83 @@
 			return false;
 		}
 
+		/**
+		 * Returns the balance paid on the order through the payment gateway
+		 * @param $order ActiveRecord object Shop_Order
+		 * @param boolean $include_pending If payments pending should be included (not yet settled)
+		 * @param boolean $in_refunds Will the total paid out in refunds
+		 */
 		public function get_total_paid($order, $include_pending=true, $in_refunds = false){
 			if($this->supports_multiple_payments()){
-				$total_received = 0;
-				$total_refunded = 0;
-				$sql_where = 'id in (SELECT MAX(id)
+
+				if($in_refunds){
+					return $this->get_refunds_total($order,$include_pending);
+				}
+
+				$total_paid = $this->get_payments_total($order, $include_pending) - $this->get_refunds_total($order,$include_pending);
+				return round($total_paid, 2);
+			}
+			throw new Phpr_SystemException('Tracking total paid across multiple payments is not supported by this payment module.');
+		}
+
+		/**
+		 * Returns total sum of all payments processed through the gateway
+		 * @param $order ActiveRecord object Shop_Order
+		 * @param boolean $include_pending If payments pending should be included (not yet settled)
+		 */
+		public function get_payments_total($order, $include_pending=true){
+			if($this->supports_multiple_payments()){
+				$total_payment = 0;
+				$add_where = $include_pending ? null : 'AND transaction_complete = 1';
+				$sql_where = "id in (SELECT MAX(id)
 							 	     FROM shop_payment_transactions
-							 		 WHERE order_id = ?
-							 		 GROUP BY transaction_id,transaction_refund DESC)';
+							 		 WHERE order_id = ? $add_where
+							 		 AND transaction_refund IS NULL
+							 		 AND transaction_void IS NULL
+							 		 GROUP BY transaction_id
+							 		 ORDER BY created_at, transaction_complete DESC)";
 				$transactions = Shop_PaymentTransaction::create()->where($sql_where, $order->id)->find_all();
 				if($transactions){
 					foreach($transactions as $transaction){
-						if($transaction->transaction_value && !$transaction->transaction_void ){
-							if($transaction->transaction_complete || $include_pending){
-								if($transaction->transaction_refund){
-									$total_refunded += $transaction->transaction_value;
-								} else {
-									$total_received += $transaction->transaction_value;
-								}
-							}
+						if($transaction->transaction_value ){
+								$total_payment += $transaction->transaction_value;
 						}
 
 					}
 				}
-				if($in_refunds){
-					return round($total_refunded,2);
-				}
-				$total_paid = $total_received - $total_refunded;
-				return round($total_paid, 2);
+				return round($total_payment, 2);
 			}
-			throw new Phpr_SystemException('Tracking total paid across multiple payments is not supported by this payment module.');
+			throw new Phpr_SystemException('The payment gateway does not support this feature.');
+		}
+
+		/**
+		 * Returns total sum of all refunds processed through the gateway
+		 * @param $order ActiveRecord object Shop_Order
+		 * @param boolean $include_pending If refunds pending should be included (not yet settled)
+		 */
+		public function get_refunds_total($order, $include_pending=true){
+			if($this->supports_multiple_payments()){
+				$total_refunded = 0;
+				$add_where = $include_pending ? null : 'AND transaction_complete = 1';
+				$sql_where = "id in (SELECT MAX(id)
+							 	     FROM shop_payment_transactions
+							 		 WHERE order_id = ? $add_where
+							 		 AND transaction_refund = 1
+							 		 AND transaction_void IS NULL
+							 		 GROUP BY transaction_id
+							 		 ORDER BY created_at, transaction_complete DESC)";
+				$transactions = Shop_PaymentTransaction::create()->where($sql_where, $order->id)->find_all();
+				if($transactions){
+					foreach($transactions as $transaction){
+						if($transaction->transaction_value ){
+							$total_refunded += $transaction->transaction_value;
+						}
+
+					}
+				}
+				return round($total_refunded, 2);
+			}
+			throw new Phpr_SystemException('The payment gateway does not support this feature.');
 		}
 
 
