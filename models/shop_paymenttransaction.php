@@ -92,6 +92,19 @@
 			return array_reverse($transactions);
 		}
 
+		public static function transaction_exists($payment_method_id, $transaction_id){
+			$bind = array(
+				'payment_method_id' => $payment_method_id,
+				'transaction_id' => $transaction_id
+			);
+			$exists = Db_DbHelper::scalar('SELECT id 
+										   FROM shop_payment_transactions 
+										   WHERE payment_method_id = :payment_method_id 
+										   AND transaction_id = :transaction_id',$bind);
+
+			return $exists ? true : false;
+		}
+
 		public static function request_transactions_update($order, $unique_transactions = null){
 			if(!$unique_transactions){
 				$unique_transactions = self::get_unique_transactions($order);
