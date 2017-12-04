@@ -1,0 +1,8 @@
+<?
+	$columnDefinition = $form_field->getColDefinition(); 
+	$field_value = h($form_model->displayField($form_field->dbName));
+	if ($form_field->nl2br)
+		$field_value = nl2br($field_value);
+?>
+
+<? $this->formRenderPartial('form_preview_value', array('value'=>$field_value, 'type'=>$columnDefinition->type, 'form_field'=>$form_field)) ?>

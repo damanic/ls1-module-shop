@@ -1107,6 +1107,18 @@
 
 		}
 
+		public function displayField($dbName, $media = 'form') {
+			$column_definitions = $this->get_column_definitions();
+			if (!array_key_exists($dbName, $column_definitions))
+				throw new Phpr_SystemException('Cannot execute method "displayField" for field '.$dbName.' - the field is not defined in column definition list.');
+
+			$column_definition = $column_definitions[$dbName];
+			if($column_definition->type == db_float && $column_definition->currency && is_numeric($this->$dbName) ){
+				return Shop_CurrencyHelper::format_currency($this->$dbName,2, $this->currency_code);
+			}
+			return $column_definitions[$dbName]->displayValue($media);
+		}
+
 		/**
 		 * Used to find an order using foreign/custom reference code
 		 * @return Shop_Order Returns the order if found or FALSE otherwise.
@@ -2932,6 +2944,7 @@
 		 * @param string , the order reference
 		 */
 		private function event_onOrderFindByOrderReference($order_ref) {}
+
 	}
 
 ?>

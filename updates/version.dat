@@ -955,3 +955,4 @@
 #1.31.3 Minor improvement. DB Indexes, extends format_currency(), adds new function to Shop_PaymentTypes
 #1.31.4 Minor improvement to payment transaction status logs
 #1.31.5 Improved payment transaction totals
+#1.31.6|@phpr-patch_1.31.6 Improve order currency field display
