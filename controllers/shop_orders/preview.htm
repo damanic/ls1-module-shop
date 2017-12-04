@@ -51,6 +51,12 @@
 						Email: <a href="mailto:<?= $form_model->billing_email ?>"><?= h($form_model->billing_email) ?></a>
 					</p>
 				</li>
+				<? if (isset($form_model->currency_code) && !empty($form_model->currency_code)): ?>
+				<li>
+					<h3>Order Currency</h3>
+					<p><?= strtoupper($form_model->currency_code) ?></p>
+				</li>
+				<? endif ?>
 				<li>
 					<h3>Total</h3>
 					<p><?= format_currency($form_model->total) ?></p>
