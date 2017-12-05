@@ -1,7 +1,9 @@
+<? if(!$form_model->is_order_locked()):?>
 <div class="toolbar read_only_table">
 	<a class="imageLink new_document img_noBottomPading" onclick="new PopupForm('preview_onLoadShippingCodeForm'); return false;" href="#">Add tracking code</a>
 	<div class="clear"></div>
 </div>
+<?endif;?>
 
 <? $codes = Shop_OrderTrackingCode::find_by_order($form_model) ?>
 <table class="simpleList">
@@ -19,7 +21,11 @@
 		<tr class="<?= Backend_Html::zebra('shipping_codes') ?>">
 			<td><?= h($record->displayField('code_shipping_method')) ?></td>
 			<td ><?= h($record->code) ?></td>
-			<td class="iconCell last"><a onclick="return $(this).getForm().sendPhpr('preview_onDeleteTrackingCode', {extraFields: {code_id: <?= $record->id ?>}, confirm: 'Do you really want to delete this tracking code?', update: 'tracking_code_list', loadIndicator: {show: false}});" title="Remove product" class="deleteDocument" href="#">Delete code</a></td>
+			<td class="iconCell last">
+				<? if(!$form_model->is_order_locked()):?>
+				<a onclick="return $(this).getForm().sendPhpr('preview_onDeleteTrackingCode', {extraFields: {code_id: <?= $record->id ?>}, confirm: 'Do you really want to delete this tracking code?', update: 'tracking_code_list', loadIndicator: {show: false}});" title="Remove product" class="deleteDocument" href="#">Delete code</a>
+				<? endif; ?>
+			</td>
 		</tr>
 		<?
 			endforeach;

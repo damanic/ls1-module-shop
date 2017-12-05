@@ -35,9 +35,13 @@
 					</p>
 				</li>
 				<li>
-					<h3>Status</h3>
+					<h3>Status <?= $form_model->is_order_locked() ? '<small>(Order Locked)</small>' : null ?></h3>
 					<p>
-						<span class="order_status_marker" style="background-color: <?= $form_model->displayField('status_color') ?>"><?= h($form_model->displayField('status')) ?></span>
+						<span class="order_status_marker <?= $form_model->is_order_locked() ? 'locked' : null ?>" style="background-color:<?=$form_model->displayField('status_color')?>">
+							<? if($form_model->is_order_locked()):?>
+								<img src="/modules/shop/resources/images/biglock.png" alt="Order Locked" title="Order Locked"/>
+							<? endif; ?>
+						</span>
 						<?= h($form_model->displayField('status')) ?>
 					</p>
 					<p class="description">
@@ -93,6 +97,8 @@
 
 				<div class="separator"></div>
 				<a class="imageLink print img_noBottomPading" href="<?= url('shop/orders/orderdoc/'.$form_model->id) ?>">Print docs</a>
+
+				<? if(!$form_model->is_order_locked()): ?>
 				<a class="imageLink lorry img_noBottomPading" href="<?= url('shop/orders/packing_slip/'.$form_model->id) ?>">Print packing slip</a>
 				
 				<? if ($form_model->shipping_method->supports_shipping_labels()): ?>
@@ -106,18 +112,54 @@
 					<a class="imageLink pay img_noBottomPading" href="<?= url('/shop/orders/pay/'.$form_model->id.'?'.uniqid()) ?>">Pay</a>
 				<? endif ?>
 
+				<? endif ;?>
+
 				<div class="separator"></div>
 				<? if (!$form_model->deleted_at): ?>
 					<a class="imageLink change_status img_noBottomPading" href="<?= url('shop/orders/change_status/'.$form_model->id.'?'.uniqid()) ?>">Update status</a>
-					<a class="imageLink edit_record" href="<?= url('shop/orders/edit/'.$form_model->id) ?>" >Edit</a>
-					<div class="separator"></div>
-					<a class="imageLink mark_deleted" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrder', {confirm: 'Do you really want to mark this order as deleted? You will be able to restore the order if needed.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Mark as deleted</a>
-					<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
-				<? else: ?>
-					<a class="imageLink enable" onclick="return $(this).getForm().sendPhpr('preview_onRestoreOrder', {confirm: 'Do you really want to restore this order?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Restore</a>
+					<? if(!$form_model->is_order_locked()): ?>
+						<a class="imageLink edit_record" href="<?= url('shop/orders/edit/'.$form_model->id) ?>" >Edit</a>
+					<? endif; ?>
+				<? endif; ?>
 
-					<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
-				<? endif ?>
+				<? if(!$form_model->is_order_locked()): ?>
+					<div class="separator"></div>
+					<? if ($this->currentUser->get_permission('shop', 'lock_orders')): ?>
+						<a class="imageLink mark_locked"
+						   onclick="return $(this).getForm().sendPhpr('onLockOrder', {
+						   	confirm: 'Locking will stop users from being able to edit this order, are you sure?.',
+						   	loadIndicator: {show: false},
+						   	extraFields: {url: window.location.href},
+						   	onBeforePost: function(){
+						   		LightLoadingIndicator.show('Loading...')
+						   	},
+						   	onComplete: LightLoadingIndicator.hide,
+						   	onFailure: popupAjaxError
+						   })" href="#">Lock</a>
+					<? endif;?>
+				<? if (!$form_model->deleted_at): ?>
+						<a class="imageLink mark_deleted" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrder', {confirm: 'Do you really want to mark this order as deleted? You will be able to restore the order if needed.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Mark as deleted</a>
+						<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+					<? else: ?>
+						<a class="imageLink enable" onclick="return $(this).getForm().sendPhpr('preview_onRestoreOrder', {confirm: 'Do you really want to restore this order?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Restore</a>
+
+						<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+					<? endif ?>
+				<? else:?>
+					<? if ($this->currentUser->get_permission('shop', 'lock_orders')): ?>
+				<a class="imageLink mark_unlocked"
+				   onclick="return $(this).getForm().sendPhpr('onUnlockOrder', {
+						   	confirm: 'Orders are usually locked for good reason. Are you sure?',
+						   	loadIndicator: {show: false},
+						   	extraFields: {url: window.location.href},
+						   	onBeforePost: function(){
+						   		LightLoadingIndicator.show('Loading...')
+						   	},
+						   	onComplete: LightLoadingIndicator.hide,
+						   	onFailure: popupAjaxError
+						   })" href="#">Unlock</a>
+					<? endif; ?>
+				<?endif?>
 				
 				<? Backend::$events->fireEvent('shop:onExtendOrderPreviewToolbar', $this, $form_model) ?>
 				<div class="clear"></div>

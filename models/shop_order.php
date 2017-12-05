@@ -2151,6 +2151,23 @@
 				}
 			} else Phpr_Files::outputCsvRow($row_data, $separator);
 		}
+
+		public function lock_order(){
+			Backend::$events->fireEvent('shop:onBeforeOrderRecordLocked', $this);
+			$this->locked = 1;
+		}
+
+		public function unlock_order(){
+			Backend::$events->fireEvent('shop:onBeforeOrderRecordUnlocked', $this);
+			$this->locked = null;
+		}
+
+		public function is_order_locked(){
+			if($this->locked){
+				return true;
+			}
+			return false;
+		}
 		
 		protected function after_fetch()
 		{
@@ -2944,6 +2961,26 @@
 		 * @param string , the order reference
 		 */
 		private function event_onOrderFindByOrderReference($order_ref) {}
+
+		/**
+		 * Triggered when attempt to lock the order
+		 * @event shop:onBeforeOrderRecordLocked
+		 * @triggered /modules/shop/models/shop_order.php
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param Shop_Order , the order
+		 */
+		private function event_onBeforeOrderRecordLocked($order) {}
+
+		/**
+		 * Triggered when attempt to unlock the order
+		 * @event shop:onBeforeOrderRecordUnlocked
+		 * @triggered /modules/shop/models/shop_order.php
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param Shop_Order , the order
+		 */
+		private function event_onBeforeOrderRecordUnlocked($order) {}
 
 	}
 

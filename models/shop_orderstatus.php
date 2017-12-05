@@ -77,7 +77,8 @@
 			$this->define_multi_relation_column('transitions', 'outcoming_transitions', 'Transitions', "concat((select name from shop_order_statuses where shop_order_statuses.id=shop_status_transitions.to_state_id), ' (', (select name from shop_roles where shop_roles.id=shop_status_transitions.role_id),')')");
 			$this->define_column('notify_customer', 'Notify Customer')->validation();
 			$this->define_column('notify_recipient', 'Notify Transition Recipients')->validation(); 
-			$this->define_column('update_stock', 'Update Stock')->validation(); 
+			$this->define_column('update_stock', 'Update Stock')->validation();
+			$this->define_column('order_lock_action', 'Order Lock Action')->validation();
 
 			$this->define_relation_column('customer_message_template', 'customer_message_template', 'Customer Message Template', db_varchar, '@code')->validation()->method('validate_message_template');
 			$this->define_relation_column('system_message_template', 'system_message_template', 'System Message Template', db_varchar, '@code')->validation()->method('validate_system_message_template');
@@ -97,6 +98,7 @@
 		{
 			$this->add_form_field('name')->tab('Order Status');
 			$this->add_form_field('update_stock')->tab('Order Status')->comment('Update stock values when an order enters this status.', 'above');
+			$this->add_form_field('order_lock_action')->renderAs(frm_dropdown)->emptyOption('no action')->tab('Order Status')->comment('Order transitions can be set to lock or unlock the order from being edited', 'above');
 			$this->add_form_field('color')->tab('Order Status')->renderAs('state_colors')->comment('Color for indicating the status in the order list.', 'above');
 
 			if ($this->code != self::status_new && $this->code != self::status_paid)
@@ -142,6 +144,36 @@
 					return $value;
 			}
 			
+			return false;
+		}
+
+		public function get_order_lock_action_options($key_value = -1){
+			$options = array(
+				1 => 'Lock',
+				2 => 'Unlock',
+			);
+			if ($key_value != -1)
+			{
+				if (!strlen($key_value))
+					return null;
+
+				return $options[$key_value] ? $options[$key_value] : null;
+			}
+
+			return $options;
+		}
+
+		public function unlocks_order(){
+			if($this->order_lock_action == 2){
+				return true;
+			}
+			return false;
+		}
+
+		public function locks_order(){
+			if($this->order_lock_action == 1){
+				return true;
+			}
 			return false;
 		}
 		

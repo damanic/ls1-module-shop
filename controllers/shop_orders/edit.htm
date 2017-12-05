@@ -1,6 +1,8 @@
 <? Phpr_View::beginBlock("head") ?>
 	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
-	<script type="text/javascript" src="modules/shop/resources/javascript/order.js?<?= module_build('shop') ?>"></script>
+	<? if(!$form_model->is_order_locked()): ?>
+		<script type="text/javascript" src="modules/shop/resources/javascript/order.js?<?= module_build('shop') ?>"></script>
+	<? endif;?>
 <? Phpr_View::endBlock() ?>
 
 <? Phpr_View::beginBlock("view") ?>
@@ -18,7 +20,7 @@
 		</div>
 
 		<div class="form850">
-			<? if (!($lock = Db_RecordLock::lock_exists($form_model))): ?>
+			<? if (!($record_lock = Db_RecordLock::lock_exists($form_model)) && !$form_model->is_order_locked()): ?>
 				<?= Phpr_Form::openTag() ?>
 					<input type="hidden" name="Shop_Order[shipping_state_id]" value=""/>
 					<input type="hidden" name="Shop_Order[billing_state_id]" value=""/>
@@ -40,10 +42,19 @@
 				</form>
 				<? $this->formAddLockCode() ?>
 			<? else: ?>
-				<? $this->renderPartial(PATH_APP.'/modules/backend/controllers/partials/_record_locked.htm', array(
-					'record_name'=>'order',
-					'lock'=>$lock
-				)) ?>
+
+				<?
+				if($record_lock && !$form_model->is_order_locked()){
+					$this->renderPartial(PATH_APP.'/modules/backend/controllers/partials/_record_locked.htm',
+						array(
+							'record_name'=>'order',
+							'lock'=>$record_lock
+							)
+					);
+				} else {
+					$this->renderPartial('edit_order_locked');
+				}
+			?>
 			<? endif ?>
 		</div>
 	<? else: ?>

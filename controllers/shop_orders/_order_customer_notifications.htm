@@ -1,4 +1,4 @@
-<? if (!$form_model->deleted_at): ?>
+<? if (!$form_model->deleted_at && !$form_model->is_order_locked()): ?>
 	<div class="toolbar">
 		<a class="imageLink new_message img_noBottomPading" href="<?= url('shop/customer_notifications/create/'.$form_model->id.'?'.uniqid()) ?>">New message</a>
 

@@ -92,7 +92,9 @@
 			'onLoadDiscountForm',
 			'onApplyDiscount',
 			'onCustomEvent',
-			'onUpdateBundleProductList'
+			'onUpdateBundleProductList',
+			'onUnlockOrder',
+			'onLockOrder',
 		);
 
 		protected $required_permissions = array('shop:manage_orders_and_customers');
@@ -1913,6 +1915,36 @@
 			}
 
 			$this->renderPartial('find_bundle_product_form');
+		}
+
+		protected function onUnlockOrder($order_id){
+			try {
+				$order = $this->getOrderObj( $order_id );
+				if ( !$this->currentUser->get_permission( 'shop', 'lock_orders' ) ) {
+					throw new Phpr_ApplicationException( 'You do not have permission to unlock orders' );
+				}
+				$order->unlock_order();
+				$order->save();
+				Phpr::$response->redirect( Phpr::$request->getReferer( post( 'url' ) ) );
+			}
+			catch (Exception $ex) {
+				$this->handlePageError($ex);
+			}
+		}
+
+		protected function onLockOrder($order_id){
+			try {
+				$order = $this->getOrderObj( $order_id );
+				if ( !$this->currentUser->get_permission( 'shop', 'lock_orders' ) ) {
+					throw new Phpr_ApplicationException( 'You do not have permission to lock orders' );
+				}
+				$order->lock_order();
+				$order->save();
+				Phpr::$response->redirect( Phpr::$request->getReferer( post( 'url' ) ) );
+			}
+			catch (Exception $ex) {
+				$this->handlePageError($ex);
+			}
 		}
 
 

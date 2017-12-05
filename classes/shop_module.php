@@ -463,6 +463,7 @@
 			$host_obj->add_field($this, 'manage_orders_and_customers', 'Manage orders and customers', 'left')->renderAs(frm_checkbox)->comment('Access order list, create and edit orders and customers.', 'above');
 			$host_obj->add_field($this, 'customers_export_import', 'Export or import customers', 'right')->renderAs(frm_checkbox)->comment('Export or import the customer list from CSV files.', 'above');
 			$host_obj->add_field($this, 'manage_discounts', 'Manage discounts')->renderAs(frm_checkbox)->comment('Manage catalog-level and cart-level price rules.', 'above');
+			$host_obj->add_field($this, 'lock_orders', 'Lock/Unlock Orders')->renderAs(frm_checkbox)->comment('Allow user to lock/unlock orders. Locking prevents an order from being edited', 'above');
 		}
 
 		/**

@@ -133,6 +133,20 @@
 					$status->send_notifications($order, $comment);
 				}
 			}
+
+			/*
+			 * Handle Locking
+			 */
+			if ($status && $status->order_lock_action) {
+				if($order->is_order_locked() && $status->unlocks_order()){
+					$order->unlock_order();
+					$order->save();
+				} else if(!$order->is_order_locked() && $status->locks_order()){
+					$order->lock_order();
+					$order->save();
+				}
+
+			}
 				
 			return true;
 		}

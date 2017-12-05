@@ -1,0 +1,18 @@
+<div class="lock_message">
+	<h1 style="padding-bottom:0px; padding-top:5px;">This order has been locked.</h1>
+</div>
+
+<div class="button">
+	<a href="/admin/shop/orders/preview/<?=$form_model->id?>/">Return to the order preview</a>
+</div>
+
+<? if ($this->currentUser->get_permission('shop', 'lock_orders')): ?>
+<?= Phpr_Form::openTag() ?>
+	<?= backend_ajax_button('Unlock the Order', 'onUnlockOrder', array(), "confirm: 'Orders are usually locked for good reason. Are you sure?',
+					onBeforePost: LightLoadingIndicator.show.pass('Loading...'),
+					loadIndicator: {show: false},
+					onComplete: LightLoadingIndicator.hide,
+					extraFields: {url: window.location.href},
+	update: 'multi'") ?>
+</form>
+<? endif; ?>
