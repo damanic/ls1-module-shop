@@ -754,6 +754,17 @@
 		{
 			Backend::$events->fireEvent('shop:onCustomerSaved', $this);
 		}
+
+		public function displayField($dbName, $media = 'form')
+		{
+			$results = Backend::$events->fireEvent('shop:onCustomerDisplayField', $this, $dbName, $media);
+			foreach ($results as $result) {
+				if ($result){
+					return is_string($result) ? $result : null;
+				}
+			}
+			return parent::displayField($dbName,$media);
+		}
 		
 		/*
 		 * Customer CSV import functions
