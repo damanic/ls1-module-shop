@@ -1398,6 +1398,18 @@
 		 * @return mixed The handler should return a new generated password or null.
 		 */
 		private function event_onBeforeGenerateCustomerPassword() {}
+
+		/**
+		 * Allows to override how a field displays in the backend user area
+		 * The event handler can return an alternative string to be displayed
+		 * Or to display HTML output, render the output and return true
+		 * @event shop:onCustomerDisplayField
+		 * @package shop.events
+		 * @author Matt Manning
+		 * @return mixed The handler should return a string or boolean.
+		 */
+		private function event_onCustomerDisplayField() {}
+
 	}
 
 ?>
