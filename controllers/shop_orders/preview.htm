@@ -137,14 +137,14 @@
 						   	onFailure: popupAjaxError
 						   })" href="#">Lock</a>
 					<? endif;?>
-				<? if (!$form_model->deleted_at): ?>
-						<a class="imageLink mark_deleted" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrder', {confirm: 'Do you really want to mark this order as deleted? You will be able to restore the order if needed.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Mark as deleted</a>
-						<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+					<? if (!$form_model->deleted_at): ?>
+							<a class="imageLink mark_deleted" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrder', {confirm: 'Do you really want to mark this order as deleted? You will be able to restore the order if needed.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Mark as deleted</a>
 					<? else: ?>
-						<a class="imageLink enable" onclick="return $(this).getForm().sendPhpr('preview_onRestoreOrder', {confirm: 'Do you really want to restore this order?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Restore</a>
-
-						<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+							<a class="imageLink enable" onclick="return $(this).getForm().sendPhpr('preview_onRestoreOrder', {confirm: 'Do you really want to restore this order?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Restore</a>
 					<? endif ?>
+					<? if ($this->currentUser->get_permission('shop', 'delete_orders')): ?>
+						<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('preview_onDeleteOrderPermanently', {confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+					<? endif; ?>
 				<? else:?>
 					<? if ($this->currentUser->get_permission('shop', 'lock_orders')): ?>
 				<a class="imageLink mark_unlocked"

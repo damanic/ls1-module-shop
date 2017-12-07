@@ -736,6 +736,9 @@
 		
 		protected function preview_onDeleteOrderPermanently($order_id)
 		{
+			if ( !$this->currentUser->get_permission( 'shop', 'delete_orders' ) ) {
+				throw new Phpr_ApplicationException( 'You do not have permission to permanently delete orders' );
+			}
 			try
 			{
 				$order = $this->getOrderObj($order_id);
@@ -2139,6 +2142,9 @@
 
 		protected function edit_onDeleteOrderPermanently($order_id)
 		{
+			if ( !$this->currentUser->get_permission( 'shop', 'delete_orders' ) ) {
+				throw new Phpr_ApplicationException( 'You do not have permission to permanently delete orders' );
+			}
 			try
 			{
 				$order = $this->getOrderObj($order_id);

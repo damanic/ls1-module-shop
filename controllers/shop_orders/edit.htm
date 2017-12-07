@@ -34,9 +34,11 @@
 					<? if (!$form_model->deleted_at): ?>
 						<?= backend_ajax_button('Mark As Deleted ', 'edit_onDeleteOrder', array('class'=>"right"), "confirm: 'Do you really want to mark this order as deleted? You will be able to restore the order if needed.'") ?>
 					<? endif ?>
-					
+
+					<? if ($this->currentUser->get_permission('shop', 'delete_orders')): ?>
 					<?= backend_ajax_button('Delete Permanently ', 'edit_onDeleteOrderPermanently', array('class'=>"right"), "confirm: 'Do you really want to DELETE this order PERMANENTLY? This action is not undoable.'") ?>
-					
+					<? endif; ?>
+
 					<div class="clear"></div>
 					<div id="tmp_site"></div>
 				</form>
