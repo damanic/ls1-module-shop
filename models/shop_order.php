@@ -2005,8 +2005,16 @@
 			$weight = 0;
 			foreach ($this->items as $item)
 				$weight += $item->total_weight();
-				
+
 			return $weight;
+		}
+
+		public function display_total_weight($return = false){
+			$string = $this->get_total_weight().' '.Shop_ShippingParams::get()->weight_unit;
+			if($return){
+				return $string;
+			}
+			echo $string;
 		}
 		
 		public function get_csv_import_columns($import = true)
