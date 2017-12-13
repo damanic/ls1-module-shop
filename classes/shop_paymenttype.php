@@ -359,7 +359,6 @@
 		public function get_payments_total($order, $include_pending=true){
 			if($this->supports_multiple_payments()){
 				$total_payment = 0;
-				$void_transaction_ids = Shop_PaymentTransaction::get_void_transaction_ids($order);
 				$add_where = $include_pending ? null : 'AND transaction_complete = 1';
 				$sql_where = "shop_payment_transactions.id in (SELECT MAX(id)
 							 	     FROM shop_payment_transactions
@@ -367,8 +366,12 @@
 							 		 AND transaction_refund IS NULL
 							 		 AND transaction_void IS NULL
 							 		 GROUP BY transaction_id
-							 		 ORDER BY created_at, transaction_complete DESC)
-							 AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)";
+							 		 ORDER BY created_at, transaction_complete DESC)";
+
+				$void_transaction_ids = Shop_PaymentTransaction::get_void_transaction_ids($order);
+				if(count($void_transaction_ids)){
+					$sql_where .= ' AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)';
+				}
 				$bind = array(
 					'order_id' => $order->id,
 					'void_transaction_ids' => $void_transaction_ids
@@ -394,7 +397,6 @@
 		 */
 		public function get_refunds_total($order, $include_pending=true){
 			if($this->supports_multiple_payments()){
-				$void_transaction_ids = Shop_PaymentTransaction::get_void_transaction_ids($order);
 				$total_refunded = 0;
 				$add_where = $include_pending ? null : 'AND transaction_complete = 1';
 				$sql_where = "shop_payment_transactions.id in (SELECT MAX(id)
@@ -403,8 +405,12 @@
 							 		 AND transaction_refund = 1
 							 		 AND transaction_void IS NULL
 							 		 GROUP BY transaction_id
-							 		 ORDER BY created_at, transaction_complete DESC)
-							  AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)";
+							 		 ORDER BY created_at, transaction_complete DESC)";
+
+				$void_transaction_ids = Shop_PaymentTransaction::get_void_transaction_ids($order);
+				if(count($void_transaction_ids)){
+					$sql_where .= ' AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)';
+				}
 				$bind = array(
 					'order_id' => $order->id,
 					'void_transaction_ids' => $void_transaction_ids
