@@ -95,6 +95,7 @@
 			'onUpdateBundleProductList',
 			'onUnlockOrder',
 			'onLockOrder',
+			'onToggleOrderDoc'
 		);
 
 		protected $required_permissions = array('shop:manage_orders_and_customers');
@@ -102,6 +103,7 @@
 		public function __construct()
 		{
 			$this->addPublicAction('rss');
+			$this->addJavascript('/modules/shop/resources/javascript/print_this.js');
 			
 			if (Phpr::$router->action == 'import_csv' || post('import_csv_flag') || Phpr::$router->action == 'import_csv_get_config')
 				$this->implement .= ', Backend_CsvImport';
@@ -546,8 +548,12 @@
 				if (!count($order_ids))
 					throw new Phpr_ApplicationException('Please select orders to print documents for.');
 
-				$order_ids = implode('|', $order_ids);
-				Phpr::$response->redirect(url('shop/orders/orderdoc/'.$order_ids));
+//				$order_ids = implode('|', $order_ids);
+//				Phpr::$response->redirect(url('shop/orders/invoice/'.$order_ids));
+
+				$order_id_string = implode('|', $order_ids);
+				$this->orderdoc($order_id_string, null);
+				$this->renderPartial('popup_print_orderdoc');
 			}
 			catch (Exception $ex)
 			{
@@ -673,6 +679,27 @@
 			}
 			
 			$this->renderPartial('order_item_preview');
+		}
+
+		protected function preview_onPrintOrderDoc($order_id){
+			try
+			{
+				$order = $this->getOrderObj($order_id);
+				$variant = post('variant');
+
+				if (!$order)
+					throw new Phpr_ApplicationException('Order not found');
+
+				$orders = array($order);
+				$this->_orderdoc_add_viewdata($orders,$variant);
+				$this->viewData['order_id_string'] = $order_id;
+			}
+			catch (Exception $ex)
+			{
+				$this->handlePageError($ex);
+			}
+
+			$this->renderPartial('popup_print_orderdoc');
 		}
 
 		protected function preview_onLoadPaymentDetailsPreview()
@@ -967,59 +994,76 @@
 
 		public function orderdoc($order_id_string, $variant)
 		{
-			try
-			{
-				if (strpos($order_id_string, '|') !== false)
-				{
-					$order_id = explode('|', $order_id_string);
-					$identifiers = array();
-					foreach ($order_id as $id)
-					{
-						if (strlen($id))
-							$identifiers[] = $id;
-					}
-				} else
-					$order_id = array($order_id_string);
-
-				if (count($order_id) == 1)
-					$this->app_page_title = 'Docs: Order #'.$order_id[0];
-				else
-				{
-					if (count($order_id) > 5)
-						$this->app_page_title = 'Docs: Multiple orders';
-					else
-						$this->app_page_title = 'Docs #'.implode(', ', $order_id);
-				}
-
-				$orders = array();
-				foreach ($order_id as $id)
-				{
-					try
-					{
-						$order = $this->formFindModelObject($id);
-						$orders[] = $order;
-					} catch (exception $ex) {}
-				}
+			try {
+				$orders = $this->_orderdoc_get_orders($order_id_string);
 
 				if (!count($orders))
 					throw new Phpr_ApplicationException('No orders found');
 
-
-
-				$this->viewData['orders'] = $orders;
+				if (count($orders) == 1)
+					$this->app_page_title = 'Docs: Order #'.$orders[0]->id;
+				else {
+					$this->app_page_title = 'Docs: Multiple orders';
+				}
 				$this->viewData['order_id_string'] = $order_id_string;
-				$company_info = $this->viewData['company_info'] = Shop_CompanyInformation::get();
-				$this->viewData['template_info'] = $this->viewData['company_info']->get_invoice_template();
-				$this->viewData['active_variant'] = empty($variant) ? Shop_OrderDocsHelper::get_default_variant($orders,$this->viewData['template_info']): $variant;
-//				$this->viewData['template_css'] = array();
-//				$this->viewData['template_id'] = isset($invoice_info['template_id']) ? $invoice_info['template_id'] : null;
-//				$this->viewData['invoice_template_css'] = isset($invoice_info['css']) ? $invoice_info['css'] : array();
-				$this->viewData['display_due_date'] = strlen($company_info->invoice_due_date_interval);
+				$this->_orderdoc_add_viewdata($orders, $variant);
 			}
-			catch (exception $ex)
-			{
+			catch (exception $ex) {
 				$this->handlePageError($ex);
 			}
+		}
+
+		private function _orderdoc_get_orders($order_id_string) {
+			$orders = array();
+			if ( strpos( $order_id_string, '|' ) !== false ) {
+				$order_ids = explode( '|', $order_id_string );
+			} else {
+				$order_ids = array( $order_id_string );
+			}
+
+			$orders = array();
+			foreach ( $order_ids as $id ) {
+				if ( is_numeric( $id ) ) {
+					try {
+						$order    = $this->formFindModelObject( $id );
+						$orders[] = $order;
+					} catch ( exception $ex ) {
+					}
+				}
+			}
+
+			return $orders;
+		}
+
+		private function _orderdoc_add_viewdata($orders, $variant){
+			$this->viewData['orders'] = $orders;
+			$company_info = $this->viewData['company_info'] = Shop_CompanyInformation::get();
+			$this->viewData['template_info'] = $this->viewData['company_info']->get_invoice_template();
+			$this->viewData['custom_render'] = isset($this->viewData['template_info']['custom_render']) ? $this->viewData['template_info']['custom_render'] : false;
+			$this->viewData['active_variant'] = empty($variant) ? Shop_OrderDocsHelper::get_default_variant($orders,$this->viewData['template_info']): $variant;
+			$this->viewData['applicable_variants'] = Shop_OrderDocsHelper::get_applicable_variants($orders, $this->viewData['template_info'] );
+			$this->viewData['display_due_date'] = strlen($company_info->invoice_due_date_interval);
+			$this->viewData['auto_print'] = (count($this->viewData['applicable_variants']) < 2) ? true : false ;
+
+			$this->viewData['css'] = array();
+			$this->viewData['css_files'] = array();
+			foreach ($this->viewData['template_info']['css'] as $src => $media){
+				$href = (strpos($src, '/') === false) ? '/modules/shop/invoice_templates/'.$this->viewData['template_info']['template_id'].'/resources/css/'.$src : $src;
+				$this->viewData['css'][] = array(
+					'media' => $media,
+					'href' => $href
+				);
+				$this->viewData['css_files'][] = $href;
+			}
+		}
+
+		protected function onToggleOrderDoc(){
+			$variant = post('variant');
+			$order_id_string = post('order_id_string');
+			$this->orderdoc($order_id_string,$variant);
+			$this->renderMultiple(array(
+				'orderdoc_viewer'=>'@_orderdoc_viewer',
+			));
 		}
 		
 		/*

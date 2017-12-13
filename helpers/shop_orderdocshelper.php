@@ -10,8 +10,16 @@ class Shop_OrderDocsHelper{
 		}
 	}
 
+	/**
+	 * Gets template HTML file
+	 * @documentable
+	 * @deprecated Use {@link Shop_OrderDocsHelper::get_template_file()} method instead.
+	 */
 	public static function get_template_variant($order, $template_info, $variant){
+		self::get_template_file($order, $template_info, $variant);
+	}
 
+	public static function get_template_file($order, $template_info, $variant){
 		//do specified variant
 		if(!empty($variant)){
 			if(self::can_show_template_variant($order,$template_info,$variant)){
@@ -25,9 +33,9 @@ class Shop_OrderDocsHelper{
 		//use default variant
 		$default_variant = self::get_default_variant($order,$template_info);
 		$template = self::get_template_dir( $template_info['template_id'] ) . '/variants/' . strtolower( $default_variant ) . '.htm';
-			if ( file_exists( $template ) ) {
-				return $template;
-			}
+		if ( file_exists( $template ) ) {
+			return $template;
+		}
 
 
 
@@ -55,6 +63,41 @@ class Shop_OrderDocsHelper{
 		return $variants;
 	}
 
+	public static function get_view_data($order){
+		$company_info = Shop_CompanyInformation::get();
+		$template_info = $company_info->get_invoice_template();
+
+		$has_bundles = false;
+		foreach ( $order->items as $item ) {
+			if ( $item->bundle_master_order_item_id ) {
+				$has_bundles = true;
+				break;
+			}
+		}
+		$invoice_date = $order->get_invoice_date();
+		$view_data    = array(
+			'order_id'             => $order->id,
+			'order'                => $order,
+			'company_info'         => $company_info,
+			'template_info'        => $template_info,
+			'display_tax_included' => Shop_CheckoutData::display_prices_incl_tax( $order ),
+			'has_bundles'          => $has_bundles,
+			'invoice_date'         => $invoice_date,
+			'display_due_date'     => strlen( $company_info->invoice_due_date_interval ),
+			'due_date'             => $company_info->get_invoice_due_date( $invoice_date ),
+		);
+
+		return $view_data;
+	}
+
+	protected static function apply_view_data($controller, $view_data){
+		if(is_array($view_data)){
+			foreach($view_data as $key => $value){
+				$controller->viewData[$key] = $value;
+			}
+		}
+	}
+
 	public static function can_show_template_variant($order,$template_info,$variant){
 		$show_on_status_code = isset($template_info['variants'][$variant]['on_status']) ? $template_info['variants'][$variant]['on_status'] : false;
 		$show_if_has_status_code =  isset($template_info['variants'][$variant]['has_status']) ? $template_info['variants'][$variant]['has_status'] : false ;
@@ -78,40 +121,19 @@ class Shop_OrderDocsHelper{
 
 	public static function render_doc($controller, Shop_Order $order, $variant=null){
 
-		$company_info = Shop_CompanyInformation::get();
-		$template_info = $company_info->get_invoice_template();
-		$template_file = self::get_template_variant($order, $template_info, $variant);
+		$view_data = self::get_view_data($order);
+		$template_file = self::get_template_file($order, $view_data['template_info'], $variant);
+		$html = null;
 
-		if(!$template_file){
+		if(!$template_file) {
 			return false;
 		}
 
-
-		$has_bundles = false;
-		foreach ($order->items as $item)
-		{
-			if ($item->bundle_master_order_item_id) {
-				$has_bundles = true;
-				break;
-			}
-		}
-		$invoice_date = $order->get_invoice_date();
-
+		self::apply_view_data($controller,$view_data);
 		ob_start();
-		$controller->renderPartial($template_file, array(
-			'order_id'=>$controller->viewData['order_id'] = $order->id,
-			'order'=>$controller->viewData['order'] = $order,
-			'company_info'=>$controller->viewData['company_info'] = $company_info,
-			'template_info'=>$controller->viewData['template_info'] = $template_info,
-			'display_tax_included'=>$controller->viewData['display_tax_included'] = Shop_CheckoutData::display_prices_incl_tax($order),
-			'has_bundles'=>$controller->viewData['has_bundles'] = $has_bundles,
-			'invoice_date'=> $controller->viewData['invoice_date'] = $invoice_date,
-			'display_due_date' => strlen($company_info->invoice_due_date_interval),
-			'due_date'=>$company_info->get_invoice_due_date($invoice_date),
-		));
+		$controller->renderPartial( $template_file, $view_data );
 		$html = ob_get_contents();
 		ob_end_clean();
-
 
 		//Allow HTML output to be modified (eg. use html to create a pdf and show pdf in iframe).
 		$html_modified = Backend::$events->fireEvent('shop:onBeforeRenderOrderDoc', $html);
@@ -123,6 +145,11 @@ class Shop_OrderDocsHelper{
 		echo $html;
 	}
 
+	public static function render_custom_doc($controller, $orders, $template_info, $variant=null){
+		$orders = is_array($orders) ? $orders : array($orders);
+		//Allow HTML output to be modified (eg. use html to create a pdf and show pdf in iframe).
+		Backend::$events->fireEvent('shop:onRenderCustomOrderDoc', $controller, $orders, $template_info, $variant);
+	}
 
 	public static function get_template_dir($template_id = null){
 		$path = PATH_APP."/modules/shop/invoice_templates";

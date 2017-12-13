@@ -2,6 +2,7 @@
 	$template_info = array(
 		'name'=>'LemonStand Standard Docs',
 		'description'=>'Standard LemonStand Commercial Document Templates',
+		'custom_render' => false, //if true, template files are ignored, use event shop:onRenderCustomOrderDoc
 		'css'=>array(
 			
 			/*

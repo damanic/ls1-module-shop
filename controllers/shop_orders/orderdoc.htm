@@ -22,41 +22,12 @@
 			<li><?= $this->app_page_title ?></li>
 		</ul>
 
-		<? if ($this->isHintVisible('orderdoc_hint')): ?>
-			<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
-				<div class="hint">
-					<p class="last">You can specify your company name and customize documents on the <a href="<?= url('shop/company_info/') ?>">System/Settings/Company Information and Settings</a> page.</p>
-					<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('orderdoc_hint', this)">Close</a>
-				</div>
-			</form>
-		<? endif ?>
-
-		<div class="toolbar">
-			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="window.print()">Print</a>
-			<? foreach(Shop_OrderDocsHelper::get_applicable_variants($orders, $template_info) as $v => $v_params) { ?>
-				<a class="imageLink <? if($active_variant == $v){echo 'hold';} else { echo '';}?> img_noBottomPading" style=" background-image: url('/modules/backend/resources/images/file_icons/text.png'); background-repeat: no-repeat; background-position: 5px 3px;"  href="<?= url('shop/orders/orderdoc/'.$order_id_string.'/'.$v) ?>"><?=$v_params['title']?></a>
-			<?}?>
-			<div class="clear"></div>
-		</div>
-
-		<div class="print_sheets">
-			<?
-				foreach ($orders as $order):
-					if(Shop_OrderDocsHelper::can_show_template_variant($order,$template_info,$active_variant)):
-			?>
-						<div class="print_sheet">
-						<?
-							Shop_OrderDocsHelper::render_doc($this, $order, $active_variant);
-						?>
-						</div>
-
-			<? 		endif;
-				endforeach;
-			?>
-		</div>
+		<?= Phpr_Form::openTag(array('id'=>'orderdoc_viewer')); ?>
+			<? $this->renderPartial('orderdoc_viewer'); ?>
+		</form>
 	<? else: ?>
 		<?= flash() ?>
 		<p><a href="<?= url('/shop/orders/') ?>">Return to the order list</a></p>
-		<input type="hidden" id="no_print_layout" value="1"></input>
+		<input type="hidden" id="no_print_layout" value="1">
 	<? endif ?>
 <? Phpr_View::endBlock() ?>

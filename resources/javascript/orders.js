@@ -110,7 +110,9 @@ function change_status()
 		alert('Please select orders to change status.');
 		return false;
 	}
-	
+
+
+
 	new PopupForm('index_onLoadChangeStatusForm', {
 		ajaxFields: $('listShop_Orders_index_list_body').getForm()
 	});
@@ -140,20 +142,15 @@ function print_invoice()
 
 function print_docs()
 {
-	if (!orders_selected())
-	{
+	if (!orders_selected()) {
 		alert('Please select orders to print documents for.');
 		return false;
 	}
 
-	$('listShop_Orders_index_list_body').getForm().sendPhpr(
-		'index_onPrintDocs',
-		{
-			loadIndicator: {show: false},
-			onBeforePost: LightLoadingIndicator.show.pass('Loading...'),
-			onComplete: LightLoadingIndicator.hide
-		}
-	);
+	new PopupForm('index_onPrintDocs', {
+		closeByEsc: true,
+		ajaxFields: $('listShop_Orders_index_list_body').getForm(),
+	});
 
 	return false;
 }

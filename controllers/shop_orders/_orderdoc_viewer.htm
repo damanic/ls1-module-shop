@@ -1,0 +1,95 @@
+<? if ($this->isHintVisible('orderdoc_hint')): ?>
+<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
+<div class="hint">
+	<p class="last">You can specify your company name and customize documents on the <a href="<?= url('shop/company_info/') ?>">System/Settings/Company Information and Settings</a> page.</p>
+	<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('orderdoc_hint', this)">Close</a>
+</div>
+</form>
+<? endif ?>
+
+<div class="toolbar">
+	<? if(!$custom_render):?>
+	<script>
+		function print_orderdoc(){
+			jQuery('#orderdocs-print-container').printThis({
+				debug: false,               // show the iframe for debugging
+				importCSS: true,            // import page CSS
+				importStyle: true,         // import style tags
+				printContainer: true,       // grab outer container as well as the contents of the selector
+				loadCSS: <?= json_encode($css_files); ?>,  // path to additional css file - use an array [] for multiple
+				pageTitle: 'Order Document: <?=$active_variant?>', // add title to print page
+				removeInline: false,        // remove all inline styles from print elements
+				printDelay: 0,            // variable print delay; depending on complexity a higher value may be necessary
+				header: null,               // prefix to html
+				footer: null,               // postfix to html
+				base: false ,               // preserve the BASE tag, or accept a string for the URL
+				formValues: true,           // preserve input/form values
+				canvas: false,              // copy canvas elements (experimental)
+				removeScripts: false,       // remove script tags from print content
+				copyTagClasses: false       // copy classes from the html & body tag
+			});
+		}
+	</script>
+	<? if($auto_print): ?>
+		<script>
+			jQuery(document).ready(function(){
+				print_orderdoc();
+				cancelPopup();
+			});
+		</script>
+	<? endif;?>
+	<a class="imageLink print img_noBottomPading" href="javascript:;"
+	   onclick="print_orderdoc()">Print</a>
+	<? endif;?>
+	<? foreach($applicable_variants as $v => $v_params) { ?>
+		<a class="imageLink <? if($active_variant == $v){echo 'hold';} else { echo '';}?> img_noBottomPading"
+		   style=" background-image: url('/modules/backend/resources/images/file_icons/text.png'); background-repeat: no-repeat; background-position: 5px 3px;"
+		   href="<?= url('shop/orders/orderdoc/'.$order_id_string.'/'.$v) ?>"
+		   onclick="$(this).getForm().sendPhpr('onToggleOrderDoc',{
+					update: 'multi',
+					extraFields: {
+						order_id_string : '<?= $order_id_string ?>',
+						variant : '<?= $v ?>',
+					},
+					onFailure: popupAjaxError,
+					loadIndicator: {
+						show: true,
+						element: 'orderdocs-print-container',
+						hideOnSuccess: true,
+						injectInElement: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					}
+				}
+			); return false;">
+			<?=$v_params['title']?>
+		</a>
+	<?}?>
+	<div class="clear"></div>
+</div>
+
+<div id="orderdocs-print-container" style="<?= (isset($limit_overflow) && is_numeric($limit_overflow)) ? 'overflow-y: scroll; max-height:'.$limit_overflow.'px;' : null; ?>">
+	<? foreach ($css as $file_info): ?>
+		<style type="text/css" media="<?=$file_info['media']?>" scoped>
+			@import url(<?= $file_info['href'] ?>);
+		</style>
+	<? endforeach; ?>
+	<? if(!$custom_render):?>
+		<div class="print_sheets">
+			<?
+				foreach ($orders as $order):
+					if(Shop_OrderDocsHelper::can_show_template_variant($order,$template_info,$active_variant)):
+			?>
+			<div class="print_sheet">
+				<?
+					Shop_OrderDocsHelper::render_doc($this, $order, $active_variant);
+				?>
+			</div>
+
+			<?endif;
+				endforeach;
+			?>
+		</div>
+	<? else: ?>
+		<? Shop_OrderDocsHelper::render_custom_doc($this, $orders, $template_info, $active_variant); ?>
+	<? endif; ?>
+</div>

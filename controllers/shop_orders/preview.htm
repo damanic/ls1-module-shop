@@ -96,7 +96,7 @@
 				<a class="imageLink go_back img_noBottomPading" href="<?= $this->getRefererUrl() ?>">Return to the <?= mb_strtolower($this->getRefererName()) ?></a>
 
 				<div class="separator"></div>
-				<a class="imageLink print img_noBottomPading" href="<?= url('shop/orders/orderdoc/'.$form_model->id) ?>">Print docs</a>
+				<a class="imageLink print img_noBottomPading" onclick="new PopupForm('preview_onPrintOrderDoc', {closeByEsc: true}); return false;" href="<?= url('shop/orders/orderdoc/'.$form_model->id) ?>">Print docs</a>
 
 				<? if(!$form_model->is_order_locked()): ?>
 				<a class="imageLink lorry img_noBottomPading" href="<?= url('shop/orders/packing_slip/'.$form_model->id) ?>">Print packing slip</a>

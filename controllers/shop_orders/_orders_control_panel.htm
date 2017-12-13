@@ -6,7 +6,8 @@
 		<? endif ?>
 		<div class="separator">&nbsp;</div>
 		<?= backend_ctr_button('Print docs', 'print', array('href'=>'#', 'onclick'=>"return print_docs()")) ?>
-		<?= backend_ctr_button('Print packing slip', 'lorry', array('href'=>'#', 'onclick'=>"return print_packing_slip()")) ?>
+
+	<?= backend_ctr_button('Print packing slip', 'lorry', array('href'=>'#', 'onclick'=>"return print_packing_slip()")) ?>
 		<?= backend_ctr_button('Print shipping label', 'shipping_label', array('href'=>'#', 'onclick'=>"return print_shipping_label()")) ?>
 		<div class="separator">&nbsp;</div>
 		<?= backend_ctr_button('Change <u>s</u>tatus', 'change_status', array('href'=>'#', 'onclick'=>"return change_status()", 'class'=>'tooltip', 'title'=>'Change status for selected orders: <strong>ctrl+alt+s</strong>')) ?>
