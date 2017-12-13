@@ -67,29 +67,31 @@
 	<div class="clear"></div>
 </div>
 
-<div id="orderdocs-print-container" style="<?= (isset($limit_overflow) && is_numeric($limit_overflow)) ? 'overflow-y: scroll; max-height:'.$limit_overflow.'px;' : null; ?>">
-	<? foreach ($css as $file_info): ?>
-		<style type="text/css" media="<?=$file_info['media']?>" scoped>
-			@import url(<?= $file_info['href'] ?>);
-		</style>
-	<? endforeach; ?>
-	<? if(!$custom_render):?>
-		<div class="print_sheets">
-			<?
-				foreach ($orders as $order):
-					if(Shop_OrderDocsHelper::can_show_template_variant($order,$template_info,$active_variant)):
-			?>
-			<div class="print_sheet">
+<div style="<?= (isset($limit_overflow) && is_numeric($limit_overflow)) ? 'overflow-y: scroll; max-height:'.$limit_overflow.'px;' : null; ?>">
+	<div id="orderdocs-print-container">
+		<? foreach ($css as $file_info): ?>
+			<style type="text/css" media="<?=$file_info['media']?>" scoped>
+				@import url(<?= $file_info['href'] ?>);
+			</style>
+		<? endforeach; ?>
+		<? if(!$custom_render):?>
+			<div class="print_sheets">
 				<?
-					Shop_OrderDocsHelper::render_doc($this, $order, $active_variant);
+					foreach ($orders as $order):
+						if(Shop_OrderDocsHelper::can_show_template_variant($order,$template_info,$active_variant)):
+				?>
+				<div class="print_sheet">
+					<?
+						Shop_OrderDocsHelper::render_doc($this, $order, $active_variant);
+					?>
+				</div>
+
+				<?endif;
+					endforeach;
 				?>
 			</div>
-
-			<?endif;
-				endforeach;
-			?>
-		</div>
-	<? else: ?>
-		<? Shop_OrderDocsHelper::render_custom_doc($this, $orders, $template_info, $active_variant); ?>
-	<? endif; ?>
+		<? else: ?>
+			<? Shop_OrderDocsHelper::render_custom_doc($this, $orders, $template_info, $active_variant); ?>
+		<? endif; ?>
+	</div>
 </div>
