@@ -359,15 +359,21 @@
 		public function get_payments_total($order, $include_pending=true){
 			if($this->supports_multiple_payments()){
 				$total_payment = 0;
+				$void_transaction_ids = Shop_PaymentTransaction::get_void_transaction_ids($order);
 				$add_where = $include_pending ? null : 'AND transaction_complete = 1';
-				$sql_where = "id in (SELECT MAX(id)
+				$sql_where = "shop_payment_transactions.id in (SELECT MAX(id)
 							 	     FROM shop_payment_transactions
-							 		 WHERE order_id = ? $add_where
+							 		 WHERE order_id = :order_id $add_where
 							 		 AND transaction_refund IS NULL
 							 		 AND transaction_void IS NULL
 							 		 GROUP BY transaction_id
-							 		 ORDER BY created_at, transaction_complete DESC)";
-				$transactions = Shop_PaymentTransaction::create()->where($sql_where, $order->id)->find_all();
+							 		 ORDER BY created_at, transaction_complete DESC)
+							 AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)";
+				$bind = array(
+					'order_id' => $order->id,
+					'void_transaction_ids' => $void_transaction_ids
+				);
+				$transactions = Shop_PaymentTransaction::create()->where($sql_where, $bind)->find_all();
 				if($transactions){
 					foreach($transactions as $transaction){
 						if($transaction->transaction_value ){
@@ -388,16 +394,22 @@
 		 */
 		public function get_refunds_total($order, $include_pending=true){
 			if($this->supports_multiple_payments()){
+				$void_transaction_ids = Shop_PaymentTransaction::get_void_transaction_ids($order);
 				$total_refunded = 0;
 				$add_where = $include_pending ? null : 'AND transaction_complete = 1';
-				$sql_where = "id in (SELECT MAX(id)
+				$sql_where = "shop_payment_transactions.id in (SELECT MAX(id)
 							 	     FROM shop_payment_transactions
-							 		 WHERE order_id = ? $add_where
+							 		 WHERE order_id = :order_id $add_where
 							 		 AND transaction_refund = 1
 							 		 AND transaction_void IS NULL
 							 		 GROUP BY transaction_id
-							 		 ORDER BY created_at, transaction_complete DESC)";
-				$transactions = Shop_PaymentTransaction::create()->where($sql_where, $order->id)->find_all();
+							 		 ORDER BY created_at, transaction_complete DESC)
+							  AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)";
+				$bind = array(
+					'order_id' => $order->id,
+					'void_transaction_ids' => $void_transaction_ids
+				);
+				$transactions = Shop_PaymentTransaction::create()->where($sql_where, $bind)->find_all();
 				if($transactions){
 					foreach($transactions as $transaction){
 						if($transaction->transaction_value ){

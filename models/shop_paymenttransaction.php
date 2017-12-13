@@ -116,6 +116,17 @@
 			}
 		}
 
+		public static function get_void_transaction_ids(Shop_Order $order){
+			$sql = "SELECT DISTINCT(transaction_id) FROM shop_payment_transactions 
+					WHERE order_id = :order_id
+					AND transaction_void = 1
+					AND transaction_id IS NOT NULL";
+			$bind = array(
+				'order_id' => $order->id
+			);
+			return Db_DbHelper::scalarArray($sql, $bind);
+		}
+
 		
 		public function list_available_transitions()
 		{   
