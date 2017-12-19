@@ -1,12 +1,3 @@
-<? if ($this->isHintVisible('orderdoc_hint')): ?>
-<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
-<div class="hint">
-	<p class="last">You can specify your company name and customize documents on the <a href="<?= url('shop/company_info/') ?>">System/Settings/Company Information and Settings</a> page.</p>
-	<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('orderdoc_hint', this)">Close</a>
-</div>
-</form>
-<? endif ?>
-
 <div class="toolbar">
 	<? if(!$custom_render):?>
 	<script>
@@ -15,18 +6,18 @@
 				debug: false,               // show the iframe for debugging
 				importCSS: true,            // import page CSS
 				importStyle: true,         // import style tags
-				printContainer: true,       // grab outer container as well as the contents of the selector
+				printContainer: false,       // grab outer container as well as the contents of the selector
 				loadCSS: <?= json_encode($css_files); ?>,  // path to additional css file - use an array [] for multiple
 				pageTitle: 'Order Document: <?=$active_variant?>', // add title to print page
 				removeInline: false,        // remove all inline styles from print elements
-				printDelay: 0,            // variable print delay; depending on complexity a higher value may be necessary
+				printDelay: 300,            // variable print delay; depending on complexity a higher value may be necessary
 				header: null,               // prefix to html
 				footer: null,               // postfix to html
 				base: false ,               // preserve the BASE tag, or accept a string for the URL
 				formValues: true,           // preserve input/form values
 				canvas: false,              // copy canvas elements (experimental)
 				removeScripts: false,       // remove script tags from print content
-				copyTagClasses: false       // copy classes from the html & body tag
+				copyTagClasses: true       // copy classes from the html & body tag
 			});
 		}
 	</script>

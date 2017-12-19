@@ -1,4 +1,12 @@
 <div style="width:800px; padding:10px; background-color:white;">
+	<? if ($this->isHintVisible('orderdoc_hint')): ?>
+		<?= Phpr_Form::openTag(array('id'=>'hint_form')) ?>
+			<div class="hint">
+				<p class="last">You can specify your company name and customize documents on the <a href="<?= url('shop/company_info/') ?>">System/Settings/Company Information and Settings</a> page.</p>
+				<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('orderdoc_hint', this)">Close</a>
+			</div>
+		</form>
+	<? endif ?>
 	<?= Phpr_Form::openTag(array('id'=>'orderdoc_viewer'))?>
 		<? $this->renderPartial('orderdoc_viewer',array('limit_overflow'=>500)); ?>
 	</form>
