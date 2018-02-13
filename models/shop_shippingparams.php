@@ -40,6 +40,12 @@
 			'default_state'=>array('class_name'=>'Shop_Country', 'foreign_key'=>'default_shipping_state_id')
 		);
 
+		public $has_many = array(
+			'shipping_boxes'=>array('class_name'=>'Shop_ShippingBox', 'foreign_key'=>'params_id', 'delete'=>true),
+		);
+
+
+
 		public static function create($values = null) 
 		{
 			return new self($values);
@@ -107,7 +113,9 @@
 			$this->define_column('default_shipping_city', 'City')->validation()->fn('trim');
 			
 			$this->define_column('display_shipping_service_errors', 'Display shipping service errors')->validation()->fn('trim');
-			
+
+			$this->define_multi_relation_column('shipping_boxes', 'shipping_boxes', 'Shipping Boxes',  "@id")->invisible();
+
 		}
 
 		public function define_form_fields($context = null)
@@ -134,6 +142,8 @@
 			$this->add_form_field('default_shipping_city', 'right')->tab('Default Shipping Location');
 			
 			$this->add_form_field('display_shipping_service_errors')->tab('Parameters')->comment('Display shipping service errors like "Please specify a valid ZIP code" on the front-end website. This feature should be implemented in the front-end partials. Please refer to the <a href="http://lemonstand.com/docs/creating_shipping_method_partial/" target="_blank">documentation</a> for details.', 'above', true);
+
+			$this->add_form_field('shipping_boxes')->tab('Shipping Boxes')->renderAs('shipping_boxes');
 		}
 		
 		public function get_country_options($key_value=-1)

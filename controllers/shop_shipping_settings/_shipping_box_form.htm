@@ -1,0 +1,27 @@
+<div id="shipping_box_form">
+	<h2>Shipping Box</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+			<p>Enter dimensions and weights in your preferred units as specified on the Units Tab</p>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($box) ?>
+
+					<?= backend_ajax_button('Save', 'onUpdateShippingBox', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updateShippingBoxes.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+					<input type="hidden" name="shippingparams_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="box_id" value="<?= $box_id ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

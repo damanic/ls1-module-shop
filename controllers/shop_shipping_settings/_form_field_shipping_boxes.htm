@@ -1,0 +1,38 @@
+
+<li>
+
+	<p>If you have a set of box sizes for shipping orders, enter them here to assist with postage and packing calculations</p>
+</li>
+<li>
+	<div id="shipping_box_list<?= $this->formGetEditSessionKey() ?>" class="clear">
+		<? $this->renderPartial('shipping_box_list') ?>
+	</div>
+
+	<p class="addDocument img_noBottomPading">
+		<a href="#"
+		   onclick="$('shipping_box_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadShippingBoxForm', {ajaxFields: $('shipping_box_id<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">
+			Add box
+		</a>
+	</p>
+	<input type="hidden" name="shipping_box_id" id="shipping_box_id<?= $this->formGetEditSessionKey() ?>" value=""/>
+
+	<script type="text/javascript">
+		function updateShippingBoxes(session_key)
+		{
+			cancelPopup();
+
+			$('shipping_box_list'+session_key).getForm().sendPhpr(
+				'onUpdateShippingBoxList',
+				{
+					update: 'shipping_box_list'+session_key,
+					loadIndicator: {
+						show: true,
+						element: 'shipping_box_list'+session_key,
+						hideOnSuccess: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					}
+				}
+			)
+		}
+	</script>
+</li>

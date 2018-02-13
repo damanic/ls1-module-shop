@@ -64,7 +64,7 @@
 			$this->add_form_field('weight', 'left')->tab('Shipping');
 			$this->add_form_field('width', 'right')->tab('Shipping');
 			$this->add_form_field('height', 'left')->tab('Shipping');
-			$this->add_form_field('depth', 'right')->tab('Shipping');
+			$this->add_form_field('depth', 'right')->comment('You can group extras with equal group names.', 'above')->tab('Shipping');
 
 			Backend::$events->fireEvent('shop:onExtendExtraOptionForm', $this, $context);
 			foreach ($this->api_added_columns as $column_name)

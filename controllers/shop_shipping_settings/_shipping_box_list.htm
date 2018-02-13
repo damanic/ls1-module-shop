@@ -1,0 +1,40 @@
+<?
+	$boxes = $form_model->list_related_records_deferred('shipping_boxes', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th class="float">Width</th>
+			<th class="float">Length</th>
+			<th class="float">Depth</th>
+			<th class="float">Max Weight</th>
+			<? if ($boxes->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody>
+		<? if (!$boxes->count): ?>
+			<tr class="noData">
+				<td colspan="6" class="last">You have not added any shipping boxes.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($boxes as $box):
+				$parent_session_key = $this->formGetEditSessionKey();
+				$onClick = "$('shipping_box_id{$parent_session_key}').value = '{$box->id}'; new PopupForm('onLoadShippingBoxForm', {ajaxFields: $('shipping_box_id{$parent_session_key}').getForm()}); return false;";
+			?>
+				<tr class="<?= Backend_Html::zebra('shipping_boxes') ?>">
+					<td class="link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= $box->displayField('name', 'list') ?></a></td>
+					<td class="float link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($box->displayField('width', 'list')) ?></a></td>
+					<td class="float link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($box->displayField('length', 'list')) ?></a></td>
+					<td class="float link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($box->displayField('depth', 'list')) ?></a></td>
+					<td class="float link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($box->displayField('max_weight', 'list')) ?></a></td>
+					<td class="iconCell last"><a onclick="$('shipping_box_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $box->id ?>'; return $(this).getForm().sendPhpr('onDeleteShippingBox', {confirm: 'Do you really want to delete this box?', update: 'shipping_box_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Delete box" class="deleteDocument" href="#">Delete</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>

@@ -9,6 +9,10 @@
 		private static $partials = null;
 		private static $catalog_version_update = false;
 
+		public function __construct(){
+			require_once( PATH_APP . '/modules/shop/vendor/autoload.php' );
+		}
+
 		/**
 		 * Creates the module information object
 		 * @return Core_ModuleInfo

@@ -1,36 +1,36 @@
 <div class="toolbar">
 	<? if(!$custom_render):?>
-	<script>
-		function print_orderdoc(){
-			jQuery('#orderdocs-print-container').printThis({
-				debug: false,               // show the iframe for debugging
-				importCSS: true,            // import page CSS
-				importStyle: true,         // import style tags
-				printContainer: false,       // grab outer container as well as the contents of the selector
-				loadCSS: <?= json_encode($css_files); ?>,  // path to additional css file - use an array [] for multiple
-				pageTitle: 'Order Document: <?=$active_variant?>', // add title to print page
-				removeInline: false,        // remove all inline styles from print elements
-				printDelay: 300,            // variable print delay; depending on complexity a higher value may be necessary
-				header: null,               // prefix to html
-				footer: null,               // postfix to html
-				base: false ,               // preserve the BASE tag, or accept a string for the URL
-				formValues: true,           // preserve input/form values
-				canvas: false,              // copy canvas elements (experimental)
-				removeScripts: false,       // remove script tags from print content
-				copyTagClasses: true       // copy classes from the html & body tag
-			});
-		}
-	</script>
-	<? if($auto_print): ?>
 		<script>
-			jQuery(document).ready(function(){
-				print_orderdoc();
-				cancelPopup();
-			});
+			function print_orderdoc(){
+				jQuery('#orderdocs-print-container').printThis({
+					debug: false,               // show the iframe for debugging
+					importCSS: true,            // import page CSS
+					importStyle: true,         // import style tags
+					printContainer: false,       // grab outer container as well as the contents of the selector
+					loadCSS: <?= json_encode($css_files); ?>,  // path to additional css file - use an array [] for multiple
+					pageTitle: 'Order Document: <?=$active_variant?>', // add title to print page
+					removeInline: false,        // remove all inline styles from print elements
+					printDelay: 300,            // variable print delay; depending on complexity a higher value may be necessary
+					header: null,               // prefix to html
+					footer: null,               // postfix to html
+					base: false ,               // preserve the BASE tag, or accept a string for the URL
+					formValues: true,           // preserve input/form values
+					canvas: false,              // copy canvas elements (experimental)
+					removeScripts: false,       // remove script tags from print content
+					copyTagClasses: true       // copy classes from the html & body tag
+				});
+			}
 		</script>
-	<? endif;?>
-	<a class="imageLink print img_noBottomPading" href="javascript:;"
-	   onclick="print_orderdoc()">Print</a>
+			<? if($auto_print): ?>
+				<script>
+					jQuery(document).ready(function(){
+						print_orderdoc();
+						cancelPopup();
+					});
+				</script>
+			<? endif;?>
+		<a class="imageLink print img_noBottomPading" href="javascript:;"
+		   onclick="print_orderdoc()">Print</a>
 	<? endif;?>
 	<? foreach($applicable_variants as $v => $v_params) { ?>
 		<a class="imageLink <? if($active_variant == $v){echo 'hold';} else { echo '';}?> img_noBottomPading"

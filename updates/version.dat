@@ -957,3 +957,4 @@
 #1.31.5 Improved payment transaction totals
 #1.31.6|@phpr-patch_1.31.6 Improve order currency field display, New event shop:onCustomerDisplayField.
 #1.31.7 Adds order locks. New user permissions for order lock and permanent delete.
+#1.31.8 Adds shipping boxes to shipping settings and a box packer helper to help with shipping cost calculations
