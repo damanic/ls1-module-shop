@@ -98,7 +98,7 @@
 				<div class="separator"></div>
 				<a class="imageLink print img_noBottomPading" onclick="new PopupForm('preview_onPrintOrderDoc', {closeByEsc: true}); return false;" href="<?= url('shop/orders/orderdoc/'.$form_model->id) ?>">Print docs</a>
 
-				<? if(!$form_model->is_order_locked()): ?>
+
 				<a class="imageLink lorry img_noBottomPading" href="<?= url('shop/orders/packing_slip/'.$form_model->id) ?>">Print packing slip</a>
 				
 				<? if ($form_model->shipping_method->supports_shipping_labels()): ?>
@@ -107,6 +107,7 @@
 					<a class="imageLink shipping_label img_noBottomPading" href="<?= url('shop/orders/shipping_label/'.$form_model->id) ?>">Print shipping label</a>
 				<? endif ?>
 
+				<? if(!$form_model->is_order_locked()): ?>
 				<? if (!$form_model->deleted_at && !$form_model->payment_processed() && $form_model->payment_method->has_payment_form()): ?>
 					<div class="separator"></div>
 					<a class="imageLink pay img_noBottomPading" href="<?= url('/shop/orders/pay/'.$form_model->id.'?'.uniqid()) ?>">Pay</a>

@@ -27,19 +27,30 @@
 		
 		public static function set_code($order, $shipping_method, $code)
 		{
-			Db_DbHelper::query(
-				'delete from shop_order_shipping_track_codes where order_id=:order_id and shipping_method_id=:method_id', 
-				array(
-					'order_id'=>$order->id,
-					'method_id'=>$shipping_method->id
-				)
-			);
+			self::remove_codes($order, $shipping_method);
+			self::add_code($order,$shipping_method,$code);
+		}
 
+		public static function add_code($order, $shipping_method, $code){
 			$obj = self::create();
 			$obj->order_id = $order->id;
 			$obj->shipping_method_id = $shipping_method->id;
 			$obj->code = $code;
 			$obj->save();
+		}
+
+		public static function remove_codes($order, $shipping_method, $code=null){
+			$sql = 'delete from shop_order_shipping_track_codes where order_id=:order_id and shipping_method_id=:method_id';
+			if($code){
+				$sql .= ' and code=:code';
+			}
+			Db_DbHelper::query( $sql,
+				array(
+					'order_id'=>$order->id,
+					'method_id'=>$shipping_method->id,
+					'code' => $code
+				)
+			);
 		}
 		
 		public static function find_by_order_and_method($order, $shipping_method)
@@ -48,7 +59,7 @@
 			$obj->where('order_id=?', $order->id);
 			$obj->where('shipping_method_id=?', $shipping_method->id);
 			
-			return $obj->find();
+			return $obj->order('id DESC')->limit(1)->find();
 		}
 		
 		public static function find_by_order($order)

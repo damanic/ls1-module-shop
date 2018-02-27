@@ -23,7 +23,7 @@
 			<td ><?= h($record->code) ?></td>
 			<td class="iconCell last">
 				<? if(!$form_model->is_order_locked()):?>
-				<a onclick="return $(this).getForm().sendPhpr('preview_onDeleteTrackingCode', {extraFields: {code_id: <?= $record->id ?>}, confirm: 'Do you really want to delete this tracking code?', update: 'tracking_code_list', loadIndicator: {show: false}});" title="Remove product" class="deleteDocument" href="#">Delete code</a>
+				<a onclick="return $(this).getForm().sendPhpr('preview_onDeleteTrackingCode', {extraFields: {code_id: <?= $record->id ?>}, confirm: 'Do you really want to delete this tracking code?', update: 'tracking_code_list', loadIndicator: {show: false}});" title="Remove code" class="deleteDocument" href="#">Delete code</a>
 				<? endif; ?>
 			</td>
 		</tr>

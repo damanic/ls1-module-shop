@@ -15,8 +15,10 @@
 			$this->image_data = $image_data;
 			$this->file_extension = $file_extension;
 			$this->title = $title;
-			
-			$this->save_temporary($order, $shipping_option);
+
+			if($this->image_data) {
+				$this->save_temporary( $order, $shipping_option );
+			}
 		}
 		
 		protected function save_temporary($order, $shipping_option)

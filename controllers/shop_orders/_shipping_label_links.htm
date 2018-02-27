@@ -10,7 +10,7 @@
 	<? if ($cnt): ?>
 		<ul class="shipping_label_list">
 			<? foreach ($labels as $index=>$label): ?>
-				<li class="<?= strtolower($label->file_extension) ?>"><a target="_blank" href="<?= url('shop/orders/shippinglabel/'.$label->link) ?>"><? if($label->title): echo h($label->title); else: ?>Label <?= $index+1 ?><? endif ?></a> (<?= Phpr_Files::fileSize($label->file_size) ?>)</li>
+				<li class="<?= strtolower($label->file_extension) ?>"><a target="_blank" href="<?= !stristr($label->link, '://') ? url('shop/orders/shippinglabel/'.$label->link) :  $label->link?>"><? if($label->title): echo h($label->title); else: ?>Label <?= $index+1 ?><? endif ?></a> (<?= Phpr_Files::fileSize($label->file_size) ?>)</li>
 			<? endforeach ?>
 		</ul>
 		<div class="clear"></div>
