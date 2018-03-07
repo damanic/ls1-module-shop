@@ -1,4 +1,10 @@
 <?php
+/*
+ * This helper requires PHP v5.4+
+ */
+if (version_compare(phpversion(), '5.4.0', '<')) {
+	return;
+}
 
 use DVDoug\BoxPacker\Packer as BockPacker;
 use DVDoug\BoxPacker\Box as BoxPackerBox;
@@ -12,6 +18,9 @@ class Shop_BoxPacker {
 	protected $unpackable_items = array();
 
 	public function __construct() {
+		if (version_compare(phpversion(), '5.4.0', '<')) {
+			throw new Phpr_ApplicationException('Error: Shop_Boxpacker requires PHP >= 5.4');
+		}
 		$this->shipping_params  = Shop_ShippingParams::get();
 		$this->weights_in_kg    = ( $this->shipping_params->weight_unit == 'KGS' );
 		$this->dimensions_in_cm = ( $this->shipping_params->dimension_unit == 'CM' );

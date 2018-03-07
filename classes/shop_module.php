@@ -10,7 +10,10 @@
 		private static $catalog_version_update = false;
 
 		public function __construct(){
-			require_once( PATH_APP . '/modules/shop/vendor/autoload.php' );
+			if (version_compare(phpversion(), '5.4.0', '>=')) {
+				//add helpers (boxpacker)
+				require_once( PATH_APP . '/modules/shop/vendor/autoload.php' );
+			}
 		}
 
 		/**
