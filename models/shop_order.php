@@ -4,9 +4,9 @@
 
 	/**
 	 * Represents an order.
-	 * 
+	 *
 	 * @property boolean $free_shipping Indicates whether free shipping is applied to the order.
-	 * @property Db_DataCollection $items A collection of order items. 
+	 * @property Db_DataCollection $items A collection of order items.
 	 * Each element is the collection is an object of the {@link Shop_OrderItem} class.
 	 * @property float $discount Total order discount.
 	 * @property float $discount_tax_incl Total order discount, tax inclusive.
@@ -17,23 +17,23 @@
 	 * @property float $subtotal Order subtotal sum - a sum of the order item totals.
 	 * @property float $subtotal_tax_incl Order subtotal, tax inclusive
 	 * @property float $tax_total Total tax value: $goods_tax + $shipping_tax.
-	 * @property float $total Total order amount. 
+	 * @property float $total Total order amount.
 	 * It includes the subtotal value, tax value and the shipping quote value. The discount value is already subtracted from the $total value.
 	 * @property float $subtotal_before_discounts subtotal before the discount applied.
 	 * @property integer $id Specifies the order record identifier.
 	 * @property Phpr_DateTime $order_datetime Specifies a date and time when the order was placed.
 	 * @property Phpr_DateTime $status_update_datetime A reference to the date/time object representing date and time when the order status has been updated last time.
-	 * @property Phpr_DateTime $deleted_at Specifies a date and time when the order was marked as deleted. 
+	 * @property Phpr_DateTime $deleted_at Specifies a date and time when the order was marked as deleted.
 	 * See {@link Shop_Order::delete_order() delete_order()} method.
 	 * @property Shop_Country $billing_country A reference to the billing country.
 	 * @property Shop_Country $shipping_country A reference to the shipping country.
 	 * @property Shop_CountryState $billing_state A reference to the billing state.
 	 * @property Shop_CountryState $shipping_state A reference to the shipping state.
-	 * @property Shop_Coupon $coupon An object, representing a coupon applied to the order, if any. 
+	 * @property Shop_Coupon $coupon An object, representing a coupon applied to the order, if any.
 	 * The Shop_Coupon object has the <en>$code</en> property, which contains the coupon code.
 	 * @property Shop_Customer $customer A reference to the customer who placed the order.
-	 * @property Shop_OrderStatus $status A reference to the current order status. 
-	 * Usually the status information can be loaded with {@link Db_ActiveRecord::displayField() displayField()} method. 
+	 * @property Shop_OrderStatus $status A reference to the current order status.
+	 * Usually the status information can be loaded with {@link Db_ActiveRecord::displayField() displayField()} method.
 	 * See {@link Shop_OrderStatus} class documentation for details.
 	 * @property Shop_PaymentMethod $payment_method A reference to a payment method, selected by the customer for the order.
 	 * @property Shop_ShippingOption $shipping_method A reference to a shipping method, selected by the customer for the order.
@@ -68,10 +68,10 @@
 		public $belongs_to = array(
 			'shipping_country'=>array('class_name'=>'Shop_Country', 'foreign_key'=>'shipping_country_id'),
 			'billing_country'=>array('class_name'=>'Shop_Country', 'foreign_key'=>'billing_country_id'),
-			
+
 			'shipping_state'=>array('class_name'=>'Shop_CountryState', 'foreign_key'=>'shipping_state_id'),
 			'billing_state'=>array('class_name'=>'Shop_CountryState', 'foreign_key'=>'billing_state_id'),
-			
+
 			'shipping_method'=>array('class_name'=>'Shop_ShippingOption', 'foreign_key'=>'shipping_method_id'),
 			'payment_method'=>array('class_name'=>'Shop_PaymentMethod', 'foreign_key'=>'payment_method_id'),
 			'status'=>array('class_name'=>'Shop_OrderStatus', 'foreign_key'=>'status_id'),
@@ -80,7 +80,7 @@
 			'customer'=>array('class_name'=>'Shop_Customer', 'foreign_key'=>'customer_id'),
 			'coupon'=>array('class_name'=>'Shop_Coupon', 'foreign_key'=>'coupon_id'),
 		);
-		
+
 		public $has_many = array(
 			'log_records'=>array('class_name'=>'Shop_OrderStatusLog', 'foreign_key'=>'order_id', 'order'=>'shop_order_status_log_records.created_at desc', 'delete'=>true),
 			'items'=>array('class_name'=>'Shop_OrderItem', 'foreign_key'=>'shop_order_id', 'delete'=>true, 'order'=>'shop_order_items.id'),
@@ -89,17 +89,17 @@
 			'payment_transactions'=>array('class_name'=>'Shop_PaymentTransaction', 'foreign_key'=>'order_id', 'order'=>'shop_payment_transactions.created_at desc, shop_payment_transactions.id desc', 'delete'=>true),
 			'notes'=>array('class_name'=>'Shop_OrderNote', 'foreign_key'=>'order_id', 'order'=>'shop_order_notes.created_at desc', 'delete'=>true)
 		);
-		
+
 		public $calculated_columns = array(
 			'tax_total'=>array('sql'=>'shipping_tax+goods_tax', 'type'=>db_float),
 			'has_notes'=>array('sql'=>'select count(shop_order_notes.id) from shop_order_notes where shop_order_notes.order_id=shop_orders.id', 'type'=>db_number)
 		);
 
-		public $custom_columns = array('create_guest_customer'=>db_bool, 
+		public $custom_columns = array('create_guest_customer'=>db_bool,
 			'register_customer'=>db_bool,
 			'notify_registered_customer'=>db_bool,
-			'payment_page_url'=>db_text, 
-			'subtotal_before_discounts'=>db_float, 
+			'payment_page_url'=>db_text,
+			'subtotal_before_discounts'=>db_float,
 			'subtotal_tax_incl'=>db_float,
 			'shipping_quote_tax_incl'=>db_float,
 			'discount_tax_incl'=>db_float,
@@ -108,14 +108,14 @@
 
 		public $shipping_sub_option_id;
 		public $internal_shipping_suboption_id;
-		
+
 		protected $api_added_columns = array();
 
 		public static function create()
 		{
 			return new self();
 		}
-		
+
 		public function define_columns($context = null)
 		{
 			$this->define_column('id', '#');
@@ -155,30 +155,30 @@
 			$this->define_column('tax_total', 'Tax Total')->currency(true);
 			$this->define_column('total_cost', 'Total Cost')->defaultInvisible()->currency(true);
 			$this->define_column('subtotal_before_discounts', 'Subtotal Before Discounts')->currency(true)->invisible();
-			
+
 			$this->define_column('free_shipping', 'Free Shipping')->defaultInvisible();
 			$this->define_column('auto_discount_price_eval', 'Evaluate the order discount and free shipping automatically')->invisible();
 
 			$this->define_relation_column('shipping_method', 'shipping_method', 'Shipping Method', db_varchar, '@name')->defaultInvisible()->validation()->required('Please select shipping method.');
 			$this->define_relation_column('payment_method', 'payment_method', 'Payment Method', db_varchar, '@name')->defaultInvisible()->validation()->required('Please select payment method.');
 			$this->define_relation_column('status_color', 'status', 'Status Color', db_varchar, '@color')->invisible();
-			
+
 			$this->define_multi_relation_column('log_records', 'log_records', 'Log Records', "@status_id")->invisible();
 			$this->define_multi_relation_column('items', 'items', 'Items', "@id")->invisible()->validation();
-			
+
 			$this->define_relation_column('registered_customer', 'registered_customer', 'Customer', db_varchar, "concat(@first_name, ' ', @last_name, ' (', @email, ')')")->invisible();
-			
+
 			$this->define_relation_column('customer_obj', 'customer', 'Customer object', db_varchar, "concat(@first_name, ' ', @last_name, ' (', @email, ')')")->defaultInvisible();
 			$this->define_relation_column('coupon', 'coupon', 'Coupon', db_varchar, "@code")->defaultInvisible();
-			
+
 			$this->define_column('create_guest_customer', 'Create new customer')->invisible()->validation();
 			$this->define_column('register_customer', 'Register customer')->invisible()->validation();
 			$this->define_column('notify_registered_customer', 'Notify customer')->invisible()->validation();
-			
+
 			$this->define_column('deleted_at', 'Deleted')->invisible()->dateFormat('%x %H:%M');
 			$this->define_column('payment_processed', 'Payment Processed')->defaultInvisible()->dateFormat('%x %H:%M');
 			$this->define_column('customer_ip', 'Customer IP')->defaultInvisible();
-			
+
 			$this->define_column('customer_notes', 'Customer Notes')->defaultInvisible();
 			$this->define_column('payment_page_url', 'Payment Page')->invisible();
 			$this->define_column('tax_exempt', 'Tax Exempt')->defaultInvisible();;
@@ -193,7 +193,7 @@
 			if($context == 'list_settings')
 				$has_notes_column->listTitle('Has Notes');
 			$this->define_relation_column('notes', 'notes', 'Notes ', db_varchar, '@note')->invisible();
-			
+
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('shop:onExtendOrderModel', $this, $context);
 			$this->api_added_columns = array_keys($this->defined_column_list);
@@ -208,7 +208,7 @@
 			{
 				$this->add_form_field('order_datetime', 'left')->tab('Order Details')->noForm();
 				$this->add_form_field('status', 'right')->tab('Order Details')->noForm()->previewNoRelation();
-				
+
 				$this->add_form_field('customer_ip')->tab('Order Details')->noForm();
 
 				$this->add_form_field('total', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Total order amount</strong><br/>Total = Subtotal + Shipping Quote + Tax Total');
@@ -227,9 +227,9 @@
 					$this->add_form_field('tax_exempt')->tab('Order Details');
 
 				$this->add_form_field('coupon')->tab('Order Details')->noForm()->previewNoOptionsMessage('<a coupon code was not specified>');
-				
+
 				$this->add_form_field('customer_notes')->tab('Order Details')->noForm()->nl2br(true);
-				
+
 //				$this->add_form_field('items')->tab('Order')->noForm();
 //				$this->add_form_custom_area('tax_summary')->tab('Order Details')->noForm();
 
@@ -249,10 +249,10 @@
 					$this->add_form_field('payment_page_url')->tab('Billing Information');
 
 				$this->add_form_field('shipping_method')->tab('Shipping Information');
-				
+
 				if (strlen($this->shipping_sub_option))
 					$this->add_form_field('shipping_sub_option')->tab('Shipping Information')->noForm();
-				
+
 				$this->add_form_field('shipping_first_name', 'left')->tab('Shipping Information');
 				$this->add_form_field('shipping_last_name', 'right')->tab('Shipping Information');
 				$this->add_form_field('shipping_company', 'left')->tab('Shipping Information');
@@ -264,31 +264,31 @@
 				$this->add_form_field('shipping_street_addr')->tab('Shipping Information')->nl2br(true);
 				$this->add_form_field('shipping_city', 'left')->tab('Shipping Information');
 				$this->add_form_field('shipping_zip', 'right')->tab('Shipping Information');
-				
+
 				Backend::$events->fireEvent('shop:onExtendOrderForm', $this, $context);
 			} else {
 				if ($this->is_new_record())
 				{
 					$this->add_form_field('registered_customer')->tab('Customer')->
 						renderAs(frm_record_finder, array(
-							'sorting'=>'first_name, last_name, email', 
-							'list_columns'=>'first_name,last_name,email,guest,created_at', 
+							'sorting'=>'first_name, last_name, email',
+							'list_columns'=>'first_name,last_name,email,guest,created_at',
 							'search_columns'=>'shop_customers.first_name,shop_customers.last_name,shop_customers.email,shop_customers.guest,shop_customers.created_at',
-							'search_prompt'=>'Find customer by name or email', 
+							'search_prompt'=>'Find customer by name or email',
 							'form_title'=>'Find Customer',
 							'display_name_field'=>'full_name',
 							'display_description_field'=>'email',
 							'prompt'=>'Click the Find button to find a customer'))->
 						comment('Please select a customer or check "Create new customer".', 'above');
 					$this->add_form_field('create_guest_customer')->tab('Customer');
-					
+
 					$this->add_form_field('register_customer')->cssClassName('hidden')->tab('Customer')->comment('Use this checkbox to create a registered customer.');
 					$this->add_form_field('notify_registered_customer')->cssClassName('hidden')->tab('Customer')->comment('Use this checkbox to send a registration notification with a password to the new customer.');
 				}
 
 				$this->add_form_field('items')->tab('Order');
 				$this->add_form_field('tax_exempt')->tab('Order')->comment('Use this checkbox if the tax should not be applied to this order.');
-				
+
 				$this->add_form_field('billing_first_name', 'left')->tab('Billing Information');
 				$this->add_form_field('billing_last_name', 'right')->tab('Billing Information');
 				$this->add_form_field('billing_email')->tab('Billing Information');
@@ -311,21 +311,21 @@
 				$this->add_form_field('shipping_street_addr')->tab('Shipping Information')->nl2br(true)->renderAs(frm_textarea)->size('small');
 				$this->add_form_field('shipping_city', 'left')->tab('Shipping Information');
 				$this->add_form_field('shipping_zip', 'right')->tab('Shipping Information');
-				
+
 				$this->add_form_field('override_shipping_quote', 'left')->tab('Shipping Method')->comment('Use this checkbox if you want to enter the shipping quote manually.');
 				$this->add_form_field('manual_shipping_quote', 'right')->tab('Shipping Method')->cssClassName('checkbox_align');
-				
+
 				$this->add_form_field('shipping_method')->tab('Shipping Method')->renderAs(frm_radio);
 				$this->add_form_field('payment_method')->tab('Payment Method')->renderAs(frm_radio);
-				
+
 				$this->add_form_field('free_shipping')->tab('Discounts');
 				$this->add_form_field('auto_discount_price_eval')->tab('Discounts');
 				$this->add_form_field('coupon', 'right')->tab('Discounts')->emptyOption('<no coupon>');
 				$this->add_form_custom_area('enter_discount')->tab('Discounts');
-				
+
 				Backend::$events->fireEvent('shop:onExtendOrderForm', $this, $context);
 			}
-			
+
 			foreach ($this->api_added_columns as $column_name)
 			{
 				$form_field = $this->find_form_field($column_name);
@@ -336,7 +336,7 @@
 				}
 			}
 		}
-		
+
 		public function get_added_field_options($db_name, $current_key_value = -1)
 		{
 			$result = Backend::$events->fireEvent('shop:onGetOrderFieldOptions', $db_name, $current_key_value);
@@ -345,29 +345,29 @@
 				if (is_array($options) || (strlen($options && $current_key_value != -1)))
 					return $options;
 			}
-			
+
 			return false;
 		}
-		
+
 		public function get_added_field_option_state($db_name, $key_value)
 		{
 			$result = Backend::$events->fireEvent('shop:onGetOrderFieldState', $db_name, $key_value);
 			foreach ($result as $value)
 				return $value;
-			
+
 			return false;
 		}
-		
+
 		public function get_shipping_country_options($key_value=-1)
 		{
 			return $this->list_countries($key_value, $this->shipping_country_id);
 		}
-		
+
 		public function get_billing_country_options($key_value=-1)
 		{
 			return $this->list_countries($key_value, $this->billing_country_id);
 		}
-		
+
 		protected function list_countries($key_value=-1, $default = -1)
 		{
 			if ($key_value != -1)
@@ -386,7 +386,7 @@
 
 			return $result;
 		}
-		
+
 		public function copy_billing_address($data)
 		{
 			$this->shipping_first_name = $data['billing_first_name'];
@@ -398,19 +398,19 @@
 			$this->shipping_street_addr = $data['billing_street_addr'];
 			$this->shipping_city = $data['billing_city'];
 			$this->shipping_zip = $data['billing_zip'];
-			
+
 			$results = Backend::$events->fireEvent('shop:onOrderCopyBillingAddress', $this, $data);
-			
+
 			foreach($results as $result) {
 				if(!is_array($result))
 					continue;
-				
+
 				foreach($result as $key => $value) {
 					$this->$key = $value;
 				}
 			}
 		}
-		
+
 		public function set_shipping_address($data)
 		{
 			$this->shipping_first_name = $data['shipping_first_name'];
@@ -424,14 +424,14 @@
 			$this->shipping_zip = $data['shipping_zip'];
 			$this->shipping_addr_is_business = isset($data['shipping_addr_is_business']) ? $data['shipping_addr_is_business'] : false;
 		}
-		
+
 		public function set_billing_address($data)
 		{
 			$this->billing_country_id = $data['billing_country_id'];
 			$this->billing_state_id = $data['billing_state_id'];
 			$this->billing_zip = $data['billing_zip'];
 		}
-		
+
 		public function set_form_data($data)
 		{
 			$this->set_shipping_address($data);
@@ -456,10 +456,10 @@
 				$obj = Shop_CountryState::create()->find($key_value);
 				return $obj ? $obj->name : null;
 			}
-		
+
 			return $this->list_states($this->shipping_country_id);
 		}
-		
+
 		public function get_billing_state_options($key_value = -1)
 		{
 			if ($key_value != -1)
@@ -473,7 +473,7 @@
 
 			return $this->list_states($this->billing_country_id);
 		}
-		
+
 		public function get_registered_customer_options($key_value = -1)
 		{
 			return array();
@@ -487,23 +487,23 @@
 				if ($obj)
 					$country_id = $obj->id;
 			}
-			
+
 			$states = Db_DbHelper::objectArray(
 				'select * from shop_states where country_id=:country_id order by name',
 				array('country_id'=>$country_id)
 			);
-			
+
 			$result = array();
 			foreach ($states as $state)
 				$result[$state->id] = $state->name;
-				
+
 			if (!count($result))
 				$result = array(null=>'<no states available>');
-				
+
 			return $result;
 		}
 
-		public function after_validation($deferred_session_key = null) 
+		public function after_validation($deferred_session_key = null)
 		{
 			$items = $this->list_related_records_deferred('items', $deferred_session_key);
 			if (!$items->count)
@@ -515,12 +515,12 @@
 		 * The object is populated with shipping address information from the order.
 		 * @documentable
 		 * @return Shop_CheckoutAddressInfo Returns an address information object.
-		 */ 
+		 */
 		public function get_shipping_address_info()
 		{
 			$result = new Shop_CheckoutAddressInfo();
 			$result->act_as_billing_info = false;
-			
+
 			$result->first_name = $this->shipping_first_name;
 			$result->last_name = $this->shipping_last_name;
 			$result->company = $this->shipping_company;
@@ -531,7 +531,7 @@
 			$result->city = $this->shipping_city;
 			$result->zip = $this->shipping_zip;
 			$result->shipping_addr_is_business = $this->is_business;
-			
+
 			return $result;
 		}
 
@@ -545,9 +545,9 @@
 		{
 			if ($this->parent_order_id)
 				return false;
-			
+
 			$result = Backend::$events->fireEvent('shop:onOrderSupportsInvoices', $this);
-			foreach ($result as $value) 
+			foreach ($result as $value)
 			{
 				if ($value)
 					return true;
@@ -555,7 +555,7 @@
 
 			return false;
 		}
-		
+
 		/**
 		 * Determines whether there are any modules which support invoices.
 		 * @documentable
@@ -564,7 +564,7 @@
 		public static function invoice_system_supported()
 		{
 			$result = Backend::$events->fireEvent('shop:onInvoiceSystemSupported');
-			foreach ($result as $value) 
+			foreach ($result as $value)
 			{
 				if ($value)
 					return true;
@@ -572,7 +572,7 @@
 
 			return false;
 		}
-		
+
 		/**
 		 * Determines whether there are any modules which support automated billing
 		 * @documentable
@@ -581,7 +581,7 @@
 		public static function automated_billing_supported()
 		{
 			$result = Backend::$events->fireEvent('shop:onAutomatedBillingSupported');
-			foreach ($result as $value) 
+			foreach ($result as $value)
 			{
 				if ($value)
 					return true;
@@ -589,7 +589,7 @@
 
 			return false;
 		}
-		
+
 		/**
 		 * Returns a list of invoices.
 		 * Invoices are orders which are grouped under the given order.
@@ -615,15 +615,15 @@
 		 * @see Shop_CheckoutData
 		 * @see shop:onOrderBeforeCreate
 		 * @param Shop_Customer $customer Specifies an existing customer object. If this parameter is NULL a new customer will be created.
-		 * @param boolean $register_customer Determines whether the customer should be registered. Registered customers can 
+		 * @param boolean $register_customer Determines whether the customer should be registered. Registered customers can
 		 * {@link http://lemonstand.com/docs/customer_login_and_logout log into} the store.
 		 * @param string $cart_name Specifies a name of the shopping cart to load order items from.
-		 * @param array $options A list of options. 
+		 * @param array $options A list of options.
 		 * @return Shop_Order Returns the new order object.
 		 */
 		public static function place_order($customer, $register_customer = false, $cart_name = 'main', $options = array())
 		{
-			
+
 			Backend::$events->fireEvent('shop:onOrderBeforeCreate', $cart_name);
 
 			$cart_items = Shop_Cart::list_active_items($cart_name);
@@ -635,10 +635,10 @@
 				/*
 				 * Check order item availability
 				 */
-				
+
 				foreach ($cart_items as $cart_item_index=>$item)
 					Shop_Cart::check_availability($item->product, $item->quantity, $item->options, false);
-				
+
 				/*
 				 * Update or create a customer
 				 */
@@ -668,7 +668,7 @@
 							$new_customer->password = post('password', uniqid());
 							$new_customer->password_confirm = $new_customer->password;
 						}
-						
+
 						$new_customer->init_columns_info();
 					}
 				} else
@@ -676,7 +676,7 @@
 					$customer->password = null;
 					$customer->init_columns_info();
 				}
-				
+
 				Shop_TaxClass::set_customer_context($customer);
 
 				$billing_info = Shop_CheckoutData::get_billing_info();
@@ -687,28 +687,28 @@
 				$customer->set_api_fields(Shop_CheckoutData::get_custom_fields());
 				Backend::$events->fireEvent('shop:onOrderAfterUpdateCustomer', $customer);
 				$customer->save();
-				
+
 				/*
 				 * Calculate discounts
 				 */
 
 				$payment_method = Shop_CheckoutData::get_payment_method();
 				$shipping_method = Shop_CheckoutData::get_shipping_method();
-				
+
 				$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::create()->find($payment_method->id) : null;
 				$shipping_method_obj = $shipping_method->id ? Shop_ShippingOption::create()->find($shipping_method->id) : null;
 
 				$subtotal = Shop_Cart::total_price_no_tax($cart_name, false);
 
 				$discount_info = Shop_CartPriceRule::evaluate_discount(
-					$payment_method_obj, 
-					$shipping_method_obj, 
+					$payment_method_obj,
+					$shipping_method_obj,
 					$cart_items,
 					$shipping_info,
-					Shop_CheckoutData::get_coupon_code(), 
+					Shop_CheckoutData::get_coupon_code(),
 					$customer,
 					$subtotal);
-					
+
 				$tax_info = Shop_TaxClass::calculate_taxes($cart_items, $shipping_info);
 
 				/*
@@ -719,10 +719,10 @@
 				$order->init_columns_info();
 
 				$order->customer_id = $customer->id;
-				
+
 				$shipping_info->save_to_order($order);
 				$billing_info->save_to_order($order);
-				
+
 				$order->shipping_method_id = $shipping_method->id;
 				$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
 
@@ -734,20 +734,20 @@
 
 				$order->payment_method_id = $payment_method->id;
 				$order->goods_tax = $goods_tax = $tax_info->tax_total;
-				
+
 				$subtotal = Shop_Cart::total_price_no_tax($cart_name, true, $cart_items);
 
 				/*
 				 * Update order currency fields
 				 */
-				
+
 				$order->discount = $discount_info->cart_discount;
 				$order->set_sales_taxes($tax_info->taxes);
 
 				$order->free_shipping = array_key_exists($shipping_method->internal_id, $discount_info->free_shipping_options) ? 1 : 0;
 
 				$order->total = $goods_tax + $subtotal;
-				
+
 				if (!$order->free_shipping)
 				{
 					 $order->total += round($shipping_method->quote_no_tax, 2) + $shipping_tax;
@@ -756,10 +756,10 @@
 					$order->shipping_quote = 0;
 					$order->shipping_tax = 0;
 				}
-				
+
 				$order->subtotal = $subtotal;
 				$order->auto_discount_price_eval = 1;
-				
+
 				if ($order->total < 0)
 					$order->total = 0;
 
@@ -772,7 +772,7 @@
 					$order->coupon_id = null;
 
 				$session_key = uniqid('front_end_order', true);
-				
+
 				/*
 				 * Create order items
 				 */
@@ -788,7 +788,7 @@
 					$obj->options = serialize($item->options);
 					$obj->auto_discount_price_eval = 1;
 					$obj->tax = 0;
-					
+
 					$extras = array();
 					foreach ($item->extra_options as $extra)
 						$extras[] = array($extra->get_price_no_tax($item->product), $extra->description, $extra->get_price($item->product, true));
@@ -798,7 +798,7 @@
 					$effective_quantity = $item->quantity;
 					if ($item->product->tier_prices_per_customer)
 						$effective_quantity += $customer->get_purchased_item_quantity($item->product);
-					
+
 					$item_om_record = $item->get_om_record();
 					if (!$item_om_record)
 					{
@@ -806,15 +806,15 @@
 						$product_price = $item->single_price_no_tax(false, $effective_quantity) - $product_discount;
 					} else
 						$product_price = $item_om_record->get_sale_price($item->product, $effective_quantity, $customer->customer_group_id, true);
-					
+
 					$obj->price = $product_price;
 
 					$obj->cost = $item->om('cost');
 					$obj->discount = $item->applied_discount;
-					
+
 					if ($item_om_record)
 						$obj->option_matrix_record_id = $item_om_record->id;
-					
+
 					$total_cost += $obj->cost*$item->quantity;
 
 					if (array_key_exists($cart_item_index, $tax_info->item_taxes))
@@ -831,14 +831,14 @@
 					$obj->save();
 
 					$items[] = $obj;
-					
+
 					$item_map[$item->key] = $obj;
 				}
-				
+
 				/*
 				 * Apply bundle item data
 				 */
-				
+
 				foreach ($cart_items as $cart_item_index=>$item)
 				{
 					if ($item->is_bundle_item())
@@ -847,20 +847,20 @@
 						if ($master_item && array_key_exists($master_item->key, $item_map))
 						{
 							$item_map[$item->key]->bundle_master_order_item_id = $item_map[$master_item->key]->id;
-							
+
 							$bundle_item = $item->get_bundle_item();
 							$item_map[$item->key]->bundle_master_bundle_item_id = $bundle_item->id;
 							$item_map[$item->key]->bundle_master_bundle_item_name = $bundle_item->name;
-							
+
 							$item_map[$item->key]->save();
 						}
 					}
-					
+
 				}
 
 				foreach ($items as $item)
 					$order->items->add($item, $session_key);
-					
+
 				/*
 				 * Set customer notes and custom fields
 				 */
@@ -871,7 +871,7 @@
 
 				$order->save(null, $session_key);
 				$order->customer = $customer;
-				
+
 				/*
 				 * Save applied discount rules information
 				 */
@@ -888,14 +888,14 @@
 
 				if ($new_customer)
 					$new_customer->delete();
-					
+
 				foreach ($items as $item)
 					$item->delete();
-				
+
 				throw $ex;
 			}
 		}
-		
+
 		public function eval_subtotal_before_discounts()
 		{
 			$result = 0;
@@ -904,7 +904,7 @@
 
 			return $result;
 		}
-		
+
 		public function eval_discount_tax_incl()
 		{
 			$result = 0;
@@ -913,12 +913,12 @@
 
 			return $result;
 		}
-		
+
 		public function eval_shipping_quote_tax_incl()
 		{
 			return $this->free_shipping ? 0 : $this->shipping_tax_2 + $this->shipping_tax_1 + $this->shipping_quote;
 		}
-		
+
 		public function eval_subtotal_tax_incl()
 		{
 			$result = 0;
@@ -927,7 +927,7 @@
 
 			return $result;
 		}
-		
+
 		public function apply_shipping_tax_array($tax_array)
 		{
 			if (isset($tax_array[0]))
@@ -953,7 +953,7 @@
 
 		public function before_create($deferred_session_key = null)
 		{
-			
+
 			$this->order_hash = $this->create_hash();
 			while (Db_DbHelper::scalar('select count(*) from shop_orders where order_hash=:hash', array('hash'=>$this->order_hash)))
 				$this->order_hash = $this->create_hash();
@@ -963,27 +963,27 @@
 				$this->order_datetime = Phpr_Date::userDate(Phpr_DateTime::now());
 				$this->order_date = $this->order_datetime;
 			}
-				
+
 			$userIp = Phpr::$request->getUserIp();
 			if ($userIp == '::1')
 				$userIp = '192.168.0.1';
 
 			$this->customer_ip = $userIp;
-			
+
 			/*
 			 * Create guest customer
 			 */
-			
+
 			if ($this->create_guest_customer)
 			{
 				$new_customer = $customer = Shop_Customer::create();
 				$new_customer->copy_from_order($this);
 				$new_customer->disable_column_cache();
 				$new_customer->define_columns();
-				
+
 				if (!$this->register_customer)
 					$new_customer->guest = 1;
-				else 
+				else
 				{
 					$new_customer->guest = false;
 					$new_customer->generate_password();
@@ -991,7 +991,7 @@
 
 				$new_customer->save();
 				$this->customer_id = $new_customer->id;
-				
+
 				if ($this->register_customer && $this->notify_registered_customer)
 					$new_customer->send_registration_confirmation();
 			}
@@ -1007,12 +1007,12 @@
 			 */
 			$this->set_currency_code();
 		}
-		
-		public function before_update($session_key = null) 
+
+		public function before_update($session_key = null)
 		{
 			Backend::$events->fireEvent('shop:onOrderBeforeUpdate', $this, $session_key);
 		}
-		
+
 		/**
 		 * Returns the last used order identifier.
 		 * @return integer Returns the last used order identifier.
@@ -1022,21 +1022,21 @@
 			$status = Db_DbHelper::object("SHOW TABLE STATUS where Name='shop_orders'");
 			if (!$status)
 				throw new Phpr_ApplicationException('Error requesting the last used order number');
-				
+
 			return $status->Auto_increment-1;
 		}
-		
+
 		public static function set_next_order_id($new_id)
 		{
 			$new_id = trim($new_id);
-			
+
 			if (!strlen($new_id) || !preg_match('/^[0-9]+$/', $new_id))
 				throw new Phpr_ApplicationException('Invalid order number specified');
-			
+
 			$prev_id = self::get_last_used_order_id();
 			if ($prev_id >= $new_id)
 				throw new Phpr_ApplicationException('New order number should be more than the last used number ('.$prev_id.')');
-				
+
 			Db_DbHelper::query('ALTER TABLE shop_orders AUTO_INCREMENT='.$new_id);
 		}
 
@@ -1113,7 +1113,10 @@
 				throw new Phpr_SystemException('Cannot execute method "displayField" for field '.$dbName.' - the field is not defined in column definition list.');
 
 			$column_definition = $column_definitions[$dbName];
-			if($column_definition->type == db_float && $column_definition->currency && is_numeric($this->$dbName) ){
+			if ($column_definition->type == db_float && $column_definition->currency && is_numeric($this->$dbName)) {
+                if (! strlen($this->currency_code)) {
+                    $this->currency_code = Shop_CurrencySettings::get()->code;
+                }
 				return Shop_CurrencyHelper::format_currency($this->$dbName,2, $this->currency_code);
 			}
 			return $column_definitions[$dbName]->displayValue($media);
@@ -1133,28 +1136,28 @@
 			$order = Shop_Order::create()->find($order_ref);
 			return $order ? $order : false;
 		}
-		
+
 		public function set_api_fields($fields)
 		{
 			if (!is_array($fields))
 				return;
-				
+
 			foreach ($fields as $field=>$value)
 			{
 				if (in_array($field, $this->api_added_columns))
 					$this->$field = $value;
 			}
 		}
-		
+
 		public function after_create_saved()
 		{
 			$status_id = Shop_OrderStatus::get_status_new()->id;
-			
+
 			$order_copy = Shop_Order::create()->find($this->id);
 			Shop_OrderStatusLog::create_record($status_id, $order_copy);
-			
+
 			Backend::$events->fireEvent('shop:onNewOrder', $this->id);
-			
+
 			$payment_method = $this->payment_method;
 			if ($payment_method)
 			{
@@ -1181,22 +1184,22 @@
 		public function before_delete($db_delete = true){
 			Backend::$events->fireEvent('shop:onOrderBeforeDelete', $this, $db_delete);
 		}
-		
+
 		public function after_delete()
 		{
 			self::delete_order_data($this->id);
-			
+
 			/*
 			 * Delete invoices and assigned data
 			 */
-			
+
 			$invoice_ids = Db_DbHelper::scalarArray('select id from shop_orders where parent_order_id=:order_id', array('order_id'=>$this->id));
 			foreach ($invoice_ids as $invoice_id)
 				self::delete_order_data($invoice_id);
-				
+
 			Backend::$events->fireEvent('shop:onOrderAfterDelete', $this);
 		}
-		
+
 		/**
 		 * Removes an order and all records which refer to it
 		 */
@@ -1212,7 +1215,7 @@
 			Db_DbHelper::query('delete from shop_order_applied_rules where shop_order_id=:order_id', $bind);
 			Db_DbHelper::query('delete from shop_payment_transactions where order_id=:order_id', $bind);
 		}
-		
+
 		public function after_has_many_bind($obj, $relation_name)
 		{
 		   if ($relation_name == 'items')
@@ -1231,18 +1234,18 @@
 			$this->save();
 			Backend::$events->fireEvent('shop:onOrderRestored', $this);
 		}
-		
+
 		public function __get($name)
 		{
 			if ($name == 'color')
 				return $this->displayField('status_color');
-				
+
 			if ($name == 'goods_tax_total')
 				return $this->goods_tax;
-				
+
 			return parent::__get($name);
 		}
-		
+
 		public function set_applied_cart_rules($rules)
 		{
 			$bind = array('id'=>$this->id);
@@ -1255,7 +1258,7 @@
 			}
 			Backend::$events->fireEvent('shop:onOrderSetAppliedCartRules', $this);
 		}
-		
+
 		/**
 		 * Returns URL of the order payment page URL.
 		 * Use this method for creating links to the payment page for unpaid orders. Payment page is a page based on {@link action@shop:pay} action.
@@ -1270,20 +1273,20 @@
 			if ($payment_method)
 			{
 				$payment_method->define_form_fields();
-				$custom_pay_page = $payment_method->get_paymenttype_object()->get_custom_payment_page($payment_method); 
+				$custom_pay_page = $payment_method->get_paymenttype_object()->get_custom_payment_page($payment_method);
 			}
 
 			$pay_page = $custom_pay_page ? $custom_pay_page : Cms_Page::create()->find_by_action_reference('shop:pay');
-			
+
 			if ($pay_page)
 			{
 				$protocol = null;
 				if ($pay_page->protocol != 'any')
 					$protocol = $pay_page->protocol;
-				
+
 				return root_url($pay_page->url.'/'.$this->order_hash, true, $protocol);
 			}
-				
+
 			return null;
 		}
 
@@ -1312,18 +1315,18 @@
 			$message_text = str_replace('{order_reference}', $this->get_order_reference(), $message_text);
 			$message_text = str_replace('{order_date}', $this->order_datetime->format('%x'), $message_text);
 			$message_text = str_replace('{order_subtotal}', $include_tax ? format_currency($this->subtotal_tax_incl) : format_currency($this->subtotal), $message_text);
-			
+
 			$message_text = str_replace('{order_shipping_quote}', $include_tax ? format_currency($this->shipping_quote_tax_incl) : format_currency($this->shipping_quote), $message_text);
 			$message_text = str_replace('{order_shipping_tax}', format_currency($this->shipping_tax), $message_text);
 			$message_text = str_replace('{order_tax}', format_currency($this->goods_tax), $message_text);
 			$message_text = str_replace('{order_total_tax}', format_currency($this->goods_tax + $this->shipping_tax), $message_text);
-			
+
 			$message_text = str_replace('{customer_notes}', strlen($this->customer_notes) ? h($this->customer_notes) : h('<not specified>'), $message_text);
 			$message_text = str_replace('{cart_discount}', $include_tax ? format_currency($this->discount_tax_incl) : format_currency($this->discount), $message_text);
 			$message_text = str_replace('{tax_incl_label}', tax_incl_label($this), $message_text);
-			
+
 			$message_text = str_replace('{net_amount}', format_currency($this->total - $this->goods_tax - $this->shipping_tax), $message_text);
-			
+
 			$message_text = str_replace('{billing_country}', h($this->displayField('billing_country')), $message_text);
 			$message_text = str_replace('{billing_state}', h($this->displayField('billing_state')), $message_text);
 			$message_text = str_replace('{billing_street_addr}', h($this->displayField('billing_street_addr')), $message_text);
@@ -1337,20 +1340,20 @@
 			$message_text = str_replace('{order_coupon}', $this->coupon ? h($this->coupon->code) : h('<not specified>'), $message_text);
 			$message_text = str_replace('{billing_customer_name}', h($this->billing_first_name.' '.$this->billing_last_name), $message_text);
 			$message_text = str_replace('{shipping_customer_name}', h($this->shipping_first_name.' '.$this->shipping_last_name), $message_text);
-			
+
 
 			$message_text = str_replace('{customer_email}', h($this->billing_email), $message_text);
 			$message_text = str_replace('{customer_first_name}', h($this->billing_first_name), $message_text);
 			$message_text = str_replace('{customer_last_name}', h($this->billing_last_name), $message_text);
 			$message_text = str_replace('{customer_name}', h($this->billing_first_name.' '.$this->billing_last_name), $message_text);
-			
+
 			$status_comment = strlen(trim($status_comment)) ? $status_comment : '<not specified>';
 			$message_text = str_replace('{order_status_comment}', h($status_comment), $message_text);
-			
+
 			if ($status)
 			{
 				$message_text = str_replace('{order_status_name}', h($status->name), $message_text);
-				
+
 				if (strpos($message_text, '{order_previous_status}') !== false)
 				{
 					$prev_status = Shop_OrderStatus::create()->find($this->status_id);
@@ -1372,7 +1375,7 @@
 				$pay_page_url = $this->get_payment_page_url();
 				$message_text = str_replace('{payment_page_link}', '<a href="'.$pay_page_url.'">'.$pay_page_url.'</a>', $message_text);
 			}
-			
+
 			if (strpos($message_text, '{shipping_codes}') !== false)
 			{
 				$codes = Shop_OrderTrackingCode::find_by_order($this);
@@ -1382,7 +1385,7 @@
 					$codes_str = '<ul>';
 					foreach ($codes as $code)
 						$codes_str .= '<li>'.h($code->displayField('code_shipping_method')).': '.h($code->code).'</li>';
-						
+
 					$codes_str .= '</ul>';
 				}
 
@@ -1396,19 +1399,19 @@
 		{
 			if (!$customer)
 				$customer = $this->customer;
-				
+
 			$items = Shop_OrderItem::create()->where('shop_order_id=?', $this->id)->order('shop_order_items.id')->find_all();
-			
+
 			$email_scope_vars = array('order'=>$this, 'customer'=>$customer, 'items'=>$items);
 			$email_scope_vars = array_merge($email_scope_vars, $params);
 
 			$message = System_CompoundEmailVar::apply_scope_variables($message, 'shop:order', $email_scope_vars);
-			
+
 			$status = array_key_exists('prev_status', $params) ? $params['prev_status'] : null;
 			$message = $this->set_order_email_vars($message, $status_comment, $status);
 			$message = $customer->set_customer_email_vars($message);
 			$message = Core_ModuleManager::applyEmailVariables($message, $this, $customer);
-			
+
 			return $message;
 		}
 
@@ -1420,22 +1423,22 @@
 			$customer = Shop_Customer::create()->find($this->customer_id);
 			if (!$customer)
 				return;
-		
+
 			$message = $this->set_order_and_customer_email_vars($customer, $template->content, $status_comment, $params);
 			$template->subject = $this->set_order_and_customer_email_vars($customer, $template->subject, $status_comment, $params);
-			
+
 			$reply_to = $template->get_reply_address(null, null, $this->billing_email, $this->billing_first_name.' '.$this->billing_last_name);
 			Shop_OrderNotification::add_message($this, $customer, $message, $template->subject, null, $reply_to);
 
 			$customer->email = $this->billing_email;
 			$template->send_to_customer($customer, $message, null, null, $this->billing_email, $this->billing_first_name.' '.$this->billing_last_name, array('order'=>$this));
 		}
-		
+
 		public function send_team_notifications($template, $users, $status_comment = null, $params = array())
 		{
 			global $phpr_order_no_tax_mode;
 			$phpr_order_no_tax_mode = true;
-			
+
 			$customer = Shop_Customer::create()->find($this->customer_id);
 			if (!$customer)
 				return;
@@ -1457,14 +1460,14 @@
 		{
 			$this->stock_updated = true;
 			Db_DbHelper::query('update shop_orders set stock_updated=1 where id=:id', array('id'=>$this->id));
-			
+
 			foreach ($this->items as $item)
-			{   
+			{
 				if ($item->product)
 					$item->product->decrease_stock($item->quantity, $item->get_om_record());
 			}
 		}
-		
+
 		protected function create_hash()
 		{
 			return md5(uniqid('order', microtime()));
@@ -1480,15 +1483,15 @@
 		public function set_payment_processed()
 		{
 			$current_status = $this->payment_processed(false);
-			
+
 			if (!$current_status)
 			{
 				$now = Phpr_DateTime::now();
 				$this->payment_processed = $now;
-				
+
 				/*
 				 * Instantly update the DB column, because saving the model (ActiveRecord) could
-				 * cause undesirable delay which could result in duplicate 
+				 * cause undesirable delay which could result in duplicate
 				 * payment notifications
 				 */
 
@@ -1500,7 +1503,7 @@
 
 				$this->save();
 			}
-			
+
 			return !$current_status;
 		}
 
@@ -1513,9 +1516,9 @@
 		 */
 		public function is_paid()
 		{
-			return Db_DbHelper::scalar('select count(*) from 
-				shop_order_status_log_records, shop_order_statuses 
-				where shop_order_statuses.id=shop_order_status_log_records.status_id 
+			return Db_DbHelper::scalar('select count(*) from
+				shop_order_status_log_records, shop_order_statuses
+				where shop_order_statuses.id=shop_order_status_log_records.status_id
 				and shop_order_status_log_records.order_id=:order_id and shop_order_statuses.code=:code',
 				array(
 					'order_id'=>$this->id,
@@ -1525,14 +1528,14 @@
 
 		/**
 		 * Returns TRUE if a customer has successfully paid the order.
-		 * The {@link Shop_Order::is_paid() is_paid()} and payment_processed() methods 
-		 * could return opposite results in a case when a customer have paid an order (the payment_processed() method will return TRUE), 
+		 * The {@link Shop_Order::is_paid() is_paid()} and payment_processed() methods
+		 * could return opposite results in a case when a customer have paid an order (the payment_processed() method will return TRUE),
 		 * but you (a merchant) have not validated the payment and have not sent the order into the {@link http://lemonstand.com/docs/understanding_the_paid_order_status/ Paid status}
-		 * (the {@link Shop_Order::is_paid() is_paid()} method will return FALSE). Payment methods in LemonStand can be configured 
-		 * in such a way that a successful payment automatically sends an order to the Paid status. Another way is to automatically send the 
+		 * (the {@link Shop_Order::is_paid() is_paid()} method will return FALSE). Payment methods in LemonStand can be configured
+		 * in such a way that a successful payment automatically sends an order to the Paid status. Another way is to automatically send the
 		 * order to some pending status, validate the payment manually, and then send the order to the Paid status.
-		 * 
-		 * The common usage for the payment_processed() method is hiding the Pay button on the {@link http://lemonstand.com/docs/order_details_page order details page}. 
+		 *
+		 * The common usage for the payment_processed() method is hiding the Pay button on the {@link http://lemonstand.com/docs/order_details_page order details page}.
 		 * The common usage for the is_paid() method is restricting customer's access to product files when you sell downloadable products.
 		 * @documentable
 		 * @param boolean $use_cached Determines whether subsequent calls of the method can use a cached value instead of loading it from the database each time.
@@ -1542,12 +1545,12 @@
 		{
 			if ($use_cached)
 				return $this->payment_processed;
-				
+
 			return Db_DbHelper::scalar('select payment_processed from shop_orders where id=:id', array('id'=>$this->id));
 		}
-		
+
 		/**
-		 * Returns true if payment transaction operations (changing transaction status, 
+		 * Returns true if payment transaction operations (changing transaction status,
 		 * requesting transaction status) are allowed.
 		 * The operations are allowed if there are any transactions registered for the order
 		 */
@@ -1556,10 +1559,10 @@
 			$has_transactions = $this->payment_transactions->count;
 			if (!$has_transactions)
 				return false;
-				
+
 			if (!$this->payment_method)
 				return false;
-				
+
 			return true;
 		}
 
@@ -1579,15 +1582,15 @@
 
 			return $this->total ? $this->total : 0;
 		}
-		
+
 		/**
-		 * Returns a list of taxes applied to order items. 
-		 * The method returns an array of objects containing the following fields: 
+		 * Returns a list of taxes applied to order items.
+		 * The method returns an array of objects containing the following fields:
 		 * <ul>
 		 *   <li><em>name</em> - the tax name, for example GST.</li>
 		 *   <li><em>total</em> - total tax value.</li>
 		 * </ul>
-		 * Use this method for displaying a list of order taxes on the order {@link http://lemonstand.com/docs/payment_receipt_page receipt page}, 
+		 * Use this method for displaying a list of order taxes on the order {@link http://lemonstand.com/docs/payment_receipt_page receipt page},
 		 * for example:
 		 * <pre>
 		 * Applied sales taxes:
@@ -1605,7 +1608,7 @@
 
 			if (!strlen($this->sales_taxes))
 				return $result;
-				
+
 			try
 			{
 				$taxes = unserialize($this->sales_taxes);
@@ -1614,19 +1617,19 @@
 					if ($tax_info->total > 0)
 						$this->add_tax_item($result, $tax_name, $tax_info->total, 0, 'Sales tax');
 				}
-			} catch (Exception $ex) 
+			} catch (Exception $ex)
 			{
 				return $result;
 			}
-			
+
 			return $result;
 		}
-		
+
 		public function set_sales_taxes($taxes)
 		{
 			if (!is_array($taxes))
 				$taxes = array();
-			
+
 			$taxes_to_save = $taxes;
 			foreach ($taxes_to_save as $tax_name=>&$tax_info)
 			{
@@ -1638,12 +1641,12 @@
 
 		/**
 		 * Returns a list of taxes applied to the order shipping service.
-		 * The method returns an array of objects containing the following fields: 
+		 * The method returns an array of objects containing the following fields:
 		 * <ul>
 		 *   <li><em>name</em> - the tax name, for example GST.</li>
 		 *   <li><em>total</em> - total tax value.</li>
 		 * </ul>
-		 * Use this method for displaying a list of order taxes on the order {@link http://lemonstand.com/docs/payment_receipt_page receipt page}, 
+		 * Use this method for displaying a list of order taxes on the order {@link http://lemonstand.com/docs/payment_receipt_page receipt page},
 		 * for example:
 		 * <pre>
 		 * Applied shipping taxes:
@@ -1666,18 +1669,18 @@
 
 			if ($this->shipping_tax_2 > 0)
 				$this->add_tax_item($result, $this->shipping_tax_name_2, $this->shipping_tax_2, 0);
-			
+
 			return $result;
 		}
 
 		/**
 		 * Returns a list of sales and shipping taxes applied to the order.
-		 * The method returns an array of objects containing the following fields: 
+		 * The method returns an array of objects containing the following fields:
 		 * <ul>
 		 *   <li><em>name</em> - the tax name, for example GST.</li>
 		 *   <li><em>total</em> - total tax value.</li>
 		 * </ul>
-		 * Use this method for displaying a list of order taxes on the order {@link http://lemonstand.com/docs/payment_receipt_page receipt page}, 
+		 * Use this method for displaying a list of order taxes on the order {@link http://lemonstand.com/docs/payment_receipt_page receipt page},
 		 * for example:
 		 * <pre>
 		 * Applied taxes:
@@ -1699,29 +1702,29 @@
 		{
 			if (!$name)
 				$name = $default_name;
-			
+
 			if (!array_key_exists($name, $list))
 			{
 				$tax_info = array('name'=>$name, 'amount'=>0, 'discount'=>0, 'total'=>0);
 				$list[$name] = (object)$tax_info;
 			}
-			
+
 			$list[$name]->amount += $amount;
 			$list[$name]->discount += $discount;
 			$list[$name]->total += ($amount - $discount);
 		}
-		
+
 		public static function get_rss($record_number = 20)
 		{
 			$orders = Shop_Order::create();
 			$orders->order('id desc');
 			$orders = $orders->limit($record_number)->find_all();
-			
+
 			$root_url = Phpr::$request->getRootUrl();
-			
-			$rss = new Core_Rss( 'LemonStand Order List', 
-				$root_url.url('shop/orders'), 
-				'A list of recent orders in LemonStand', 
+
+			$rss = new Core_Rss( 'LemonStand Order List',
+				$root_url.url('shop/orders'),
+				'A list of recent orders in LemonStand',
 				$root_url.url('shop/orders/rss') );
 
 			$gmt_zone = new DateTimeZone( 'GMT' );
@@ -1730,20 +1733,20 @@
 			foreach ( $orders as $order )
 			{
 				$link = $root_url.url('shop/orders/preview/'.$order->id);
-				
+
 				$order_items = $order->items;
 				$item_descriptions = array();
 				foreach ($order_items as $index=>$item)
 				{
 					$item_descriptions[] = ($index+1).'. '.h($item->output_product_name(true, true)).' x '.$item->quantity.' ('.$item->product->sku.')';
 				}
-					
+
 				$item_descriptions = implode('<br/>', $item_descriptions);
 				$item_body = '<p>Order #'.$order->id.', created: '.$order->order_datetime->format('%x %X');
 				$item_body .= '<br/>Total: '.format_currency($order->total).'</p>';
 				$item_body .= '<p><strong>Customer</strong><br/>';
 				$item_body .= h($order->billing_first_name).' '.h($order->billing_last_name).' ('.$order->columnValue('billing_country').'), '.$order->billing_email.'</p>';
-				
+
 				$order_datetime = $order->order_datetime;
 				$order_datetime->assignTimeZone($user_zone);
 				$order_datetime->setTimeZone($gmt_zone);
@@ -1779,7 +1782,7 @@
 			$parts = explode(':', $ci->invoice_date_source);
 			if (count($parts) != 2)
 				return null;
-				
+
 			$status_id = trim($parts[1]);
 			if (!preg_match('/^[0-9]+$/', $status_id))
 				return null;
@@ -1806,7 +1809,7 @@
 
 			$order->parent_order_id = $this->id;
 			$order->coupon_id = $this->coupon_id;
-			
+
 			/*
 			 * Apply customer information
 			 */
@@ -1818,10 +1821,10 @@
 			$customer->copy_from_order($this);
 			$customer->copy_to_order($order);
 			$order->customer_id = $this->customer_id;
-			
+
 			Shop_TaxClass::set_tax_exempt($this->tax_exempt);
 			Shop_TaxClass::set_customer_context($customer);
-			
+
 			/*
 			 * Set shipping and payment methods
 			 */
@@ -1830,7 +1833,7 @@
 			$order->shipping_sub_option = $this->shipping_sub_option;
 
 			$order->payment_method_id = $this->payment_method_id;
-			
+
 			/*
 			 * Calculate shipping cost
 			 */
@@ -1857,25 +1860,25 @@
 				$order->shipping_state_id,
 				$order->shipping_zip,
 				$order->shipping_city,
-				$total_price, 
-				$total_volume, 
-				$total_weight, 
+				$total_price,
+				$total_volume,
+				$total_weight,
 				$total_item_num,
 				false,
 				false,
 				$cart_items,
 				null,
-				null, 
+				null,
 				$order->shipping_method_id,
 				$order->shipping_addr_is_business,
 				true
 			);
-			
+
 			if (!array_key_exists($order->shipping_method_id, $shipping_options))
 				throw new Phpr_ApplicationException('Shipping method '.$this->shipping_method->name.' is not applicable.');
-				
+
 			$shipping_method = $shipping_options[$order->shipping_method_id];
-					
+
 			if (!$shipping_method->multi_option)
 			{
 				$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
@@ -1900,19 +1903,19 @@
 				if (!$option_found)
 					throw new Phpr_ApplicationException('Shipping method '.$this->shipping_method->name.'/'.$order->shipping_sub_option.' is not applicable.');
 			}
-			
+
 			/*
 			 * Apply shipping tax
 			 */
-			
+
 			$shipping_info = new Shop_CheckoutAddressInfo();
 			$shipping_info->act_as_billing_info = false;
 			$shipping_info->load_from_customer($customer);
-			
+
 			$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, $shipping_info, $order->shipping_quote);
 			$order->apply_shipping_tax_array($shipping_taxes);
 			$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
-			
+
 			if ($this->free_shipping)
 			{
 				$order->shipping_quote = 0;
@@ -1928,20 +1931,20 @@
 				$payment_method_obj = Shop_PaymentMethod::find_by_id($this->payment_method_id);
 
 				$cart_items = Shop_OrderHelper::items_to_cart_items_array($items);
-				
+
 				$subtotal = 0;
 				foreach ($cart_items as $cart_item)
 					$subtotal += $cart_item->total_price_no_tax(false);
 
 				$discount_info = Shop_CartPriceRule::evaluate_discount(
-					$payment_method_obj, 
-					$shipping_method, 
+					$payment_method_obj,
+					$shipping_method,
 					$cart_items,
 					$shipping_info,
-					$this->columnValue('coupon'), 
+					$this->columnValue('coupon'),
 					$customer,
 					$subtotal);
-					
+
 				$order->discount = $discount_info->cart_discount;
 
 				$order->free_shipping = array_key_exists($order->internal_shipping_suboption_id, $discount_info->free_shipping_options);
@@ -1954,11 +1957,11 @@
 			/*
 			 * Set order items
 			 */
-			
+
 			$session_key = $session_key ? $session_key : uniqid('front_end_order', true);
 			foreach ($items as $item)
 				$order->items->add($item, $session_key);
-				
+
 			/*
 			 * Apply tax
 			 */
@@ -1970,15 +1973,15 @@
 			{
 				if (array_key_exists($item_index, $tax_info->item_taxes))
 					$item->apply_tax_array($tax_info->item_taxes[$item_index]);
-					
+
 				$item->save();
 				$item->eval_custom_columns();
 			}
-			
+
 			/*
 			 * Save the order
 			 */
-			
+
 			$discount = 0;
 			$subtotal = 0;
 			$total_cost = 0;
@@ -1999,7 +2002,7 @@
 
 			return $order;
 		}
-		
+
 		public function get_total_weight()
 		{
 			$weight = 0;
@@ -2016,7 +2019,7 @@
 			}
 			echo $string;
 		}
-		
+
 		public function get_csv_import_columns($import = true)
 		{
 			$columns = $this->get_column_definitions();
@@ -2040,24 +2043,24 @@
 			$import_columns['shop_order_shipping_track_codes'] = (object)$column_info;
 			return $import_columns;
 		}
-		
+
 		public static function export_orders_and_products_header($header)
 		{
 			array_push($header, 'Line number', 'Product Description', 'Product SKU', 'Price', 'Discount', 'Quantity', 'Item Total', 'Item Tax Total');
 			return $header;
 		}
-		
+
 		/**
 		 * Outputs a file of a downloadable product.
 		 * This method allows to create custom pages for downloading product files.
 		 * This method stops the script execution in case if the file is successfully returned to the browser.
-		 * Please read the {@link http://lemonstandapp.com/docs/implementing_downloadable_products/ Integrating downloadable products} 
+		 * Please read the {@link http://lemonstandapp.com/docs/implementing_downloadable_products/ Integrating downloadable products}
 		 * documentation article for the usage examples.
 		 * @documentable
 		 * @see http://lemonstandapp.com/docs/implementing_downloadable_products/ Integrating downloadable products
 		 * @param integer $file_id Specifies an identifier of a {@link Shop_ProductFile product file}.
 		 * @param string $mode Specifies the file disposition - <em>attachment</em> or <em>inline</em>.
-		 * Depending on the mode the browser either displays the file contents or 
+		 * Depending on the mode the browser either displays the file contents or
 		 * offers to download it.
 		 */
 		public function output_product_file($file_id, $mode = 'attachment')
@@ -2077,7 +2080,7 @@
 				}
 			}
 		}
-		
+
 		/*
 		* @param Shop_Order $row
 		* @param array $row_data
@@ -2086,22 +2089,22 @@
 		public static function export_orders_and_products_row($row, $row_data, $separator)
 		{
 			$order_items = Db_DbHelper::queryArray('
-				select 
-					sp.name as product_name, 
-					sp.grouped_option_desc, 
+				select
+					sp.name as product_name,
+					sp.grouped_option_desc,
 					if(
-						ifnull(sp.grouped, 0) = 0, 
-						sp.grouped_attribute_name, 
+						ifnull(sp.grouped, 0) = 0,
+						sp.grouped_attribute_name,
 						(select grouped_attribute_name from shop_products gl where gl.id=sp.product_id)
-					) as grouped_menu_label, 
+					) as grouped_menu_label,
 					sp.sku as product_sku,
 					om.sku as om_sku,
-					soi.* 
-				from 
-					shop_order_items soi 
-				inner join shop_products sp on (sp.id = soi.shop_product_id) 
+					soi.*
+				from
+					shop_order_items soi
+				inner join shop_products sp on (sp.id = soi.shop_product_id)
 				left join shop_option_matrix_records om on om.id = soi.option_matrix_record_id
-				where 
+				where
 					soi.shop_order_id=:id', array('id' => $row->id));
 
 			if(count($order_items))
@@ -2115,15 +2118,15 @@
 					$item_row = $row_data;
 					$item_obj->reset_custom_columns();
 					$item_obj->fill($item);
-					
+
 					/*
 					 * Format item description
 					 */
 					$desc = $item_obj->product_name;
-					
+
 					if (!Phpr::$config->get('DISABLE_GROUPED_PRODUCTS') && $item['grouped_option_desc'])
 						$desc .= "\n".$item['grouped_menu_label'].': '.$item['grouped_option_desc'];
-						
+
 					$options = $item_obj->get_options();
 					$option_list = array();
 					foreach ($options as $name=>$value)
@@ -2131,7 +2134,7 @@
 
 					if ($option_list)
 						$desc .= "\n ".implode('; ', $option_list);
-						
+
 					$extra_options = $item_obj->get_extra_options();
 					$extra_option_list = array();
 					foreach ($extra_options as $value)
@@ -2144,14 +2147,14 @@
 					 * Output the row
 					 */
 					$item_total = format_currency(($item_obj->single_price - $item_obj->discount)*$item_obj->quantity);
-					
-					array_push($item_row, 
+
+					array_push($item_row,
 						$index+1,
-						$desc, 
-						$item_obj->om_sku ? $item_obj->om_sku : $item_obj->product_sku, 
-						format_currency($item_obj->single_price), 
+						$desc,
+						$item_obj->om_sku ? $item_obj->om_sku : $item_obj->product_sku,
+						format_currency($item_obj->single_price),
 						format_currency($item_obj->discount),
-						$item_obj->quantity, 
+						$item_obj->quantity,
 						$item_total,
 						format_currency($item_obj->tax_2 + $item_obj->tax)
 					);
@@ -2176,19 +2179,19 @@
 			}
 			return false;
 		}
-		
+
 		protected function after_fetch()
 		{
 			Backend::$events->fireEvent('shop:onAfterOrderRecordFetch', $this);
 		}
-		
+
 		/*
 		 * Event descriptions
 		 */
 
 		/**
 		 * Allows to define new columns in the order model.
-		 * The event handler should accept two parameters - the order object and the form 
+		 * The event handler should accept two parameters - the order object and the form
 		 * execution context string. To add new columns to the order model, call the {@link Db_ActiveRecord::define_column() define_column()}
 		 * method of the order object. Before you add new columns to the model, you should add them to the
 		 * database (the <em>shop_orders</em> table).
@@ -2198,12 +2201,12 @@
 		 *   Backend::$events->addEvent('shop:onExtendOrderModel', $this, 'extend_order_model');
 		 *   Backend::$events->addEvent('shop:onExtendOrderForm', $this, 'extend_order_form');
 		 * }
-		 *  
+		 *
 		 * public function extend_order_model($order, $context)
 		 * {
 		 *   $order->define_column('x_extra_description', 'Extra description');
 		 * }
-		 *  
+		 *
 		 * public function extend_order_form($order, $context)
 		 * {
 		 *   $order->add_form_field('x_extra_description')->tab('Billing Information');
@@ -2221,11 +2224,11 @@
 		 * @param string $context Specifies the execution context.
 		 */
 		private function event_onExtendOrderModel($order, $context) {}
-			
+
 		/**
-		 * Allows to add new fields to the Create/Edit Order and Preview Order forms in the Administration Area. 
-		 * Usually this event is used together with the {@link shop:onExtendOrderModel} event. 
-		 * To add new fields to the order form, call the {@link Db_ActiveRecord::add_form_field() add_form_field()} method of the 
+		 * Allows to add new fields to the Create/Edit Order and Preview Order forms in the Administration Area.
+		 * Usually this event is used together with the {@link shop:onExtendOrderModel} event.
+		 * To add new fields to the order form, call the {@link Db_ActiveRecord::add_form_field() add_form_field()} method of the
 		 * order object.
 		 * <pre>
 		 * public function subscribeEvents()
@@ -2233,12 +2236,12 @@
 		 *   Backend::$events->addEvent('shop:onExtendOrderModel', $this, 'extend_order_model');
 		 *   Backend::$events->addEvent('shop:onExtendOrderForm', $this, 'extend_order_form');
 		 * }
-		 *  
+		 *
 		 * public function extend_order_model($order, $context)
 		 * {
 		 *   $order->define_column('x_extra_description', 'Extra description');
 		 * }
-		 *  
+		 *
 		 * public function extend_order_form($order, $context)
 		 * {
 		 *   $order->add_form_field('x_extra_description')->tab('Billing Information');
@@ -2253,19 +2256,19 @@
 		 * @see http://lemonstand.com/docs/extending_existing_models Extending existing models
 		 * @see http://lemonstand.com/docs/creating_and_updating_database_tables Creating and updating database tables
 		 * @param Shop_Order $order Specifies the order object.
-		 * @param string $context Specifies the execution context. This parameter value is <em>preview</em> if the form rendered on the Order Preview page. 
+		 * @param string $context Specifies the execution context. This parameter value is <em>preview</em> if the form rendered on the Order Preview page.
 		 */
 		private function event_onExtendOrderForm($order, $context) {}
-			
+
 		/**
 		 * Allows to populate drop-down, radio- or checkbox list fields, which have been added with {@link shop:onExtendOrderForm} event.
-		 * Usually you do not need to use this event for fields which represent 
-		 * {@link http://lemonstand.com/docs/extending_models_with_related_columns data relations}. But if you want a standard 
-		 * field (corresponding an integer-typed database column, for example), to be rendered as a drop-down list, you should 
+		 * Usually you do not need to use this event for fields which represent
+		 * {@link http://lemonstand.com/docs/extending_models_with_related_columns data relations}. But if you want a standard
+		 * field (corresponding an integer-typed database column, for example), to be rendered as a drop-down list, you should
 		 * handle this event.
 		 *
 		 * The event handler should accept 2 parameters - the field name and a current field value. If the current
-		 * field value is -1, the handler should return an array containing a list of options. If the current 
+		 * field value is -1, the handler should return an array containing a list of options. If the current
 		 * field value is not -1, the handler should return a string (label), corresponding the value.
 		 * <pre>
 		 * public function subscribeEvents()
@@ -2274,17 +2277,17 @@
 		 *   Backend::$events->addEvent('shop:onExtendOrderForm', $this, 'extend_order_form');
 		 *   Backend::$events->addEvent('shop:onGetOrderFieldOptions', $this, 'get_order_options');
 		 * }
-		 *  
+		 *
 		 * public function extend_order_model($order, $context)
 		 * {
 		 *   $order->define_column('x_gender', 'Gender');
 		 * }
-		 *  
+		 *
 		 * public function extend_order_form($order, $context)
 		 * {
 		 *   $order->add_form_field('x_gender')->tab('Billing Information');
 		 * }
-		 * 
+		 *
 		 * public function get_order_options($field_name, $current_value)
 		 * {
 		 *   if ($field_name == 'x_gender')
@@ -2292,7 +2295,7 @@
 		 *     $options = array('male'=>'Male', 'female'=>'Female', 'unisex'=>'Unisex');
 		 *     if ($current_value == -1)
 		 *       return $options;
-		 *          
+		 *
 		 *     if (array_key_exists($current_value, $options))
 		 *       return $options[$current_value];
 		 *   }
@@ -2311,7 +2314,7 @@
 		 * @return mixed Returns a list of options or a specific option label.
 		 */
 		private function event_onGetOrderFieldOptions($db_name, $field_value) {}
-			
+
 		/**
 		 * Determines whether a custom radio button or checkbox list option is checked.
 		 * This event should be handled if you added custom radio-button and or checkbox list fields with {@link shop:onExtendOrderForm} event.
@@ -2353,19 +2356,19 @@
 		 * @return array Return an associative array of order property names and values to override the order's shipping information.
 		 */
 		private function event_onOrderCopyBillingAddress($order, $data) {}
-			
+
 		/**
-		 * Allows to enable the invoice support for a specific order. 
-		 * By default the invoice support is disabled, but some modules, for example 
-		 * {@link http://lemonstand.com/docs/subscriptions_module Subscriptions Module}, require it. 
-		 * When the invoice support is enabled for specific order, the Order Preview form displays the Invoices tab, 
-		 * which contains a list of the order invoices. 
+		 * Allows to enable the invoice support for a specific order.
+		 * By default the invoice support is disabled, but some modules, for example
+		 * {@link http://lemonstand.com/docs/subscriptions_module Subscriptions Module}, require it.
+		 * When the invoice support is enabled for specific order, the Order Preview form displays the Invoices tab,
+		 * which contains a list of the order invoices.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onOrderSupportsInvoices', $this, 'eval_order_supports_invoices');
 		 * }
-		 *  
+		 *
 		 * public function eval_order_supports_invoices($order)
 		 * {
 		 *   foreach ($order->items as $item)
@@ -2376,7 +2379,7 @@
 		 *         return true;
 		 *     }
 		 *   }
-		 *   
+		 *
 		 *   return false;
 		 * }
 		 * </pre>
@@ -2388,23 +2391,23 @@
 		 * @return boolean Returns TRUE if invoices are supported by the order. Returns FALSE otherwise.
 		 */
 		private function event_onOrderSupportsInvoices($order) {}
-			
+
 		/**
-		 * Allows to enable the invoice support in LemonStand. 
-		 * By default invoices are disabled, and Administration Area user interface does not display any controls and labels 
-		 * related to invoices. Some modules, for example {@link http://lemonstand.com/docs/subscriptions_module Subscriptions Module}, 
-		 * require invoice support and this event allows them 
+		 * Allows to enable the invoice support in LemonStand.
+		 * By default invoices are disabled, and Administration Area user interface does not display any controls and labels
+		 * related to invoices. Some modules, for example {@link http://lemonstand.com/docs/subscriptions_module Subscriptions Module},
+		 * require invoice support and this event allows them
 		 * to enable it.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onInvoiceSystemSupported', $this, 'process_invoice_system_supported');
 		 * }
-		 *  
+		 *
 		 * public function process_invoice_system_supported()
 		 * {
 		 *   return true;
-		 * }	
+		 * }
 		 * </pre>
 		 * @event shop:onInvoiceSystemSupported
 		 * @package shop.events
@@ -2413,15 +2416,15 @@
 		 * @return boolean Returns TRUE, if the invoice support is enabled. Returns FALSE otherwise.
 		 */
 		private function event_onInvoiceSystemSupported() {}
-			
+
 		/**
-		 * Allows to enable the automated bulling features in LemonStand. 
+		 * Allows to enable the automated bulling features in LemonStand.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onAutomatedBillingSupported', $this, 'process_auto_billing_supported');
 		 * }
-		 *  
+		 *
 		 * public function process_auto_billing_supported()
 		 * {
 		 *   return true;
@@ -2433,21 +2436,21 @@
 		 * @return boolean Returns TRUE, if the automated billing features are enabled. Returns FALSE otherwise.
 		 */
 		private function event_onAutomatedBillingSupported() {}
-		
+
 		/**
-		 * Allows you to alter the checkout information or cart content before an order is {@link Shop_Order::place_order() placed}. 
+		 * Allows you to alter the checkout information or cart content before an order is {@link Shop_Order::place_order() placed}.
 		 * This event is fired only when an order is placed from the front-end website.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onOrderBeforeCreate', $this, 'process_order');
 		 * }
-		 *  
+		 *
 		 * public function process_order($cart_name)
 		 * {
 		 *   $price = Shop_Cart::total_price($cart_name);
 		 *   if ($price < 100)
-		 *     throw new Phpr_ApplicationException('We are sorry, 
+		 *     throw new Phpr_ApplicationException('We are sorry,
 		 *       you cannot place orders with total order amount less than 100 USD');
 		 * }
 		 * </pre>
@@ -2458,16 +2461,16 @@
 		 * @param string $cart_name Specifies the shopping cart name.
 		 */
 		private function event_onOrderBeforeCreate($cart_name) {}
-		
+
 		/**
-		 * Triggered if an error occurs during the {@link Shop_Order::place_order() order placement}. 
-		 * This event is triggered only if the order is created from the front-end store pages. 
+		 * Triggered if an error occurs during the {@link Shop_Order::place_order() order placement}.
+		 * This event is triggered only if the order is created from the front-end store pages.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onOrderError', $this, 'process_order_error');
 		 * }
-		 *  
+		 *
 		 * public function process_order_error($cart_name, $error_message)
 		 * {
 		 *   // Do something
@@ -2484,21 +2487,21 @@
 		private function event_onOrderError($cart_name, $error_message) {}
 
 		/**
-		 * Triggered before a new order record is saved to the database. 
-		 * Unlike the {@link shop:onOrderBeforeCreate} event, this event is triggered even if the order is created 
-		 * from the Administration Area. In case if the order is created from the front-end website, 
-		 * this event triggers after the {@link shop:onOrderBeforeCreate}. 
+		 * Triggered before a new order record is saved to the database.
+		 * Unlike the {@link shop:onOrderBeforeCreate} event, this event is triggered even if the order is created
+		 * from the Administration Area. In case if the order is created from the front-end website,
+		 * this event triggers after the {@link shop:onOrderBeforeCreate}.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onBeforeOrderRecordCreate', $this, 'process_new_order_record');
 		 * }
-		 *  
+		 *
 		 * public function process_new_order_record($order, $session_key)
 		 * {
 		 *   // Load the item list
 		 *   $items = $order->list_related_records_deferred('items', $deferred_session_key);
-		 *   
+		 *
 		 *   // Perform some check
 		 *   foreach ($items as $item)
 		 *   {
@@ -2519,20 +2522,20 @@
 		private function event_onBeforeOrderRecordCreate($order, $session_key) {}
 
 		/**
-		 * Triggered before an existing order record is saved to the database. 
+		 * Triggered before an existing order record is saved to the database.
 		 * Event handler example:
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onOrderBeforeUpdate', $this, 'process_order_update');
 		 * }
-		 *  
+		 *
 		 * public function process_order_update($order, $session_key)
 		 * {
 		 *   // Perform some check
 		 *   if ($order->total > 10000)
 		 *     throw new Phpr_ApplicationException('Order total should not exceed $10,000');
-		 *   
+		 *
 		 *   $items = $order->list_related_records_deferred('items', $session_key);
 		 * }
 		 * </pre>
@@ -2544,7 +2547,7 @@
 		 * @param string $session_key Specifies the form session key.
 		 */
 		private function event_onOrderBeforeUpdate($order, $session_key) {}
-			
+
 		/**
 		 * Triggered after a new order is placed.
 		 * Inside the event handler you can perform further order processing.
@@ -2554,7 +2557,7 @@
 		 * {
 		 *   Backend::$events->addEvent('shop:onNewOrder', $this, 'process_new_order');
 		 * }
-		 *  
+		 *
 		 * public function process_new_order($order_id)
 		 * {
 		 *   $order = Shop_Order::create()->find($order_id);
@@ -2571,7 +2574,7 @@
 		 * @param integer $order_id Specifies the order identifier.
 		 */
 		private function event_onNewOrder($order_id) {}
-			
+
 		/**
 		 * Triggered after an order has been marked deleted with {@link Shop_Order::delete_order()} method.
 		 * Event handler example:
@@ -2580,7 +2583,7 @@
 		 * {
 		 *   Backend::$events->addEvent('shop:onOrderMarkedDeleted', $this, 'process_order_marked_deleted');
 		 * }
-		 *  
+		 *
 		 * public function process_order_marked_deleted($order)
 		 * {
 		 *   // Do something
@@ -2595,7 +2598,7 @@
 		 * @param Shop_Order $order Specifies the order object.
 		 */
 		private function event_onOrderMarkedDeleted($order) {}
-			
+
 		/**
 		 * Triggered after an order has been restored with {@link Shop_Order::restore_order()} method.
 		 * Event handler example:
@@ -2604,7 +2607,7 @@
 		 * {
 		 *   Backend::$events->addEvent('shop:onOrderMarkedDeleted', $this, 'process_order_marked_deleted');
 		 * }
-		 *  
+		 *
 		 * public function process_order_marked_deleted($order)
 		 * {
 		 *   // Do something
@@ -2628,10 +2631,10 @@
 		 * {
 		 *   Backend::$events->addEvent('shop:onOrderAfterDelete', $this, 'process_order_deletion');
 		 * }
-		 *  
+		 *
 		 * public function process_order_deletion($order)
 		 * {
-		 *   // Delete order custom data 
+		 *   // Delete order custom data
 		 *   //
 		 * }
 		 * </pre>
@@ -2650,7 +2653,7 @@
 		 * @param Shop_Order $order Specifies the order object.
 		 */
 		private function event_onAfterOrderRecordFetch($order) {}
-			
+
 		/**
 		 * Triggered before orders RSS feed is generated.
 		 * The event handler can output another implementation of the feed and stop the script execution.
@@ -2669,7 +2672,7 @@
 		 * {
 		 *   Backend::$events->addEvent('shop:onConfigureOrdersPage', $this, 'add_orders_filter');
 		 * }
-		 * 
+		 *
 		 * public function add_orders_filter($controller)
 		 * {
 		 *   $controller->filter_filters['billing_state'] = array(
@@ -2691,9 +2694,9 @@
 		private function event_onConfigureOrdersPage($controller) {}
 
 		/**
-		 * Allows to load extra CSS or JavaScript files on the Order List, Order Preview, Create/Edit Order and other back-end pages related to orders. 
-		 * The event handler should accept a single parameter - the controller object reference. 
-		 * Call addJavaScript() and addCss() methods of the controller object to add references to JavaScript and 
+		 * Allows to load extra CSS or JavaScript files on the Order List, Order Preview, Create/Edit Order and other back-end pages related to orders.
+		 * The event handler should accept a single parameter - the controller object reference.
+		 * Call addJavaScript() and addCss() methods of the controller object to add references to JavaScript and
 		 * CSS files. Use paths relative to LemonStand installation URL for your resource files.
 		 * Example:
 		 * <pre>
@@ -2701,7 +2704,7 @@
 		 * {
 		 *   Backend::$events->addEvent('shop:onDisplayOrdersPage', $this, 'load_resources');
 		 * }
-		 *  
+		 *
 		 * public function load_resources($controller)
 		 * {
 		 *   $controller->addJavaScript('/modules/mymodule/resources/javascript/my.js');
@@ -2718,28 +2721,28 @@
 		 * @param Shop_Orders $controller Specifies the controller object.
 		 */
 		private function event_onDisplayOrdersPage($controller) {}
-			
+
 		/**
-		 * Allows to add new buttons to the toolbar above the Order Preview form. 
-		 * The event handler accepts two parameter - the controller object, which you can use for 
-		 * rendering a partial containing new buttons and the order object. 
-		 * 
-		 * The following example adds the "Subscription chart" button to the order preview toolbar. 
+		 * Allows to add new buttons to the toolbar above the Order Preview form.
+		 * The event handler accepts two parameter - the controller object, which you can use for
+		 * rendering a partial containing new buttons and the order object.
+		 *
+		 * The following example adds the "Subscription chart" button to the order preview toolbar.
 		 * Similar code used in the {@link http://lemonstand.com/docs/subscriptions_module Subscriptions Module}.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onExtendOrderPreviewToolbar', $this, 'extend_order_toolbar');
 		 * }
-		 *  
+		 *
 		 * public function extend_order_toolbar($controller, $order)
 		 * {
 		 *   $controller->renderPartial(PATH_APP.'/modules/subscriptions/partials/_order_toolbar.htm',
 		 *     array('order'=>$order));
 		 * }
-		 * 
+		 *
 		 * // Example of the _order_toolbar.htm partial
-		 * 
+		 *
 		 * <? if (Subscriptions_Engine::get()->order_has_subscriptions($order->id)): ?>
 		 *   <div class="separator">&nbsp;</div>
 		 *   <?= backend_ctr_button('Subscription chart', 'subscription_chart', url('subscriptions/chart/order/'.$order->id)) ?>
@@ -2759,8 +2762,8 @@
 		private function event_onExtendOrderPreviewToolbar($controller, $order) {}
 
 		/**
-		 * Allows to display custom tabs on the Order Preview page in the Administration Area. 
-		 * The event handler should accept two parameters - the controller object and the order object. 
+		 * Allows to display custom tabs on the Order Preview page in the Administration Area.
+		 * The event handler should accept two parameters - the controller object and the order object.
 		 * The handler should return an associative array of tab titles and corresponding tab partials.
 		 * <pre>
 		 * public function subscribeEvents()
@@ -2789,24 +2792,24 @@
 		 * @return array Returns an array of tab names and tab partial paths.
 		 */
 		private function event_onExtendOrderPreviewTabs($controller, $order) {}
-			
+
 		/**
-		 * Allows to add new buttons to the toolbar above the order list in the Administration Area. 
-		 * The event handler should accept a single parameter - the controller object, which you can use to render a 
+		 * Allows to add new buttons to the toolbar above the order list in the Administration Area.
+		 * The event handler should accept a single parameter - the controller object, which you can use to render a
 		 * partial containing additional buttons. Event handler example:
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onExtendOrdersToolbar', $this, 'extend_orders_toolbar');
 		 * }
-		 *  
+		 *
 		 * public function extend_orders_toolbar($controller)
 		 * {
 		 *   $controller->renderPartial(PATH_APP.'/modules/mymodule/partials/_orders_toolbar.htm');
 		 * }
-		 * 
+		 *
 		 * // Example of the _orders_toolbar.htm partial
-		 * 
+		 *
 		 * <div class="separator">&nbsp;</div>
 		 * <?= backend_ctr_button('My button', 'my_button_css_class', url('mymodule/manage/')) ?>
 		 * </pre>
@@ -2821,22 +2824,22 @@
 		private function event_onExtendOrdersToolbar($controller) {}
 
 		/**
-		 * Allows to add new buttons to the toolbar above the Payment Transactions list on Order Preview page in the Administration Area. 
-		 * The event handler should accept two parameter - the controller object, which you can use to render a 
+		 * Allows to add new buttons to the toolbar above the Payment Transactions list on Order Preview page in the Administration Area.
+		 * The event handler should accept two parameter - the controller object, which you can use to render a
 		 * partial containing additional buttons and the order object. Event handler example:
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onExtendOrderPaymentTransactionsToolbar', $this, 'extend_transactions_toolbar');
 		 * }
-		 *  
+		 *
 		 * public function extend_transactions_toolbar($controller, $order)
 		 * {
 		 *   $controller->renderPartial(PATH_APP.'/modules/mymodule/partials/_transactions_toolbar.htm');
 		 * }
-		 * 
+		 *
 		 * // Example of the _transactions_toolbar.htm partial
-		 * 
+		 *
 		 * <div class="separator">&nbsp;</div>
 		 * <?= backend_ctr_button('My button', 'my_button_css_class', url('mymodule/manage/')) ?>
 		 * </pre>
@@ -2852,8 +2855,8 @@
 		private function event_onExtendOrderPaymentTransactionsToolbar($controller, $order) {}
 
 		/**
-		 * Allows to display custom partials in the header of the Order Preview page in the Administration Area. 
-		 * The event handler should accept two parameters - the controller object and the order object. 
+		 * Allows to display custom partials in the header of the Order Preview page in the Administration Area.
+		 * The event handler should accept two parameters - the controller object and the order object.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
@@ -2879,30 +2882,30 @@
 		private function event_onExtendOrderPreviewHeader($controller, $order) {}
 
 		/**
-		 * Allows to add new button to the toolbar above the Invoice List on the Order Preview page in the Administration Area. 
-		 * The event handler should accept a single parameter - the controller object, which you can use for rendering a partial, 
-		 * containing new buttons. The following example adds the "Generate subscription invoice" button to the toolbar. 
+		 * Allows to add new button to the toolbar above the Invoice List on the Order Preview page in the Administration Area.
+		 * The event handler should accept a single parameter - the controller object, which you can use for rendering a partial,
+		 * containing new buttons. The following example adds the "Generate subscription invoice" button to the toolbar.
 		 * Similar code used in the {@link http://lemonstand.com/docs/subscriptions_module Subscriptions Module}.
 		 * <pre>
 		 * public function subscribeEvents()
 		 * {
 		 *   Backend::$events->addEvent('shop:onExtendOrderInvoicesToolbar', $this, 'extend_invoices_toolbar');
 		 * }
-		 *  
+		 *
 		 * public function extend_invoices_toolbar($controller)
 		 * {
 		 *   $controller->renderPartial(PATH_APP.'/modules/subscriptions/partials/_invoices_toolbar.htm');
 		 * }
-		 * 
+		 *
 		 * // Example of the _invoices_toolbar.htm partial
-		 * 
+		 *
 		 * <div class="separator">&nbsp;</div>
 		 * <?= backend_ctr_button(
-		 *   'Generate subscription invoice', 
-		 *   'generate_subscription_invoice', 
+		 *   'Generate subscription invoice',
+		 *   'generate_subscription_invoice',
 		 *   array('href'=>'#', 'onclick'=>"
 		 *     new PopupForm('onCustomEvent', {
-		 *       closeByEsc: false, 
+		 *       closeByEsc: false,
 		 *       ajaxFields: {custom_event_handler: 'subscriptions:onGenerateInvoice'}
 		 *   }); return false;
 		 * ")) ?>
@@ -2916,9 +2919,9 @@
 		 * @param Shop_Orders $controller Specifies the controller object.
 		 */
 		private function event_onExtendOrderInvoicesToolbar($controller) {}
-			
+
 		/**
-		 * Triggered before a shipping tracking code is deleted. 
+		 * Triggered before a shipping tracking code is deleted.
 		 * The event handler should accept two parameters - the order identifier and the Shop_OrderTrackingCode object, representing the tracking code.
 		 * @event shop:onBeforeDeleteShippingTrackingCode
 		 * @triggered /modules/shop/controllers/shop_orders.php
