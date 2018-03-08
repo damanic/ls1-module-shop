@@ -106,10 +106,11 @@ class Shop_BoxPacker {
 			}
 
 		$keep_flat = false;
-		$result = Backend::$events->fireEvent('shop:onBoxPackerGetKeepFlat', $item);
+		$result = Backend::$events->fireEvent('shop:onBoxPackerGetKeepFlat', $item); //return true if item should be packed upright
 		foreach ($result as $true) {
 			if ($true){
 				$keep_flat = $true;
+				break;
 			}
 		}
 
