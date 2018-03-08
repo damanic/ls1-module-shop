@@ -105,13 +105,21 @@ class Shop_BoxPacker {
 				return false; // cannot pack items with no given dimensions
 			}
 
+		$keep_flat = false;
+		$result = Backend::$events->fireEvent('shop:onBoxPackerGetKeepFlat', $item);
+		foreach ($result as $true) {
+			if ($true){
+				$keep_flat = $true;
+			}
+		}
+
 			return new Shop_BoxPacker_Item(
 				is_a($item, 'Shop_ExtraOption' ) ? 'Extra Option: '.$item->description : $item->product->name,
 				$this->convert_to_mm( $width ),
 				$this->convert_to_mm( $length ),
 				$this->convert_to_mm( $depth ),
 				$this->convert_to_grams( $weight ),
-				$keep_flat = true
+				$keep_flat
 			);
 	}
 
@@ -384,6 +392,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 
 	/**
 	 * @var int
+	 * set to true if item should be packed 'right way up'
 	 */
 	private $keepFlat;
 
@@ -402,7 +411,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	 * @param int    $weight
 	 * @param int    $keepFlat
 	 */
-	public function __construct($description, $width, $length, $depth, $weight, $keepFlat)
+	public function __construct($description, $width, $length, $depth, $weight, $keepFlat=false)
 	{
 		$this->description = $description;
 		$this->width = $width;
