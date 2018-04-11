@@ -1014,6 +1014,16 @@ class Shop_Order extends Db_ActiveRecord
 	}
 
 	/**
+	 * Triggered every time the order is modified
+	 * @param  $operation will be one of following values 'updated', 'created', 'deleted'
+	 * @param  $session_key
+	 */
+	public function after_modify($operation, $session_key = null)
+	{
+		Backend::$events->fireEvent('shop:onOrderAfterModify', $this, $operation, $session_key);
+	}
+
+	/**
 	 * Returns the last used order identifier.
 	 * @return integer Returns the last used order identifier.
 	 */
@@ -2990,6 +3000,18 @@ class Shop_Order extends Db_ActiveRecord
 	 * @param Shop_Order , the order
 	 */
 	private function event_onBeforeOrderRecordUnlocked($order) {}
+
+	/**
+	 * Triggered after order is created, updated or deleted
+	 * @event shop:onOrderAfterModify
+	 * @triggered /modules/shop/models/shop_order.php
+	 * @package shop.events
+	 * @author Matt Manning (github:damanic)
+	 * @param Shop_Order $order
+	 * @param $operation one of values: 'created', 'updated', 'deleted'
+	 * @param $session_key
+	 */
+	private function event_onOrderAfterModify($order, $operation, $session_key){}
 
 }
 
