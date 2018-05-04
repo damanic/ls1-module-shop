@@ -2070,14 +2070,25 @@
 			}
 			
 			self::update_total_stock_value($this);
-			$is_out_of_stock = $use_om_record ? $om_record->is_out_of_stock($this) : $this->is_out_of_stock();
 
-			if ($is_out_of_stock)
-			{
+			$send_email_template_code = false;
+			$is_out_of_stock         = $use_om_record ? $om_record->is_out_of_stock($this) : $this->is_out_of_stock();
+
+			if ($is_out_of_stock) {
 				Backend::$events->fireEvent('shop:onProductOutOfStock', $this, $om_record);
+				$send_email_template_code = 'shop:out_of_stock_internal';
+			}
+			else {
+				$is_low_stock = $use_om_record ? $om_record->is_low_stock($this) : $this->is_low_stock();
+				if($is_low_stock) {
+					$send_email_template_code = 'shop:low_stock_internal';
+				}
+			}
+
+			if($send_email_template_code){
 				$users = Shop_Role::get_users_notified_on_out_of_stock();
 				if($users && $users->count) {
-					$template = System_EmailTemplate::create()->find_by_code( 'shop:out_of_stock_internal' );
+					$template = System_EmailTemplate::create()->find_by_code( $send_email_template_code );
 					if ( !$template ) {
 						return;
 					}
@@ -2085,24 +2096,6 @@
 					$message           = $this->set_email_variables( $template->content, $product_url, $om_record );
 					$template->subject = $this->set_email_variables( $template->subject, $product_url, $om_record );
 					$template->send_to_team( $users, $message );
-				}
-			}
-			else
-			{
-				$is_low_stock = $use_om_record ? $om_record->is_low_stock($this) : $this->is_low_stock();
-				if($is_low_stock)
-				{
-					$users = Shop_Role::get_users_notified_on_out_of_stock();
-					if($users && $users->count) {
-						$template = System_EmailTemplate::create()->find_by_code( 'shop:low_stock_internal' );
-						if ( !$template ) {
-							return;
-						}
-						$product_url = Phpr::$request->getRootUrl() . url( 'shop/products/edit/' . $this->master_grouped_product_id . '?' . uniqid() );
-						$message           = $this->set_email_variables( $template->content, $product_url, $om_record );
-						$template->subject = $this->set_email_variables( $template->subject, $product_url, $om_record );
-						$template->send_to_team( $users, $message );
-					}
 				}
 			}
 		}
