@@ -44,3 +44,10 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.31.1 Discontinued Yahoo currency converter. Added fixer.io currency converter.
 - 1.31.2 Minor Fix for get_payment_due()
 - 1.31.3 Add indices to payment_transactions
+- 1.31.4 Minor improvement to payment transaction status logs
+- 1.31.5 Improved payment transaction totals
+- 1.31.6|@phpr-patch_1.31.6 Improve order currency field display, New event shop:onCustomerDisplayField.
+- 1.31.7 Adds order locks. New user permissions for order lock and permanent delete.
+- 1.31.8 Adds shipping boxes to shipping settings and a box packer helper to help with shipping cost calculations
+- 1.31.9 New event `shop:onOrderAfterModify` is triggered after order is created, updated or deleted
+- 1.31.10 Support for multiple Attribute and Option selections in search results
