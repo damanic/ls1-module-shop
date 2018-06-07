@@ -1,4 +1,4 @@
 '.idea'
 'composer.json'
 'composer.lock'
-.DS_Store
+'.DS_Store'
