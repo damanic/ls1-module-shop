@@ -2812,7 +2812,7 @@
 					}
 					else
 					{
-						$option_values_array = [];
+						$option_values_array = array();
 
 						foreach ( $option_values[ $index ] as $att_value_index => $att_value )
 							 $option_values_array[] = trim( urldecode( $att_value ) );
@@ -2852,7 +2852,7 @@
 					}
 					else
 					{
-						$attribute_values_array = [];
+						$attribute_values_array = array();
 
 						foreach ( $attribute_values[ $index ] as $att_value_index => $att_value )
 							 $attribute_values_array[] = trim( urldecode( $att_value ) );
@@ -2980,7 +2980,7 @@
 			 		$search_params[] = $name . '=' . urlencode( $value );
 			 	else
 			 	{
-			 		$values_array = [];
+			 		$values_array = array();
 
 			 		foreach ( $value as $att_value_index => $att_value )
 			 			$values_array[] = urlencode( $att_value );
