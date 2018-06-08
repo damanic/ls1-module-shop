@@ -50,5 +50,4 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.31.7 Adds order locks. New user permissions for order lock and permanent delete.
 - 1.31.8 Adds shipping boxes to shipping settings and a box packer helper to help with shipping cost calculations
 - 1.31.9 New event `shop:onOrderAfterModify` is triggered after order is created, updated or deleted
-- 1.31.10 Support for multiple Attribute and Option selections in search results
-- 1.31.11 Bugfix: shop_actions PHP 5.3 compatible
+- 1.31.11 Support for multiple Attribute and Option selections in search results
