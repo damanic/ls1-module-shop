@@ -112,7 +112,7 @@
 
 		public function subscribe_crontab(){
 			return array(
-				'update_currency_rates' => array( 'method' => 'update_currency_rates', 'interval' => 3600 ),
+				'update_currency_rates' => array( 'method' => 'update_currency_rates', 'interval' => 1440 ), //24 hours
 			);
 		}
 		
