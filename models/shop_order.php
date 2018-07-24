@@ -103,7 +103,9 @@ class Shop_Order extends Db_ActiveRecord
 								   'subtotal_tax_incl'=>db_float,
 								   'shipping_quote_tax_incl'=>db_float,
 								   'discount_tax_incl'=>db_float,
-								   'manual_shipping_quote'=>db_float
+								   'shipping_quote_no_discount'=>db_float,
+								   'total_shipping_discount'=>db_float,
+								   'shipping_quote_discounted'=>db_float,
 	);
 
 	public $shipping_sub_option_id;
@@ -145,7 +147,7 @@ class Shop_Order extends Db_ActiveRecord
 		$this->define_column('shipping_zip', 'Zip/Postal Code')->defaultInvisible()->listTitle('Sh. Zip/Postal Code')->validation()->fn('trim')->required();
 		$this->define_column('shipping_addr_is_business', 'Business address')->invisible();
 
-		$this->define_column('discount', 'Discount')->currency(true)->defaultInvisible();
+		$this->define_column('discount', 'Subtotal Discount')->currency(true)->defaultInvisible();
 		$this->define_column('subtotal', 'Subtotal')->currency(true);
 		$this->define_column('goods_tax', 'Sales Tax')->currency(true)->defaultInvisible();;
 		$this->define_column('shipping_quote', 'Shipping Quote')->currency(true);
@@ -185,6 +187,11 @@ class Shop_Order extends Db_ActiveRecord
 
 		$this->define_column('override_shipping_quote', 'Override shipping quote')->invisible();
 		$this->define_column('manual_shipping_quote', 'Shipping quote')->invisible();
+		$this->define_column('shipping_quote_no_discount', 'Shipping Quote Before Discounts')->currency(true)->invisible();
+		$this->define_column('shipping_discount', 'Internal Shipping Discount')->currency(true)->invisible();
+		$this->define_column('total_shipping_discount', 'Shipping Quote Discount')->currency(true)->invisible();
+		$this->define_column('shipping_quote_discounted', 'Shipping Quote')->currency(true)->invisible();
+
 
 		$this->define_column('currency_code', 'currency_code', 'Currency')->invisible();
 		$this->define_column('shop_currency_rate', 'shop_currency_rate', 'Currency Exchange Rate')->invisible();
@@ -193,6 +200,9 @@ class Shop_Order extends Db_ActiveRecord
 		if($context == 'list_settings')
 			$has_notes_column->listTitle('Has Notes');
 		$this->define_relation_column('notes', 'notes', 'Notes ', db_varchar, '@note')->invisible();
+
+
+
 
 		$this->defined_column_list = array();
 		Backend::$events->fireEvent('shop:onExtendOrderModel', $this, $context);
@@ -211,17 +221,20 @@ class Shop_Order extends Db_ActiveRecord
 
 			$this->add_form_field('customer_ip')->tab('Order Details')->noForm();
 
-			$this->add_form_field('total', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Total order amount</strong><br/>Total = Subtotal + Shipping Quote + Tax Total');
-			$this->add_form_field('tax_total', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Total tax amount</strong><br/>Tax  total = Sales Tax + Shipping Tax');
 
-			$this->add_form_field('subtotal', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Order subtotal</strong><br/>Subtotal is a sum of all order items, taking into account applied discounts');
-			$this->add_form_field('subtotal_before_discounts', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Subtotal before discounts</strong><br/>The sum of all order items without discounts applied');
-
-			$this->add_form_field('shipping_quote', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Cost of shipping</strong><br/>The cost of shipping, including handling fee, if applicable');
+			$this->add_form_field('subtotal_before_discounts', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Subtotal before discounts</strong><br/>The sum of all order items without discounts applied');
 			$this->add_form_field('discount', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Discount</strong><br/>Total amount of discount');
+			$this->add_form_field('subtotal', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Order subtotal</strong><br/>Subtotal is a sum of all order items, taking into account applied discounts');
+			$this->add_form_field('goods_tax', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Sales tax</strong><br/>Sum of all taxes applied to all order items');
 
-			$this->add_form_field('goods_tax', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Sales tax</strong><br/>Sum of all taxes applied to all order items');
+			$this->add_form_field('shipping_quote_no_discount', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Shipping Price</strong><br/>The shipping quote calculated before any discounts applied');
+			$this->add_form_field('total_shipping_discount', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Shipping Discount</strong><br/>Total amount of shipping discount applied');
+
+			$this->add_form_field('shipping_quote_discounted', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Cost of shipping</strong><br/>The cost of shipping, including handling fee, if applicable');
 			$this->add_form_field('shipping_tax', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Shipping tax</strong><br/>Sum of all taxes applied to the shipping service');
+
+			$this->add_form_field('tax_total', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Total tax amount</strong><br/>Tax  total = Sales Tax + Shipping Tax');
+			$this->add_form_field('total', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Total order amount</strong><br/>Total = Subtotal + Shipping Quote + Tax Total');
 
 			if ($this->tax_exempt)
 				$this->add_form_field('tax_exempt')->tab('Order Details');
@@ -725,6 +738,7 @@ class Shop_Order extends Db_ActiveRecord
 
 			$order->shipping_method_id = $shipping_method->id;
 			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
+			$order->shipping_discount = round($shipping_method->discount, 2);
 
 			$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, $shipping_info, $shipping_method->quote_no_tax);
 			$order->apply_shipping_tax_array($shipping_taxes);
@@ -746,22 +760,14 @@ class Shop_Order extends Db_ActiveRecord
 
 			$order->free_shipping = array_key_exists($shipping_method->internal_id, $discount_info->free_shipping_options) ? 1 : 0;
 
-			$order->total = $goods_tax + $subtotal;
-
-			if (!$order->free_shipping)
-			{
-				$order->total += round($shipping_method->quote_no_tax, 2) + $shipping_tax;
-			} else
-			{
+			if ($order->free_shipping) {
 				$order->shipping_quote = 0;
+				$order->shipping_discount = 0;
 				$order->shipping_tax = 0;
 			}
 
 			$order->subtotal = $subtotal;
 			$order->auto_discount_price_eval = 1;
-
-			if ($order->total < 0)
-				$order->total = 0;
 
 			$coupon_code = Shop_CheckoutData::get_coupon_code();
 			if (strlen($coupon_code))
@@ -868,6 +874,9 @@ class Shop_Order extends Db_ActiveRecord
 			$order->total_cost += $total_cost;
 			$order->customer_notes = Shop_CheckoutData::get_customer_notes();
 			$order->set_api_fields(Shop_CheckoutData::get_custom_fields());
+			$order->total = $order->get_order_total();
+			if ($order->total < 0)
+				$order->total = 0;
 
 			$order->save(null, $session_key);
 			$order->customer = $customer;
@@ -1890,6 +1899,7 @@ class Shop_Order extends Db_ActiveRecord
 		if (!$shipping_method->multi_option)
 		{
 			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
+			$order->shipping_discount = round($shipping_method->discount, 2);
 			$order->shipping_sub_option = null;
 			$order->internal_shipping_suboption_id = $order->shipping_method_id;
 		} else {
@@ -1901,6 +1911,7 @@ class Shop_Order extends Db_ActiveRecord
 				if ($sub_option->id == $order->shipping_method_id.'_'.$sub_option_id)
 				{
 					$order->shipping_quote = round($sub_option->quote_no_tax, 2);
+					$order->shipping_discount = round($sub_option->discount, 2);
 					$order->shipping_sub_option = $sub_option->name;
 					$order->internal_shipping_suboption_id = $order->shipping_method_id.'_'.$sub_option->suboption_id;
 					$option_found = true;
@@ -1927,6 +1938,7 @@ class Shop_Order extends Db_ActiveRecord
 		if ($this->free_shipping)
 		{
 			$order->shipping_quote = 0;
+			$order->shipping_discount = 0;
 			$order->shipping_tax = 0;
 		}
 
@@ -2003,7 +2015,7 @@ class Shop_Order extends Db_ActiveRecord
 		$order->total_cost = $total_cost;
 		$order->discount = $discount;
 		$order->subtotal = $subtotal;
-		$order->total = $order->goods_tax + $order->subtotal + $order->shipping_quote + $order->shipping_tax;
+		$order->total = $order->get_order_total();
 
 		if ($save)
 			$order->save(null, $session_key);
@@ -2186,6 +2198,52 @@ class Shop_Order extends Db_ActiveRecord
 			return true;
 		}
 		return false;
+	}
+
+	public function get_order_total(){
+		return $this->goods_tax + $this->subtotal + $this->get_shipping_quote_discounted() + $this->shipping_tax;
+	}
+
+	public function get_total_discount_applied(){
+		return round($this->discount + $this->get_shipping_discount(),2);
+	}
+
+	public function eval_shipping_quote_no_discount(){
+		return $this->get_shipping_quote_no_discount();
+	}
+
+	public function get_shipping_quote_no_discount(){
+		return max(($this->shipping_quote + $this->shipping_discount), 0);
+	}
+
+	public function eval_shipping_quote_discounted(){
+		return $this->get_shipping_quote_discounted();
+	}
+
+	public function get_shipping_quote_discounted(){
+		return max(($this->get_shipping_quote_no_discount() - $this->get_shipping_discount()),0);
+	}
+
+	public function eval_total_shipping_discount(){
+		return $this->get_shipping_discount();
+	}
+
+	public function get_shipping_discount(){
+		return max(($this->shipping_discount + $this->get_extended_shipping_discounts()),0);
+	}
+
+
+	public function get_extended_shipping_discounts(){
+		$external_discount = 0;
+		$results = Backend::$events->fireEvent('shop:onOrderGetShippingDiscount', $this);
+		if($results){
+			foreach($results as $discount_amount) {
+				if(is_numeric($discount_amount)) {
+					$external_discount += abs($discount_amount);
+				}
+			}
+		}
+		return $external_discount;
 	}
 
 	protected function after_fetch()

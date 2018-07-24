@@ -27,21 +27,21 @@
 	<? endif ?>
 	<li>
 		<h3>Subtotal</h3>
-		<p><?= format_currency($form_model->subtotal ? $form_model->subtotal : 0) ?></p>
+		<p><?= format_currency($form_model->subtotal_before_discounts ? $form_model->subtotal_before_discounts : 0) ?></p>
 		<p class="description">
 			Sales tax: <?= format_currency($form_model->goods_tax ? $form_model->goods_tax : 0) ?>
 		</p>
 	</li>
 	<li>
-		<h3>Shipping</h3>
-		<p><?= format_currency($form_model->shipping_quote ? $form_model->shipping_quote : 0) ?></p>
+		<h3>Shipping Rate</h3>
+		<p><?= format_currency($form_model->shipping_quote_no_discount ? $form_model->shipping_quote_no_discount : 0) ?></p>
 		<p class="description">
 			Shipping tax: <?= format_currency($form_model->shipping_tax ? $form_model->shipping_tax : 0) ?>
 		</p>
 	</li>
 	<li>
 		<h3>Total discount applied</h3>
-		<p><?= format_currency($form_model->discount ? $form_model->discount : 0) ?></p>
+		<p><?= format_currency($form_model->get_total_discount_applied()) ?></p>
 		<p class="description">
 			<? $coupon = $form_model->coupon; ?>
 			Coupon: <?= h($coupon ? $coupon->code : '<no coupon used>') ?>

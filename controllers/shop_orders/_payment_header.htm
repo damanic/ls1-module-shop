@@ -32,7 +32,7 @@
 			<p><?= format_currency($order->total) ?></p>
 			<p class="description">
 				Tax: <?= format_currency($order->shipping_tax + $order->goods_tax) ?>,
-				shipping: <?= format_currency($order->shipping_quote) ?>
+				Shipping: <?= format_currency($order->shipping_quote_discounted) ?>
 			</p>
 		</li>
 	</ul>

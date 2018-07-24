@@ -403,13 +403,15 @@
 			if (!is_array($quote))
 			{
 				$quote += $total_per_product_cost;
-				$discounted = $quote - $discount_info->shipping_discount;
-				$quote = ($discounted < 0) ? 0 : $discounted;
-				$method->quote_no_tax = $quote;
-				$method->quote = $quote;
+				$discounted_quote = max(($quote - $discount_info->shipping_discount),0);
+				$method->quote_no_discount = $quote;
+				$method->discount = $discount_info->shipping_discount;
+				$method->quote_no_tax = $discounted_quote;
+				$method->quote = $discounted_quote;
 				$method->sub_option_id = null;
 				$method->sub_option_name = null;
 				$method->internal_id = $option->id;
+
 			} else {
 				$sub_option_found = false;
 				foreach ($quote as $sub_option_name=>$rate_obj)
@@ -419,14 +421,15 @@
 						$sub_option_found = true;
 
 						$rate_obj['quote'] += $total_per_product_cost;
-						$discounted = $rate_obj['quote'] - $discount_info->shipping_discount;
-						$rate_obj['quote'] = ($discounted < 0) ? 0 : $discounted;
+						$discounted_quote = max(($rate_obj['quote'] - $discount_info->shipping_discount) ,0);
 
-						$method->quote = $rate_obj['quote'];
-						$method->quote_no_tax = $rate_obj['quote'];
+						$method->quote_no_discount = $rate_obj['quote'];
+						$method->quote = $discounted_quote;
+						$method->quote_no_tax = $discounted_quote;
 						$method->sub_option_id = $option->id.'_'.$sub_option_id;
 						$method->sub_option_name = $sub_option_name;
 						$method->internal_id = $option->id.'_'.$rate_obj['id'];
+						$method->discount  = $discount_info->shipping_discount;
 
 						break;
 					}

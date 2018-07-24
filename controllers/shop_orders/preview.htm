@@ -66,7 +66,7 @@
 					<p><?= format_currency($form_model->total) ?></p>
 					<p class="description">
 						Tax: <?= format_currency($form_model->shipping_tax + $form_model->goods_tax) ?>,
-						shipping: <?= format_currency($form_model->shipping_quote) ?>
+						Shipping: <?= format_currency($form_model->shipping_quote_discounted) ?>
 					</p>
 				</li>
 

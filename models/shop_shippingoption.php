@@ -655,12 +655,13 @@
 				if ( $quote !== null ) {
 					if ( !is_array( $quote ) ) {
 						$quote += $total_per_product_cost;
-						$discounted = $quote - $discount_info->shipping_discount;
-						$quote = ($discounted < 0) ? 0 : $discounted;
+						$discounted_quote = max(($quote - $discount_info->shipping_discount), 0);
 
-						$option->quote_no_tax   = $quote;
-						$option->quote          = $quote;
-						$option->quote_tax_incl = $quote;
+						$option->quote_no_discount = $quote;
+						$option->quote_no_tax   = $discounted_quote;
+						$option->quote          = $discounted_quote;
+						$option->quote_tax_incl = $discounted_quote;
+						$option->discount   = $discount_info->shipping_discount;
 
 						$shiping_taxes = Shop_TaxClass::get_shipping_tax_rates( $option->id, $shipping_info, $quote );
 						if ( $display_prices_including_tax ) {

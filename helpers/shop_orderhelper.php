@@ -121,6 +121,7 @@ class Shop_OrderHelper{
 				if (!$shipping_method->multi_option)
 				{
 					$order->shipping_quote = !$order->override_shipping_quote ? round($quote, 2) : $manual_shipping_quote;
+					$order->shipping_discount = !$order->override_shipping_quote ? round($shipping_method->discount, 2) : 0;
 					$order->shipping_sub_option = null;
 					$order->internal_shipping_suboption_id = $shipping_method_id;
 				}
@@ -131,6 +132,7 @@ class Shop_OrderHelper{
 						if ($sub_option->id == $order->shipping_method_id.'_'.$sub_option_hash)
 						{
 							$order->shipping_quote = !$order->override_shipping_quote ? round($sub_option->quote_no_tax, 2) : $manual_shipping_quote;
+							$order->shipping_discount = !$order->override_shipping_quote ? round($sub_option->discount, 2) : 0;
 							$order->shipping_sub_option = $sub_option->name;
 							$order->internal_shipping_suboption_id = $order->shipping_method_id.'_'.$sub_option->suboption_id;
 							break;
@@ -177,13 +179,14 @@ class Shop_OrderHelper{
 		if ($order->free_shipping)
 		{
 			$order->shipping_quote = 0;
+			$order->shipping_discount = 0;
 			$order->shipping_tax = 0;
 		}
 
 		$order->discount = $discount;
 		$order->subtotal = $subtotal;
 		$order->total_cost = $total_cost;
-		$order->total = $order->goods_tax + $order->subtotal + $order->shipping_quote + $order->shipping_tax;
+		$order->total = $order->get_order_total();
 
 		return $items;
 	}
