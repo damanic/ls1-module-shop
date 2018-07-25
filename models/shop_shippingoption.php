@@ -677,8 +677,10 @@
 							$suboption_id = $option->id . '_' . md5( $name );
 
 							$rate['quote'] += $total_per_product_cost;
+							$rate['quote_no_discount'] = $rate['quote'];
 							$discounted = $rate['quote'] - $discount_info->shipping_discount;
 							$rate['quote'] = ($discounted < 0) ? 0 : $discounted;
+							$rate['discount'] = $discount_info->shipping_discount;
 
 							$quote_tax_incl = $quote_no_tax = $quote = $rate['quote'];
 							$shiping_taxes  = Shop_TaxClass::get_shipping_tax_rates( $option->id, $shipping_info, $quote );
