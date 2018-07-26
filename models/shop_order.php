@@ -103,9 +103,9 @@ class Shop_Order extends Db_ActiveRecord
 								   'subtotal_tax_incl'=>db_float,
 								   'shipping_quote_tax_incl'=>db_float,
 								   'discount_tax_incl'=>db_float,
-								   'shipping_quote_no_discount'=>db_float,
 								   'total_shipping_discount'=>db_float,
 								   'shipping_quote_discounted'=>db_float,
+								   'shipping_quote_no_discount'=>db_float,
 	);
 
 	public $shipping_sub_option_id;
@@ -187,10 +187,10 @@ class Shop_Order extends Db_ActiveRecord
 
 		$this->define_column('override_shipping_quote', 'Override shipping quote')->invisible();
 		$this->define_column('manual_shipping_quote', 'Shipping quote')->invisible();
-		$this->define_column('shipping_quote_no_discount', 'Shipping Quote Before Discounts')->currency(true)->invisible();
 		$this->define_column('shipping_discount', 'Internal Shipping Discount')->currency(true)->invisible();
 		$this->define_column('total_shipping_discount', 'Shipping Quote Discount')->currency(true)->invisible();
 		$this->define_column('shipping_quote_discounted', 'Shipping Quote')->currency(true)->invisible();
+		$this->define_column('shipping_quote_no_discount', 'Shipping Quote Before Discounts')->currency(true)->invisible();
 
 
 		$this->define_column('currency_code', 'currency_code', 'Currency')->invisible();

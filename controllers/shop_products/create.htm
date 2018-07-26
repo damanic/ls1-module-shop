@@ -3,14 +3,14 @@
 		<? $this->renderPartial('product_types_js_setup') ?>
 	<? endif ?>
 	<script type="text/javascript" src="modules/shop/resources/javascript/product.js?<?= module_build('shop') ?>"></script>
-	<script type="text/javascript" src="modules/shop/resources/javascript/save_item.js"></script>
+	<script type="text/javascript" src="modules/shop/resources/javascript/save_item.js?<?= module_build('shop') ?>"></script>
 	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
 	
-	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.event.drag-2.0.min.js"></script>
-	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.sizes.min.js"></script>
-	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.splitter.js"></script>
-	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.ui.fullheightlayout.js"></script>
-	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.ui.anchorlayout.js?<?= module_build('shop') ?>"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.event.drag-2.0.min.js?<?= module_build('backend') ?>"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.sizes.min.js?<?=module_build('backend')?>"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.splitter.js?<?=module_build('backend')?>"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.ui.fullheightlayout.js?<?=module_build('backend')?>"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/jquery.ui.anchorlayout.js?<?=module_build('backend')?>"></script>
 <? Phpr_View::endBlock() ?>
 
 <? Phpr_View::beginBlock("view") ?>
