@@ -2246,6 +2246,29 @@ class Shop_Order extends Db_ActiveRecord
 		return $external_discount;
 	}
 
+	public function get_items_shipping() {
+		$items_shipping = array();
+		foreach ($this->items as $item){
+			$shipping_enabled = isset($item->product->product_type) ? $item->product->product_type->shipping : true;
+			if($shipping_enabled){
+				$items_shipping[] = $item;
+			}
+		}
+		return $items_shipping;
+	}
+
+	public function count_items_shipping($by_quantity=true){
+		$items_shipping = $this->get_items_shipping();
+		if(!$by_quantity){
+			return count($items_shipping);
+		}
+		$count = 0;
+		foreach ($items_shipping as $item){
+			$count += $item->quantity;
+		}
+		return $count;
+	}
+
 	protected function after_fetch()
 	{
 		Backend::$events->fireEvent('shop:onAfterOrderRecordFetch', $this);
