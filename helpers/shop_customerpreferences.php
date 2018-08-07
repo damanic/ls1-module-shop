@@ -125,7 +125,6 @@ class Shop_CustomerPreferences {
 		$result = Db_DbHelper::queryArray( $sql, $bind );
 		if ( !$result ) {
 			$this->preference_data = array();
-
 			return false;
 		}
 		$this->preference_data = $result[0];

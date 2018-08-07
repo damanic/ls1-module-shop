@@ -206,6 +206,31 @@
 
 			return null;
 		}
+
+		public function get_cart_items($cart_name){
+			$cart_items = array();
+			$stored_items = $this->list_items($cart_name);
+			if ( $stored_items ) {
+				foreach ( $stored_items as $key => $item ) {
+					$cart_item                = new Shop_CartItem();
+					$product_lookup        = Shop_Product::create()->where( 'id = ?', $item->product_id )->apply_visibility();
+					$sql                   = $product_lookup->build_sql();
+					$result = Db_DbHelper::queryArray($sql);
+					$product_data = isset($result[0]) ? $result[0] : false;
+					if($product_data) {
+						$product                  = new Db_ActiverecordProxy( $product_data['id'], 'Shop_Product', $product_data );
+						$cart_item->key           = $item->item_key;
+						$cart_item->product       = $product;
+						$cart_item->options       = $item->options;
+						$cart_item->extra_options = $item->extras;
+						$cart_item->quantity      = $item->quantity;
+						$cart_item->price_preset  = false;
+						$cart_items[]             = $cart_item;
+					}
+				}
+			}
+			return $cart_items;
+		}
 	}
 
 ?>
