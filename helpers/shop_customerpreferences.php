@@ -18,6 +18,15 @@ class Shop_CustomerPreferences {
 		return $result ? $_this : false;
 	}
 
+	public static function load_by_hash( $hash ) {
+		if ( !$hash || !preg_match('/^[a-f0-9]{32}$/', $hash) ) {
+			return false;
+		}
+		$_this  = new self();
+		$result = $_this->load_preference_by_hash( $hash );
+		return $result ? $_this : false;
+	}
+
 
 	public static function get( $customer, $field_name, $default = null ) {
 		$field_name  = trim( $field_name );
@@ -37,8 +46,8 @@ class Shop_CustomerPreferences {
 			return self::$cache[$hash];
 		}
 		$_this = new self();
-		$found = $_this->load_preference_by_hash( $hash );
-		return $found ? $_this->value( $default ) : $default;
+		$preference = self::load_by_hash( $hash );
+		return $preference ? $preference->value( $default ) : $default;
 	}
 
 	public static function set( $customer, $field_name, $value ) {
