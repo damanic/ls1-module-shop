@@ -632,6 +632,7 @@
 				
 				$page_url = root_url($password_restore_page->url.'/'.$this->password_restore_hash, true, $protocol);
 				$message_text = str_replace('{password_restore_page_link}', '<a href="'.$page_url.'">'.$page_url.'</a>', $message_text);
+				$message_text = str_replace('{password_restore_page_url}', $page_url, $message_text);
 			}
 			
 			return $message_text;

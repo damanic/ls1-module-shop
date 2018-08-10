@@ -502,7 +502,8 @@
 					'customer_email'=>array('Outputs a customer email address', Phpr::$security->getUser()->email),
 					'customer_password'=>array('Outputs a customer password. Can be used only in the registration confirmation template.', '1234567'),
 					'customer_password_restore_hash' => array('Outputs the password restore hash, which can be used in a custom password restore link.', '19ag812nwqg1239123n23'),
-					'password_restore_page_link' => array('Outputs a link to the password restore page (page using the action shop:password_restore_request), link includes the customer\'s password restore hash.', '<a href="'.$password_restore_page_url.'">'.$password_restore_page_url.'</a>')
+					'password_restore_page_link' => array('Outputs a HTML link to the password restore page (page using the action shop:password_restore_request), link includes the customer\'s password restore hash.', '<a href="'.$password_restore_page_url.'">'.$password_restore_page_url.'</a>'),
+					'password_restore_page_url' => array('Outputs a plain text URL to the password restore page, link includes the customer\'s password restore hash.', $password_restore_page_url)
 				),
 				'Order variables'=>array(
 					'order_total'=>array('Outputs order total amount', format_currency(125.96)),
@@ -521,7 +522,8 @@
 					'order_previous_status'=>array('Displays a previous order status name', 'New'),
 					'order_status_name'=>array('Displays a current order status name', 'Paid'),
 					'customer_notes'=>array('Outputs notes provided by the customer', 'Please deliver this order by this Friday!'),
-					'payment_page_link'=>array('Outputs a link of the Pay page', '<a href="'.$pay_page_url.'">'.$pay_page_url.'</a>'),
+					'payment_page_link'=>array('Outputs a HTML link for the Pay page', '<a href="'.$pay_page_url.'">'.$pay_page_url.'</a>'),
+					'payment_page_url'=>array('Outputs the URL for the Pay page', $pay_page_url),
 					'tax_incl_label'=>array('Outputs the "tax included" label, in accordance with the label configuration.', '(inlc. GST))'),
 					'net_amount'=>array('Outputs order net amount (total - tax).', format_currency(115.97)),
 					'billing_customer_name'=>array('Outputs a customer billing name.', 'John Smith'),

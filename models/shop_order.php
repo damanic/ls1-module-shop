@@ -1387,10 +1387,11 @@ class Shop_Order extends Db_ActiveRecord
 			}
 		}
 
-		if (strpos($message_text, '{payment_page_link}') !== false)
+		if ((strpos($message_text, '{payment_page_link}') !== false) || strpos($message_text, '{payment_page_url}') !== false)
 		{
 			$pay_page_url = $this->get_payment_page_url();
 			$message_text = str_replace('{payment_page_link}', '<a href="'.$pay_page_url.'">'.$pay_page_url.'</a>', $message_text);
+			$message_text = str_replace('{payment_page_url}', $pay_page_url, $message_text);
 		}
 
 		if (strpos($message_text, '{shipping_codes}') !== false)
