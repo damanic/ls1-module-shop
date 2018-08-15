@@ -95,17 +95,19 @@ class Shop_Order extends Db_ActiveRecord
 		'has_notes'=>array('sql'=>'select count(shop_order_notes.id) from shop_order_notes where shop_order_notes.order_id=shop_orders.id', 'type'=>db_number)
 	);
 
-	public $custom_columns = array('create_guest_customer'=>db_bool,
-								   'register_customer'=>db_bool,
-								   'notify_registered_customer'=>db_bool,
-								   'payment_page_url'=>db_text,
-								   'subtotal_before_discounts'=>db_float,
-								   'subtotal_tax_incl'=>db_float,
-								   'shipping_quote_tax_incl'=>db_float,
-								   'discount_tax_incl'=>db_float,
-								   'total_shipping_discount'=>db_float,
-								   'shipping_quote_discounted'=>db_float,
-								   'shipping_quote_no_discount'=>db_float,
+	public $custom_columns = array(
+		'create_guest_customer'      => db_bool,
+		'register_customer'          => db_bool,
+		'notify_registered_customer' => db_bool,
+		'payment_page_url'           => db_text,
+		'subtotal_before_discounts'  => db_float,
+		'subtotal_tax_incl'          => db_float,
+		'shipping_quote_tax_incl'    => db_float,
+		'discount_tax_incl'          => db_float,
+		'total_shipping_discount'    => db_float,
+		'shipping_quote_discounted'  => db_float,
+		'shipping_quote_no_discount' => db_float,
+		'order_reference' 			 => db_text,
 	);
 
 	public $shipping_sub_option_id;
@@ -201,8 +203,7 @@ class Shop_Order extends Db_ActiveRecord
 			$has_notes_column->listTitle('Has Notes');
 		$this->define_relation_column('notes', 'notes', 'Notes ', db_varchar, '@note')->invisible();
 
-
-
+		$this->define_column('order_reference', 'Order Reference')->invisible();
 
 		$this->defined_column_list = array();
 		Backend::$events->fireEvent('shop:onExtendOrderModel', $this, $context);
@@ -2233,6 +2234,10 @@ class Shop_Order extends Db_ActiveRecord
 		return max(($this->shipping_discount + $this->get_extended_shipping_discounts()),0);
 	}
 
+	public function eval_order_reference(){
+		return $this->get_order_reference();
+	}
+
 
 	public function get_extended_shipping_discounts(){
 		$external_discount = 0;
@@ -2250,7 +2255,7 @@ class Shop_Order extends Db_ActiveRecord
 	public function get_items_shipping() {
 		$items_shipping = array();
 		foreach ($this->items as $item){
-			$shipping_enabled = isset($item->product->product_type) ? $item->product->product_type->shipping : true;
+			$shipping_enabled = isset($item->product->product_type->id) ? $item->product->product_type->shipping : true;
 			if($shipping_enabled){
 				$items_shipping[] = $item;
 			}
