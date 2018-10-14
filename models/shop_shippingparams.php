@@ -113,6 +113,8 @@
 			$this->define_column('default_shipping_city', 'City')->validation()->fn('trim');
 			
 			$this->define_column('display_shipping_service_errors', 'Display shipping service errors')->validation()->fn('trim');
+			$this->define_column('enable_hs_codes', 'Enable HS Codes')->validation()->fn('trim');
+
 
 			$this->define_multi_relation_column('shipping_boxes', 'shipping_boxes', 'Shipping Boxes',  "@id")->invisible();
 
@@ -142,6 +144,7 @@
 			$this->add_form_field('default_shipping_city', 'right')->tab('Default Shipping Location');
 			
 			$this->add_form_field('display_shipping_service_errors')->tab('Parameters')->comment('Display shipping service errors like "Please specify a valid ZIP code" on the front-end website. This feature should be implemented in the front-end partials. Please refer to the <a href="http://lemonstand.com/docs/creating_shipping_method_partial/" target="_blank">documentation</a> for details.', 'above', true);
+			$this->add_form_field('enable_hs_codes')->tab('Parameters')->comment('Adds a Harmonised System Code field to the product shipping tab, this can be used to identify your product on customs documentation.', 'above', true);
 
 			$this->add_form_field('shipping_boxes')->tab('Shipping Boxes')->renderAs('shipping_boxes');
 		}

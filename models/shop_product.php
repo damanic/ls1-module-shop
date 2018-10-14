@@ -301,6 +301,8 @@
 			
 			$this->define_column('visibility_search', 'Visible in search results')->invisible();
 			$this->define_column('visibility_catalog', 'Visible in the catalog')->invisible();
+
+			$this->define_column('shipping_hs_code', 'Harmonized System Code')->defaultInvisible();
 			
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('shop:onExtendProductModel', $this);
@@ -423,6 +425,10 @@
 				$this->add_form_field('width', 'right')->tab('Shipping');
 				$this->add_form_field('height', 'left')->tab('Shipping');
 				$this->add_form_field('depth', 'right')->tab('Shipping');
+				$shipping_params = Shop_ShippingParams::get();
+				if($shipping_params->enable_hs_codes) {
+					$this->add_form_field( 'shipping_hs_code' )->renderAs( frm_dropdown )->emptyOption( '- please select -' )->cssClassName( 'search-contains--false' )->tab( 'Shipping' )->comment( 'This code may be required for customs clearance when shipping internationally' );
+				}
 
 				if ($context == 'grouped')
 					$this->add_form_field('perproduct_shipping_cost_use_parent')->tab('Shipping');
@@ -3774,7 +3780,39 @@
 
 			return $this->om_options_preset->options_as_string();
 		}
-		
+
+		public function get_shipping_hs_code_options($keyValue = -1)
+		{
+			$result = array();
+			$obj = new self();
+
+			if ($keyValue == -1)
+				return $this->list_shipping_hs_code_options();
+			else
+			{
+				if ($keyValue == null)
+					return $result;
+
+				$name = Db_DbHelper::scalar("SELECT CONCAT(description,' [ ',code,' ]') as value FROM shop_shipping_hs_codes WHERE code = ?",$keyValue);
+
+				if ($name)
+					return $name;
+			}
+
+			return $result;
+		}
+
+		protected function list_shipping_hs_code_options(){
+			$sql = "SELECT code, CONCAT(description,' [ ',code,' ]') as value
+ 					FROM shop_shipping_hs_codes
+ 					WHERE CHAR_LENGTH(code) = 6";
+			$result = Db_DbHelper::queryArray($sql);
+			$options = array();
+			foreach($result as $data){
+				$options[$data['code']] = $data['value'];
+			}
+			return $options;
+		}
 		/*
 		 * Event descriptions
 		 */

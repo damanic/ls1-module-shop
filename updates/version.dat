@@ -964,3 +964,4 @@
 #1.32.0 Adds shipping discount field to order totals
 #1.32.1 Adds helper: Shop_CustomerPreferences
 #1.32.2 Adds new currency rate provider
+#1.32.3 Adds support for HS tariff codes
