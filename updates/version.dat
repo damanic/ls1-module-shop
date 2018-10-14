@@ -963,3 +963,4 @@
 #1.31.11 Bugfix: shop_actions PHP 5.3 compatible
 #1.32.0 Adds shipping discount field to order totals
 #1.32.1 Adds helper: Shop_CustomerPreferences
+#1.32.2 Adds new currency rate provider
