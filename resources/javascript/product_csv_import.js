@@ -18,14 +18,18 @@ function product_import_reposition_images()
 
 function set_uploader_visibility(visible)
 {
-	var obj = $('csv_importform_uploader_container_Shop_ProductCsvImportModel_images_file').getElement('object');
-	if (obj)
-	{
-		if (!visible)
-			obj.setStyle('display', 'none');
-		else
-			obj.setStyle('display', 'block');
+	var el = $('csv_importform_uploader_container_Shop_ProductCsvImportModel_images_file');
+	if(el){
+		var obj = el.getElement('object');
+		if (obj)
+		{
+			if (!visible)
+				obj.setStyle('display', 'none');
+			else
+				obj.setStyle('display', 'block');
+		}
 	}
+
 }
 
 window.addEvent('phpr_file_upload_loaded', function(column_name, uploader){
