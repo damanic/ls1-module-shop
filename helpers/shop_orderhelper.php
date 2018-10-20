@@ -159,7 +159,7 @@ class Shop_OrderHelper{
 		foreach ($items as $item)
 		{
 			$discount += $item->discount*$item->quantity;
-			$subtotal += ($item->single_price - $item->discount)*$item->quantity;
+			$subtotal += $item->eval_total_price();
 			$total_cost += $item->quantity*$item->cost;
 		}
 

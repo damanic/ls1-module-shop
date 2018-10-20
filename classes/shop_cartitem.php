@@ -419,7 +419,9 @@
 
 			$quantity = $quantity === null ? $this->quantity : $quantity;
 
-			return ($this->single_price_no_tax(true, $this->get_effective_quantity()) - $catalog_level_discount - $cart_level_discount)*$quantity;
+			$total_price_no_tax = ($this->single_price_no_tax(true, $this->get_effective_quantity()) - $catalog_level_discount - $cart_level_discount)*$quantity;
+
+			return  number_format($total_price_no_tax,2, '.', '');
 		}
 		
 		/**

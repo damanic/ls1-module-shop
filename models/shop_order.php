@@ -911,8 +911,7 @@ class Shop_Order extends Db_ActiveRecord
 		$result = 0;
 		foreach ($this->items as $item)
 			$result += $item->single_price*$item->quantity;
-
-		return $result;
+		return number_format($result,2, '.', '');
 	}
 
 	public function eval_discount_tax_incl()
@@ -2015,8 +2014,8 @@ class Shop_Order extends Db_ActiveRecord
 		}
 
 		$order->total_cost = $total_cost;
-		$order->discount = $discount;
 		$order->subtotal = $subtotal;
+		$order->discount = $order->subtotal - $this->subtotal_before_discounts();
 		$order->total = $order->get_order_total();
 
 		if ($save)
