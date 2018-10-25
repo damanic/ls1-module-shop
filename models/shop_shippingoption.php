@@ -398,10 +398,10 @@
 				if(is_array($event_result))
 				{
 					$request_params = array_merge($request_params, $event_result);
-					extract($event_result);
 				}
 			}
-			
+			extract($request_params); //reset request vars incase modified
+
 			$result = $obj->get_quote($request_params);
 			if ($result === null)
 				return null;
