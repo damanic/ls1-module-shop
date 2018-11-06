@@ -34,7 +34,7 @@
 	</li>
 	<li>
 		<h3>Shipping Rate</h3>
-		<p><?= format_currency($form_model->shipping_quote_no_discount ? $form_model->shipping_quote_no_discount : 0) ?></p>
+		<p><?= format_currency($form_model->get_shipping_quote_no_discount()) ?></p>
 		<p class="description">
 			Shipping tax: <?= format_currency($form_model->shipping_tax ? $form_model->shipping_tax : 0) ?>
 		</p>

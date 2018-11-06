@@ -187,7 +187,7 @@ class Shop_Order extends Db_ActiveRecord
 		$this->define_column('payment_page_url', 'Payment Page')->invisible();
 		$this->define_column('tax_exempt', 'Tax Exempt')->defaultInvisible();;
 
-		$this->define_column('override_shipping_quote', 'Override shipping quote')->invisible();
+		$this->define_column('override_shipping_quote', 'Fixed shipping quote')->invisible();
 		$this->define_column('manual_shipping_quote', 'Shipping quote')->invisible();
 		$this->define_column('shipping_discount', 'Internal Shipping Discount')->currency(true)->invisible();
 		$this->define_column('total_shipping_discount', 'Shipping Quote Discount')->currency(true)->invisible();
@@ -330,6 +330,7 @@ class Shop_Order extends Db_ActiveRecord
 			$this->add_form_field('manual_shipping_quote', 'right')->tab('Shipping Method')->cssClassName('checkbox_align');
 
 			$this->add_form_field('shipping_method')->tab('Shipping Method')->renderAs(frm_radio);
+
 			$this->add_form_field('payment_method')->tab('Payment Method')->renderAs(frm_radio);
 
 			$this->add_form_field('free_shipping')->tab('Discounts');
@@ -926,7 +927,7 @@ class Shop_Order extends Db_ActiveRecord
 
 	public function eval_shipping_quote_tax_incl()
 	{
-		return $this->free_shipping ? 0 : $this->shipping_tax_2 + $this->shipping_tax_1 + $this->shipping_quote;
+		return $this->free_shipping ? 0 : $this->shipping_tax_2 + $this->shipping_tax_1 + $this->get_shipping_quote();
 	}
 
 	public function eval_subtotal_tax_incl()
@@ -2214,8 +2215,22 @@ class Shop_Order extends Db_ActiveRecord
 		return $this->get_shipping_quote_no_discount();
 	}
 
+	public function has_shipping_quote_override(){
+		if($this->override_shipping_quote && Core_Number::is_valid($this->manual_shipping_quote)){
+			return true;
+		}
+		return false;
+	}
+
+	public function get_shipping_quote(){
+		if($this->has_shipping_quote_override()){
+			return $this->manual_shipping_quote;
+		}
+		return $this->shipping_quote;
+	}
+
 	public function get_shipping_quote_no_discount(){
-		return max(($this->shipping_quote + $this->shipping_discount), 0);
+		return max(($this->get_shipping_quote() + $this->get_shipping_discount()), 0);
 	}
 
 	public function eval_shipping_quote_discounted(){
@@ -2231,6 +2246,9 @@ class Shop_Order extends Db_ActiveRecord
 	}
 
 	public function get_shipping_discount(){
+		if($this->has_shipping_quote_override()){
+			return 0;
+		}
 		return max(($this->shipping_discount + $this->get_extended_shipping_discounts()),0);
 	}
 
