@@ -387,21 +387,23 @@
 				'total_weight' => $total_weight,
 				'total_item_num' => $total_item_num,
 				'cart_items' => $cart_items,
-				'updated_items' => $updated_items
+				'updated_items' => $updated_items,
+				'is_business'=> $is_business
 			);
 
 			$event_results = Backend::$events->fireEvent('shop:onBeforeShippingQuote', $this, $event_params);
-			
-			// Overwrite local variables with returned results and update the request_params array
 			foreach($event_results as $event_result)
 			{
 				if(is_array($event_result))
 				{
+					//update the param arrays
 					$request_params = array_merge($request_params, $event_result);
-					extract($event_result);
+					$event_params = array_merge($event_params, $event_result);
 				}
 			}
-			
+			// Overwrite local variables with updated results
+			extract($event_params); // more info
+
 			$result = $obj->get_quote($request_params);
 			if ($result === null)
 				return null;
@@ -494,17 +496,14 @@
 			/*
 			 * Apply handling fee
 			 */
+			if(isset($handling_fee) && is_numeric($handling_fee)){
+				if (!is_array($result))
+					return $result + $handling_fee;
 
-			$handling_fee = $this->handling_fee;
-			if (!$handling_fee)
-				return $result;
-				
-			if (!is_array($result))
-				return $result + $handling_fee;
-				
-			foreach ($result as $name=>&$option_obj)
-			{
-				$option_obj['quote'] += $handling_fee;
+				foreach ($result as $name=>&$option_obj)
+				{
+					$option_obj['quote'] += $handling_fee;
+				}
 			}
 
 			return $result;
