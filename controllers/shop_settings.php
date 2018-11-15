@@ -39,7 +39,7 @@
 					$this->list_custom_head_cells = PATH_APP.'/phproad/modules/db/behaviors/db_listbehavior/partials/_list_head_cb.htm';
 					
 					$this->list_search_enabled = true;
-					$this->list_search_fields = array('name', 'code', 'code_3', 'code_iso_numeric');
+					$this->list_search_fields = array('shop_countries.name', 'shop_countries.code', 'shop_countries.code_3', 'shop_countries.code_iso_numeric');
 					$this->list_search_prompt = 'find countries by name or code';
 					$this->list_top_partial = 'country_selectors';
 				break;
