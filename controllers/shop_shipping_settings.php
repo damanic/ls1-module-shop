@@ -2,7 +2,7 @@
 
 	class Shop_Shipping_Settings extends Backend_SettingsController
 	{
-		protected $access_for_groups = array(Users_Groups::admin);
+		protected $required_permissions = array( 'shop:manage_shipping_settings' );
 		public $implement = 'Db_FormBehavior, Db_ListBehavior';
 
 		public $form_edit_title = 'Shipping Settings';

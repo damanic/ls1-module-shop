@@ -23,7 +23,10 @@
 			'onDeleteCountryState'
 		);
 
-		protected $access_for_groups = array(Users_Groups::admin);
+		protected $required_permissions = array(
+			'shop:manage_countries_and_states',
+			'shop:manage_shop_currency',
+		);
 
 		public function __construct()
 		{
@@ -55,6 +58,10 @@
 
 		public function currency()
 		{
+			if ( !$this->currentUser->get_permission( 'shop', 'manage_shop_currency' ) ) {
+				Phpr::$session->flash['error'] = 'You do not have permission, access denied.';
+				Phpr::$response->redirect(url('system/settings'));
+			}
 			$this->app_page_title = 'Currency';
 			$this->form_model_class = 'Shop_CurrencySettings';
 			$settings = Shop_CurrencySettings::get();
@@ -87,6 +94,10 @@
 		
 		public function countries()
 		{
+			if ( !$this->currentUser->get_permission( 'shop', 'manage_countries_and_states' ) ) {
+				Phpr::$session->flash['error'] = 'You do not have permission, access denied.';
+				Phpr::$response->redirect(url('system/settings'));
+			}
 			$this->app_page_title = 'Countries';
 		}
 		
