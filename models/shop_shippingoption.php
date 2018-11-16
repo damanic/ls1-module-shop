@@ -341,8 +341,9 @@
 
 			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id($payment_method->id) : null;
 			$shipping_info = Shop_CheckoutData::get_shipping_info();
-			foreach ($cart_items as $key=>$cart_item)
+			foreach ($cart_items as $key=>$cart_item) {
 				$cart_item->free_shipping = false;
+			}
 
 			Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj, 
@@ -620,8 +621,40 @@
 			}
 
 			$shipping_options = $shipping_options->find_all();
+			$payment_method     = Shop_CheckoutData::get_payment_method();
+			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
+			$coupon_code = Shop_CheckoutData::get_coupon_code();
 
+			//start allow discount rules to add hidden shipping options
+			if ( !$return_disabled ) {
+				$discount_info = Shop_CartPriceRule::evaluate_discount(
+					$payment_method_obj,
+					null,
+					$order_items,
+					$shipping_info,
+					$coupon_code,
+					$customer,
+					$total_price
+				);
+
+				if ( isset( $discount_info->add_shipping_options ) && count( $discount_info->add_shipping_options ) ) {
+					foreach ( $discount_info->add_shipping_options as $option_id ) {
+						$option = Shop_ShippingOption::create()->find( $option_id );
+						if ( $option ) {
+							$shipping_options->objectArray[] = $option;
+						}
+					}
+				}
+			}
+			//end allow discount rules to add hidden shipping options
+
+			$processed_options = array();
 			foreach ( $shipping_options as $option ) {
+				if(isset($processed_options[$option->id])) {
+					continue;
+				}
+				$processed_options[$option->id] = $option;
+
 				if ( $apply_customer_group_filter && !self::option_visible_for_customer_group( $option->id, $customer_group_id ) ) {
 					continue;
 				}
@@ -638,14 +671,12 @@
 
 
 				//FETCH SHIPPING DISCOUNTS
-				$payment_method     = Shop_CheckoutData::get_payment_method();
-				$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
 				$discount_info      = Shop_CartPriceRule::evaluate_discount(
 					$payment_method_obj,
 					$option,
 					$order_items,
 					$shipping_info,
-					Shop_CheckoutData::get_coupon_code(),
+					$coupon_code,
 					$customer,
 					$total_price );
 
@@ -713,6 +744,7 @@
 					$result[$option->id] = $option;
 				}
 			}
+
 
 
 			uasort( $result, 'phpr_sort_order_shipping_options' );

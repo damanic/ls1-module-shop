@@ -476,7 +476,7 @@
 			$host_obj->add_field($this, 'lock_orders', 'Lock/Unlock Orders','right')->renderAs(frm_checkbox)->comment('Allow user to lock/unlock orders. Locking prevents an order from being edited', 'above');
 			$host_obj->add_field($this, 'delete_orders', 'Delete Orders','left')->renderAs(frm_checkbox)->comment('Allow user to permanently delete an order record', 'above');
 			$host_obj->add_field($this, 'manage_countries_and_states', 'Manage countries and states','left')->renderAs(frm_checkbox)->comment('Allow user to manage countries and states available to the shopping system', 'above');
-			$host_obj->add_field($this, 'manage_shipping_settings', 'Manage shipping settings','left')->renderAs(frm_checkbox)->comment('Allow user to manage the shipping configuration', 'above');
+			$host_obj->add_field($this, 'manage_shipping_settings', 'Manage shipping settings','right')->renderAs(frm_checkbox)->comment('Allow user to manage the shipping configuration', 'above');
 		}
 
 		/**
