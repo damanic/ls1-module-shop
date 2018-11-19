@@ -139,7 +139,7 @@ class Shop_OrderHelper{
 					}
 				}
 
-				$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, (object)$shipping_info, $order->shipping_quote);
+				$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, (object)$shipping_info, $order->get_shipping_quote());
 				$order->apply_shipping_tax_array($shipping_taxes);
 				$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
 			}
@@ -158,7 +158,7 @@ class Shop_OrderHelper{
 		foreach ($items as $item)
 		{
 			$discount += $item->discount*$item->quantity;
-			$subtotal += ($item->single_price - $item->discount)*$item->quantity;
+			$subtotal += $item->eval_total_price();
 			$total_cost += $item->quantity*$item->cost;
 		}
 
