@@ -360,7 +360,8 @@
 					'url'=>'/shop/settings/currency',
 					'description'=>'Configure the store currency. Set currency formatting parameters and ISO code.',
 					'sort_id'=>50,
-					'section'=>'eCommerce'
+					'section'=>'eCommerce',
+					'access_permission'=>'shop:manage_shop_currency'
 					),
 				array(
 					'icon'=>'/modules/shop/resources/images/countries_settings.png', 
@@ -368,7 +369,8 @@
 					'url'=>'/shop/settings/countries',
 					'description'=>'Setup a list of countries and states you cater to. Set ISO codes for countries and states.',
 					'sort_id'=>70,
-					'section'=>'eCommerce'
+					'section'=>'eCommerce',
+					'access_permission'=>'shop:manage_countries_and_states'
 					),
 				array(
 					'icon'=>'/modules/shop/resources/images/statuses_settings.png', 
@@ -392,7 +394,8 @@
 					'url'=>'/shop/shipping_settings',
 					'description'=>'Specify a shipping origin and default location, weight and dimension units.',
 					'sort_id'=>80,
-					'section'=>'eCommerce'
+					'section'=>'eCommerce',
+					'access_permission'=>'shop:manage_shipping_settings'
 					),
 				array(
 					'icon'=>'/modules/shop/resources/images/currency_converter_settings.png', 
@@ -472,6 +475,8 @@
 			$host_obj->add_field($this, 'manage_discounts', 'Manage discounts','left')->renderAs(frm_checkbox)->comment('Manage catalog-level and cart-level price rules.', 'above');
 			$host_obj->add_field($this, 'lock_orders', 'Lock/Unlock Orders','right')->renderAs(frm_checkbox)->comment('Allow user to lock/unlock orders. Locking prevents an order from being edited', 'above');
 			$host_obj->add_field($this, 'delete_orders', 'Delete Orders','left')->renderAs(frm_checkbox)->comment('Allow user to permanently delete an order record', 'above');
+			$host_obj->add_field($this, 'manage_countries_and_states', 'Manage countries and states','left')->renderAs(frm_checkbox)->comment('Allow user to manage countries and states available to the shopping system', 'above');
+			$host_obj->add_field($this, 'manage_shipping_settings', 'Manage shipping settings','right')->renderAs(frm_checkbox)->comment('Allow user to manage the shipping configuration', 'above');
 		}
 
 		/**

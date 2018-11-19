@@ -1,0 +1,26 @@
+<div id="shipping_zone_form">
+	<h2>Shipping Zone</h2>
+	<div class="content">
+		<div class="form400">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($zone) ?>
+
+					<?= backend_ajax_button('Save', 'onUpdateShippingZone', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updateShippingZones.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+					<input type="hidden" name="shippingparams_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="zone_id" value="<?= $zone_id ?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

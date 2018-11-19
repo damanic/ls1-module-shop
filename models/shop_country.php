@@ -31,6 +31,14 @@
 			'states'=>array('class_name'=>'Shop_CountryState', 'foreign_key'=>'country_id', 'order'=>'shop_states.name', 'delete'=>true)
 		);
 
+		public $belongs_to = array(
+			'shipping_zone'=>array(
+				'class_name'=>'Shop_ShippingZone', '
+				foreign_key'=>'shipping_zone_id',
+				'conditions'=>'(shop_shipping_zones.params_id IS NOT NULL)'
+			),
+		);
+
 		/**
 		 * Creates an object of the class.
 		 * You can use this method with <em>find_by_code()</em> method to load a country by its code:
@@ -60,6 +68,8 @@
 			$front_end = Db_ActiveRecord::$execution_context == 'front-end';
 			if (!$front_end)
 				$this->define_multi_relation_column('states', 'states', 'States', "@name")->invisible();
+				$this->define_relation_column('shipping_zone', 'shipping_zone', 'Shipping Zone ', db_varchar, '@name')->listTitle('Shipping Zone')->defaultInvisible();
+
 		}
 
 		public function define_form_fields($context = null)
@@ -90,6 +100,8 @@
 				$enabled_backend->disabled();
 			
 			$this->add_form_field('states')->tab('States');
+			$this->add_form_field('shipping_zone')->tab('Shipping Zone')->comment("You can manage shipping zones from the 'Settings -> Shipping Settings' page.", 'above');
+
 		}
 		
 		public function before_delete($id=null)

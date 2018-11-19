@@ -42,6 +42,7 @@
 
 		public $has_many = array(
 			'shipping_boxes'=>array('class_name'=>'Shop_ShippingBox', 'foreign_key'=>'params_id', 'delete'=>true),
+			'shipping_zones'=>array('class_name'=>'Shop_ShippingZone', 'foreign_key'=>'params_id', 'delete'=>true),
 		);
 
 
@@ -117,6 +118,7 @@
 
 
 			$this->define_multi_relation_column('shipping_boxes', 'shipping_boxes', 'Shipping Boxes',  "@id")->invisible();
+			$this->define_multi_relation_column('shipping_zones', 'shipping_zones', 'Shipping Zones',  "@id")->invisible();
 
 		}
 
@@ -147,6 +149,7 @@
 			$this->add_form_field('enable_hs_codes')->tab('Parameters')->comment('Adds a Harmonised System Code field to the product shipping tab, this can be used to identify your product on customs documentation.', 'above', true);
 
 			$this->add_form_field('shipping_boxes')->tab('Shipping Boxes')->renderAs('shipping_boxes');
+			$this->add_form_field('shipping_zones')->tab('Shipping Zones')->renderAs('shipping_zones');
 		}
 		
 		public function get_country_options($key_value=-1)
@@ -240,6 +243,7 @@
 		
 		public function after_modify($operation, $deferred_session_key)
 		{
+			Db_DbHelper::query( 'DELETE FROM shop_shipping_zones WHERE params_id IS NULL' );
 			Shop_Module::update_catalog_version();
 		}
 		

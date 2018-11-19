@@ -10,6 +10,7 @@
 		public $cart_discount_incl_tax = 0;
 		public $applied_rules_info = array();
 		public $shipping_discount = 0;
+		public $add_shipping_options = array();
 	}
 
 ?>

@@ -24,6 +24,7 @@
 
 		protected $access_for_groups = array(Users_Groups::admin);
 
+
 		public function __construct()
 		{
 			parent::__construct();

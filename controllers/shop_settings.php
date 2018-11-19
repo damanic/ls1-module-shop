@@ -23,7 +23,10 @@
 			'onDeleteCountryState'
 		);
 
-		protected $access_for_groups = array(Users_Groups::admin);
+		protected $required_permissions = array(
+			'shop:manage_countries_and_states',
+			'shop:manage_shop_currency',
+		);
 
 		public function __construct()
 		{
@@ -39,7 +42,7 @@
 					$this->list_custom_head_cells = PATH_APP.'/phproad/modules/db/behaviors/db_listbehavior/partials/_list_head_cb.htm';
 					
 					$this->list_search_enabled = true;
-					$this->list_search_fields = array('name', 'code', 'code_3', 'code_iso_numeric');
+					$this->list_search_fields = array('shop_countries.name', 'shop_countries.code', 'shop_countries.code_3', 'shop_countries.code_iso_numeric');
 					$this->list_search_prompt = 'find countries by name or code';
 					$this->list_top_partial = 'country_selectors';
 				break;
@@ -55,6 +58,10 @@
 
 		public function currency()
 		{
+			if ( !$this->currentUser->get_permission( 'shop', 'manage_shop_currency' ) ) {
+				Phpr::$session->flash['error'] = 'You do not have permission, access denied.';
+				Phpr::$response->redirect(url('system/settings'));
+			}
 			$this->app_page_title = 'Currency';
 			$this->form_model_class = 'Shop_CurrencySettings';
 			$settings = Shop_CurrencySettings::get();
@@ -87,6 +94,10 @@
 		
 		public function countries()
 		{
+			if ( !$this->currentUser->get_permission( 'shop', 'manage_countries_and_states' ) ) {
+				Phpr::$session->flash['error'] = 'You do not have permission, access denied.';
+				Phpr::$response->redirect(url('system/settings'));
+			}
 			$this->app_page_title = 'Countries';
 		}
 		

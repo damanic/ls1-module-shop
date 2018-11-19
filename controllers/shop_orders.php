@@ -1422,7 +1422,9 @@
 		public function edit_formBeforeRender($model)
 		{
 			$model->shipping_sub_option_id = $model->shipping_method_id.'_'.md5($model->shipping_sub_option);
-			$model->manual_shipping_quote = $model->shipping_quote;
+			if(!$model->has_shipping_quote_override()) {
+				$model->manual_shipping_quote = $model->shipping_quote;
+			}
 		}
 
 		public function create_formBeforeRender($model)
@@ -2005,20 +2007,11 @@
 			$order->shipping_method_id = array_key_exists('shipping_method_id', $orderData) ? $orderData['shipping_method_id'] : null;
 			$order->payment_method_id = array_key_exists('payment_method_id', $orderData) ? $orderData['payment_method_id'] : null;
 			$order->billing_country_id = array_key_exists('billing_country_id', $orderData) ? $orderData['billing_country_id'] : null;
+			$order->override_shipping_quote = array_key_exists('override_shipping_quote', $orderData) ? $orderData['override_shipping_quote'] : null;
 
 			/*
 			 * Validate shipping parameters
 			 */
-			
-			if ($order->override_shipping_quote)
-			{
-				$manual_shipping_quote = trim(post_array_item('Shop_Order', 'manual_shipping_quote'));
-				
-				if (!Core_Number::is_valid($manual_shipping_quote))
-					throw new Phpr_ApplicationException('Please enter a valid shipping quote or disable the "Override shipping quote" option');
-			}
-
-			$shipping_methods = Shop_OrderHelper::getAvailableShippingMethods($order,$deferred_session_key);
 
 			$shipping_method_id = $order->shipping_method_id;
 			if (strpos($shipping_method_id, '_') !== false)
@@ -2027,19 +2020,30 @@
 				$order->shipping_sub_option_id = $shipping_method_id;
 				$order->shipping_method_id = $parts[0];
 			}
-
-			$shipping_method_found = false;
-			foreach ($shipping_methods as $method)
-			{
-				if ($method->id == $order->shipping_method_id)
-				{
-					$shipping_method_found = true;
-					break;
-				}
-			}
 			
-			if (!$shipping_method_found)
-				throw new Phpr_ApplicationException('Please select shipping method');
+			if ($order->override_shipping_quote)
+			{
+				$manual_shipping_quote = trim(post_array_item('Shop_Order', 'manual_shipping_quote'));
+				
+				if (!Core_Number::is_valid($manual_shipping_quote))
+					throw new Phpr_ApplicationException('Please enter a valid shipping quote or disable the "Override shipping quote" option');
+
+			} else {
+				$shipping_methods = Shop_OrderHelper::getAvailableShippingMethods($order,$deferred_session_key);
+
+				$shipping_method_found = false;
+				foreach ($shipping_methods as $method)
+				{
+					if ($method->id == $order->shipping_method_id)
+					{
+						$shipping_method_found = true;
+						break;
+					}
+				}
+
+				if (!$shipping_method_found)
+					throw new Phpr_ApplicationException('Please select shipping method');
+			}
 
 			/*
 			 * Validate payment method
@@ -2104,7 +2108,7 @@
 				$order->shipping_sub_option_id = $order->shipping_method_id;
 				$order->shipping_method_id = $parts[0];
 			}
-			
+
 			if ($order->is_new_record())
 			{
 				echo ">>tab_5<<";

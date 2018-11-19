@@ -341,8 +341,9 @@
 
 			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id($payment_method->id) : null;
 			$shipping_info = Shop_CheckoutData::get_shipping_info();
-			foreach ($cart_items as $key=>$cart_item)
+			foreach ($cart_items as $key=>$cart_item) {
 				$cart_item->free_shipping = false;
+			}
 
 			Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj, 
@@ -387,20 +388,22 @@
 				'total_weight' => $total_weight,
 				'total_item_num' => $total_item_num,
 				'cart_items' => $cart_items,
-				'updated_items' => $updated_items
+				'updated_items' => $updated_items,
+				'is_business'=> $is_business
 			);
 
 			$event_results = Backend::$events->fireEvent('shop:onBeforeShippingQuote', $this, $event_params);
-			
-			// Overwrite local variables with returned results and update the request_params array
 			foreach($event_results as $event_result)
 			{
 				if(is_array($event_result))
 				{
+					//update the param arrays
 					$request_params = array_merge($request_params, $event_result);
+					$event_params = array_merge($event_params, $event_result);
 				}
 			}
-			extract($request_params); //reset request vars incase modified
+			// Overwrite local variables with updated results
+			extract($event_params); // more info
 
 			$result = $obj->get_quote($request_params);
 			if ($result === null)
@@ -494,17 +497,14 @@
 			/*
 			 * Apply handling fee
 			 */
+			if(isset($handling_fee) && is_numeric($handling_fee)){
+				if (!is_array($result))
+					return $result + $handling_fee;
 
-			$handling_fee = $this->handling_fee;
-			if (!$handling_fee)
-				return $result;
-				
-			if (!is_array($result))
-				return $result + $handling_fee;
-				
-			foreach ($result as $name=>&$option_obj)
-			{
-				$option_obj['quote'] += $handling_fee;
+				foreach ($result as $name=>&$option_obj)
+				{
+					$option_obj['quote'] += $handling_fee;
+				}
 			}
 
 			return $result;
@@ -621,8 +621,40 @@
 			}
 
 			$shipping_options = $shipping_options->find_all();
+			$payment_method     = Shop_CheckoutData::get_payment_method();
+			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
+			$coupon_code = Shop_CheckoutData::get_coupon_code();
 
+			//start allow discount rules to add hidden shipping options
+			if ( !$return_disabled ) {
+				$discount_info = Shop_CartPriceRule::evaluate_discount(
+					$payment_method_obj,
+					null,
+					$order_items,
+					$shipping_info,
+					$coupon_code,
+					$customer,
+					$total_price
+				);
+
+				if ( isset( $discount_info->add_shipping_options ) && count( $discount_info->add_shipping_options ) ) {
+					foreach ( $discount_info->add_shipping_options as $option_id ) {
+						$option = Shop_ShippingOption::create()->find( $option_id );
+						if ( $option ) {
+							$shipping_options->objectArray[] = $option;
+						}
+					}
+				}
+			}
+			//end allow discount rules to add hidden shipping options
+
+			$processed_options = array();
 			foreach ( $shipping_options as $option ) {
+				if(isset($processed_options[$option->id])) {
+					continue;
+				}
+				$processed_options[$option->id] = $option;
+
 				if ( $apply_customer_group_filter && !self::option_visible_for_customer_group( $option->id, $customer_group_id ) ) {
 					continue;
 				}
@@ -639,14 +671,12 @@
 
 
 				//FETCH SHIPPING DISCOUNTS
-				$payment_method     = Shop_CheckoutData::get_payment_method();
-				$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
 				$discount_info      = Shop_CartPriceRule::evaluate_discount(
 					$payment_method_obj,
 					$option,
 					$order_items,
 					$shipping_info,
-					Shop_CheckoutData::get_coupon_code(),
+					$coupon_code,
 					$customer,
 					$total_price );
 
@@ -714,6 +744,7 @@
 					$result[$option->id] = $option;
 				}
 			}
+
 
 
 			uasort( $result, 'phpr_sort_order_shipping_options' );
