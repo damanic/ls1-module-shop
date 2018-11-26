@@ -606,7 +606,14 @@
 				if ($tier_quantity <= $quantity)
 				{
 					$price = round($price, 2);
-					return $no_tax ? $price : Shop_TaxClass::apply_tax_conditional($product->tax_class_id, $price);
+					$price = $no_tax ? $price : Shop_TaxClass::apply_tax_conditional($product->tax_class_id, $price);
+					$prices = Backend::$events->fireEvent('shop:onOptionMatrixReturnCompiledPrice', $this , $quantity, $customer_group_id, $price);
+					foreach ($prices as $use_price) {
+						if (is_numeric($use_price)) {
+							$price = $use_price;
+						}
+					}
+					return $price;
 				}
 			}
 
