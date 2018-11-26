@@ -1729,8 +1729,16 @@
 
 			foreach ($price_tiers as $tier_quantity=>$price)
 			{
-				if ($tier_quantity <= $quantity)
-					return round($price, 4);
+				if ($tier_quantity <= $quantity) {
+					$price = round( $price, 2 );
+					$prices = Backend::$events->fireEvent('shop:onProductReturnCompiledPrice', $this , $quantity, $customer_group_id, $price);
+					foreach ($prices as $use_price) {
+						if (is_numeric($use_price)) {
+							$price = $use_price;
+						}
+					}
+					return $price;
+				}
 			}
 
 			return $this->price_no_tax($quantity, $customer_group_id);
