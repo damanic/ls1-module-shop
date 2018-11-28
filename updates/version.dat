@@ -968,3 +968,4 @@
 #1.32.4 Bugfixes: manual shipping quotes, csv import uploader
 #1.32.5 Minor fix for event shop:onBeforeShippingQuote, allows handling fee override
 #1.33.0 Adds shipping zones to shipping settings
+#1.33.1 New events: shop:onProductReturnCompiledPrice, shop:onOptionMatrixReturnCompiledPrice
