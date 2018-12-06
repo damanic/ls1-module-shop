@@ -18,7 +18,7 @@ $zones = $form_model->list_related_records_deferred('shipping_zones', $this->for
 		<? if (!$zones->count): ?>
 			<tr class="noData">
 				<td colspan="3" class="last">You have not added any shipping zones.</td>
-			</tr>z
+			</tr>
 		<? else: ?>
 			<? foreach ($zones as $zone):
 				$parent_session_key = $this->formGetEditSessionKey();
