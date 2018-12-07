@@ -970,3 +970,4 @@
 #1.33.0 Adds shipping zones to shipping settings
 #1.33.1 New events: shop:onProductReturnCompiledPrice, shop:onOptionMatrixReturnCompiledPrice
 #1.33.2 Minor backend form/ui improvement
+#1.33.3 Adds service levels to shipping settings

@@ -1,0 +1,36 @@
+<li>
+	<p>Add shipping zones and delivery time estimates for this service</p>
+</li>
+<li>
+	<div id="shipping_delivery_estimate_list<?= $this->formGetEditSessionKey() ?>" class="clear">
+		<? $this->renderPartial('shipping_delivery_estimate_list') ?>
+	</div>
+
+	<p class="addDocument img_noBottomPading">
+		<a href="#"
+		   onclick="$('shipping_delivery_estimate_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadShippingDeliveryEstimateForm', {ajaxFields: $('shipping_delivery_estimate_id<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">
+			Add delivery estimate
+		</a>
+	</p>
+	<input type="hidden" name="shipping_delivery_estimate_id" id="shipping_delivery_estimate_id<?= $this->formGetEditSessionKey() ?>" value=""/>
+
+	<script type="text/javascript">
+		function updateShippingDeliveryEstimates(session_key)
+		{
+			cancelPopup();
+
+			$('shipping_delivery_estimate_list'+session_key).getForm().sendPhpr(
+				'onUpdateShippingDeliveryEstimateList',
+				{
+					update: 'shipping_delivery_estimate_list'+session_key,
+					loadIndicator: {
+						show: true,
+						element: 'shipping_delivery_estimate_list'+session_key,
+						hideOnSuccess: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					}
+				}
+			)
+		}
+	</script>
+</li>

@@ -50,6 +50,30 @@ class Shop_ShippingZone extends Db_ActiveRecord {
 		}
 	}
 
+	public function before_delete($id = NULL){
+		$id = $id ? $id : $this->id;
+		if($this->has_countries_assigned($id)){
+			throw new Phpr_ApplicationException('Cannot delete. Countries have been assigned to this shipping zone. ');
+		}
+		if($this->has_service_levels_assigned($id)){
+			throw new Exception('Cannot delete Zone. Shipping Service Levels have been assigned to this shipping zone. ');
+		}
+	}
+
+	private function has_countries_assigned($id=null){
+		$id = $id ? $id : $this->id;
+		$sql= "SELECT id FROM shop_countries WHERE shipping_zone_id = ? LIMIT 1";
+		$result = Db_DbHelper::scalar($sql, $this->id);
+		return $result ? true : false;
+	}
+
+	private function has_service_levels_assigned($id=null){
+		$id = $id ? $id : $this->id;
+		$sql= "SELECT id FROM shop_shipping_delivery_estimate WHERE shipping_zone_id = ? AND shipping_service_level_id IS NOT NULL LIMIT 1";
+		$result = Db_DbHelper::scalar($sql, $id);
+		return $result ? true : false;
+	}
+
 	/*
 	* Event descriptions
 	*/

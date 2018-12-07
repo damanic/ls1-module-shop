@@ -1,0 +1,36 @@
+<li>
+	<p>Service levels can add additional detail to your delivery time estimates</p>
+</li>
+<li>
+	<div id="shipping_service_level_list<?= $this->formGetEditSessionKey() ?>" class="clear">
+		<? $this->renderPartial('shipping_service_level_list') ?>
+	</div>
+
+	<p class="addDocument img_noBottomPading">
+		<a href="#"
+		   onclick="$('shipping_service_level_id<?= $this->formGetEditSessionKey() ?>').value = ''; new PopupForm('onLoadShippingServiceLevelForm', {ajaxFields: $('shipping_service_level_id<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">
+			Add service level
+		</a>
+	</p>
+	<input type="hidden" name="shipping_service_level_id" id="shipping_service_level_id<?= $this->formGetEditSessionKey() ?>" value=""/>
+
+	<script type="text/javascript">
+		function updateShippingServiceLevels(session_key)
+		{
+			cancelPopup();
+
+			$('shipping_service_level_list'+session_key).getForm().sendPhpr(
+				'onUpdateShippingServiceLevelList',
+				{
+					update: 'shipping_service_level_list'+session_key,
+					loadIndicator: {
+						show: true,
+						element: 'shipping_service_level_list'+session_key,
+						hideOnSuccess: true,
+						src: 'phproad/resources/images/form_load_30x30.gif'
+					}
+				}
+			)
+		}
+	</script>
+</li>

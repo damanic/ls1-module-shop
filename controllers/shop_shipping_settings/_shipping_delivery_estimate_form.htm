@@ -1,0 +1,27 @@
+<div id="shipping_delivery_estimate_form">
+	<h2>Delivery Estimate</h2>
+	<div class="content">
+		<div class="form800">
+			<?= Phpr_Form::openTag() ?>
+				<? if (!isset($fatalError)): ?>
+					<? $this->formRender($delivery_estimate) ?>
+
+					<?= backend_ajax_button('Save', 'onUpdateShippingDeliveryEstimate', array('class'=>'default'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updateShippingDeliveryEstimates.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+					<input type="hidden" name="shippingparams_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="delivery_estimate_id" value="<?= $delivery_estimate_id ?>"/>
+					<input type="hidden" name="service_level_id" value="<?=$service_level_id?>"/>
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>
