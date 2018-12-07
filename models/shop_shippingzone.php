@@ -64,7 +64,7 @@ class Shop_ShippingZone extends Db_ActiveRecord {
 	 *
 	 * @param Shop_ShippingZone $shipping_zone Specifies the shipping zone object.
 	 */
-	private function event_onExtendProductModel( $product ) {
+	private function event_onExtendShippinZoneModel( $shipping_zone ) {
 	}
 
 	/**
@@ -78,7 +78,7 @@ class Shop_ShippingZone extends Db_ActiveRecord {
 	 * @param Shop_ShippingZone $shipping_zone Specifies the shipping zone object.
 	 * @param string            $context       Specifies the execution context.
 	 */
-	private function event_onExtendProductForm( $shipping_zone, $context ) {
+	private function event_onExtendShippingZoneForm( $shipping_zone, $context ) {
 	}
 
 }
