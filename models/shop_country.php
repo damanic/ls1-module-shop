@@ -103,6 +103,25 @@
 			$this->add_form_field('shipping_zone')->tab('Shipping Zone')->comment("You can manage shipping zones from the 'Settings -> Shipping Settings' page.", 'above');
 
 		}
+
+		public function get_shipping_zone_options($key_value = -1){
+			if ($key_value != -1)
+			{
+				if (!strlen($key_value))
+					return null;
+
+				$obj = Shop_ShippingZone::create()->find($key_value);
+				return $obj ? $obj->name : null;
+			}
+
+			$options = array(null=>'<please select>');
+			$zones = Shop_ShippingZone::create()->where('(shop_shipping_zones.params_id IS NOT NULL)')->find_all();
+			$zones_array = $zones->as_array('name', 'id');
+			foreach($zones_array as $id => $name){
+				$options[$id] = $name;
+			}
+			return $options;
+		}
 		
 		public function before_delete($id=null)
 		{
