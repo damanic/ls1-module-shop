@@ -19,7 +19,7 @@ $delivery_estimates = $form_model->list_related_records_deferred('delivery_estim
 
 	<? if (!$delivery_estimates->count): ?>
 	<tr class="noData">
-		<td colspan="3" class="last">You have not added any delivery estimates for this service level.</td>
+		<td colspan="4" class="last">You have not added any delivery estimates for this service level.</td>
 	</tr>
 	<? else: ?>
 	<? foreach ($delivery_estimates as $delivery_estimate): ?>

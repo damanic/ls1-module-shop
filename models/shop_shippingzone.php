@@ -74,6 +74,15 @@ class Shop_ShippingZone extends Db_ActiveRecord {
 		return $result ? true : false;
 	}
 
+	public static function get_zones_with_delivery_estimates(){
+		$sql = 'SELECT DISTINCT(shipping_zone_id) 
+				FROM shop_shipping_delivery_estimate
+				WHERE shipping_zone_id IS NOT NULL 
+				AND shipping_service_level_id IS NOT NULL';
+		$zone_ids = Db_DbHelper::scalarArray($sql);
+		return self::create()->where('id IN (?)',array($zone_ids))->find_all();
+	}
+
 	/*
 	* Event descriptions
 	*/

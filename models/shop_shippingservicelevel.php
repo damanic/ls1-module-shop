@@ -14,7 +14,7 @@ class Shop_ShippingServiceLevel extends Db_ActiveRecord {
 	public function define_columns( $context = null ) {
 		$this->define_column( 'name', 'Name' )->validation()->fn( 'trim' )->required( "Please specify a name" );
 		$this->define_multi_relation_column('delivery_estimates', 'delivery_estimates', 'Service Delivery Estimates', '@id')->invisible();
-
+		$this->define_column( 'trackable', 'Shipment can be tracked' );
 		$this->defined_column_list = array();
 		Backend::$events->fireEvent( 'shop:onExtendShippingServiceLevelModel', $this );
 		$this->api_added_columns = array_keys( $this->defined_column_list );
@@ -22,6 +22,7 @@ class Shop_ShippingServiceLevel extends Db_ActiveRecord {
 
 	public function define_form_fields( $context = null ) {
 		$this->add_form_field( 'name' );
+		$this->add_form_field( 'trackable', 'left' )->renderAs(frm_checkbox);
 		$this->add_form_field('delivery_estimates')->renderAs('delivery_estimates');
 		Backend::$events->fireEvent( 'shop:onExtendShippingServiceLevelForm', $this, $context );
 	}
@@ -56,6 +57,18 @@ class Shop_ShippingServiceLevel extends Db_ActiveRecord {
 			$shipping_zone_ids[] = $estimate->shipping_zone_id;
 		}
 
+	}
+
+	public function get_delivery_estimate_for_zone($zone){
+		if(!is_a($zone,'Shop_ShippingZone')){
+			return false;
+		}
+		foreach($this->delivery_estimates as $estimate){
+			if($estimate->shipping_zone_id = $zone->id){
+				return $estimate;
+			}
+		}
+		return false;
 	}
 
 	public function get_zones_as_string(){
