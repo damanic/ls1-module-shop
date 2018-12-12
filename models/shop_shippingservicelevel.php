@@ -64,7 +64,7 @@ class Shop_ShippingServiceLevel extends Db_ActiveRecord {
 			return false;
 		}
 		foreach($this->delivery_estimates as $estimate){
-			if($estimate->shipping_zone_id = $zone->id){
+			if($estimate->shipping_zone_id == $zone->id){
 				return $estimate;
 			}
 		}
