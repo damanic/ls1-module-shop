@@ -6,7 +6,7 @@ if (version_compare(phpversion(), '5.4.0', '<')) {
 	return;
 }
 
-use DVDoug\BoxPacker\Packer as BockPacker;
+use DVDoug\BoxPacker\Packer as BoxPacker;
 use DVDoug\BoxPacker\Box as BoxPackerBox;
 use DVDoug\BoxPacker\Item as BoxPackerItem;
 
@@ -28,7 +28,7 @@ class Shop_BoxPacker {
 
 	public function pack( $items, $boxes = null ) {
 		$this->unpackable_items = array();
-		$packer = new BockPacker();
+		$packer = new BoxPacker();
 		$boxes = $boxes ? $boxes : $this->shipping_params->shipping_boxes;
 		if ( !$boxes ) {
 			return false;
@@ -113,9 +113,10 @@ class Shop_BoxPacker {
 				break;
 			}
 		}
-
+			$description = $item->om('sku').' | ';
+			$description .= is_a($item, 'Shop_ExtraOption' ) ? 'Extra Option: '.$item->description : $item->product->name;
 			return new Shop_BoxPacker_Item(
-				is_a($item, 'Shop_ExtraOption' ) ? 'Extra Option: '.$item->description : $item->product->name,
+				$description,
 				$this->convert_to_mm( $width ),
 				$this->convert_to_mm( $length ),
 				$this->convert_to_mm( $depth ),
@@ -178,8 +179,64 @@ class Shop_BoxPacker {
 
 }
 
+/*
+ * boxpacker classes use mm and grams.
+ * This trait allow classes to return native kg/lbs cm/inches as set up in the system shipping options
+ */
+trait Shop_BoxPacker_NativeUnits {
+
+	private $native_shipping_params = null;
+
+	public function get_native_shipping_params(){
+		if(empty($this->native_shipping_params)){
+			return $this->native_shipping_params = Shop_ShippingParams::get();
+		}
+		return $this->native_shipping_params;
+	}
+
+	public function native_dimension($value){
+		if($this->get_native_dimension_unit() == 'CM' ){
+			return $this->convert_to_cm($value);
+		}
+		return $this->convert_to_lbs($value);
+	}
+
+	public function native_weight($value){
+		if($this->get_native_weight_unit() == 'KGS' ){
+			return $this->convert_to_kgs($value);
+		}
+		return $this->convert_to_inches($value);
+	}
+
+	public function get_native_dimension_unit(){
+		return $this->get_native_shipping_params()->dimension_unit;
+	}
+
+	public function get_native_weight_unit(){
+		return $this->get_native_shipping_params()->weight_unit;
+	}
+
+	public function convert_to_cm($unit){
+		return round($unit / 10, 2);
+	}
+
+	public function convert_to_inches($unit){
+		return round($unit * 0.0393701, 2);
+	}
+
+	public function convert_to_lbs($unit){
+		return round($unit * 0.00220462, 2);
+	}
+
+	public function convert_to_kgs($unit){
+		return round($unit / 1000, 2);
+	}
+}
+
 class Shop_BoxPacker_Box implements BoxPackerBox
 {
+	use Shop_BoxPacker_NativeUnits;
+
 	/**
 	 * @var string
 	 */
@@ -277,56 +334,77 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getOuterWidth()
+	public function getOuterWidth($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->outerWidth);
+		}
 		return $this->outerWidth;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getOuterLength()
+	public function getOuterLength($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->outerLength);
+		}
 		return $this->outerLength;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getOuterDepth()
+	public function getOuterDepth($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->outerDepth);
+		}
 		return $this->outerDepth;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getEmptyWeight()
+	public function getEmptyWeight($native_units=false)
 	{
+		if($native_units){
+			return $this->get_native_dimension_unit($this->emptyWeight);
+		}
 		return $this->emptyWeight;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getInnerWidth()
+	public function getInnerWidth($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->innerWidth);
+		}
 		return $this->innerWidth;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getInnerLength()
+	public function getInnerLength($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->innerLength);
+		}
 		return $this->innerLength;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getInnerDepth()
+	public function getInnerDepth($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->innerDepth);
+		}
 		return $this->innerDepth;
 	}
 
@@ -341,31 +419,19 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getMaxWeight()
+	public function getMaxWeight($native_units=false)
 	{
+		if($native_units){
+			return $this->native_weight($this->maxWeight);
+		}
 		return $this->maxWeight;
-	}
-
-	public function convert_to_cm($unit){
-		return round($unit / 10, 2);
-	}
-
-	public function convert_to_inches($unit){
-		return round($unit * 0.0393701, 2);
-	}
-
-	public function convert_to_lbs($unit){
-		return round($unit * 0.00220462, 2);
-	}
-
-	public function convert_to_kgs($unit){
-		return round($unit / 100, 2);
 	}
 
 }
 
 class Shop_BoxPacker_Item implements BoxPackerItem
 {
+ 	use Shop_BoxPacker_NativeUnits;
 	/**
 	 * @var string
 	 */
@@ -420,7 +486,6 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 		$this->depth = $depth;
 		$this->weight = $weight;
 		$this->keepFlat = $keepFlat;
-
 		$this->volume = $this->width * $this->length * $this->depth;
 	}
 
@@ -435,32 +500,44 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return int
 	 */
-	public function getWidth()
+	public function getWidth($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->width);
+		}
 		return $this->width;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getLength()
+	public function getLength($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->length);
+		}
 		return $this->length;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getDepth()
+	public function getDepth($native_units=false)
 	{
+		if($native_units){
+			return $this->native_dimension($this->depth);
+		}
 		return $this->depth;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getWeight()
+	public function getWeight($native_units=false)
 	{
+		if($native_units){
+			return $this->native_weight($this->weight);
+		}
 		return $this->weight;
 	}
 
