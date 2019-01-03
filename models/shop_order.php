@@ -807,18 +807,18 @@ class Shop_Order extends Db_ActiveRecord
 				if ($item->product->tier_prices_per_customer)
 					$effective_quantity += $customer->get_purchased_item_quantity($item->product);
 
-        $item_om_record = $item->get_om_record();
-        $bundle_item_product = $item->get_bundle_item_product();
-        if (! $bundle_item_product) {
-          if (! $item_om_record) {
-            $product_discount = $item->price_is_overridden($effective_quantity) ? 0 : round($item->product->get_discount($effective_quantity), 2);
-            $product_price = $item->single_price_no_tax(false, $effective_quantity) - $product_discount;
-          } else {
-            $product_price = $item_om_record->get_sale_price($item->product, $effective_quantity, $customer->customer_group_id, true);
-          }
-        } else {
-          $product_price = $bundle_item_product->get_price_no_tax($bundle_item_product->bundle_item->product, $effective_quantity, $customer->customer_group_id, $item->options);
-        }
+		        $item_om_record = $item->get_om_record();
+		        $bundle_item_product = $item->get_bundle_item_product();
+		        if (! $bundle_item_product) {
+		          if (! $item_om_record) {
+		            $product_discount = $item->price_is_overridden($effective_quantity) ? 0 : round($item->product->get_discount($effective_quantity), 2);
+		            $product_price = $item->single_price_no_tax(false, $effective_quantity) - $product_discount;
+		          } else {
+		            $product_price = $item_om_record->get_sale_price($item->product, $effective_quantity, $customer->customer_group_id, true);
+		          }
+		        } else {
+		          $product_price = $bundle_item_product->get_price_no_tax($bundle_item_product->bundle_item->product, $effective_quantity, $customer->customer_group_id, $item->options);
+		        }
 
 				$obj->price = $product_price;
 
@@ -1540,9 +1540,9 @@ class Shop_Order extends Db_ActiveRecord
 	 */
 	public function is_paid()
 	{
-		return Db_DbHelper::scalar('select count(*) from 
-				shop_order_status_log_records, shop_order_statuses 
-				where shop_order_statuses.id=shop_order_status_log_records.status_id 
+		return Db_DbHelper::scalar('select count(*) from
+				shop_order_status_log_records, shop_order_statuses
+				where shop_order_statuses.id=shop_order_status_log_records.status_id
 				and shop_order_status_log_records.order_id=:order_id and shop_order_statuses.code=:code',
 			array(
 				'order_id'=>$this->id,
@@ -2116,22 +2116,22 @@ class Shop_Order extends Db_ActiveRecord
 	public static function export_orders_and_products_row($row, $row_data, $separator)
 	{
 		$order_items = Db_DbHelper::queryArray('
-				select 
-					sp.name as product_name, 
-					sp.grouped_option_desc, 
+				select
+					sp.name as product_name,
+					sp.grouped_option_desc,
 					if(
-						ifnull(sp.grouped, 0) = 0, 
-						sp.grouped_attribute_name, 
+						ifnull(sp.grouped, 0) = 0,
+						sp.grouped_attribute_name,
 						(select grouped_attribute_name from shop_products gl where gl.id=sp.product_id)
-					) as grouped_menu_label, 
+					) as grouped_menu_label,
 					sp.sku as product_sku,
 					om.sku as om_sku,
-					soi.* 
-				from 
-					shop_order_items soi 
-				inner join shop_products sp on (sp.id = soi.shop_product_id) 
+					soi.*
+				from
+					shop_order_items soi
+				inner join shop_products sp on (sp.id = soi.shop_product_id)
 				left join shop_option_matrix_records om on om.id = soi.option_matrix_record_id
-				where 
+				where
 					soi.shop_order_id=:id', array('id' => $row->id));
 
 		if(count($order_items))
