@@ -9,7 +9,7 @@
 		
 		public function get_name()
 		{
-			return "Apply free shipping to the cart products";
+			return "Apply free shipping to cart products specified below";
 		}
 		
 		/**

@@ -1,0 +1,61 @@
+<?
+$delivery_estimates = $form_model->list_related_records_deferred('delivery_estimates', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+	<tr>
+		<th>Shipping Zone</th>
+		<th class="float">Min Days</th>
+		<th class="float">Max Days</th>
+		<th class="float">Description</th>
+		<? if ($delivery_estimates->count): ?>
+		<th class="iconCell last">&nbsp;</th>
+		<? endif ?>
+	</tr>
+	</thead>
+
+	<tbody>
+
+	<? if (!$delivery_estimates->count): ?>
+	<tr class="noData">
+		<td colspan="4" class="last">You have not added any delivery estimates for this service level.</td>
+	</tr>
+	<? else: ?>
+	<? foreach ($delivery_estimates as $delivery_estimate): ?>
+
+	<?
+			$parent_session_key = $this->formGetEditSessionKey();
+	$onClick = "$('shipping_delivery_estimate_id{$parent_session_key}').value = '{$delivery_estimate->id}'; new PopupForm('onLoadShippingDeliveryEstimateForm', {ajaxFields: $('shipping_delivery_estimate_id{$parent_session_key}').getForm()}); return false;";
+	?>
+	<tr class="<?= Backend_Html::zebra('shipping_delivery_estimates') ?>">
+		<td class="link" onclick="<?= $onClick ?>">
+			<a href="#" onclick="<?= $onClick ?>">
+				<?=$delivery_estimate->displayField('shipping_zone', 'list') ?>
+			</a>
+		</td>
+		<td class="float link" onclick="<?= $onClick ?>">
+			<a href="#" onclick="<?= $onClick ?>">
+				<?=$delivery_estimate->displayField('min_days', 'list') ?>
+			</a>
+		</td>
+		<td class="float link" onclick="<?= $onClick ?>">
+			<a href="#" onclick="<?= $onClick ?>">
+				<?=$delivery_estimate->displayField('max_days', 'list') ?>
+			</a>
+		</td>
+		<td class="float link" onclick="<?= $onClick ?>">
+			<a href="#" onclick="<?= $onClick ?>">
+				<?=$delivery_estimate->displayField('as_text', 'list') ?>
+			</a>
+		</td>
+		<td class="iconCell last">
+			<a onclick="$('shipping_delivery_estimate_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $delivery_estimate->id ?>'; return $(this).getForm().sendPhpr('onDeleteShippingDeliveryEstimate', {confirm: 'Do you really want to delete this delivery estimate?', update: 'shipping_delivery_estimate_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Delete delivery estimate" class="deleteDocument" href="#">
+				Delete
+			</a>
+		</td>
+	</tr>
+	<? endforeach; ?>
+	<? endif ;?>
+	</tbody>
+</table>

@@ -24,7 +24,7 @@
 			
 				<? foreach ($local_methods as $option): ?>
 					<li class="selectable <?= (int)$form_model->shipping_method_id == (int)$option->id ? 'current' : null ?>" onclick="record_selector_click(this)">
-						<?= h($option->name) ?> <span class="right"><?= format_currency($option->quote) ?></span>
+						<?= h($option->name) ?> <span class="right"><?= $option->discount ? '<del>'.format_currency($option->quote_no_discount).'</del>' : null ?> <?= format_currency($option->quote) ?></span>
 						<input type="hidden" value="<?= $option->id ?>"/>
 					</li>
 				<? endforeach ?>

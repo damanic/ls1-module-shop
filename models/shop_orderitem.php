@@ -153,7 +153,10 @@
 			
 			return false;
 		}
-		
+
+		/*
+		 * Single price before discounts
+		 */
 		public function eval_single_price()
 		{
 			$result = $this->price;
@@ -183,8 +186,8 @@
 
 			$this->discount_tax_included = $this->discount + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $this->discount);
 			
-			$total_price = $this->price + $this->extras_price;
-			$this->price_tax_included = $total_price + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $total_price);
+			$single_price = $this->price + $this->extras_price;
+			$this->price_tax_included = $single_price + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $single_price);
 			
 			Backend::$events->fireEvent('shop:onBeforeOrderItemSaved', $this);
 		}
@@ -211,27 +214,38 @@
 				$this->tax_name_2 = null;
 			}
 		}
-		
+
+		/*
+		 * Discounted single unit price
+		 */
 		public function eval_unit_total_price()
 		{
 			return ($this->single_price - $this->discount);
 		}
-		
+
+		/*
+		 * Total discounted price for items
+		 */
 		public function eval_subtotal()
 		{
-			return $this->unit_total_price*$this->quantity;
+			$price = $this->eval_unit_total_price()*$this->quantity;
+			return number_format($price,2, '.', '');
 		}
-		
-		public function eval_subtotal_tax_incl()
-		{
-			return ($this->price_tax_included - $this->discount_tax_included) *$this->quantity;
-		}
-		
+
+		/*
+		 * Same as eval_subtotal for some reason?
+		 */
 		public function eval_total_price()
 		{
-			return ($this->single_price - $this->discount)*$this->quantity;
+			return $this->eval_subtotal();
 		}
-		
+
+		public function eval_subtotal_tax_incl()
+		{
+			$subtotal_tax_incl = ($this->price_tax_included - $this->discount_tax_included) * $this->quantity;
+			return number_format($subtotal_tax_incl,2, '.', '');
+		}
+
 		public function eval_bundle_item_total()
 		{
 			$master_item = $this->get_master_bundle_order_item();

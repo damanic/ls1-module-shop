@@ -75,8 +75,7 @@ class Shop_OrderHelper{
 		Shop_TaxClass::set_tax_exempt($order->tax_exempt);
 		Shop_TaxClass::set_customer_context(self::find_customer($order, true));
 
-		$order->shipping_quote = 0;
-		$order->shipping_tax = 0;
+
 		$order->goods_tax = 0;
 		$total_cost = 0;
 
@@ -87,17 +86,17 @@ class Shop_OrderHelper{
 		$shipping_info['city'] = $order->shipping_city;
 		$shipping_info['street_address'] = $order->shipping_street_addr;
 
-		$manual_shipping_quote = 0;
-		if ($order->override_shipping_quote)
-		{
-			$order->manual_shipping_quote = trim($order->manual_shipping_quote);
-
-			if (Core_Number::is_valid($order->manual_shipping_quote))
-				$manual_shipping_quote = round($order->manual_shipping_quote, 2);
+		if ($order->has_shipping_quote_override()) {
+			//manual quote is considered tax exclusive, any previous shipping tax considerations can persist.
+			$order->manual_shipping_quote = round(trim($order->manual_shipping_quote), 2);
 		}
 
-		if (strlen($order->shipping_method_id) && strlen($order->shipping_country_id))
-		{
+		if (strlen($order->shipping_method_id) && strlen($order->shipping_country_id)) {
+
+			//recalc all
+			$order->shipping_quote = 0;
+			$order->shipping_tax = 0;
+
 			$methods = self::getAvailableShippingMethods($order, $deferred_session_key);
 
 			$shipping_method_id = $order->shipping_method_id;
@@ -120,7 +119,8 @@ class Shop_OrderHelper{
 
 				if (!$shipping_method->multi_option)
 				{
-					$order->shipping_quote = !$order->override_shipping_quote ? round($quote, 2) : $manual_shipping_quote;
+					$order->shipping_quote = round($quote, 2);
+					$order->shipping_discount = round($shipping_method->discount, 2);
 					$order->shipping_sub_option = null;
 					$order->internal_shipping_suboption_id = $shipping_method_id;
 				}
@@ -130,7 +130,8 @@ class Shop_OrderHelper{
 					{
 						if ($sub_option->id == $order->shipping_method_id.'_'.$sub_option_hash)
 						{
-							$order->shipping_quote = !$order->override_shipping_quote ? round($sub_option->quote_no_tax, 2) : $manual_shipping_quote;
+							$order->shipping_quote = round($sub_option->quote_no_tax, 2);
+							$order->shipping_discount = round($sub_option->discount, 2);
 							$order->shipping_sub_option = $sub_option->name;
 							$order->internal_shipping_suboption_id = $order->shipping_method_id.'_'.$sub_option->suboption_id;
 							break;
@@ -138,7 +139,7 @@ class Shop_OrderHelper{
 					}
 				}
 
-				$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, (object)$shipping_info, $order->shipping_quote);
+				$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, (object)$shipping_info, $order->get_shipping_quote());
 				$order->apply_shipping_tax_array($shipping_taxes);
 				$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
 			}
@@ -157,7 +158,7 @@ class Shop_OrderHelper{
 		foreach ($items as $item)
 		{
 			$discount += $item->discount*$item->quantity;
-			$subtotal += ($item->single_price - $item->discount)*$item->quantity;
+			$subtotal += $item->eval_total_price();
 			$total_cost += $item->quantity*$item->cost;
 		}
 
@@ -177,13 +178,14 @@ class Shop_OrderHelper{
 		if ($order->free_shipping)
 		{
 			$order->shipping_quote = 0;
+			$order->shipping_discount = 0;
 			$order->shipping_tax = 0;
 		}
 
 		$order->discount = $discount;
 		$order->subtotal = $subtotal;
 		$order->total_cost = $total_cost;
-		$order->total = $order->goods_tax + $order->subtotal + $order->shipping_quote + $order->shipping_tax;
+		$order->total = $order->get_order_total();
 
 		return $items;
 	}

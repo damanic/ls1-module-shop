@@ -41,7 +41,11 @@ class Shop_ShippingBox extends Db_ActiveRecord {
 	}
 
 	public static function get_closest_by_volume($volume){
-		return self::create()->where('volume >= ?', $volume)->order('volume ASC')->limit(1);
+		$box = self::create()->where('volume >= ?', $volume)->order('volume ASC')->limit(1);
+		if($box && $box->id){
+			return $box;
+		}
+		return false;
 	}
 
 

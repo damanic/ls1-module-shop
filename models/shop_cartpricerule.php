@@ -583,6 +583,7 @@
 			$applied_rules_info = array();
 			$free_shipping_options = array();
 			$shipping_discount = 0;
+			$add_shipping_options = array();
 
 			/**
 			 * Prepare the discount maps
@@ -607,6 +608,11 @@
 				{
 					$discount = $rule->eval_discount($cart_items, $current_subtotal, $item_discount_map, $item_discount_tax_incl_map, $customer);
 					$action = $rule->get_action_obj();
+					if(isset($action->adds_shipping_option ) && $action->adds_shipping_option ){
+						if($rule->shipping_option) {
+							$add_shipping_options[$rule->shipping_option] = $rule->shipping_option;
+						}
+					}
 					if(isset($action->shipping_discount) && $action->shipping_discount){
 						$shipping_discount += $discount;
 					} else {
@@ -661,6 +667,7 @@
 			$result->free_shipping_options = $free_shipping_options;
 			$result->applied_rules_info = $applied_rules_info;
 			$result->shipping_discount = $shipping_discount;
+			$result->add_shipping_options = $add_shipping_options;
 
 			return $result;
 		}

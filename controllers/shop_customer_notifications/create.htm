@@ -1,6 +1,6 @@
 <? Phpr_View::beginBlock("head") ?>
-	<script type="text/javascript" src="modules/system/resources/javascript/emailtemplates.js"></script>
-	<script type="text/javascript" src="modules/backend/resources/javascript/unload_manager.js"></script>
+	<script type="text/javascript" src="modules/system/resources/javascript/emailtemplates.js?<?=module_build('system')?>"></script>
+	<script type="text/javascript" src="modules/backend/resources/javascript/unload_manager.js?<?=module_build('backend')?>"></script>
 	
 	<script type="text/javascript">
 		UnloadManager.unload_message = 'The message content has been changed.';

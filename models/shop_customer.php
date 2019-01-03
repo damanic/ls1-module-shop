@@ -247,9 +247,14 @@
 				$obj = Shop_CustomerGroup::create()->find($key_value);
 				return $obj ? $obj->name : null;
 			}
-			
+
+			$options = array(null=>'<please select>');
 			$groups = Shop_CustomerGroup::create()->where('(shop_customer_groups.code is null or shop_customer_groups.code<>?)', Shop_CustomerGroup::guest_group)->order('name')->find_all();
-			return $groups->as_array('name', 'id');
+			$groups_array = $groups->as_array('name', 'id');
+			foreach($groups_array as $id => $name){
+				$options[$id] = $name;
+			}
+			return $options;
 		}
 		
 		public function get_shipping_country_options($key_value=-1)
@@ -346,6 +351,18 @@
 						$this->password = $this->fetched['password'];
 				} else
 					$this->password = Phpr_SecurityFramework::create()->salted_hash($this->password);
+			}
+			if (!$this->customer_group_id)
+			{
+				if ($this->guest) {
+					$group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::guest_group);
+					if ($group)
+						$this->customer_group_id = $group->id;
+				} else {
+					$group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::registered_group);
+					if ($group)
+						$this->customer_group_id = $group->id;
+				}
 			}
 		}
 
@@ -632,6 +649,7 @@
 				
 				$page_url = root_url($password_restore_page->url.'/'.$this->password_restore_hash, true, $protocol);
 				$message_text = str_replace('{password_restore_page_link}', '<a href="'.$page_url.'">'.$page_url.'</a>', $message_text);
+				$message_text = str_replace('{password_restore_page_url}', $page_url, $message_text);
 			}
 			
 			return $message_text;
@@ -695,21 +713,6 @@
 		
 		public function before_create($deferred_session_key = null)
 		{
-			if ($this->guest)
-			{
-				$group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::guest_group);
-				if ($group)
-					$this->customer_group_id = $group->id;
-			} else
-			{
-				if (!$this->customer_group_id)
-				{
-					$group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::registered_group);
-					if ($group)
-						$this->customer_group_id = $group->id;
-				}
-			}
-
 			Backend::$events->fireEvent('shop:onCustomerBeforeCreate', $this);
 		}
 		

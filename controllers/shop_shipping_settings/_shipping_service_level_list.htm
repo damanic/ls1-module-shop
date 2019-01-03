@@ -1,0 +1,37 @@
+<?
+$service_levels = $form_model->list_related_records_deferred('shipping_service_levels', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+	<tr>
+		<th>Name</th>
+		<th class="float">Zones</th>
+		<? if ($service_levels->count): ?>
+		<th class="iconCell last">&nbsp;</th>
+		<? endif ?>
+	</tr>
+	</thead>
+
+	<tbody>
+
+	<? if (!$service_levels->count): ?>
+		<tr class="noData">
+			<td colspan="3" class="last">You have not added any service levels.</td>
+		</tr>
+	<? else: ?>
+		<? foreach ($service_levels as $service_level): ?>
+
+			<?
+			$parent_session_key = $this->formGetEditSessionKey();
+			$onClick = "$('shipping_service_level_id{$parent_session_key}').value = '{$service_level->id}'; new PopupForm('onLoadShippingServiceLevelForm', {ajaxFields: $('shipping_service_level_id{$parent_session_key}').getForm()}); return false;";
+			?>
+			<tr class="<?= Backend_Html::zebra('shipping_service_levels') ?>">
+				<td class="link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= $service_level->displayField('name', 'list') ?></a></td>
+				<td class="float link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?=$service_level->get_zones_as_string()?></a></td>
+				<td class="iconCell last"><a onclick="$('shipping_service_level_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $service_level->id ?>'; return $(this).getForm().sendPhpr('onDeleteShippingServiceLevel', {confirm: 'Do you really want to delete this service level?', update: 'shipping_service_level_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Delete service level" class="deleteDocument" href="#">Delete</a></td>
+			</tr>
+		<? endforeach; ?>
+	<? endif ;?>
+	</tbody>
+</table>

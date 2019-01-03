@@ -6,7 +6,7 @@ class Shop_CurrencyHelper{
 		if (strlen($num) && strlen($currency_code)) {
 
 			$currencies = new Shop_CurrencySettings();
-			$obj = $currencies->where( 'code = ?', $currency_code )->find_all();
+			$obj = $currencies->where( 'code = :code || iso_4217_code = :code', array( 'code' => $currency_code ) )->find_all();
 
 			if ( $obj ) {
 				$negative   = $num < 0;

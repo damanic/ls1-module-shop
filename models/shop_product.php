@@ -301,6 +301,8 @@
 			
 			$this->define_column('visibility_search', 'Visible in search results')->invisible();
 			$this->define_column('visibility_catalog', 'Visible in the catalog')->invisible();
+
+			$this->define_column('shipping_hs_code', 'Harmonized System Code')->defaultInvisible();
 			
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('shop:onExtendProductModel', $this);
@@ -423,6 +425,10 @@
 				$this->add_form_field('width', 'right')->tab('Shipping');
 				$this->add_form_field('height', 'left')->tab('Shipping');
 				$this->add_form_field('depth', 'right')->tab('Shipping');
+				$shipping_params = Shop_ShippingParams::get();
+				if($shipping_params->enable_hs_codes) {
+					$this->add_form_field( 'shipping_hs_code' )->renderAs( frm_dropdown )->emptyOption( '- please select -' )->cssClassName( 'search-contains--false' )->tab( 'Shipping' )->comment( 'This code may be required for customs clearance when shipping internationally' );
+				}
 
 				if ($context == 'grouped')
 					$this->add_form_field('perproduct_shipping_cost_use_parent')->tab('Shipping');
@@ -1723,8 +1729,16 @@
 
 			foreach ($price_tiers as $tier_quantity=>$price)
 			{
-				if ($tier_quantity <= $quantity)
-					return round($price, 4);
+				if ($tier_quantity <= $quantity) {
+					$price = round( $price, 2 );
+					$prices = Backend::$events->fireEvent('shop:onProductReturnCompiledPrice', $this , $quantity, $customer_group_id, $price);
+					foreach ($prices as $use_price) {
+						if (is_numeric($use_price)) {
+							$price = $use_price;
+						}
+					}
+					return $price;
+				}
 			}
 
 			return $this->price_no_tax($quantity, $customer_group_id);
@@ -2070,50 +2084,32 @@
 			}
 			
 			self::update_total_stock_value($this);
-			$is_out_of_stock = $use_om_record ? $om_record->is_out_of_stock($this) : $this->is_out_of_stock();
-			
-			if ($is_out_of_stock)
-			{
+
+			$send_email_template_code = false;
+			$is_out_of_stock         = $use_om_record ? $om_record->is_out_of_stock($this) : $this->is_out_of_stock();
+
+			if ($is_out_of_stock) {
 				Backend::$events->fireEvent('shop:onProductOutOfStock', $this, $om_record);
-				
-				$users = Users_User::create()->from('users', 'distinct users.*');
-				$users->join('shop_roles', 'shop_roles.id=users.shop_role_id');
-				$users->where('shop_roles.notified_on_out_of_stock is not null and shop_roles.notified_on_out_of_stock=1');
-				$users->where('(users.status is null or users.status = 0)');
-				$users = $users->find_all();
-				
-				$template = System_EmailTemplate::create()->find_by_code('shop:out_of_stock_internal');
-				if (!$template)
-					return;
-
-				$product_url = Phpr::$request->getRootUrl().url('shop/products/edit/'.$this->master_grouped_product_id.'?'.uniqid());
-
-				$message = $this->set_email_variables($template->content, $product_url, $om_record);
-				$template->subject = $this->set_email_variables($template->subject, $product_url, $om_record);
-
-				$template->send_to_team($users, $message);
+				$send_email_template_code = 'shop:out_of_stock_internal';
 			}
-			else
-			{
+			else {
 				$is_low_stock = $use_om_record ? $om_record->is_low_stock($this) : $this->is_low_stock();
-				if($is_low_stock)
-				{
-					$users = Users_User::create()->from('users', 'distinct users.*');
-					$users->join('shop_roles', 'shop_roles.id=users.shop_role_id');
-					$users->where('shop_roles.notified_on_out_of_stock is not null and shop_roles.notified_on_out_of_stock=1');
-					$users->where('(users.status is null or users.status = 0)');
-					$users = $users->find_all();
-					
-					$template = System_EmailTemplate::create()->find_by_code('shop:low_stock_internal');
-					if (!$template)
+				if($is_low_stock) {
+					$send_email_template_code = 'shop:low_stock_internal';
+				}
+			}
+
+			if($send_email_template_code){
+				$users = Shop_Role::get_users_notified_on_out_of_stock();
+				if($users && $users->count) {
+					$template = System_EmailTemplate::create()->find_by_code( $send_email_template_code );
+					if ( !$template ) {
 						return;
-
-					$product_url = Phpr::$request->getRootUrl().url('shop/products/edit/'.$this->master_grouped_product_id.'?'.uniqid());
-
-					$message = $this->set_email_variables($template->content, $product_url, $om_record);
-					$template->subject = $this->set_email_variables($template->subject, $product_url, $om_record);
-
-					$template->send_to_team($users, $message);
+					}
+					$product_url       = Phpr::$request->getRootUrl() . url( 'shop/products/edit/' . $this->master_grouped_product_id . '?' . uniqid() );
+					$message           = $this->set_email_variables( $template->content, $product_url, $om_record );
+					$template->subject = $this->set_email_variables( $template->subject, $product_url, $om_record );
+					$template->send_to_team( $users, $message );
 				}
 			}
 		}
@@ -3792,7 +3788,39 @@
 
 			return $this->om_options_preset->options_as_string();
 		}
-		
+
+		public function get_shipping_hs_code_options($keyValue = -1)
+		{
+			$result = array();
+			$obj = new self();
+
+			if ($keyValue == -1)
+				return $this->list_shipping_hs_code_options();
+			else
+			{
+				if ($keyValue == null)
+					return $result;
+
+				$name = Db_DbHelper::scalar("SELECT CONCAT(description,' [ ',code,' ]') as value FROM shop_shipping_hs_codes WHERE code = ?",$keyValue);
+
+				if ($name)
+					return $name;
+			}
+
+			return $result;
+		}
+
+		protected function list_shipping_hs_code_options(){
+			$sql = "SELECT code, CONCAT(description,' [ ',code,' ]') as value
+ 					FROM shop_shipping_hs_codes
+ 					WHERE CHAR_LENGTH(code) = 6";
+			$result = Db_DbHelper::queryArray($sql);
+			$options = array();
+			foreach($result as $data){
+				$options[$data['code']] = $data['value'];
+			}
+			return $options;
+		}
 		/*
 		 * Event descriptions
 		 */

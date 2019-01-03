@@ -35,7 +35,15 @@
 			$in_use = Db_DbHelper::scalar('select count(*) from users where shop_role_id=:id', array('id'=>$this->id));
 			if ($in_use)
 				throw new Phpr_ApplicationException("The role cannot be deleted because $in_use user(s) have this role assigned.");
-		} 
+		}
+
+		public static function get_users_notified_on_out_of_stock(){
+			$users = Users_User::create()->from('users', 'distinct users.*');
+			$users->join('shop_roles', 'shop_roles.id=users.shop_role_id');
+			$users->where('shop_roles.notified_on_out_of_stock is not null and shop_roles.notified_on_out_of_stock=1');
+			$users->where('(users.status is null or users.status = 0)');
+			return $users->find_all();
+		}
 	}
 
 ?>

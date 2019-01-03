@@ -10,7 +10,10 @@
 		private static $catalog_version_update = false;
 
 		public function __construct(){
-			require_once( PATH_APP . '/modules/shop/vendor/autoload.php' );
+			if (version_compare(phpversion(), '5.4.0', '>=')) {
+				//add helpers (boxpacker)
+				require_once( PATH_APP . '/modules/shop/vendor/autoload.php' );
+			}
 		}
 
 		/**
@@ -109,7 +112,7 @@
 
 		public function subscribe_crontab(){
 			return array(
-				'update_currency_rates' => array( 'method' => 'update_currency_rates', 'interval' => 3600 ),
+				'update_currency_rates' => array( 'method' => 'update_currency_rates', 'interval' => 1440 ), //24 hours
 			);
 		}
 		
@@ -357,7 +360,8 @@
 					'url'=>'/shop/settings/currency',
 					'description'=>'Configure the store currency. Set currency formatting parameters and ISO code.',
 					'sort_id'=>50,
-					'section'=>'eCommerce'
+					'section'=>'eCommerce',
+					'access_permission'=>'shop:manage_shop_currency'
 					),
 				array(
 					'icon'=>'/modules/shop/resources/images/countries_settings.png', 
@@ -365,7 +369,8 @@
 					'url'=>'/shop/settings/countries',
 					'description'=>'Setup a list of countries and states you cater to. Set ISO codes for countries and states.',
 					'sort_id'=>70,
-					'section'=>'eCommerce'
+					'section'=>'eCommerce',
+					'access_permission'=>'shop:manage_countries_and_states'
 					),
 				array(
 					'icon'=>'/modules/shop/resources/images/statuses_settings.png', 
@@ -389,7 +394,8 @@
 					'url'=>'/shop/shipping_settings',
 					'description'=>'Specify a shipping origin and default location, weight and dimension units.',
 					'sort_id'=>80,
-					'section'=>'eCommerce'
+					'section'=>'eCommerce',
+					'access_permission'=>'shop:manage_shipping_settings'
 					),
 				array(
 					'icon'=>'/modules/shop/resources/images/currency_converter_settings.png', 
@@ -469,6 +475,8 @@
 			$host_obj->add_field($this, 'manage_discounts', 'Manage discounts','left')->renderAs(frm_checkbox)->comment('Manage catalog-level and cart-level price rules.', 'above');
 			$host_obj->add_field($this, 'lock_orders', 'Lock/Unlock Orders','right')->renderAs(frm_checkbox)->comment('Allow user to lock/unlock orders. Locking prevents an order from being edited', 'above');
 			$host_obj->add_field($this, 'delete_orders', 'Delete Orders','left')->renderAs(frm_checkbox)->comment('Allow user to permanently delete an order record', 'above');
+			$host_obj->add_field($this, 'manage_countries_and_states', 'Manage countries and states','left')->renderAs(frm_checkbox)->comment('Allow user to manage countries and states available to the shopping system', 'above');
+			$host_obj->add_field($this, 'manage_shipping_settings', 'Manage shipping settings','right')->renderAs(frm_checkbox)->comment('Allow user to manage the shipping configuration', 'above');
 		}
 
 		/**
@@ -499,7 +507,8 @@
 					'customer_email'=>array('Outputs a customer email address', Phpr::$security->getUser()->email),
 					'customer_password'=>array('Outputs a customer password. Can be used only in the registration confirmation template.', '1234567'),
 					'customer_password_restore_hash' => array('Outputs the password restore hash, which can be used in a custom password restore link.', '19ag812nwqg1239123n23'),
-					'password_restore_page_link' => array('Outputs a link to the password restore page (page using the action shop:password_restore_request), link includes the customer\'s password restore hash.', '<a href="'.$password_restore_page_url.'">'.$password_restore_page_url.'</a>')
+					'password_restore_page_link' => array('Outputs a HTML link to the password restore page (page using the action shop:password_restore_request), link includes the customer\'s password restore hash.', '<a href="'.$password_restore_page_url.'">'.$password_restore_page_url.'</a>'),
+					'password_restore_page_url' => array('Outputs a plain text URL to the password restore page, link includes the customer\'s password restore hash.', $password_restore_page_url)
 				),
 				'Order variables'=>array(
 					'order_total'=>array('Outputs order total amount', format_currency(125.96)),
@@ -518,7 +527,8 @@
 					'order_previous_status'=>array('Displays a previous order status name', 'New'),
 					'order_status_name'=>array('Displays a current order status name', 'Paid'),
 					'customer_notes'=>array('Outputs notes provided by the customer', 'Please deliver this order by this Friday!'),
-					'payment_page_link'=>array('Outputs a link of the Pay page', '<a href="'.$pay_page_url.'">'.$pay_page_url.'</a>'),
+					'payment_page_link'=>array('Outputs a HTML link for the Pay page', '<a href="'.$pay_page_url.'">'.$pay_page_url.'</a>'),
+					'payment_page_url'=>array('Outputs the URL for the Pay page', $pay_page_url),
 					'tax_incl_label'=>array('Outputs the "tax included" label, in accordance with the label configuration.', '(inlc. GST))'),
 					'net_amount'=>array('Outputs order net amount (total - tax).', format_currency(115.97)),
 					'billing_customer_name'=>array('Outputs a customer billing name.', 'John Smith'),

@@ -1,0 +1,36 @@
+<?
+$zones = $form_model->list_related_records_deferred('shipping_zones', $this->formGetEditSessionKey());
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th class="float">Min Delivery Time</th>
+			<th class="float">Max Delivery Time</th>
+			<? if ($zones->count): ?>
+				<th class="iconCell last">&nbsp;</th>
+			<? endif ?>
+		</tr>
+	</thead>
+
+	<tbody>
+		<? if (!$zones->count): ?>
+			<tr class="noData">
+				<td colspan="3" class="last">You have not added any shipping zones.</td>
+			</tr>
+		<? else: ?>
+			<? foreach ($zones as $zone):
+				$parent_session_key = $this->formGetEditSessionKey();
+				$onClick = "$('shipping_zone_id{$parent_session_key}').value = '{$zone->id}'; new PopupForm('onLoadShippingZoneForm', {ajaxFields: $('shipping_zone_id{$parent_session_key}').getForm()}); return false;";
+			?>
+				<tr class="<?= Backend_Html::zebra('shipping_zones') ?>">
+					<td class="link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= $zone->displayField('name', 'list') ?></a></td>
+					<td class="float link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($zone->displayField('delivery_min_days', 'list')) ?></a></td>
+					<td class="float link" onclick="<?= $onClick ?>"><a href="#" onclick="<?= $onClick ?>"><?= h($zone->displayField('delivery_max_days', 'list')) ?></a></td>
+					<td class="iconCell last"><a onclick="$('shipping_zone_id<?= $this->formGetEditSessionKey() ?>').value = '<?= $zone->id ?>'; return $(this).getForm().sendPhpr('onDeleteShippingZone', {confirm: 'Do you really want to delete this zone?', update: 'shipping_zone_list<?= $this->formGetEditSessionKey() ?>', loadIndicator: {show: false}});" title="Delete zone" class="deleteDocument" href="#">Delete</a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+</table>
