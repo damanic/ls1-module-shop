@@ -807,26 +807,24 @@ class Shop_Order extends Db_ActiveRecord
 				if ($item->product->tier_prices_per_customer)
 					$effective_quantity += $customer->get_purchased_item_quantity($item->product);
 
-                $item_om_record = $item->get_om_record();
-                $bundle_item_product = $item->get_bundle_item_product();
-                if (! $bundle_item_product) {
-                    if (! $item_om_record) {
-                        $product_discount = $item->price_is_overridden($effective_quantity) ? 0 : round($item->product->get_discount($effective_quantity), 2);
-                        $product_price = $item->single_price_no_tax(false, $effective_quantity) - $product_discount;
-                    } else {
-                        $product_price = $item_om_record->get_sale_price($item->product, $effective_quantity, $customer->customer_group_id, true);
-                    }
+
+                if ($item->is_bundle_item()) {
+					$bundle_item_product = $item->get_bundle_item_product();
+					$product_price = $bundle_item_product->get_price_no_tax($bundle_item_product->bundle_item->product, $effective_quantity, $customer->customer_group_id, $item->options);
                 } else {
-                    $product_price = $bundle_item_product->get_price_no_tax($bundle_item_product->bundle_item->product, $effective_quantity, $customer->customer_group_id, $item->options);
+					$item_om_record = $item->get_om_record();
+					if ($item_om_record) {
+						$obj->option_matrix_record_id = $item_om_record->id;
+						$product_price = $item_om_record->get_sale_price($item->product, $effective_quantity, $customer->customer_group_id, true);
+					} else {
+						$product_discount = $item->price_is_overridden($effective_quantity) ? 0 : round($item->product->get_discount($effective_quantity), 2);
+						$product_price = $item->single_price_no_tax(false, $effective_quantity) - $product_discount;
+					}
                 }
                 
 				$obj->price = $product_price;
-
 				$obj->cost = $item->om('cost');
 				$obj->discount = $item->applied_discount;
-
-				if ($item_om_record)
-					$obj->option_matrix_record_id = $item_om_record->id;
 
 				$total_cost += $obj->cost*$item->quantity;
 
