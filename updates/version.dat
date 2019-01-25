@@ -975,3 +975,4 @@
 #1.33.5 Unit conversion helpers added to Shop_BoxPacker classes
 #1.33.6 Bugfix: correct price for bundled products
 #1.33.7 IPV6 Support
+#1.33.8 New event: shop:onAfterCategoryModify

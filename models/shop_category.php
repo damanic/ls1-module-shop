@@ -851,6 +851,7 @@
 		public function after_modify($operation, $deferred_session_key)
 		{
 			Shop_Module::update_catalog_version();
+			Backend::$events->fireEvent('shop:onAfterCategoryModify', $this, $operation);
 		}
 		
 		/**
