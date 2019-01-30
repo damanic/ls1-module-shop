@@ -455,7 +455,7 @@
 
 				if ($context != 'grouped' && !$front_end)
 				{
-					$this->add_form_field('categories')->tab('Categories')->comment('Select categories the product belongs to.', 'above')->referenceSort('name')->optionsHtmlEncode(false);
+					$this->add_form_field('categories')->tab('Categories')->comment('Select categories the product belongs to.', 'above')->referenceSort('name')->optionsHtmlEncode(false)->cssClasses('height-400');
 				}
 
 				$this->add_form_field('meta_description')->tab('Meta');
