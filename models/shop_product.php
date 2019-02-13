@@ -1706,7 +1706,7 @@
 			if($this->on_sale && strlen($this->sale_price_or_discount))
 			{
 				$price = $this->price_no_tax($quantity, $customer_group_id);
-				return round(self::get_set_sale_price($price, $this->sale_price_or_discount), 4);
+				return round(self::get_set_sale_price($price, $this->sale_price_or_discount), 2);
 			}
 
 			if (!strlen($this->price_rules_compiled))
@@ -3462,7 +3462,7 @@
 				$price = $original_price + $sale_price_or_discount;
 			}
 			
-			return $price > 0 ? $price : 0;
+			return $price > 0 ? round($price,2) : 0;
 		}
 		
 		/**
