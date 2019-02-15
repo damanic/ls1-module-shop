@@ -115,7 +115,7 @@ class Shop_BoxPacker {
 		}
 			$description = $item->om('sku').' | ';
 			$description .= is_a($item, 'Shop_ExtraOption' ) ? 'Extra Option: '.$item->description : $item->product->name;
-			return new Shop_BoxPacker_Item(
+			$bp_item = new Shop_BoxPacker_Item(
 				$description,
 				$this->convert_to_mm( $width ),
 				$this->convert_to_mm( $length ),
@@ -123,6 +123,9 @@ class Shop_BoxPacker {
 				$this->convert_to_grams( $weight ),
 				$keep_flat
 			);
+
+			$bp_item->item_id = $item->id;
+			return $bp_item;
 	}
 
 	public function get_unpackable_items(){
@@ -432,6 +435,12 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 class Shop_BoxPacker_Item implements BoxPackerItem
 {
  	use Shop_BoxPacker_NativeUnits;
+
+	/**
+	 * @var string
+	 */
+ 	public $item_id;
+
 	/**
 	 * @var string
 	 */
