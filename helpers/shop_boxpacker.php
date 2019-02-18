@@ -75,7 +75,7 @@ class Shop_BoxPacker {
 
 	public function make_box_compat( Shop_ShippingBox $box ) {
 
-		return new Shop_BoxPacker_Box(
+		$bp_box = new Shop_BoxPacker_Box(
 			$box->name,
 			$this->convert_to_mm( $box->width ),
 			$this->convert_to_mm( $box->length ),
@@ -86,6 +86,9 @@ class Shop_BoxPacker {
 			$this->convert_to_mm( $box->inner_depth ? $box->inner_depth : $box->depth),
 			$this->convert_to_grams( $box->max_weight )
 		);
+
+		$bp_box->box_id = $box->id;
+		return $bp_box;
 	}
 
 	public function make_item_compat($item, $force = false){
@@ -239,6 +242,12 @@ trait Shop_BoxPacker_NativeUnits {
 class Shop_BoxPacker_Box implements BoxPackerBox
 {
 	use Shop_BoxPacker_NativeUnits;
+
+	/**
+	 * @var string
+	 */
+	public $box_id;
+
 
 	/**
 	 * @var string
