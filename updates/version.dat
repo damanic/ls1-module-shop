@@ -977,3 +977,4 @@
 #1.33.7 IPV6 Support
 #1.33.8 New event: shop:onAfterCategoryModify
 #1.33.9 Minor backend UI improvement. Fixed some rounding issues
+#1.33.10 Improved box packer helpers
