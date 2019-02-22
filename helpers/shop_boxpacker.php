@@ -36,18 +36,41 @@ class Shop_BoxPacker {
 		foreach ( $boxes as $box ) {
 			$packer->addBox( $this->make_box_compat($box) );
 		}
+		$packable_list = $this->get_packable_items_list($items);
+		if($packable_list['failed_compat']){
+			throw new Phpr_ApplicationException('Packing failed. Some items did not have valid height, width, depth dimensions');
+		}
+
+		$packable_items = $packable_list['items'];
+		foreach ( $items as $item ) {
+			if ( isset( $packable_items[$item->id] ) ) {
+				$quantity = $item->quantity;
+				while ( $quantity > 0 ) {
+					$quantity --;
+					$packer->addItem( $packable_items[$item->id]['item'] );
+				}
+				if ( isset( $packable_items[$item->id]['extras'] ) ) {
+					foreach ( $packable_items[$item->id]['extras'] as $extra ) {
+						$packer->addItem( $extra );
+					}
+				}
+			}
+		}
+		$packed_boxes = $packer->pack();
+		return $packed_boxes;
+	}
+
+	public function get_packable_items_list($items){
+		$compat_items = array();
+		$failed_compat = false;
 		foreach ( $items as $item ) {
 			$shipping_enabled = $item->product->product_type->shipping;
 			if($shipping_enabled) {
-				$quantity = $item->quantity;
 				$compatible_item = $this->make_item_compat( $item );
-				if(!$compatible_item) {
-					$this->unpackable_items[$item->om('sku')]  = $item;
-					continue;
-				}
-				while ( $quantity > 0 ) {
-					$quantity --;
-					$packer->addItem( $this->make_item_compat( $item ) );
+				if($compatible_item) {
+					$compat_items[$item->id]['item']  = $compatible_item;
+				} else {
+					$failed_compat = true;
 				}
 			}
 			$extras = false;
@@ -58,15 +81,17 @@ class Shop_BoxPacker {
 			}
 			if($extras){
 				foreach ($extras as $extra_item) {
-					$packer->addItem( $this->make_item_compat( $extra_item ), $force = true);
+					$compatible_item = $this->make_item_compat( $extra_item );
+					if($compatible_item){
+						$compat_items[$item->id]['extras'][]  = $compatible_item;
+					}
 				}
 			}
 		}
-		if(count($this->unpackable_items )){
-			throw new Phpr_ApplicationException('Packing failed. Some items did not have valid height, width, depth dimensions');
-		}
-		$packed_boxes = $packer->pack();
-		return $packed_boxes;
+		return array(
+			'items' => $compat_items,
+			'failed_compat' => $failed_compat
+		);
 	}
 
 	public function get_boxes() {
@@ -157,7 +182,7 @@ class Shop_BoxPacker {
 		return $volume;
 	}
 
-	protected function convert_to_mm( $unit ) {
+	public function convert_to_mm( $unit ) {
 		$unit = ($unit && is_numeric($unit)) ? $unit : 0;
 		if(!$unit){
 			return $unit;
@@ -170,7 +195,7 @@ class Shop_BoxPacker {
 
 	}
 
-	protected function convert_to_grams( $unit ) {
+	public function convert_to_grams( $unit ) {
 		$unit = ($unit && is_numeric($unit)) ? $unit : 0;
 		if(!$unit){
 			return $unit;
@@ -247,7 +272,6 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	 * @var string
 	 */
 	public $box_id;
-
 
 	/**
 	 * @var string
