@@ -5,19 +5,19 @@
 		/**
 		 * Returns information about the payment type
 		 * Must return array: array(
-		 *		'name'=>'Authorize.net', 
+		 *		'name'=>'Authorize.net',
 		 *		'custom_payment_form'=>false,
 		 *		'offline'=>false,
 		 *		'pay_offline_message'=>null
 		 * ).
 		 * Use custom_paymen_form key to specify a name of a partial to use for building a back-end
-		 * payment form. Usually it is needed for forms which ACTION refer outside web services, 
+		 * payment form. Usually it is needed for forms which ACTION refer outside web services,
 		 * like PayPal Standard. Otherwise override build_payment_form method to build back-end payment
 		 * forms.
-		 * If the payment type provides a front-end partial (containing the payment form), 
+		 * If the payment type provides a front-end partial (containing the payment form),
 		 * it should be called in following way: payment:name, in lower case, e.g. payment:authorize.net
 		 *
-		 * Set index 'offline' to true to specify that the payments of this type cannot be processed online 
+		 * Set index 'offline' to true to specify that the payments of this type cannot be processed online
 		 * and thus they have no payment form. You may specify a message to display on the payment page
 		 * for offline payment type, using 'pay_offline_message' index.
 		 *
@@ -33,13 +33,13 @@
 		}
 
 		/**
-		 * Builds the payment type administration user interface 
-		 * For drop-down and radio fields you should also add methods returning 
+		 * Builds the payment type administration user interface
+		 * For drop-down and radio fields you should also add methods returning
 		 * options. For example, of you want to have Sizes drop-down:
 		 * public function get_sizes_options();
 		 * This method should return array with keys corresponding your option identifiers
 		 * and values corresponding its titles.
-		 * 
+		 *
 		 * @param $host_obj ActiveRecord object to add fields to
 		 * @param string $context Form context. In preview mode its value is 'preview'
 		 */
@@ -51,7 +51,7 @@
 			$host_obj->add_field('shipping_address', 'Shipping Address')->tab('Configuration')->renderAs(frm_dropdown)->comment('Please specify whether you want PayPal to allow customers entering their shipping address in the payment form.', 'above')->validation()->fn('trim');
 			$host_obj->add_field('address_override', 'Override Address')->tab('Configuration')->renderAs(frm_checkbox)->comment('The address specified on the Checkout page overrides the PayPal member\'s stored address.', 'above')->validation()->fn('trim');
 			$host_obj->add_field('use_shipping_address', 'Use Shipping Address')->tab('Configuration')->renderAs(frm_checkbox)->comment('Use shipping address instead of billing address in PayPal transactions.', 'above')->validation()->fn('trim');
-			
+
 			$host_obj->add_field('skip_itemized_data', 'Do not submit itemized order information')->tab('Configuration')->renderAs(frm_checkbox)->comment('Enable this option if you don\'t want to submit itemized order information with a transaction. When the option is enabled only the order total amount is submitted to the payment gateway. The total amount includes the tax and shipping amounts.', 'above');
 
 			if ($context !== 'preview')
@@ -59,12 +59,12 @@
 				$host_obj->add_form_partial($host_obj->get_partial_path('hint.htm'))->tab('Configuration');
 				$host_obj->add_field('pdt_token', 'PDT Token')->tab('Configuration')->renderAs(frm_text)->comment('PayPal Payment Data Transfer token.', 'above')->validation()->fn('trim')->required('Please provide PayPal Payment Data Transfer token.');
 			}
-			
+
 			$host_obj->add_field('cancel_page', 'Cancel Page', 'left')->tab('Configuration')->renderAs(frm_dropdown)->formElementPartial(PATH_APP.'/modules/shop/controllers/partials/_page_selector.htm')->comment('Page which the customer’s browser is redirected to if payment is cancelled.', 'above')->emptyOption('<please select a page>');
-			
+
 			$host_obj->add_field('order_status', 'Order Status', 'right')->tab('Configuration')->renderAs(frm_dropdown)->comment('Select status to assign the order in case of successful payment.', 'above');
 		}
-		
+
 		public function get_order_status_options($current_key_value = -1)
 		{
 			if ($current_key_value == -1)
@@ -72,7 +72,7 @@
 
 			return Shop_OrderStatus::create()->find($current_key_value)->name;
 		}
-		
+
 		public function get_cancel_page_options($current_key_value = -1)
 		{
 			if ($current_key_value == -1)
@@ -80,7 +80,7 @@
 
 			return Cms_Page::create()->find($current_key_value)->title;
 		}
-		
+
 		public function get_shipping_address_options($current_key_value = -1)
 		{
 			$options = array(
@@ -88,7 +88,7 @@
 				0 => 'Prompt for an address, but do not require one',
 				2 => 'Prompt for an address, and require one'
 			);
-			
+
 			if ($current_key_value == -1)
 				return $options;
 
@@ -103,9 +103,9 @@
 		 */
 		public function validate_config_on_save($host_obj)
 		{
-			
+
 		}
-		
+
 		/**
 		 * Validates configuration data after it is loaded from database
 		 * Use host object to access fields previously added with build_config_ui method.
@@ -126,7 +126,7 @@
 			$host_obj->test_mode = 1;
 			$host_obj->shipping_address = 1;
 		}
-		
+
 		public function get_return_page_options($current_key_value = -1)
 		{
 			if ($current_key_value == -1)
@@ -134,7 +134,7 @@
 
 			return Cms_Page::create()->find($current_key_value)->title;
 		}
-		
+
 		public function get_form_action($host_obj)
 		{
 			if ($host_obj->test_mode)
@@ -142,7 +142,7 @@
 			else
 				return "https://www.paypal.com/cgi-bin/webscr";
 		}
-		
+
 		public function get_hidden_fields($host_obj, $order, $backend = false)
 		{
 			$result = array();
@@ -153,7 +153,7 @@
 
 			$result['first_name'] = $order->billing_first_name;
 			$result['last_name'] = $order->billing_last_name;
-			
+
 			if (!$host_obj->use_shipping_address)
 			{
 				$result['address1'] = $order->billing_street_addr;
@@ -183,7 +183,7 @@
 			/*
 			 * Order items
 			 */
-			
+
 			if ($host_obj->skip_itemized_data)
 			{
 				$result['item_name_1'] = 'Order #'.$order->get_order_reference();
@@ -201,15 +201,19 @@
 			}
 
 			//$result['discount_amount_cart'] = $order->discount;
-			
+
 			/*
 			 * Shipping
 			 */
 
 			if (!$host_obj->skip_itemized_data)
 			{
+				// Patch for discounted shipping. Christopher Stevens 28/02/2019
+				$shipping_quote = method_exists( $order, 'get_shipping_quote_discounted' ) ? $order->get_shipping_quote_discounted() : $order->shipping_quote;
+
 				$result['item_name_'.$item_index] = 'Shipping Cost';
-				$result['amount_'.$item_index] = $order->shipping_quote;
+				// $result['amount_'.$item_index] = $order->shipping_quote;
+				$result['amount_'.$item_index] = $shipping_quote;
 				$result['quantity_'.$item_index] = 1;
 
 				$item_index++;
@@ -224,7 +228,7 @@
 			/*
 			 * Payment setup
 			 */
-			
+
 			$result['no_shipping'] = strlen($host_obj->shipping_address) ? $host_obj->shipping_address : 1;
 			$result['cmd'] = '_cart';
 			$result['upload'] = 1;
@@ -251,23 +255,23 @@
 					elseif ($cancel_page->action_reference == 'shop:order')
 						$result['cancel_return'] .= '/'.$order->id;
 				}
-			} else 
+			} else
 			{
 				$result['return'] = Phpr::$request->getRootUrl().root_url('/ls_paypal_autoreturn/'.$order->order_hash.'/backend');
 				//	$result['return'] = Phpr::$request->getRootUrl().url('shop/orders/preview/'.$order->id.'?'.uniqid());
 				$result['cancel_return'] = Phpr::$request->getRootUrl().url('shop/orders/pay/'.$order->id.'?'.uniqid());
 			}
-			
+
 			$result['bn'] = 'LemonStand_Cart_WPS';
 			$result['charset'] = 'utf-8';
-			
+
 			foreach($result as $key=>$value)
 			{
 				$result[$key] = str_replace("\n", ' ', $value);
 			}
 			return $result;
 		}
-		
+
 		/**
 		 * Processes payment using passed data
 		 * @param array $data Posted payment form data
@@ -282,15 +286,15 @@
 		}
 
 		/**
-		 * Registers a hidden page with specific URL. Use this method for cases when you 
-		 * need to have a hidden landing page for a specific payment gateway. For example, 
+		 * Registers a hidden page with specific URL. Use this method for cases when you
+		 * need to have a hidden landing page for a specific payment gateway. For example,
 		 * PayPal needs a landing page for the auto-return feature.
 		 * Important! Payment module access point names should have the ls_ prefix.
 		 * @return array Returns an array containing page URLs and methods to call for each URL:
-		 * return array('ls_paypal_autoreturn'=>'process_paypal_autoreturn'). The processing methods must be declared 
-		 * in the payment type class. Processing methods must accept one parameter - an array of URL segments 
+		 * return array('ls_paypal_autoreturn'=>'process_paypal_autoreturn'). The processing methods must be declared
+		 * in the payment type class. Processing methods must accept one parameter - an array of URL segments
 		 * following the access point. For example, if URL is /ls_paypal_autoreturn/1234 an array with single
-		 * value '1234' will be passed to process_paypal_autoreturn method 
+		 * value '1234' will be passed to process_paypal_autoreturn method
 		 */
 		public function register_access_points()
 		{
@@ -299,7 +303,7 @@
 				'ls_paypal_ipn'=>'process_paypal_ipn'
 			);
 		}
-		
+
 		protected function get_cancel_page($host_obj)
 		{
 			$cancel_page = $host_obj->cancel_page;
@@ -312,40 +316,40 @@
 
 			return Cms_Page::create()->find($cancel_page);
 		}
-		
+
 		public function process_paypal_ipn($params)
 		{
 			try
 			{
 				$order = null;
-				
+
 				/*
 				 * Find order and load paypal settings
 				 */
-				
+
 				sleep(5);
 
 				$order_hash = array_key_exists(0, $params) ? $params[0] : null;
 				if (!$order_hash)
 					throw new Phpr_ApplicationException('Order not found');
-				
+
 				$order = Shop_Order::create()->find_by_order_hash($order_hash);
 				if (!$order)
 					throw new Phpr_ApplicationException('Order not found.');
-				
+
 				if (!$order->payment_method)
 					throw new Phpr_ApplicationException('Payment method not found.');
-				
+
 				$order->payment_method->define_form_fields();
 				$payment_method_obj = $order->payment_method->get_paymenttype_object();
-				
+
 				if (!($payment_method_obj instanceof Shop_PayPal_Standard_Payment))
 					throw new Phpr_ApplicationException('Invalid payment method.');
-				
-				$endpoint = $order->payment_method->test_mode ? 
-					"www.sandbox.paypal.com/cgi-bin/webscr" : 
+
+				$endpoint = $order->payment_method->test_mode ?
+					"www.sandbox.paypal.com/cgi-bin/webscr" :
 					"www.paypal.com/cgi-bin/webscr";
-				
+
 				$fields = $_POST;
 				foreach($fields as $key => $value)
 				{
@@ -390,19 +394,19 @@
 				throw new Phpr_ApplicationException($ex->getMessage());
 			}
 		}
-		
+
 		public function process_paypal_autoreturn($params)
 		{
 			try
 			{
 				$order = null;
-				
+
 				$response = null;
-				
+
 				/*
 				 * Find order and load paypal settings
 				 */
-			
+
 				$order_hash = array_key_exists(0, $params) ? $params[0] : null;
 				if (!$order_hash)
 					throw new Phpr_ApplicationException('Order not found');
@@ -416,7 +420,7 @@
 
 				$order->payment_method->define_form_fields();
 				$payment_method_obj = $order->payment_method->get_paymenttype_object();
-			
+
 				if (!($payment_method_obj instanceof Shop_PayPal_Standard_Payment))
 					throw new Phpr_ApplicationException('Invalid payment method.');
 
@@ -432,8 +436,8 @@
 					if (!$transaction)
 						throw new Phpr_ApplicationException('Invalid transaction value');
 
-					$endpoint = $order->payment_method->test_mode ? 
-						"www.sandbox.paypal.com/cgi-bin/webscr" : 
+					$endpoint = $order->payment_method->test_mode ?
+						"www.sandbox.paypal.com/cgi-bin/webscr" :
 						"www.paypal.com/cgi-bin/webscr";
 
 					$fields = array(
@@ -447,7 +451,7 @@
 					/*
 					 * Mark order as paid
 					 */
-			
+
 					if (strpos($response, 'SUCCESS') !== false)
 					{
 						$matches = array();
@@ -457,10 +461,10 @@
 
 						if ($matches[1] != $order->get_order_reference())
 							throw new Phpr_ApplicationException('Invalid invoice number.');
-							
+
 						if (!preg_match('/^mc_gross=([0-9\.]+)/m', $response, $matches))
 							throw new Phpr_ApplicationException('Invalid response.');
-							
+
 						if ($matches[1] != strval($this->get_paypal_total($order, $order->payment_method)))
 							throw new Phpr_ApplicationException('Invalid order total - order total received is '.$matches[1]);
 
@@ -475,15 +479,15 @@
 						}
 					}
 				}
-			
+
 				if (!$is_backend)
 				{
 					$return_page = $order->payment_method->receipt_page;
 					if ($return_page)
 						Phpr::$response->redirect(root_url($return_page->url.'/'.$order->order_hash).'?utm_nooverride=1');
-					else 
+					else
 						throw new Phpr_ApplicationException('PayPal Standard Receipt page is not found.');
-				} else 
+				} else
 				{
 					Phpr::$response->redirect(url('/shop/orders/payment_accepted/'.$order->id.'?utm_nooverride=1&nocache'.uniqid()));
 				}
@@ -500,7 +504,7 @@
 		/**
 		 * This function is called before a CMS page deletion.
 		 * Use this method to check whether the payment method
-		 * references a page. If so, throw Phpr_ApplicationException 
+		 * references a page. If so, throw Phpr_ApplicationException
 		 * with explanation why the page cannot be deleted.
 		 * @param $host_obj ActiveRecord object containing configuration fields values
 		 * @param Cms_Page $page Specifies a page to be deleted
@@ -510,11 +514,11 @@
 			if ($host_obj->cancel_page == $page->id)
 				throw new Phpr_ApplicationException('Page cannot be deleted because it is used in PayPal Standard payment method as a cancel page.');
 		}
-		
+
 		/**
 		 * This function is called before an order status deletion.
 		 * Use this method to check whether the payment method
-		 * references an order status. If so, throw Phpr_ApplicationException 
+		 * references an order status. If so, throw Phpr_ApplicationException
 		 * with explanation why the status cannot be deleted.
 		 * @param $host_obj ActiveRecord object containing configuration fields values
 		 * @param Shop_OrderStatus $status Specifies a status to be deleted
@@ -524,7 +528,7 @@
 			if ($host_obj->order_status == $status->id)
 				throw new Phpr_ApplicationException('Status cannot be deleted because it is used in PayPal Standard payment method.');
 		}
-		
+
 		/**
 		* This function is used internally to determine the order total as calculated by PayPal
 		* Used because LS stores order item prices with more precision than is sent to PayPal.
@@ -534,7 +538,7 @@
 		{
 			if ($host_obj->skip_itemized_data)
 				return $order->total;
-			
+
 			$order_total = 0;
 			//add up individual order items
 			foreach ($order->items as $item)
@@ -542,16 +546,19 @@
 				$item_price = round($item->unit_total_price, 2);
 				$order_total = $order_total + ($item->quantity * $item_price);
 			}
-			
+
+			// Patch for discounted shipping. Christopher Stevens 28/02/2019
+			$shipping_quote = method_exists( $order, 'get_shipping_quote_discounted' ) ? $order->get_shipping_quote_discounted() : $order->shipping_quote;
+
 			//add shipping quote + tax
-			$order_total = $order_total + $order->shipping_quote;
+			$order_total = $order_total + $shipping_quote;
 			if ($order->shipping_tax > 0)
 				$order_total = $order_total + $order->shipping_tax;
-			
+
 			//order items tax
 			$cart_tax = round($order->goods_tax, 2);
 			$order_total = $order_total + $cart_tax;
-			
+
 			return $order_total;
 		}
 

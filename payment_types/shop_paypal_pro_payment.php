@@ -20,19 +20,19 @@
 		/**
 		 * Returns information about the payment type
 		 * Must return array: array(
-		 *		'name'=>'Authorize.net', 
+		 *		'name'=>'Authorize.net',
 		 *		'custom_payment_form'=>false,
 		 *		'offline'=>false,
 		 *		'pay_offline_message'=>null
 		 * ).
 		 * Use custom_paymen_form key to specify a name of a partial to use for building a back-end
-		 * payment form. Usually it is needed for forms which ACTION refer outside web services, 
+		 * payment form. Usually it is needed for forms which ACTION refer outside web services,
 		 * like PayPal Standard. Otherwise override build_payment_form method to build back-end payment
 		 * forms.
-		 * If the payment type provides a front-end partial (containing the payment form), 
+		 * If the payment type provides a front-end partial (containing the payment form),
 		 * it should be called in following way: payment:name, in lower case, e.g. payment:authorize.net
 		 *
-		 * Set index 'offline' to true to specify that the payments of this type cannot be processed online 
+		 * Set index 'offline' to true to specify that the payments of this type cannot be processed online
 		 * and thus they have no payment form. You may specify a message to display on the payment page
 		 * for offline payment type, using 'pay_offline_message' index.
 		 *
@@ -47,13 +47,13 @@
 		}
 
 		/**
-		 * Builds the payment type administration user interface 
-		 * For drop-down and radio fields you should also add methods returning 
+		 * Builds the payment type administration user interface
+		 * For drop-down and radio fields you should also add methods returning
 		 * options. For example, of you want to have Sizes drop-down:
 		 * public function get_sizes_options();
 		 * This method should return array with keys corresponding your option identifiers
 		 * and values corresponding its titles.
-		 * 
+		 *
 		 * @param $host_obj ActiveRecord object to add fields to
 		 * @param string $context Form context. In preview mode its value is 'preview'
 		 */
@@ -69,14 +69,14 @@
 				$host_obj->add_field('api_user_name', 'API User Name', 'left')->tab('Configuration')->renderAs(frm_text)->validation()->fn('trim')->required('Please provide PayPal API user name.');
 				$host_obj->add_field('api_password', 'API Password', 'right')->tab('Configuration')->renderAs(frm_text)->validation()->fn('trim')->required('Please provide PayPal API password.');
 			}
-			
+
 			$host_obj->add_field('paypal_action', 'PayPal Action', 'left')->tab('Configuration')->renderAs(frm_dropdown)->comment('Action PayPal should perform with customer\'s credit card.', 'above');
 
 			$host_obj->add_field('order_status', 'Order Status', 'right')->tab('Configuration')->renderAs(frm_dropdown)->comment('Select status to assign the order in case of successful payment.', 'above');
 
 			$host_obj->add_field('adjust_tax_value', 'Adjust tax value')->tab('Configuration')->renderAs(frm_checkbox)->comment('If needed for the order, the tax amount sent to PayPal will be adjusted to accommodate for tax inclusive pricing and increased product price precision.', 'above');
 			$host_obj->add_field('skip_order_details', 'Do not submit order details')->tab('Configuration')->renderAs(frm_checkbox)->comment('When selected, the order details (tax, shipping cost, order items) will not be sent to PayPal.', 'above');
-			
+
 			if ($context !== 'preview')
 			{
 				$host_obj->add_field('cc_test_mode', 'Test Mode')->tab('3D Secure')->renderAs(frm_onoffswitcher)->comment('Use the Cardinal Centinel Test Environment to test 3D Secure.', 'above');
@@ -90,7 +90,7 @@
 				$host_obj->add_field('cc_transaction_pass', 'Cardinal Centinel Transaction Password')->tab('3D Secure')->renderAs(frm_text);
 			}
 		}
-		
+
 		public function get_order_status_options($current_key_value = -1)
 		{
 			if ($current_key_value == -1)
@@ -98,20 +98,20 @@
 
 			return Shop_OrderStatus::create()->find($current_key_value)->name;
 		}
-		
+
 		public function get_paypal_action_options($current_key_value = -1)
 		{
 			$options = array(
 				'Sale'=>'Capture',
 				'Authorization'=>'Authorization only'
 			);
-			
+
 			if ($current_key_value == -1)
 				return $options;
 
 			return isset($options[$current_key_value]) ? $options[$current_key_value] : null;
 		}
-		
+
 		/**
 		 * Validates configuration data before it is saved to database
 		 * Used to ensure all Cardinal Centinel data is entered if 3D Secure is enabled
@@ -126,7 +126,7 @@
 			if($host_obj->enable_3d_secure && !strlen($host_obj->cc_transaction_pass))
 				$host_obj->field_error('cc_transaction_pass', 'Please enter the Cardinal Centinel Transaction Password to enable 3D Secure.');
 		}
-		
+
 		/**
 		 * Validates configuration data after it is loaded from database
 		 * Use host object to access fields previously added with build_config_ui method.
@@ -149,13 +149,13 @@
 		}
 
 		/**
-		 * Builds the back-end payment form 
-		 * For drop-down and radio fields you should also add methods returning 
+		 * Builds the back-end payment form
+		 * For drop-down and radio fields you should also add methods returning
 		 * options. For example, of you want to have Sizes drop-down:
 		 * public function get_sizes_options();
 		 * This method should return array with keys corresponding your option identifiers
 		 * and values corresponding its titles.
-		 * 
+		 *
 		 * @param $host_obj ActiveRecord object to add fields to
 		 */
 		public function build_payment_form($host_obj)
@@ -168,13 +168,13 @@
 
 			$host_obj->add_field('EXPDATE_MONTH', 'Expiration Month', 'left')->renderAs(frm_text)->renderAs(frm_text)->validation()->fn('trim')->required('Please specify card expiration month')->numeric();
 			$host_obj->add_field('EXPDATE_YEAR', 'Expiration Year', 'right')->renderAs(frm_text)->renderAs(frm_text)->validation()->fn('trim')->required('Please specify card expiration year')->numeric();
-			
+
 			$host_obj->add_field('ISSUENUMBER', 'Issue Number')->comment('Please specify the Issue Number or Start Date for Solo and Maestro cards', 'above')->renderAs(frm_text)->renderAs(frm_text)->validation()->fn('trim')->numeric();
 
 			$host_obj->add_field('STARTDATE_MONTH', 'Start Month', 'left')->renderAs(frm_text)->renderAs(frm_text)->validation()->fn('trim')->numeric();
 			$host_obj->add_field('STARTDATE_YEAR', 'Start Year', 'right')->renderAs(frm_text)->renderAs(frm_text)->validation()->fn('trim')->numeric();
 		}
-		
+
 		public function get_CREDITCARDTYPE_options()
 		{
 			return array(
@@ -223,10 +223,10 @@
 			$result = array();
 			foreach($fields as $key=>$val)
 				$result[] = urlencode($key)."=".urlencode($val);
-			
+
 			return implode('&', $result);
 		}
-		
+
 		private function post_data($endpoint, $fields)
 		{
 			$errno = null;
@@ -243,17 +243,17 @@
 
 			$poststring = $this->format_form_fields($fields);
 
-			fputs($fp, "POST /nvp HTTP/1.1\r\n"); 
-			fputs($fp, "Host: $endpoint\r\n"); 
-			fputs($fp, "Content-type: application/x-www-form-urlencoded\r\n"); 
-			fputs($fp, "Content-length: ".strlen($poststring)."\r\n"); 
-			fputs($fp, "Connection: close\r\n\r\n"); 
-			fputs($fp, $poststring . "\r\n\r\n"); 
+			fputs($fp, "POST /nvp HTTP/1.1\r\n");
+			fputs($fp, "Host: $endpoint\r\n");
+			fputs($fp, "Content-type: application/x-www-form-urlencoded\r\n");
+			fputs($fp, "Content-length: ".strlen($poststring)."\r\n");
+			fputs($fp, "Connection: close\r\n\r\n");
+			fputs($fp, $poststring . "\r\n\r\n");
 
 			$response = null;
 			while(!feof($fp))
 				$response .= fgets($fp, 4096);
-				
+
 			return $response;
 		}
 
@@ -274,7 +274,7 @@
 				if (isset($element[0]) && isset($element[1]))
 					$result[$element[0]] = urldecode($element[1]);
 			}
-			
+
 			return $result;
 		}
 
@@ -288,17 +288,17 @@
 			unset($fields['CVV2']);
 			$fields['ACCT'] = '...'.substr($fields['ACCT'], -4);
 			unset($fields['XID']);
-			
+
 			return $fields;
 		}
-		
+
 		protected function get_avs_status_text($status_code)
 		{
 			$status_code = strtoupper($status_code);
-			
+
 			if (!strlen($status_code))
 				return 'AVS response code is empty';
-			
+
 			$status_names = array(
 				'A'=>'Address only match (no ZIP)',
 				'B'=>'Address only match (no ZIP)',
@@ -323,17 +323,17 @@
 				'3'=>'The merchant did not provide AVS information. Not processed.',
 				'4'=>'Address not checked, or acquirer had no response',
 			);
-			
+
 			if (array_key_exists($status_code, $status_names))
 				return $status_names[$status_code];
 
 			return 'Unknown AVS response code';
 		}
-		
+
 		protected function get_ccv_status_text($status_code)
 		{
 			$status_code = strtoupper($status_code);
-			
+
 			if (!strlen($status_code))
 				return 'CCV response code is empty';
 
@@ -350,7 +350,7 @@
 				'3'=>'Merchant has indicated that CVV2 is not present on card',
 				'4'=>'Service not available'
 			);
-			
+
 			if (array_key_exists($status_code, $status_names))
 				return $status_names[$status_code];
 
@@ -375,7 +375,7 @@
 			$validation->add('LASTNAME', 'Cardholder last name')->fn('trim')->required('Please specify a cardholder last name.');
 			$validation->add('EXPDATE_MONTH', 'Expiration month')->fn('trim')->required('Please specify a card expiration month.')->regexp('/^[0-9]*$/', 'Credit card expiration month can contain only digits.');
 			$validation->add('EXPDATE_YEAR', 'Expiration year')->fn('trim')->required('Please specify a card expiration year.')->regexp('/^[0-9]*$/', 'Credit card expiration year can contain only digits.');
-			
+
 			$validation->add('ISSUENUMBER', 'Issue Number')->fn('trim')->numeric();
 
 			$validation->add('STARTDATE_MONTH', 'Start Month', 'left')->fn('trim')->numeric();
@@ -437,7 +437,7 @@
 						{
 							//CC is enrolled in the 3D secure program, direct the customer to the card issuer to perform the verification
 							$authentication_url = root_url('/ls_paypal_pro_authenticate_3d/'.$order->order_hash, true);
-							
+
 							//redirect to the card issuer
 							$fields['PaReq'] = $response->getValue("Payload");
 							$fields['TermUrl'] = $authentication_url;
@@ -472,11 +472,11 @@
 					throw new Phpr_ApplicationException($ex->getMessage());
 				}
 			}
-			
+
 			/*
 			 * Send request
 			 */
-			
+
 			@set_time_limit(3600);
 			$endpoint = $host_obj->test_mode ? $this->endpoints['PAYPAL']['TEST'] : $this->endpoints['PAYPAL']['LIVE'];
 			$fields = array();
@@ -486,7 +486,7 @@
 			try
 			{
 				$expMonth = $validation->fieldValues['EXPDATE_MONTH'] < 10 ? '0'.$validation->fieldValues['EXPDATE_MONTH'] : $validation->fieldValues['EXPDATE_MONTH'];
-				
+
 				if (strlen($validation->fieldValues['STARTDATE_MONTH']))
 					$startMonth = $validation->fieldValues['STARTDATE_MONTH'] < 10 ? '0'.$validation->fieldValues['STARTDATE_MONTH'] : $validation->fieldValues['STARTDATE_MONTH'];
 				else
@@ -517,15 +517,15 @@
 				$fields['CVV2'] = $validation->fieldValues['CVV2'];
 				$fields['ISSUENUMBER'] = $validation->fieldValues['ISSUENUMBER'];
 				$fields['CURRENCYCODE'] = Shop_CurrencySettings::get()->code;
-				
+
 				$fields['FIRSTNAME'] = $validation->fieldValues['FIRSTNAME'];
 				$fields['LASTNAME'] = $validation->fieldValues['LASTNAME'];
 				$fields['IPADDRESS'] = $userIp;
 				$fields['STREET'] = $order->billing_street_addr;
-				
+
 				if ($order->billing_state)
 					$fields['STATE'] = $order->billing_state->code;
-					
+
 				$fields['COUNTRY'] = $order->billing_country->name;
 				$fields['CITY'] = $order->billing_city;
 				$fields['ZIP'] = $order->billing_zip;
@@ -534,7 +534,11 @@
 
 				if(!$host_obj->skip_order_details)
 				{
-					$fields['SHIPPINGAMT'] = $order->shipping_quote;
+					// Patch for discounted shipping. Christopher Stevens 28/02/2019
+					$shipping_quote = method_exists( $order, 'get_shipping_quote_discounted' ) ? $order->get_shipping_quote_discounted() : $order->shipping_quote;
+
+					// $fields['SHIPPINGAMT'] = $order->shipping_quote;
+					$fields['SHIPPINGAMT'] = $shipping_quote;
 					$fields['TAXAMT'] = number_format($order->goods_tax + $order->shipping_tax, 2, '.', '');
 
 					$item_index = 0;
@@ -548,17 +552,20 @@
 						$item_index++;
 					}
 					$fields['ITEMAMT'] = $order->subtotal;
-					
-					if (!ceil($order->subtotal) && $order->shipping_quote)
+
+					// if (!ceil($order->subtotal) && $order->shipping_quote)
+					if (!ceil($order->subtotal) && $shipping_quote)
 					{
 						$fields['SHIPPINGAMT'] = '0.00';
-						
+
 						$fields['L_NAME'.$item_index] = 'Shipping';
-						$fields['L_AMT'.$item_index] = number_format($order->shipping_quote, 2, '.', '');
+						// $fields['L_AMT'.$item_index] = number_format($order->shipping_quote, 2, '.', '');
+						$fields['L_AMT'.$item_index] = number_format( $shipping_quote, 2, '.', '');
 						$fields['L_QTY'.$item_index] = 1;
 						$item_index++;
-						
-						$fields['ITEMAMT'] = $order->shipping_quote;
+
+						// $fields['ITEMAMT'] = $order->shipping_quote;
+						$fields['ITEMAMT'] = $shipping_quote;
 					}
 
 					if($host_obj->adjust_tax_value)
@@ -576,7 +583,7 @@
 				}
 
 				$fields['AMT'] = $order->total;
-				
+
 				// if ($order->discount)
 				// {
 				// 	$fields['L_NAME'.$item_index] = 'Discount';
@@ -589,13 +596,13 @@
 				$fields['SHIPTOSTREET'] = $order->shipping_street_addr;
 				$fields['SHIPTOCITY'] = $order->shipping_city;
 				$fields['SHIPTOCOUNTRYCODE'] = $order->shipping_country->code;
-				
+
 				if ($order->shipping_state)
 					$fields['SHIPTOSTATE'] = $order->shipping_state->code;
 
 				$fields['SHIPTOPHONENUM'] = $order->shipping_phone;
 				$fields['SHIPTOZIP'] = $order->shipping_zip;
-				
+
 				$fields['INVNUM'] = $order->get_order_reference();
 				$fields['ButtonSource'] = 'LemonStand_Cart_DP';
 
@@ -608,7 +615,7 @@
 				$response_fields = $this->parse_response($response);
 				if (!isset($response_fields['ACK']))
 					throw new Phpr_ApplicationException('Invalid PayPal response.');
-					
+
 				if ($response_fields['ACK'] !== 'Success' && $response_fields['ACK'] !== 'SuccessWithWarning')
 				{
 					for ($i=5; $i>=0; $i--)
@@ -625,17 +632,17 @@
 				 */
 
 				$fields = $this->prepare_fields_log($fields);
-				
+
 				$this->log_payment_attempt(
-					$order, 
-					'Successful payment', 
-					1, 
-					$fields, 
-					$response_fields, 
+					$order,
+					'Successful payment',
+					1,
+					$fields,
+					$response_fields,
 					$response,
 					$response_fields['CVV2MATCH'],
 					$this->get_ccv_status_text($response_fields['CVV2MATCH']),
-					$response_fields['AVSCODE'], 
+					$response_fields['AVSCODE'],
 					$this->get_avs_status_text($response_fields['AVSCODE'])
 				);
 
@@ -664,12 +671,12 @@
 			catch (Exception $ex)
 			{
 				$fields = $this->prepare_fields_log($fields);
-				
+
 				$cvv_code = null;
 				$cvv_message = null;
 				$avs_code = null;
 				$avs_message = null;
-				
+
 				if (array_key_exists('CVV2MATCH', $response_fields))
 				{
 					$cvv_code = $response_fields['CVV2MATCH'];
@@ -677,13 +684,13 @@
 					$avs_code = $response_fields['AVSCODE'];
 					$avs_message = $this->get_avs_status_text($response_fields['AVSCODE']);
 				}
-				
+
 				$this->log_payment_attempt(
-					$order, 
-					$ex->getMessage(), 
-					0, 
-					$fields, 
-					$response_fields, 
+					$order,
+					$ex->getMessage(),
+					0,
+					$fields,
+					$response_fields,
 					$response,
 					$cvv_code,
 					$cvv_message,
@@ -694,11 +701,11 @@
 				throw new Phpr_ApplicationException($ex->getMessage());
 			}
 		}
-		
+
 		/**
 		 * This function is called before an order status deletion.
 		 * Use this method to check whether the payment method
-		 * references an order status. If so, throw Phpr_ApplicationException 
+		 * references an order status. If so, throw Phpr_ApplicationException
 		 * with explanation why the status cannot be deleted.
 		 * @param $host_obj ActiveRecord object containing configuration fields values
 		 * @param Shop_OrderStatus $status Specifies a status to be deleted
@@ -767,7 +774,7 @@
 					window.parent.document.getElementById('paypal_3DSecure_iframe').innerHTML = '';
 				}
 				</script>";
-			
+
 			return $string;
 		}
 
@@ -859,7 +866,7 @@
 				if (!$order_hash)
 					throw new Phpr_ApplicationException('Order not found');
 				$order = Shop_Order::create()->find_by_order_hash($order_hash);
-				
+
 				if (!$order)
 					throw new Phpr_ApplicationException('Order not found.');
 
@@ -873,9 +880,9 @@
 				$this->init_sdk($host_obj);
 				if (!($payment_method_obj instanceof Shop_PayPal_Pro_Payment))
 					throw new Phpr_ApplicationException('Invalid payment method.');
-				
+
 				$cc_endpoint = $host_obj->cc_test_mode ? $this->endpoints['CC']['TEST'] : $this->endpoints['CC']['LIVE'];
-				
+
 				//authoneticate the 3d secure result
 				$centinelClient = new CentinelClient;
 				$centinelClient->Add("MsgType", "cmpi_authenticate");
@@ -955,7 +962,7 @@
 		{
 			if (self::$sdk_initialized)
 				return;
-			
+
 			self::$sdk_initialized = true;
 			require_once(PATH_APP.'/modules/shop/payment_types/shop_paypal_pro_payment/CentinelClient.php');
 		}
