@@ -208,8 +208,9 @@
 
 			if (!$host_obj->skip_itemized_data)
 			{
+				$shipping_quote = $order->get_shipping_quote_discounted();
 				$result['item_name_'.$item_index] = 'Shipping Cost';
-				$result['amount_'.$item_index] = $order->shipping_quote;
+				$result['amount_'.$item_index] = $shipping_quote;
 				$result['quantity_'.$item_index] = 1;
 
 				$item_index++;
@@ -544,7 +545,7 @@
 			}
 			
 			//add shipping quote + tax
-			$order_total = $order_total + $order->shipping_quote;
+			$order_total = $order_total + $order->get_shipping_quote_discounted();
 			if ($order->shipping_tax > 0)
 				$order_total = $order_total + $order->shipping_tax;
 			

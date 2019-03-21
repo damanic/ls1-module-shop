@@ -534,7 +534,8 @@
 
 				if(!$host_obj->skip_order_details)
 				{
-					$fields['SHIPPINGAMT'] = $order->shipping_quote;
+					$shipping_quote = $order->get_shipping_quote_discounted();
+					$fields['SHIPPINGAMT'] = $shipping_quote;
 					$fields['TAXAMT'] = number_format($order->goods_tax + $order->shipping_tax, 2, '.', '');
 
 					$item_index = 0;
@@ -549,16 +550,16 @@
 					}
 					$fields['ITEMAMT'] = $order->subtotal;
 					
-					if (!ceil($order->subtotal) && $order->shipping_quote)
+					if (!ceil($order->subtotal) && $shipping_quote)
 					{
 						$fields['SHIPPINGAMT'] = '0.00';
 						
 						$fields['L_NAME'.$item_index] = 'Shipping';
-						$fields['L_AMT'.$item_index] = number_format($order->shipping_quote, 2, '.', '');
+						$fields['L_AMT'.$item_index] = number_format($shipping_quote, 2, '.', '');
 						$fields['L_QTY'.$item_index] = 1;
 						$item_index++;
 						
-						$fields['ITEMAMT'] = $order->shipping_quote;
+						$fields['ITEMAMT'] = $shipping_quote;
 					}
 
 					if($host_obj->adjust_tax_value)
