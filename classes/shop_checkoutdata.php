@@ -1048,6 +1048,48 @@
 			return false;
 		}
 
+		public static function is_currency_set(){
+			$checkout_data = self::load();
+			if (!array_key_exists('currency_code', $checkout_data) || !$checkout_data['currency_code'] ){
+				return false;
+			}
+			return true;
+		}
+
+		public static function set_currency($currency=null){
+			$checkout_data = self::load();
+			$currency_code = null;
+
+			if(is_a($currency,'Shop_CurrencySettings')){
+				$currency_code = $currency->code;
+			} else {
+				$valid_currency_code = Db_DbHelper::scalar('SELECT shop_currency_settings.code FROM shop_currency_settings WHERE shop_currency_settings.code = ?', $currency);
+				if($valid_currency_code){
+					$currency_code = $valid_currency_code;
+				}
+			}
+
+			$checkout_data['currency_code'] = $currency_code;
+			self::save($checkout_data);
+		}
+
+		public static function get_currency($object=true){
+			$checkout_data = self::load();
+			if (!self::is_currency_set() ){
+				$currency = Shop_CurrencySettings::get();
+				return $object ? $currency : $currency->code;
+			}
+			if($object){
+				$obj = new Shop_CurrencySettings();
+				$currency = $obj->find_by_code($checkout_data['currency_code']);
+				if($currency){
+					return $currency;
+				}
+
+			}
+			return $checkout_data['currency_code'];
+		}
+
 		/*
 		 * Save/load methods
 		 */

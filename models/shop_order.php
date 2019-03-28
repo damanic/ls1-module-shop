@@ -733,6 +733,11 @@ class Shop_Order extends Db_ActiveRecord
 			$order = self::create();
 			$order->init_columns_info();
 
+			if(Shop_CheckoutData::is_currency_set()){
+				$currency_code = Shop_CheckoutData::get_currency(false);
+				$order->set_currency_code($currency_code);
+			}
+
 			$order->customer_id = $customer->id;
 
 			$shipping_info->save_to_order($order);
