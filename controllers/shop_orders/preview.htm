@@ -55,25 +55,25 @@
 						Email: <a href="mailto:<?= $form_model->billing_email ?>"><?= h($form_model->billing_email) ?></a>
 					</p>
 				</li>
-				<? if (isset($form_model->currency_code) && !empty($form_model->currency_code)): ?>
+				<? if ($currency_code = $form_model->get_currency_code()): ?>
 				<li>
 					<h3>Order Currency</h3>
-					<p><?= strtoupper($form_model->currency_code) ?></p>
+					<p><?= strtoupper($currency_code) ?></p>
 				</li>
 				<? endif ?>
 				<li>
 					<h3>Total</h3>
-					<p><?= format_currency($form_model->total) ?></p>
+					<p><?= $form_model->format_currency($form_model->total) ?></p>
 					<p class="description">
-						Tax: <?= format_currency($form_model->shipping_tax + $form_model->goods_tax) ?>,
-						Shipping: <?= format_currency($form_model->shipping_quote_discounted) ?>
+						Tax: <?= $form_model->format_currency($form_model->shipping_tax + $form_model->goods_tax) ?>,
+						Shipping: <?= $form_model->format_currency($form_model->shipping_quote_discounted) ?>
 					</p>
 				</li>
 
 				<? if(($payment_due = $form_model->get_payment_due()) && ($payment_due !== $form_model->total)):?>
 				<li class="last">
 					<h3>Payment Due</h3>
-					<p><?= format_currency($payment_due) ?></p>
+					<p><?= $form_model->format_currency($payment_due) ?></p>
 					<p class="description">
 						Check Payment Transactions
 					</p>

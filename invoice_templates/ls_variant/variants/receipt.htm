@@ -20,7 +20,7 @@ $this->renderPartial(Shop_OrderDocsHelper::get_partial('header','ls_variant'), a
 		</td>
 		<td class="invoice_details last">
 			<ul>
-				<li>Total amount <span><?= format_currency($order->total) ?></span></li>
+				<li>Total amount <span><?= $order->format_currency($order->total) ?></span></li>
 				<? if ($display_due_date): ?>
 					<li>Due date <span><?= $due_date ? $due_date->format('%x') : 'UNKNOWN DATE' ?></span></li>
 				<? endif ?>
@@ -52,8 +52,8 @@ $this->renderPartial(Shop_OrderDocsHelper::get_partial('header','ls_variant'), a
 						<?= $item->output_product_name(true, false, false, true) ?>
 					</div>
 				</td>
-				<td class="number"><?= format_currency($item->single_price) ?></td>
-				<td class="number"><?= format_currency($item->discount) ?></td>
+				<td class="number"><?= $order->format_currency($item->single_price) ?></td>
+				<td class="number"><?= $order->format_currency($item->discount) ?></td>
 				<td class="number"><?= $item->quantity ?></td>
 				<? if ($has_bundles): ?>
 					<td class="number">
@@ -62,35 +62,35 @@ $this->renderPartial(Shop_OrderDocsHelper::get_partial('header','ls_variant'), a
 						<? endif ?>
 					</td>
 				<? endif ?>
-				<td class="number"><?= format_currency($item->subtotal) ?></td>
+				<td class="number"><?= $order->format_currency($item->subtotal) ?></td>
 			</tr>
 		<? endforeach ?>
 		
 		<tr>
 			<th class="number" colspan="<?= $footer_colspan ?>">Subtotal</th>
-			<th class="number"><?= format_currency($order->subtotal) ?></th>
+			<th class="number"><?= $order->format_currency($order->subtotal) ?></th>
 		</tr>
 		<? if ($order->shipping_quote): ?>
 			<tr>
 				<th class="number" colspan="<?= $footer_colspan ?>">Shipping</th>
-				<th class="number"><?= format_currency($order->shipping_quote) ?></th>
+				<th class="number"><?= $order->format_currency($order->shipping_quote) ?></th>
 			</tr>
 		<? endif ?>
 		<? if ($order->discount): ?>
 			<tr>
 				<th class="number" colspan="<?= $footer_colspan ?>">Discount </th>
-				<th class="number">-<?= format_currency($order->discount) ?></th>
+				<th class="number">-<?= $order->format_currency($order->discount) ?></th>
 			</tr>
 		<? endif ?>
 		<? foreach ($order->list_all_taxes() as $tax): ?>
 			<tr>
 				<th class="number" colspan="<?= $footer_colspan ?>"><?= h($tax->name) ?></th>
-				<th class="number"><?= format_currency($tax->total) ?></th>
+				<th class="number"><?= $order->format_currency($tax->total) ?></th>
 			</tr>
 		<? endforeach ?>
 		<tr class="grand_total">
 			<th class="number" colspan="<?= $footer_colspan ?>">Total</th>
-			<td class="number"><?= format_currency($order->total) ?></td>
+			<td class="number"><?= $order->format_currency($order->total) ?></td>
 		</tr>
 	</tbody>
 </table>

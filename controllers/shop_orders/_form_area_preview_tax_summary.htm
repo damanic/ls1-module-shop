@@ -35,14 +35,14 @@
 				<? foreach ($item_taxes as $tax): ?>
 					<tr class="<?= Backend_Html::zebra('order_taxes') ?>">
 						<td><?= h($tax->name) ?></td>
-						<td class="number last"><?= format_currency($tax->total) ?></td>
+						<td class="number last"><?= $form_model->format_currency($tax->total) ?></td>
 					</tr>
 				<? endforeach ?>
 
 				<? foreach ($shipping_taxes as $tax): ?>
 					<tr class="<?= Backend_Html::zebra('order_taxes') ?>">
 						<td>Shipping tax (<?= h($tax->name) ?>)</td>
-						<td class="number last"><?= format_currency($tax->total) ?></td>
+						<td class="number last"><?= $form_model->format_currency($tax->total) ?></td>
 					</tr>
 				<? endforeach ?>
 			</tbody>

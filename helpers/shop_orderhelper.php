@@ -305,12 +305,13 @@ class Shop_OrderHelper{
 		return $cart_items;
 	}
 
-	public static function getAvailablePaymentMethods($order, $deferred_session_key=null)
-	{
-		$items = $order->list_related_records_deferred('items', $deferred_session_key);
-		$cart_items = self::items_to_cart_items_array($items);
-		self::evalOrderTotals($order,null);
-		return Shop_PaymentMethod::list_applicable($order->billing_country_id, $order->total, true, true, false, $cart_items)->as_array();
+	public static function getAvailablePaymentMethods($order, $deferred_session_key=null) {
+		$params = array(
+			'deferred_session_key' => $deferred_session_key,
+			'backend_only' => true,
+			'ignore_customer_group_filter' => true
+		);
+		return Shop_PaymentMethod::list_order_applicable($order, $params)->as_array();
 	}
 
 	public static function apply_item_discounts(&$items, $applied_discounts_data, $save=false)

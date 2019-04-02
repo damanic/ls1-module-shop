@@ -828,7 +828,7 @@
 
 			if (!$domestic)
 			{
-				$host_obj->add_field('label_postage', 'Postage')->renderAs(frm_text)->tab('Package')->comment('Use this field for entering a postage amount, if known. If the field is empty, the postage will be automatically calculated. The calculated shipping cost for this order is <strong>'.format_currency($order->shipping_quote).'</strong>.', 'above', true);
+				$host_obj->add_field('label_postage', 'Postage')->renderAs(frm_text)->tab('Package')->comment('Use this field for entering a postage amount, if known. If the field is empty, the postage will be automatically calculated. The calculated shipping cost for this order is <strong>'.$order->format_currency($order->shipping_quote).'</strong>.', 'above', true);
 				
 				$host_obj->add_field('label_container_type', 'Container type')->renderAs(frm_dropdown)->tab('Package');
 			}

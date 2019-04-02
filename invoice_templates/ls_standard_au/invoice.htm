@@ -41,7 +41,7 @@
 		</td>
 		<td class="invoice_details last">
 			<ul>
-				<li>Total amount <span><?= format_currency($order->total) ?></span></li>
+				<li>Total amount <span><?= $order->format_currency($order->total) ?></span></li>
 				<? if ($display_due_date): ?>
 					<li>Due date <span><?= $due_date ? $due_date->format('%x') : 'UNKNOWN DATE' ?></span></li>
 				<? endif ?>
@@ -75,16 +75,16 @@
 				</td>
 				<td class="number">
 					<? if ($display_tax_included): ?>
-						<?= format_currency($item->price_tax_included) ?> <?= tax_incl_label($order) ?>
+						<?= $order->format_currency($item->price_tax_included) ?> <?= tax_incl_label($order) ?>
 					<? else: ?>
-						<?= format_currency($item->single_price) ?>
+						<?= $order->format_currency($item->single_price) ?>
 					<? endif ?>
 				</td>
 				<td class="number">
 					<? if ($display_tax_included): ?>
-						<?= format_currency($item->discount_tax_included) ?>
+						<?= $order->format_currency($item->discount_tax_included) ?>
 					<? else: ?>
-						<?= format_currency($item->discount) ?>
+						<?= $order->format_currency($item->discount) ?>
 					<? endif ?>
 				</td>
 				<td class="number"><?= $item->quantity ?></td>
@@ -97,9 +97,9 @@
 				<? endif ?>
 				<td class="number">
 					<? if ($display_tax_included): ?>
-						<?= format_currency($item->subtotal_tax_incl) ?>
+						<?= $order->format_currency($item->subtotal_tax_incl) ?>
 					<? else: ?>
-						<?= format_currency($item->subtotal) ?>
+						<?= $order->format_currency($item->subtotal) ?>
 					<? endif ?>
 				</td>
 			</tr>
@@ -109,9 +109,9 @@
 			<th class="number" colspan="<?= $footer_colspan ?>">Subtotal</th>
 			<th class="number">
 				<? if ($display_tax_included): ?>
-					<?= format_currency($order->subtotal_tax_incl) ?>
+					<?= $order->format_currency($order->subtotal_tax_incl) ?>
 				<? else: ?>
-					<?= format_currency($order->subtotal) ?>
+					<?= $order->format_currency($order->subtotal) ?>
 				<? endif ?>
 			</th>
 		</tr>
@@ -120,9 +120,9 @@
 				<th class="number" colspan="<?= $footer_colspan ?>">Shipping</th>
 				<th class="number">
 					<? if ($display_tax_included): ?>
-						<?= format_currency($order->shipping_quote_tax_incl) ?>
+						<?= $order->format_currency($order->shipping_quote_tax_incl) ?>
 					<? else: ?>
-						<?= format_currency($order->shipping_quote) ?>
+						<?= $order->format_currency($order->shipping_quote) ?>
 					<? endif ?>
 				</th>
 			</tr>
@@ -132,20 +132,20 @@
 				<th class="number" colspan="<?= $footer_colspan ?>">Discount total</th>
 				<th class="number">
 					<? if ($display_tax_included): ?>
-						<?= format_currency($order->discount_tax_incl) ?>
+						<?= $order->format_currency($order->discount_tax_incl) ?>
 					<? else: ?>
-						<?= format_currency($order->discount) ?>
+						<?= $order->format_currency($order->discount) ?>
 					<? endif ?>
 				</th>
 			</tr>
 		<? endif ?>
 		<tr>
 			<th class="number" colspan="<?= $footer_colspan ?>">GST</th>
-			<th class="number"><?= format_currency($order->tax_total) ?></th>
+			<th class="number"><?= $order->format_currency($order->tax_total) ?></th>
 		</tr>
 		<tr class="grand_total">
 			<th class="number" colspan="<?= $footer_colspan ?>">Total</th>
-			<td class="number"><?= format_currency($order->total) ?> <?= tax_incl_label($order) ?></td>
+			<td class="number"><?= $order->format_currency($order->total) ?> <?= tax_incl_label($order) ?></td>
 		</tr>
 	</tbody>
 </table>

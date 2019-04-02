@@ -25,7 +25,7 @@
 			<td <?= click_link($href) ?> class="link"><a href="<?= $href ?>"><?= $record->id ?></a></td>
 			<td <?= click_link($href) ?> class="date link"><a href="<?= $href ?>"><?= $record->order_datetime->format('%x') ?></a></td>
 			<td <?= click_link($href) ?> class="link"><a href="<?= $href ?>"><?= h($record->displayField('status')) ?></a></td>
-			<td <?= click_link($href) ?> class="last link"><a href="<?= $href ?>"><?= format_currency($record->total) ?></a></td>
+			<td <?= click_link($href) ?> class="last link"><a href="<?= $href ?>"><?= $record->format_currency($record->total) ?></a></td>
 		</tr>
 		<?
 			endforeach;

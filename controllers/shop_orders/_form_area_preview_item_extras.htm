@@ -12,7 +12,7 @@
 				<? if ($group_name): ?>
 					<strong><?= h($group_name) ?></strong> - 
 				<? endif ?>
-				<?= h($value[1]) ?> (<?= format_currency($value[0]) ?>)
+				<?= h($value[1]) ?> (<?= $form_model->format_currency($value[0]) ?>)
 			</label>
 
 			<div class="previewContainer"><div class="checkbox on"></div></div>

@@ -151,6 +151,120 @@
 			return new Db_DataCollection($result);
 		}
 
+		public static function list_checkout_applicable($cart_name, $amount, $params=array()){
+			$default_params = array(
+				'backend_only'                 => false,
+				'ignore_customer_group_filter' => false,
+				'customer_group_id' => false,
+			);
+			$params         = array_merge( $default_params, $params );
+			$cart_items = Shop_Cart::list_active_items($cart_name);
+			$country_id = Shop_CheckoutData::get_billing_info()->country;
+			$customer_group_id = $params['customer_group_id'];
+
+			if($params['backend_only'])
+				$backend_where = 'backend_enabled = 1 and backend_enabled is not null';
+			else
+				$backend_where = 'enabled = 1 and enabled is not null';
+
+			$methods = self::create()->order('shop_payment_methods.name')->where($backend_where)->where('(select count(*) from shop_paymentmethods_countries where shop_country_id=? and shop_paymentmethods_countries.shop_payment_method_id=shop_payment_methods.id) > 0 or (select count(*) from shop_paymentmethods_countries where shop_paymentmethods_countries.shop_payment_method_id=shop_payment_methods.id) = 0', $country_id)->find_all();
+
+			$result = array();
+			foreach ($methods as $method)
+			{
+				if (!$params['ignore_customer_group_filter'])
+				{
+					if ($customer_group_id === false)
+						$customer_group_id = Cms_Controller::get_customer_group_id();
+
+					if (!self::method_visible_for_customer_group($method->id, $customer_group_id))
+						continue;
+				}
+
+				$method->define_form_fields();
+				if ($method->get_paymenttype_object()->is_applicable($amount, $method))
+					$result[] = $method;
+			}
+
+			$event_params = array(
+				'payment_methods' => $result,
+				'amount' => $amount,
+				'country_id' => $country_id,
+				'customer_group_id' => $customer_group_id,
+				'ignore_customer_group_filter' => $params['ignore_customer_group_filter'],
+				'backend' => $params['backend_only'],
+				'order_items' => $cart_items,
+				'currency_code' => Shop_CheckoutData::get_currency(false),
+			);
+
+			$updated_result = Backend::$events->fireEvent('shop:onFilterPaymentMethods', $event_params);
+			foreach ($updated_result as $updated_option_list) {
+				$result = $updated_option_list;
+				break;
+			}
+
+			return new Db_DataCollection($result);
+		}
+
+		public static function list_order_applicable($order, $params = array() ) {
+			$default_params = array(
+				'backend_only'                 => true,
+				'ignore_customer_group_filter' => true,
+				'deferred_session_key' => null
+			);
+			$params         = array_merge( $default_params, $params );
+
+			$order_items = $order->list_related_records_deferred('items', $params['deferred_session_key']);
+			$cart_items = Shop_OrderHelper::items_to_cart_items_array($order_items);
+			if($params['deferred_session_key']) {
+				Shop_OrderHelper::evalOrderTotals( $order, null );
+			}
+
+			$country_id = $order->billing_country_id;
+			$amount = $order->total;
+			$customer_group_id = $order->customer ? $order->customer->customer_group_id : null;
+
+			if ( $params['backend_only'] ) {
+				$backend_where = 'backend_enabled = 1 and backend_enabled is not null';
+			} else {
+				$backend_where = 'enabled = 1 and enabled is not null';
+			}
+
+			$methods = self::create()->order( 'shop_payment_methods.name' )->where( $backend_where )->where( '(select count(*) from shop_paymentmethods_countries where shop_country_id=? and shop_paymentmethods_countries.shop_payment_method_id=shop_payment_methods.id) > 0 or (select count(*) from shop_paymentmethods_countries where shop_paymentmethods_countries.shop_payment_method_id=shop_payment_methods.id) = 0', $country_id )->find_all();
+
+			$payment_methods = array();
+			foreach ( $methods as $method ) {
+				if ( !$params['ignore_customer_group_filter'] && $customer_group_id ) {
+					if ( !self::method_visible_for_customer_group( $method->id, $customer_group_id ) ) {
+						continue;
+					}
+				}
+				$method->define_form_fields();
+				if ( $method->get_paymenttype_object()->is_applicable( $amount, $method ) ) {
+					$payment_methods[] = $method;
+				}
+			}
+
+			$event_params = array(
+				'payment_methods' => $payment_methods,
+				'amount' => $amount,
+				'country_id' => $country_id,
+				'customer_group_id' => $customer_group_id,
+				'ignore_customer_group_filter' => $params['ignore_customer_group_filter'],
+				'backend' => $params['backend_only'],
+				'order_items' => $cart_items,
+				'currency_code' => $order->get_currency_code(),
+			);
+
+			$updated_result = Backend::$events->fireEvent('shop:onFilterPaymentMethods', $event_params);
+			foreach ($updated_result as $updated_option_list) {
+				$payment_methods = $updated_option_list;
+				break;
+			}
+
+			return new Db_DataCollection($payment_methods);
+		}
+
 		public static function page_deletion_check($page)
 		{
 			$methods = self::create()->find_all();

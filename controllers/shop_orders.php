@@ -1445,6 +1445,15 @@
 					$model->shipping_state_id = $states[0]->id;
 				}
 			}
+
+			//currency
+			if ( $currency_id = filter_input( INPUT_GET, 'currency_id' ) ) {
+				$currencies = new Shop_CurrencySettings();
+				$currency = $currencies->find( $currency_id );
+				if($currency){
+					$model->set_currency_code($currency->code);
+				}
+			}
 			
 			if (Phpr::$router->action == 'create' && Phpr::$router->param('param1') == 'for-customer')
 			{
@@ -2096,6 +2105,10 @@
 		{
 			$order = $this->viewData['form_model'] = $this->getOrderObj($order_id);
 			$orderData = post('Shop_Order');
+			if ($order->is_new_record()){
+				$order->set_form_data($orderData);
+			}
+
 			$order->set_shipping_address($orderData);
 			$order->coupon_id = array_key_exists('coupon_id', $orderData) ? $orderData['coupon_id'] : null;
 			$order->override_shipping_quote = array_key_exists('override_shipping_quote', $orderData) ? $orderData['override_shipping_quote'] : null;
@@ -2314,7 +2327,7 @@
 				} else
 				{
 					if ($value > $subtotal)
-						throw new Phpr_ApplicationException('The discount value cannot exceed the order subtotal ('.format_currency($subtotal).').');
+						throw new Phpr_ApplicationException('The discount value cannot exceed the order subtotal ('.$order->format_currency($subtotal).').');
 				}
 
 				/*

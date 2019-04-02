@@ -19,29 +19,29 @@
 		</li>
 	<? endif ?>
 
-	<? if (isset($form_model->currency_code) && !empty($form_model->currency_code)): ?>
+	<? if ($currency_code = $form_model->get_currency_code()): ?>
 	<li>
 		<h3>Order Currency</h3>
-		<p><?= strtoupper($form_model->currency_code) ?></p>
+		<p><?= strtoupper($currency_code) ?></p>
 	</li>
 	<? endif ?>
 	<li>
 		<h3>Subtotal</h3>
-		<p><?= format_currency($form_model->subtotal_before_discounts ? $form_model->subtotal_before_discounts : 0) ?></p>
+		<p><?= $form_model->format_currency($form_model->subtotal_before_discounts ? $form_model->subtotal_before_discounts : 0) ?></p>
 		<p class="description">
-			Sales tax: <?= format_currency($form_model->goods_tax ? $form_model->goods_tax : 0) ?>
+			Sales tax: <?= $form_model->format_currency($form_model->goods_tax ? $form_model->goods_tax : 0) ?>
 		</p>
 	</li>
 	<li>
 		<h3>Shipping Rate</h3>
-		<p><?= format_currency($form_model->get_shipping_quote_no_discount()) ?></p>
+		<p><?= $form_model->format_currency($form_model->get_shipping_quote_no_discount()) ?></p>
 		<p class="description">
-			Shipping tax: <?= format_currency($form_model->shipping_tax ? $form_model->shipping_tax : 0) ?>
+			Shipping tax: <?= $form_model->format_currency($form_model->shipping_tax ? $form_model->shipping_tax : 0) ?>
 		</p>
 	</li>
 	<li>
 		<h3>Total discount applied</h3>
-		<p><?= format_currency($form_model->get_total_discount_applied()) ?></p>
+		<p><?= $form_model->format_currency($form_model->get_total_discount_applied()) ?></p>
 		<p class="description">
 			<? $coupon = $form_model->coupon; ?>
 			Coupon: <?= h($coupon ? $coupon->code : '<no coupon used>') ?>
@@ -49,18 +49,18 @@
 	</li>
 	<li>
 		<h3>Total</h3>
-		<p><?= format_currency($form_model->total ? $form_model->total : 0) ?></p>
+		<p><?= $form_model->format_currency($form_model->total ? $form_model->total : 0) ?></p>
 		<p class="description">
 			<?
 				$tax_total = $form_model->goods_tax + $form_model->shipping_tax;
 			?>
-			Total tax: <?= format_currency($tax_total ? $tax_total : 0) ?>
+			Total tax: <?= $form_model->format_currency($tax_total ? $tax_total : 0) ?>
 		</p>
 	</li>
 	<? if($payment_due = $form_model->get_payment_due()):?>
 	<li class="last">
 		<h3>Payment Due</h3>
-		<p><?= format_currency($payment_due) ?></p>
+		<p><?= $form_model->format_currency($payment_due) ?></p>
 		<p class="description">
 			<a href="<?= url('/shop/orders/preview/'.$form_model->id).'#payment_transactions'; ?>">View Transactions</a>
 		</p>

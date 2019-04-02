@@ -52,8 +52,8 @@
 				<? if ($has_bundle_items): ?>
 					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($item->bundle_master_bundle_item_name) ?></a></td>
 				<? endif ?>
-				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency($item->single_price) ?></a></td>
-				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency($item->discount) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->single_price) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->discount) ?></a></td>
 				<td onclick="<?= $onClick ?>" class="number link">
 					<a href="#" onclick="<?= $onClick ?>">
 						<?= h($item->quantity) ?>
@@ -63,7 +63,7 @@
 						<? endif ?>
 					</a>
 				</td>
-				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency(($item->single_price - $item->discount)*$item->quantity) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency(($item->single_price - $item->discount)*$item->quantity) ?></a></td>
 				<td class="iconCell">
 					<? if ($item->product->bundle_items->count): ?>
 						<a href="#" class="add-bundle-item" title="Add bundle item" onclick="new PopupForm('onLoadFindBundleProductForm', {ajaxFields: $merge($(this).getForm().fieldsToHash(), {bundle_parent: <?= $item->id ?>})}); return false;">Add bundle item</a>

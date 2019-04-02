@@ -25,7 +25,7 @@
 		<? endif ?>
 		<tr>
 			<th>Base Price</th>
-			<td><?= format_currency($form_model->price) ?></td>
+			<td><?= $form_model->format_currency($form_model->price) ?></td>
 		</tr>
 		<? if ($form_model->track_inventory): ?>
 		<tr>

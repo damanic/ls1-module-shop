@@ -459,6 +459,8 @@ class Shop_Order extends Db_ActiveRecord
 		$this->coupon_id = array_key_exists('coupon_id', $data) ? $data['coupon_id'] : null;
 		$this->discount = array_key_exists('discount', $data) ? $data['discount'] : 0;
 		$this->free_shipping = array_key_exists('free_shipping', $data) ? $data['free_shipping'] : 0;
+		$currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : null;
+		$this->set_currency_code($currency_code);
 	}
 
 	public function get_shipping_state_options($key_value = -1)
@@ -1136,6 +1138,10 @@ class Shop_Order extends Db_ActiveRecord
 
 	}
 
+	public function format_currency($value){
+		return Shop_CurrencyHelper::format_currency($value,2, $this->get_currency_code());
+	}
+
 	public function displayField($dbName, $media = 'form') {
 		$column_definitions = $this->get_column_definitions();
 		if (!array_key_exists($dbName, $column_definitions))
@@ -1336,22 +1342,22 @@ class Shop_Order extends Db_ActiveRecord
 
 		$include_tax = Shop_CheckoutData::display_prices_incl_tax($this);
 
-		$message_text = str_replace('{order_total}', format_currency($this->total), $message_text);
+		$message_text = str_replace('{order_total}', $this->format_currency($this->total), $message_text);
 		$message_text = str_replace('{order_id}', $this->id, $message_text);
 		$message_text = str_replace('{order_reference}', $this->get_order_reference(), $message_text);
 		$message_text = str_replace('{order_date}', $this->order_datetime->format('%x'), $message_text);
-		$message_text = str_replace('{order_subtotal}', $include_tax ? format_currency($this->subtotal_tax_incl) : format_currency($this->subtotal), $message_text);
+		$message_text = str_replace('{order_subtotal}', $include_tax ? $this->format_currency($this->subtotal_tax_incl) : $this->format_currency($this->subtotal), $message_text);
 
-		$message_text = str_replace('{order_shipping_quote}', $include_tax ? format_currency($this->shipping_quote_tax_incl) : format_currency($this->shipping_quote), $message_text);
-		$message_text = str_replace('{order_shipping_tax}', format_currency($this->shipping_tax), $message_text);
-		$message_text = str_replace('{order_tax}', format_currency($this->goods_tax), $message_text);
-		$message_text = str_replace('{order_total_tax}', format_currency($this->goods_tax + $this->shipping_tax), $message_text);
+		$message_text = str_replace('{order_shipping_quote}', $include_tax ? $this->format_currency($this->shipping_quote_tax_incl) : $this->format_currency($this->shipping_quote), $message_text);
+		$message_text = str_replace('{order_shipping_tax}', $this->format_currency($this->shipping_tax), $message_text);
+		$message_text = str_replace('{order_tax}', $this->format_currency($this->goods_tax), $message_text);
+		$message_text = str_replace('{order_total_tax}', $this->format_currency($this->goods_tax + $this->shipping_tax), $message_text);
 
 		$message_text = str_replace('{customer_notes}', strlen($this->customer_notes) ? h($this->customer_notes) : h('<not specified>'), $message_text);
-		$message_text = str_replace('{cart_discount}', $include_tax ? format_currency($this->discount_tax_incl) : format_currency($this->discount), $message_text);
+		$message_text = str_replace('{cart_discount}', $include_tax ? $this->format_currency($this->discount_tax_incl) : $this->format_currency($this->discount), $message_text);
 		$message_text = str_replace('{tax_incl_label}', tax_incl_label($this), $message_text);
 
-		$message_text = str_replace('{net_amount}', format_currency($this->total - $this->goods_tax - $this->shipping_tax), $message_text);
+		$message_text = str_replace('{net_amount}', $this->format_currency($this->total - $this->goods_tax - $this->shipping_tax), $message_text);
 
 		$message_text = str_replace('{billing_country}', h($this->displayField('billing_country')), $message_text);
 		$message_text = str_replace('{billing_state}', h($this->displayField('billing_state')), $message_text);
@@ -1770,7 +1776,7 @@ class Shop_Order extends Db_ActiveRecord
 
 			$item_descriptions = implode('<br/>', $item_descriptions);
 			$item_body = '<p>Order #'.$order->id.', created: '.$order->order_datetime->format('%x %X');
-			$item_body .= '<br/>Total: '.format_currency($order->total).'</p>';
+			$item_body .= '<br/>Total: '.$order->format_currency($order->total).'</p>';
 			$item_body .= '<p><strong>Customer</strong><br/>';
 			$item_body .= h($order->billing_first_name).' '.h($order->billing_last_name).' ('.$order->columnValue('billing_country').'), '.$order->billing_email.'</p>';
 

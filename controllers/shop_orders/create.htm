@@ -28,7 +28,9 @@
 					<input type="hidden" name="Shop_Order[parent_order_id]" value="<?= $form_model->parent_order_id ?>"/>
 				<? endif ?>
 
-				<?= backend_ajax_button('Create', 'create_onSave', array('class'=>'default')) ?>
+			<input type="hidden" name="Shop_Order[currency_code]" value="<?= $form_model->get_currency_code() ?>"/>
+
+			<?= backend_ajax_button('Create', 'create_onSave', array('class'=>'default')) ?>
 				<?= backend_ajax_button('Cancel', 'create_onCancel') ?>
 				<div class="clear"></div>
 				<div id="tmp_site"></div>

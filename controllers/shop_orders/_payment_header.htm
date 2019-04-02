@@ -29,10 +29,10 @@
 		</li>
 		<li class="last">
 			<h3>Total</h3>
-			<p><?= format_currency($order->total) ?></p>
+			<p><?= $order->format_currency($order->total) ?></p>
 			<p class="description">
-				Tax: <?= format_currency($order->shipping_tax + $order->goods_tax) ?>,
-				Shipping: <?= format_currency($order->shipping_quote_discounted) ?>
+				Tax: <?= $order->format_currency($order->shipping_tax + $order->goods_tax) ?>,
+				Shipping: <?= $order->format_currency($order->shipping_quote_discounted) ?>
 			</p>
 		</li>
 	</ul>

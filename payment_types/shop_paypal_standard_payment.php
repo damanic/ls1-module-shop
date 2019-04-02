@@ -361,7 +361,7 @@
 				if (!$order->payment_processed(false))
 				{
 					if (post('mc_gross') != strval($this->get_paypal_total($order, $order->payment_method)))
-						$this->log_payment_attempt($order, 'Invalid order total received in IPN: '.format_currency(post('mc_gross')), 0, array(), $_POST, $response);
+						$this->log_payment_attempt($order, 'Invalid order total received in IPN: '.$order->format_currency(post('mc_gross')), 0, array(), $_POST, $response);
 					else
 					{
 						if (strpos($response, 'VERIFIED') !== false)

@@ -59,8 +59,8 @@
 				<? if ($has_bundle_items): ?>
 					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($item->bundle_master_bundle_item_name) ?></a></td>
 				<? endif ?>
-				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency($item->single_price) ?></a></td>
-				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency($item->discount) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->single_price) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->discount) ?></a></td>
 				<td onclick="<?= $onClick ?>" class="number link">
 					<a href="#" onclick="<?= $onClick ?>">
 						<?= h($item->quantity) ?>
@@ -69,7 +69,7 @@
 						<? endif ?>
 					</a>
 				</td>
-				<td onclick="<?= $onClick ?>" class="number last link"><a href="#" onclick="<?= $onClick ?>"><?= format_currency(($item->single_price - $item->discount)*$item->quantity) ?></a></td>
+				<td onclick="<?= $onClick ?>" class="number last link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency(($item->single_price - $item->discount)*$item->quantity) ?></a></td>
 			</tr>
 			
 			<? if (($item->bundle_master_order_item_id && $index == $last_index) || ($item->bundle_master_order_item_id && !$form_model->items[$index+1]->bundle_master_order_item_id)): 
@@ -78,10 +78,10 @@
 			?>
 				<tr class="bundle-totals">
 					<td colspan="3"><?= h($master_item->product->name) ?> bundle totals</td>
-					<td class="number"><?= format_currency($master_item->get_bundle_single_price()) ?></td>
-					<td class="number"><?= format_currency($master_item->get_bundle_discount()) ?></td>
+					<td class="number"><?= $form_model->format_currency($master_item->get_bundle_single_price()) ?></td>
+					<td class="number"><?= $form_model->format_currency($master_item->get_bundle_discount()) ?></td>
 					<td class="number"><?= $master_item->quantity ?></td>
-					<td class="number last"><?= format_currency($master_item->get_bundle_total_price()) ?></td>
+					<td class="number last"><?= $form_model->format_currency($master_item->get_bundle_total_price()) ?></td>
 				</tr>
 			<? 
 					endif;

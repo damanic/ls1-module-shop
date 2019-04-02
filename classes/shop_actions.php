@@ -1463,8 +1463,7 @@
 				$shiping_taxes = $this->data['shipping_taxes'] = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
 				$total += $this->data['shipping_tax'] = Shop_TaxClass::eval_total_tax($shiping_taxes);
 
-				$cart_items = Shop_Cart::list_active_items($cart_name);
-				$payment_methods = Shop_PaymentMethod::list_applicable(Shop_CheckoutData::get_billing_info()->country, $total, false, false, false, $cart_items)->as_array();
+				$payment_methods = Shop_PaymentMethod::list_checkout_applicable($cart_name,$total)->as_array();
 				$this->data['payment_methods'] = $payment_methods;
 				$this->data['checkout_step'] = 'payment_method';
 			} elseif ($checkout_step == 'payment_method')
@@ -2068,8 +2067,7 @@
 			$shiping_taxes = $this->data['shipping_taxes'] = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
 			$total += $this->data['shipping_tax'] = Shop_TaxClass::eval_total_tax($shiping_taxes);
 
-			$cart_items = Shop_Cart::list_active_items($cart_name);
-			$payment_methods = Shop_PaymentMethod::list_applicable(Shop_CheckoutData::get_billing_info()->country, $total, false, false, false, $cart_items)->as_array();
+			$payment_methods = Shop_PaymentMethod::list_checkout_applicable($cart_name,$total)->as_array();
 
 			$this->data['payment_methods'] = $payment_methods;
 			$this->data['payment_method'] = Shop_CheckoutData::get_payment_method();
@@ -2329,7 +2327,11 @@
 			$order->payment_method->define_form_fields();
 			$this->data['payment_method_obj'] = $order->payment_method->get_paymenttype_object();
 
-			$this->data['payment_methods'] = Shop_PaymentMethod::list_applicable($order->billing_country_id, $order->total);
+			$params = array(
+				'backend_only'                 => false,
+				'ignore_customer_group_filter' => false,
+			);
+			$this->data['payment_methods'] = Shop_PaymentMethod::list_order_applicable($order, $params)->as_array();
 
 			if (post('submit_payment'))
 				$this->on_pay($order);

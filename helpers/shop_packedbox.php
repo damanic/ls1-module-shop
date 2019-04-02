@@ -44,7 +44,6 @@ class Shop_PackedBox {
 	protected function get_item_weight(){
 		$weight = 0;
 		foreach ($this->items as $item){
-			traceLog($item->total_weight());
 			$weight += $item->total_weight();
 		}
 		return $weight;
