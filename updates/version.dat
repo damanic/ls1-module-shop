@@ -980,3 +980,4 @@
 #1.33.10 Improved box packer helpers
 #1.33.11 Minor update to paypal payment methods
 #1.33.12 Improved currency awareness
+#1.33.13 Bugfix for manual order discounts
