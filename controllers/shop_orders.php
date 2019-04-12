@@ -2272,7 +2272,8 @@
 				$items = $order->list_related_records_deferred('items', $this->formGetEditSessionKey());
 				foreach ($items as $item)
 					$subtotal += $item->single_price*$item->quantity;
-					
+
+				$this->viewData['order'] = $order;
 				$this->viewData['subtotal'] = $subtotal;
 			}
 			catch (Exception $ex)
