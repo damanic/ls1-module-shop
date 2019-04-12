@@ -51,3 +51,23 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.31.8 Adds shipping boxes to shipping settings and a box packer helper to help with shipping cost calculations
 - 1.31.9 New event `shop:onOrderAfterModify` is triggered after order is created, updated or deleted
 - 1.31.11 Support for multiple Attribute and Option selections in search results
+- 1.32.0 Adds shipping discount field to order totals
+- 1.32.1 Adds helper: Shop_CustomerPreferences
+- 1.32.2 Adds new currency rate provider
+- 1.32.3 Adds support for HS tariff codes
+- 1.32.4 Bugfixes: manual shipping quotes, csv import uploader
+- 1.32.5 Minor fix for event shop:onBeforeShippingQuote, allows handling fee override
+- 1.33.0 Adds shipping zones to shipping settings
+- 1.33.1 New events: shop:onProductReturnCompiledPrice, shop:onOptionMatrixReturnCompiledPrice
+- 1.33.2 Minor backend form/ui improvement
+- 1.33.3 Adds service levels to shipping settings
+- 1.33.4 Adds helper functions to fetch shipping zone delivery estimates
+- 1.33.5 Unit conversion helpers added to Shop_BoxPacker classes
+- 1.33.6 Bugfix: correct price for bundled products
+- 1.33.7 IPV6 Support
+- 1.33.8 New event: shop:onAfterCategoryModify
+- 1.33.9 Minor backend UI improvement. Fixed some rounding issues
+- 1.33.10 Improved box packer helpers
+- 1.33.11 Minor update to paypal payment methods
+- 1.33.12 Improved currency awareness
+- 1.33.13 Bugfix for manual order discounts
