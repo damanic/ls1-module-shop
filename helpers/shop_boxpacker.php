@@ -43,14 +43,15 @@ class Shop_BoxPacker {
 
 		$packable_items = $packable_list['items'];
 		foreach ( $items as $item ) {
-			if ( isset( $packable_items[$item->id] ) ) {
+			$item_key = property_exists($item,'key') ? $item->key : $item->id;
+			if ( isset( $packable_items[$item_key] ) ) {
 				$quantity = $item->quantity;
 				while ( $quantity > 0 ) {
-					$quantity --;
-					$packer->addItem( $packable_items[$item->id]['item'] );
+					$quantity--;
+					$packer->addItem( $packable_items[$item_key]['item'] );
 				}
-				if ( isset( $packable_items[$item->id]['extras'] ) ) {
-					foreach ( $packable_items[$item->id]['extras'] as $extra ) {
+				if ( isset( $packable_items[$item_key]['extras'] ) ) {
+					foreach ( $packable_items[$item_key]['extras'] as $extra ) {
 						$packer->addItem( $extra );
 					}
 				}
@@ -68,7 +69,7 @@ class Shop_BoxPacker {
 			if($shipping_enabled) {
 				$compatible_item = $this->make_item_compat( $item );
 				if($compatible_item) {
-					$compat_items[$item->id]['item']  = $compatible_item;
+					$compat_items[$compatible_item->item_id]['item']  = $compatible_item;
 				} else {
 					$failed_compat = true;
 				}
@@ -83,7 +84,7 @@ class Shop_BoxPacker {
 				foreach ($extras as $extra_item) {
 					$compatible_item = $this->make_item_compat( $extra_item );
 					if($compatible_item){
-						$compat_items[$item->id]['extras'][]  = $compatible_item;
+						$compat_items[$compatible_item->item_id]['extras'][]  = $compatible_item;
 					}
 				}
 			}
@@ -152,7 +153,7 @@ class Shop_BoxPacker {
 				$keep_flat
 			);
 
-			$bp_item->item_id = $item->id;
+			$bp_item->item_id = property_exists($item,'key') ? $item->key : $item->id;
 			return $bp_item;
 	}
 
