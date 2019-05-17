@@ -361,6 +361,17 @@
 				$result[] = $rule;
 			}
 			
+			$event_params = array(
+				'coupon' => $coupon,
+				'customer' => $customer,
+				'coupon_check' => $coupon_check,
+				'results' => $result
+			);
+			$updated_results = Backend::$events->fire_event(array('name' => 'shop:onListActiveCartPriceRules', 'type' => 'update_result'), $result, $event_params);
+			if(is_array($updated_results)){
+				$result = $updated_results;
+			}
+
 			if($coupon_check)
 				return $result;
 				
@@ -671,6 +682,19 @@
 
 			return $result;
 		}
+
+
+		/**
+		 * Triggered after the active price rules are determined.
+		 * This event can be used to filter out or alter the active rules by returning an updated result array.
+		 * @event shop:onListActiveCartPriceRules
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @result Array $result contains the active price rules.
+		 * @params Array $params contains the parameters passed to list_active_rules() method.
+		 * @return Array an updated $result array or null for no effect.
+		 */
+		private function event_onListActiveCartPriceRules($result, $params) {}
 	}
 	
 ?>
