@@ -200,22 +200,14 @@
 					$sorting_column = 'shop_products.'.$sorting_column;
 			}
 
-			$customer_group_id = Cms_Controller::get_customer_group_id();
 
 			$product_obj = $this->products_list;
 			
 			if ($custom_sorting)
 				$product_obj->reset_order();
 
-			$product_obj->apply_customer_group_visibility();
+			$product_obj->apply_customer_visibility();
 			$product_obj->apply_catalog_visibility();
-			
-			$product_obj->where('
-				((shop_products.enable_customer_group_filter is null or shop_products.enable_customer_group_filter=0) or (
-					shop_products.enable_customer_group_filter = 1 and
-					exists(select * from shop_products_customer_groups where shop_product_id=shop_products.id and customer_group_id=?)
-				))
-			', $customer_group_id);
 			
 			if ($custom_sorting)
 			{

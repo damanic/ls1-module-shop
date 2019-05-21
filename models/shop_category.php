@@ -723,7 +723,7 @@
 
 			$product_obj = $this->products_list;
 			$product_obj->reset_order();
-			$product_obj->apply_customer_group_visibility()->apply_catalog_visibility();
+			$product_obj->apply_customer_visibility()->apply_catalog_visibility();
 
 			$sort_str = implode(', ', $sorting);
 			

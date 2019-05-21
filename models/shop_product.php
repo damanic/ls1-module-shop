@@ -1332,7 +1332,7 @@
 		 * </pre>
 		 * @documentable
 		 * @see Shop_Product::apply_catalog_visibility() apply_catalog_visibility()
-		 * @see Shop_Product::apply_customer_group_visibility() apply_customer_group_visibility()
+		 * @see Shop_Product::apply_customer_visibility() apply_customer_visibility()
 		 * @see Shop_Product::apply_availability() apply_availability()
 		 * @see Shop_Product::apply_filters() apply_filters()
 		 * @return Shop_Product Returns the {@link Shop_Product} object.
@@ -1340,6 +1340,13 @@
 		public function apply_visibility()
 		{
 			$this->where('enabled=1 and (disable_completely is null or disable_completely=0)');
+			return $this;
+		}
+
+		public function apply_customer_visibility(){
+			$customer = Cms_Controller::get_customer();
+			$this->apply_customer_group_visibility();
+			Backend::$events->fireEvent( 'shop:onProductApplyCustomerVisibility', $this, $customer );
 			return $this;
 		}
 
@@ -1401,7 +1408,7 @@
 		 * </pre>
 		 * @documentable
 		 * @see Shop_Product::apply_visibility() apply_visibility()
-		 * @see Shop_Product::apply_customer_group_visibility() apply_customer_group_visibility()
+		 * @see Shop_Product::apply_customer_visibility() apply_customer_visibility()
 		 * @see Shop_Product::apply_availability() apply_availability()
 		 * @see Shop_Product::apply_filters() apply_filters()
 		 * @return Shop_Product Returns the {@link Shop_Product} object.
@@ -1431,7 +1438,7 @@
 		 * @documentable
 		 * @see Shop_Product::apply_visibility() apply_visibility()
 		 * @see Shop_Product::apply_catalog_visibility() apply_catalog_visibility()
-		 * @see Shop_Product::apply_customer_group_visibility() apply_customer_group_visibility()
+		 * @see Shop_Product::apply_customer_visibility() apply_customer_visibility()
 		 * @see Shop_Product::apply_filters() apply_filters()
 		 * @param boolean $group_products Determines whether grouped product should be returned separately, or resented with the base product.
 		 * The default value is TRUE - return only base products.
@@ -1472,7 +1479,7 @@
 		}
 
 		/**
-		 * Applies visibility, availability and customer group filters to a product list. 
+		 * Applies visibility, availability and customer filters to a product list.
 		 * Call this method before calling the {@link Db_ActiveRecord::find() find()} or 
 		 * {@link Db_ActiveRecord::find_all() find_all()} method. This method allows to
 		 * fetch custom product lists from the database, safely that disabled and hidden product are not displayed. 
@@ -1490,7 +1497,7 @@
 		 * @documentable
 		 * @see Shop_Product::apply_visibility() apply_visibility()
 		 * @see Shop_Product::apply_catalog_visibility() apply_catalog_visibility()
-		 * @see Shop_Product::apply_customer_group_visibility() apply_customer_group_visibility()
+		 * @see Shop_Product::apply_customer_visibility() apply_customer_visibility()
 		 * @see Shop_Product::apply_availability() apply_availability()
 		 * @param boolean $group_products Determines whether grouped product should be returned separately, or resented with the base product.
 		 * The default value is TRUE - return only base products.
@@ -1498,7 +1505,7 @@
 		 */
 		public function apply_filters($group_products = true)
 		{
-			return $this->apply_visibility()->apply_catalog_visibility()->apply_customer_group_visibility()->apply_availability($group_products);
+			return $this->apply_visibility()->apply_catalog_visibility()->apply_customer_visibility()->apply_availability($group_products);
 		}
 
 		/**
@@ -3161,6 +3168,28 @@
 			$result = str_replace('%FILTER%', $filter, $result);
 			return $result;
 		}
+
+		public function visible_for_customer(){
+			$visible = true;
+			$customer_group_id = Cms_Controller::get_customer_group_id();
+			$customer = Cms_Controller::get_customer();
+			if (!$this->visible_for_customer_group($customer_group_id)) {
+				$visible = false;
+			}
+			$results = Backend::$events->fire_event(array('name' => 'shop:onProductVisibleForCustomer', 'type'=>'combine'), array(
+				'product' => $this,
+				'customer' => $customer,
+				'customer_group_id' => $customer_group_id,
+			));
+			if($results){
+				foreach($results as $result){
+					if($result == false){
+						$visible = false;
+					}
+				}
+			}
+			return $visible;
+		}
 		
 		public function visible_for_customer_group($group_id)
 		{
@@ -3198,7 +3227,7 @@
 			else
 				$product_obj = $this->related_product_list_list;
 			
-			$product_obj->apply_customer_group_visibility()->apply_catalog_visibility();
+			$product_obj->apply_customer_visibility()->apply_catalog_visibility();
 
 			return $product_obj;
 		}

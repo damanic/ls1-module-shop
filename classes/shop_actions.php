@@ -139,9 +139,7 @@
 				return null;
 			}
 
-			$customer_group_id = Cms_Controller::get_customer_group_id();
-			if (!$product->visible_for_customer_group($customer_group_id))
-			{
+			if (!$product->visible_for_customer()) {
 				$this->data['product'] = null;
 				return null;
 			}
