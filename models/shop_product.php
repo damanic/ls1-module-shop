@@ -4678,6 +4678,26 @@
 		 * @return array Returns a list of column names.
 		 */
 		private function event_onGetProductSearchSortColumns() {}
+
+
+		/**
+		 * Triggered when customer visibility filters are applied to product lookups
+		 * @event shop:onProductApplyCustomerVisibility
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param Shop_Product $product The product object onto which additional where() conditions can be applied.
+		 */
+		private function event_onProductApplyCustomerVisibility() {}
+
+		/**
+		 * Triggered when a customer visibility check is performed on a product
+		 * @event shop:onProductVisibleForCustomer
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param Array $params An array that contains the product object and customer object.
+		 * return boolean Return false if the product should not be visible
+		 */
+		private function event_onProductVisibleForCustomer() {}
 	}
 
 ?>
