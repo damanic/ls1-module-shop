@@ -616,7 +616,8 @@
 		public function listDashboardReports()
 		{
 			return array(
-				'recent_orders'=>array('partial'=>'recentorders_report.htm', 'name'=>'Recent Orders')
+				'recent_orders'=>array('partial'=>'recentorders_report.htm', 'name'=>'Recent Orders'),
+				'product_groups'=>array('partial'=>'productgroups_report.htm', 'name'=>'Custom Product Groups')
 			);
 		}
 

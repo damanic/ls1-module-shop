@@ -1,0 +1,39 @@
+<h2>Custom Product Groups</h2>
+
+<? 
+	$groups = Shop_CustomGroup::create()->find_all();
+	$total = 0;
+	$groups_found = $groups->count;
+?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th class="float last">Product Count</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? if (!$groups_found): ?>
+			<tr class="noData"><td colspan="5">&lt;no data&gt;</td></tr>
+		<? else: ?>
+			<? foreach ($groups as $index=>$group): 
+				$url = url('shop/groups/edit/'.$group->id.'?'.uniqid());
+				$total += $group->product_num
+			?>
+				<tr class="<?= Backend_Html::zebra('groups') ?> <?= $index == $groups->count-1 ? 'last' : null ?>">
+					<td class="link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= h($group->name) ?></a></td>
+					<td class="last float link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= $group->product_num ?></a></td>
+				</tr>
+			<? endforeach ?>
+		<? endif ?>
+	</tbody>
+	<tfoot>
+		<tr>
+			<td colspan="1">
+				<a href="<?= url('/shop/groups') ?>">Manage customer groups</a>
+			</td>
+			<td class="float total last"><?= $groups_found ? $total : null ?></td>
+		</tr>
+	</tfoot>
+</table>
