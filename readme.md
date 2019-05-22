@@ -71,3 +71,13 @@ Allows for any number of 'invoice' variants to be selected for print (eg. quotes
 - 1.33.11 Minor update to paypal payment methods
 - 1.33.12 Improved currency awareness
 - 1.33.13 Bugfix for manual order discounts
+- 1.33.14 Bugfix: Fixes issue with Shop_Boxpacker
+- 1.33.15 Adds new events and dashboard report for custom product groups
+    - New Shop_Product Methods:
+        - `visible_for_customer()` 
+        - `apply_customer_visibility()`
+    - New Shop_Product Events: 
+         - `shop:onProductVisibleForCustomer`
+         - `shop:onProductApplyCustomerVisibility`
+    - New Shop_CartPriceRule Events: 
+         - `shop:onListActiveCartPriceRules`
