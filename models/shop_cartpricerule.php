@@ -632,7 +632,7 @@
 					}
 
 					$applied_rules[] = $rule->id;
-					$rule_info = array('rule'=>$rule, 'discount'=>$discount);
+					$rule_info = array('rule'=>$rule, 'discount'=>$discount, 'action' => $action);
 
 					$applied_rules_info[] = (object)$rule_info;
 
