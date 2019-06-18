@@ -208,6 +208,10 @@
 			$this->sort_order = $this->id;
 		}
 
+		public function before_delete($db_delete = true){
+			Backend::$events->fireEvent('shop:onCartPriceRuleBeforeDelete', $this, $db_delete);
+		}
+
 		public function init_conditions($session_key)
 		{
 			$root_rule = new Shop_PriceRuleCondition();
