@@ -208,8 +208,8 @@
 			$this->sort_order = $this->id;
 		}
 
-		public function before_delete($db_delete = true){
-			Backend::$events->fireEvent('shop:onCartPriceRuleBeforeDelete', $this, $db_delete);
+		public function before_delete($id=null){
+			Backend::$events->fireEvent('shop:onCartPriceRuleBeforeDelete', $this, $id);
 		}
 
 		public function init_conditions($session_key)
@@ -699,6 +699,17 @@
 		 * @return Array an updated $result array or null for no effect.
 		 */
 		private function event_onListActiveCartPriceRules($result, $params) {}
+
+		/**
+		 * Triggered before a discount is deleted.
+		 * The event handler should accept two parameters - the price rule object and the price rule id.
+		 * @event shop:onCartPriceRuleBeforeDelete
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param Shop_CartPriceRule $price_rule Specifies the price rule obj
+		 * @param bool $rule_id Specifies the price rule id. If the identifier is not provided, deletes the current record.
+		 */
+		private function event_onCartPriceRuleBeforeDelete($price_rule, $price_rule_id=null) {}
 	}
 	
 ?>
