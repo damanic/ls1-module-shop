@@ -43,6 +43,10 @@
 
 		public $custom_columns = array('password_confirm'=>db_varchar, 'full_name'=>db_varchar);
 
+		public $calculated_columns = array(
+			'order_count'=>array('sql'=>"(select count(*) from shop_orders where shop_orders.customer_id=shop_customers.id AND shop_orders.deleted_at IS NULL)", 'type'=>db_number)
+		);
+
 		public $belongs_to = array(
 			'shipping_country'=>array('class_name'=>'Shop_Country', 'foreign_key'=>'shipping_country_id'),
 			'billing_country'=>array('class_name'=>'Shop_Country', 'foreign_key'=>'billing_country_id'),
@@ -52,6 +56,8 @@
 			
 			'group'=>array('class_name'=>'Shop_CustomerGroup', 'foreign_key'=>'customer_group_id'),
 		);
+
+
 		
 		public $has_many = array(
 			'orders'=>array('class_name'=>'Shop_Order', 'foreign_key'=>'customer_id', 'order'=>'order_datetime desc'),
@@ -105,6 +111,8 @@
 
 			$this->define_column('deleted_at', 'Deleted')->defaultInvisible()->dateFormat('%x %H:%M');
 			$this->define_column('notes', 'Notes')->listTitle('Notes')->defaultInvisible();
+
+			$this->define_column('order_count', 'Order Count')->defaultInvisible();
 
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('shop:onExtendCustomerModel', $this, $context);
