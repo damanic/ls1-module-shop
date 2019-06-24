@@ -22,6 +22,10 @@
 			$this->define_column('description', 'Description')->validation()->fn('trim');
 			$this->define_column('rates', 'Rates')->invisible()->validation()->required();
 			$this->define_column('is_default', 'Default');
+
+			$this->defined_column_list = array();
+			Backend::$events->fireEvent('shop:onExtendTaxClassModel', $this, $context);
+			$this->api_added_columns = array_keys($this->defined_column_list);
 		}
 
 		public function define_form_fields($context = null)
@@ -47,6 +51,33 @@
 					'compound'=>array('title'=>'Compound', 'type'=>'checkbox', 'width'=>'80')
 				)
 			))->noLabel();
+
+			Backend::$events->fireEvent('shop:onExtendTaxClassForm', $this, $context);
+			foreach ($this->api_added_columns as $column_name) {
+				$form_field = $this->find_form_field($column_name);
+				if ($form_field) {
+					$form_field->optionsMethod('get_added_field_options');
+					$form_field->optionStateMethod('get_added_field_option_state');
+				}
+			}
+		}
+
+		public function get_added_field_options($db_name, $current_key_value = -1) {
+			$result = Backend::$events->fireEvent('shop:onGetTaxClassFieldOptions', $db_name, $current_key_value);
+			foreach ($result as $options) {
+				if (is_array($options) || ($options !== false && $current_key_value != -1))
+					return $options;
+			}
+			return false;
+		}
+
+		public function get_added_field_option_state($db_name, $key_value) {
+			$result = Backend::$events->fireEvent('shop:onGetTaxClassFieldState', $db_name, $key_value, $this);
+			foreach ($result as $value) {
+				if ($value !== null)
+					return $value;
+			}
+			return false;
 		}
 		
 		public function get_grid_autocomplete_values($db_name, $column, $term, $row_data)
