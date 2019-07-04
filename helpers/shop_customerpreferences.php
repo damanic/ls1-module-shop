@@ -115,7 +115,7 @@ class Shop_CustomerPreferences {
 			'r' => $redirect,
 			'v' => $value
 		);
-		return root_url( '/'.self::$access_point.'/',true).'/?'. http_build_query($params);
+		return root_url( '/'.self::$access_point.'/',true).'?'. http_build_query($params);
 	}
 
 
