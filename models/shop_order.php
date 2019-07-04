@@ -2030,7 +2030,7 @@ class Shop_Order extends Db_ActiveRecord
 
 		$order->total_cost = $total_cost;
 		$order->subtotal = $subtotal;
-		$order->discount = $order->subtotal - $this->subtotal_before_discounts();
+		$order->discount = $order->subtotal - $this->subtotal_before_discounts;
 		$order->total = $order->get_order_total();
 
 		if ($save)

@@ -5,6 +5,7 @@ class Shop_CustomerPreferences {
 	private static $cache = array();
 	private $table_name = 'shop_customer_preferences';
 	protected $preference_data = array();
+	public static $access_point = 'shop_scp';
 
 
 	public static function load( $customer, $field_name ) {
@@ -71,6 +72,13 @@ class Shop_CustomerPreferences {
 		return false;
 	}
 
+	public static function get_customer_preference($customer, $pref_name){
+			$customer_preference = Shop_CustomerPreferences::load($customer, $pref_name);
+			if(!$customer_preference){
+				return Shop_CustomerPreferences::set($customer, $pref_name, null);
+			}
+			return $customer_preference;
+	}
 
 	public function value( $default = null ) {
 		if ( !key_exists( 'pref_value', $this->preference_data ) ) {
@@ -98,6 +106,16 @@ class Shop_CustomerPreferences {
 			return null;
 		}
 		return $this->preference_data['pref_field'];
+	}
+
+	public function generate_preference_url($value,$redirect='/'){
+		$redirect = str_replace('/','|',$redirect);
+		$params = array(
+			'h' => $this->hash(),
+			'r' => $redirect,
+			'v' => $value
+		);
+		return root_url( '/'.self::$access_point.'/',true).'/?'. http_build_query($params);
 	}
 
 
@@ -164,6 +182,7 @@ class Shop_CustomerPreferences {
 
 		return md5( $string );
 	}
+
 
 
 }

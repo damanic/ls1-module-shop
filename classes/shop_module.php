@@ -108,6 +108,8 @@
 			Backend::$events->addEvent('onDeleteEmailTemplate', $this, 'checkTemplateDeletion');
 			Backend::$events->addEvent('onLogin', $this, 'backendLogin');
 			Backend::$events->addEvent('cms:onRegisterTwigExtension', $this, 'register_twig_extension');
+			Backend::$events->addEvent('core:onAfterEmailSendToCustomer', $this, 'after_email_send_to_customer');
+
 		}
 
 		public function subscribe_crontab(){
@@ -132,7 +134,8 @@
 				'ls_shop_apply_catalog_rules'=>'apply_catalog_rules',
 				'ls_shop_process_catalog_rules_batch'=>'process_catalog_rules_batch',
 				'ls_shop_process_catalog_rules_om_batch'=>'process_catalog_rules_om_batch',
-				'ls_shop_auto_billing'=>'process_auto_billing'
+				'ls_shop_auto_billing'=>'process_auto_billing',
+				Shop_CustomerPreferences::$access_point => 'apply_customer_preference'
 			);
 		}
 		
@@ -176,6 +179,31 @@
 				$result = Shop_AutoBilling::create()->process();
 				echo Shop_AutoBilling::format_result($result);
 			}
+		}
+
+		/*
+		 * This public access point can only set a boolean value
+		 */
+		public function apply_customer_preference(){
+			$result = false;
+			$hash = Phpr::$request->getField('h', null);
+			$redirect = Phpr::$request->getField('r', null);
+			if($redirect){
+				$redirect = str_replace('|','/', $redirect);
+				$redirect = substr($redirect,1);
+			}
+			$value = Phpr::$request->getField('v', null);
+			$value = $value ? 1 : null;
+			if(strlen($hash) == 32){
+				$result = Shop_CustomerPreferences::set_by_hash($hash,$value);
+			}
+
+			if($result){
+				Phpr::$session->flash['success'] = 'Your preference has been successfully updated.';
+			} else {
+				Phpr::$session->flash['error'] = 'There was a problem processing your request.';
+			}
+			Phpr::$response->redirect('/'.$redirect);
 		}
 
 		public function update_currency_rates(){
@@ -651,6 +679,11 @@
 		public function listEmailScopes()
 		{
 			return array('order'=>'Order variables', 'customer'=>'Customer variables');
+		}
+
+
+		public function after_email_send_to_customer($customer, $subject, $message_text, $customer_email, $customer_name, $custom_data, $reply_to, $template, $result){
+			//@TODO Log notification against customer record
 		}
 		
 		/**
