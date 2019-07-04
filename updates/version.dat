@@ -985,3 +985,4 @@
 #1.33.15 Adds new events and dashboard report
 #1.33.16 New event: shop:onCartPriceRuleBeforeDelete
 #1.33.17 Adds order count to customer list view and extension events to Shop_TaxClass
+#1.33.18 Allows customers to flag a preference by visiting a URL access point
