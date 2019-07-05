@@ -29,6 +29,7 @@
 			try
 			{
 				$obj = self::create();
+				$obj->customer_id = $customer->id;
 				$obj->email = $customer->email;
 				$obj->subject = $subject;
 				$obj->message = $message_text;
