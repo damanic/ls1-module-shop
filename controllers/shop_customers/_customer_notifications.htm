@@ -1,0 +1,41 @@
+<? if (!$form_model->deleted_at):  ?>
+	<div class="toolbar">
+		<a class="imageLink new_message img_noBottomPading" href="<?= url('shop/customer_notifications/create/').'?customer_id='.$form_model->id.'&'.uniqid() ?>">New message</a>
+		<div class="clear"></div>
+	</div>
+<? endif ?>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th class="iconCell"></th>
+			<th>Subject</th>
+			<th>Email</th>
+			<th>Sender</th>
+			<th class="date last">Date and Time</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?
+		$notifications = $form_model->get_recent_notifications(50);
+		if($notifications):
+			foreach ($form_model->get_recent_notifications(50) as $record):
+				$preview_url = url('shop/customer_notifications/view/'.$record->id.'/'.$form_model->id);
+		?>
+		<tr class="<?= Backend_Html::zebra('order_customer_notifications') ?> <?= $record->is_system ? null : 'important' ?>" title="<?= $record->is_system ? 'Internal system notification' : 'Customer notification' ?>">
+			<td class="iconCell <?= $record->is_system ? 'system_message' : 'message' ?>"></td>
+			<td <?= click_link($preview_url) ?> class="link"><a href="<?= $preview_url  ?>"><?= h($record->subject) ?></a></td>
+			<td <?= click_link($preview_url) ?> class="link"><a href="<?= $preview_url  ?>"><?= h($record->email) ?></a></td>
+			<td <?= click_link($preview_url) ?> class="link"><a href="<?= $preview_url  ?>"><?= h($record->displayField('created_user_name')) ?></a></td>
+			<td <?= click_link($preview_url) ?> class="link date last"><a href="<?= $preview_url  ?>"><?= $record->displayField('created_at') ?></a></td>
+		</tr>
+		<?
+			endforeach;
+		else:
+		?>
+			<tr class="noData">
+				<td colspan="5">No notifications found</td>
+			</tr>
+		<? endif ?>
+	</tbody>
+</table>

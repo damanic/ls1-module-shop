@@ -71,8 +71,10 @@
 		<div class="tabs formReportLayout">
 			<ul id="customer_tabs" class="tabs_tabs">
 				<li class="round active"><a href="#customer" onclick="return false">Customer</a></li>
-				<li class="round active"><a href="#orders" onclick="return false">Orders</a></li>
-				
+				<li class="round"><a href="#orders" onclick="return false">Orders</a></li>
+				<li class="round"><a href="#notifications" onclick="return false">Notifications</a></li>
+
+
 				<? $custom_module_tabs = Backend::$events->fireEvent('shop:onExtendCustomerPreviewTabs', $this, $form_model); ?>
 				<? 
 					$index = 1;
@@ -91,13 +93,16 @@
 			</ul>
 			<div class="clear tab_separator"></div>
 			<ul class="tabs_pages" id="customer_tab_pages">
-				<li class="form_page_preview" id="order">
+				<li class="form_page_preview" id="customer">
 					<?= Phpr_Form::openTag() ?>
 						<? $this->formRenderReportPreview() ?>
 					</form>
 				</li>
 				<li class="form_page_preview" id="orders">
 					<? $this->renderPartial('customer_orders') ?>
+				</li>
+				<li class="form_page_preview" id="notifications">
+					<? $this->renderPartial('customer_notifications') ?>
 				</li>
 				
 				<? 

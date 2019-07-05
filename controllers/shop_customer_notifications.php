@@ -48,6 +48,7 @@
 
 			if($models['customer']){
 				$customer = $models['customer'];
+				$model->email = $customer->email;
 			}
 
 

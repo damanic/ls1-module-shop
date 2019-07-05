@@ -662,6 +662,16 @@
 			
 			return $message_text;
 		}
+
+		public function get_recent_notifications($limit=20){
+			$limit = is_numeric($limit) ? $limit : 20;
+			$notifications = Shop_CustomerNotification::create();
+			$notifications->where('customer_id = ?', $this->id);
+			$notifications->where('is_system IS NULL');
+			$notifications->limit($limit);
+			$notifications->order('created_at DESC');
+			return $notifications->find_all();
+		}
 		
 		public function merge_into($destination)
 		{
