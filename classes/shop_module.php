@@ -683,7 +683,7 @@
 
 
 		public function after_email_send_to_customer($customer, $subject, $message_text, $customer_email, $customer_name, $custom_data, $reply_to, $template, $result){
-			if($template->log_notification ){
+			if(property_exists($template, 'log_notification') && $template->log_notification ){
 				Shop_CustomerNotification::add($customer,$message_text,$subject, $reply_to);
 			}
 		}
