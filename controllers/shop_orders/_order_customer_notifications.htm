@@ -1,6 +1,6 @@
 <? if (!$form_model->deleted_at && !$form_model->is_order_locked()): ?>
 	<div class="toolbar">
-		<a class="imageLink new_message img_noBottomPading" href="<?= url('shop/customer_notifications/create/'.$form_model->id.'?'.uniqid()) ?>">New message</a>
+		<a class="imageLink new_message img_noBottomPading" href="<?= url('shop/customer_notifications/create/').'?customer_id='.$form_model->customer->id.'&order_id='.$form_model->id.'&'.uniqid() ?>">New message</a>
 
 		<a class="imageLink new_from_template img_noBottomPading" href="#" onclick="new PopupForm('preview_onLoadMessageTemplateForm'); return false">New from template</a>
 		<div class="clear"></div>

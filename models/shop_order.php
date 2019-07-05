@@ -1461,6 +1461,7 @@ class Shop_Order extends Db_ActiveRecord
 		$template->subject = $this->set_order_and_customer_email_vars($customer, $template->subject, $status_comment, $params);
 
 		$reply_to = $template->get_reply_address(null, null, $this->billing_email, $this->billing_first_name.' '.$this->billing_last_name);
+
 		Shop_OrderNotification::add_message($this, $customer, $message, $template->subject, null, $reply_to);
 
 		$customer->email = $this->billing_email;

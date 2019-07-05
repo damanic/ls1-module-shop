@@ -9,8 +9,13 @@
 
 <? Phpr_View::beginBlock("view") ?>
 	<ul class="breadcrumbs">
-		<li><a href="<?= url('/shop/orders') ?>">Order List</a></li>
-		<li><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Order Preview</a></li>
+		<? if($customer_id): ?>
+			<li><a href="<?= url('/shop/customers') ?>">Customer List</a></li>
+			<li><a href="<?= url('/shop/customers/preview/'.$customer_id) ?>">Customer Preview</a></li>
+		<? else: ?>
+			<li><a href="<?= url('/shop/orders') ?>">Order List</a></li>
+			<li><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Order Preview</a></li>
+		<? endif; ?>
 		<li><?= $this->app_page_title ?></li>
 	</ul>
 
@@ -33,8 +38,17 @@
 								echo backend_ajax_button('Send test message', 'create_onTest', array(), "alert: 'Your email address is not defined. Please specify it in the user parameters.'");
 						?>
 
+					<? if($order_id): ?>
 						<?= backend_button('Cancel', url('/shop/orders/preview/'.$order_id)) ?>
+					<? else: ?>
+						<?= backend_button('Cancel', url('/shop/customers/preview/'.$customer_id)) ?>
+					<? endif; ?>
 						<div class="clear"></div>
+
+						<input type="hidden" name="order_id" value="<?=$order_id?>"/>
+						<input type="hidden" name="customer_id" value="<?=$customer_id?>"/>
+						<input type="hidden" name="notification_id" value="<?=$notification_id?>"/>
+						<input type="hidden" name="template_id" value="<?=$template_id?>"/>
 					</form>
 				</td>
 				<td class="rightFixedColumn infoBlock">
@@ -43,6 +57,6 @@
 			</tr>
 		</table>
 	<? else: ?>
-		<p><a href="<?= url('/shop/orders/preview/'.$order_id) ?>">Return to the order preview page</a></p>
+		<p><a href="<?= url('/shop/customers') ?>">Return to the customers list</a></p>
 	<? endif ?>
 <? Phpr_View::endBlock() ?>
