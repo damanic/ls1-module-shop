@@ -19,7 +19,7 @@
 					<td><?= h($product->grouped_option_desc) ?></td>
 					<td><?= h($product->name) ?></td>
 					<td><?= h($product->sku) ?></td>
-					<td class="number"><?= $form_model->format_currency($product->price) ?></td>
+					<td class="number"><?= format_currency($product->price) ?></td>
 					<td class="bool">
 						<span class="<?= $product->enabled ? 'on' : null ?>"><?= $product->enabled ? 'Yes' : 'No' ?></span>
 					</td>
