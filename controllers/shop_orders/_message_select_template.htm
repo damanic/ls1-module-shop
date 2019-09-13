@@ -10,7 +10,7 @@
 						<? 
 							$last_index = count($templates)-1;
 							foreach ($templates as $index=>$template): 
-								$url = url('/shop/customer_notifications/create/').'?template_id='.$template->id.'&order_id='.$order_id);
+								$url = url('/shop/customer_notifications/create/').'?template_id='.$template->id.'&order_id='.$order_id;
 						?>
 							<li <? if ($index == $last_index): ?>class="last"<? endif ?>>
 								<a href="<?= $url ?>">
