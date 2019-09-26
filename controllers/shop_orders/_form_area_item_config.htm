@@ -43,12 +43,6 @@
 				</td>
 			</tr>
 		<? endif ?>
-		<? foreach ($item->product->properties as $attribute): ?>
-			<tr>
-				<th><?= h($attribute->name) ?></th>
-				<td><?= h($attribute->value) ?></td>
-			</tr>
-		<? endforeach ?>
 
 		<? foreach ($item->product->options as $option): 
 			$control_name = 'product_options['.$option->option_key.']';

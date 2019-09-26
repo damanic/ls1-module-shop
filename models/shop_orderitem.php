@@ -93,8 +93,7 @@
 		
 		public function define_form_fields($context = null)
 		{
-			if ($context == 'preview')
-			{
+			if ($context == 'preview') {
 				$this->add_form_field('product_name', 'left')->tab('Item Details');
 				$this->add_form_field('product_sku', 'right')->tab('Item Details');
 
@@ -114,19 +113,18 @@
 				$extras = $this->get_extra_options();
 				if ($extras)
 					$this->add_form_custom_area('item_extras')->tab('Extras');
-			} else
-			{
+			} else {
 				$deleted_options = $this->get_deleted_options();
-				
-				if (
-					$this->product->grouped_products->count ||
-					$this->product->properties->count ||
-					$this->product->options->count ||
-					$deleted_options
-				)
+				if ( $this->product->grouped_products->count || $this->product->options->count || $deleted_options ) {
 					$this->add_form_custom_area('item_config')->tab('Item Configuration');
-					
+				}
+
 				$this->add_form_custom_area('item_pricing')->tab('Quantity and Pricing');
+
+				if($this->product->properties->count){
+					$this->add_form_custom_area('item_properties')->tab('Attributes');
+				}
+
 				$this->add_form_custom_area('item_extras')->tab('Extras');
 				$this->form_tab_css_class('Extras', 'fullsize');
 			}
