@@ -544,14 +544,24 @@
 		 */
 		public function get_sale_price($product, $quantity = 1, $customer_group_id = null, $no_tax = false)
 		{
+
+			$price = null;
 			if ($customer_group_id === null )
 				$customer_group_id = Cms_Controller::get_customer_group_id();
 
-			if($this->on_sale && strlen($this->sale_price_or_discount))
-			{
+			$prices = Backend::$events->fireEvent('shop:onOptionMatrixGetSalePrice', $this , $product, $quantity, $customer_group_id);
+			foreach ($prices as $use_price) {
+				if (is_numeric($use_price)) {
+					$price = $use_price;
+				}
+			}
+
+			if(!$price && ($this->on_sale && strlen($this->sale_price_or_discount))) {
 				$price = $this->get_price($product, $quantity, $customer_group_id, true);
 				$price = round(Shop_Product::get_set_sale_price($price, $this->sale_price_or_discount), 2);
-				
+			}
+
+			if($price){
 				return $no_tax ? $price : Shop_TaxClass::apply_tax_conditional($product->tax_class_id, $price);
 			}
 
