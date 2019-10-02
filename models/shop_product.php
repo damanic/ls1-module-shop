@@ -1801,8 +1801,8 @@
 
 		}
 
-		public function get_sale_price_proxiable($proxy, $quantity = 1, $customer_group_id = null ){
-			$price = self::get_sale_price_no_tax_proxiable($quantity, $customer_group_id);
+		public static function get_sale_price_proxiable($proxy, $quantity = 1, $customer_group_id = null ){
+			$price = self::get_sale_price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
 
 			$include_tax = Shop_CheckoutData::display_prices_incl_tax();
 			if (!$include_tax)
@@ -1836,7 +1836,7 @@
 			return self::is_on_sale_proxiable($this);
 		}
 
-		public function is_on_sale_proxiable($proxy){
+		public static function is_on_sale_proxiable($proxy){
 			return self::price_no_tax_proxiable($proxy) <> self::get_sale_price_no_tax_proxiable($proxy, 1);
 		}
 		
@@ -1868,7 +1868,7 @@
 			return self::get_sale_reduction_proxiable($this, $quantity, $customer_group_id);
 		}
 
-		public function get_sale_reduction_proxiable($proxy, $quantity, $customer_group_id = null){
+		public static function get_sale_reduction_proxiable($proxy, $quantity, $customer_group_id = null){
 			$sale_price = self::get_sale_price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
 			$original_price = self::price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
 			return $original_price - $sale_price;
