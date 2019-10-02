@@ -1567,7 +1567,11 @@
 		 */
 		public function eval_tier_price($group_id, $quantity)
 		{
-			return Shop_TierPrice::eval_tier_price($this->tier_price_compiled, $group_id, $quantity, $this->name, $this->price);
+			return self::eval_tier_price_proxiable($this, $group_id, $quantity);
+		}
+
+		public static function eval_tier_price_proxiable($proxy, $group_id, $quantity){
+			return Shop_TierPrice::eval_tier_price($proxy->tier_price_compiled, $group_id, $quantity, $proxy->name, $proxy->price);
 		}
 		
 		/**
@@ -1695,41 +1699,42 @@
 		 * If there are no price rules defined for the product and no sale price or discount specified, returns the product original price
 		 * (taking into account tier prices)
 		 */
-		public function get_sale_price_no_tax($quantity, $customer_group_id = null)
-		{
+		public function get_sale_price_no_tax($quantity, $customer_group_id = null) {
+			return self::get_sale_price_no_tax_proxiable($this, $quantity, $customer_group_id);
+		}
+
+		public static function get_sale_price_no_tax_proxiable($proxy, $quantity, $customer_group_id = null){
 			if ($customer_group_id === null )
 				$customer_group_id = Cms_Controller::get_customer_group_id();
-				
-			$api_result = Backend::$events->fireEvent('shop:onGetProductSalePrice', $this, $quantity, $customer_group_id);
-			if (is_array($api_result))
-			{
-				foreach ($api_result as $value)
-				{
+
+			$api_result = Backend::$events->fireEvent('shop:onGetProductSalePrice', $proxy, $quantity, $customer_group_id);
+			if (is_array($api_result)) {
+				foreach ($api_result as $value) {
 					if ($value !== false)
 						return $value;
 				}
 			}
 
-			if($this->on_sale && strlen($this->sale_price_or_discount))
+			if($proxy->on_sale && strlen($proxy->sale_price_or_discount))
 			{
-				$price = $this->price_no_tax($quantity, $customer_group_id);
-				return round(self::get_set_sale_price($price, $this->sale_price_or_discount), 2);
+				$price = self::price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
+				return round(self::get_set_sale_price_proxiable($proxy, $price, $proxy->sale_price_or_discount), 2);
 			}
 
-			if (!strlen($this->price_rules_compiled))
-				return $this->price_no_tax($quantity, $customer_group_id);
+			if (!strlen($proxy->price_rules_compiled))
+				return self::price_no_tax_proxiable($proxy,$quantity, $customer_group_id);
 
 			$price_rules = array();
 			try
 			{
-				$price_rules = unserialize($this->price_rules_compiled);
+				$price_rules = unserialize($proxy->price_rules_compiled);
 			} catch (Exception $ex)
 			{
-				throw new Phpr_ApplicationException('Error loading price rules for the "'.$this->name.'" product');
+				throw new Phpr_ApplicationException('Error loading price rules for the "'.$proxy->name.'" product');
 			}
 
 			if (!array_key_exists($customer_group_id, $price_rules))
-				return $this->price_no_tax($quantity, $customer_group_id);
+				return self::price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
 
 			$price_tiers = $price_rules[$customer_group_id];
 			$price_tiers = array_reverse($price_tiers, true);
@@ -1738,7 +1743,7 @@
 			{
 				if ($tier_quantity <= $quantity) {
 					$price = round( $price, 2 );
-					$prices = Backend::$events->fireEvent('shop:onProductReturnCompiledPrice', $this , $quantity, $customer_group_id, $price);
+					$prices = Backend::$events->fireEvent('shop:onProductReturnCompiledPrice', $proxy , $quantity, $customer_group_id, $price);
 					foreach ($prices as $use_price) {
 						if (is_numeric($use_price)) {
 							$price = $use_price;
@@ -1748,7 +1753,7 @@
 				}
 			}
 
-			return $this->price_no_tax($quantity, $customer_group_id);
+			return self::price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
 		}
 		
 		/**
@@ -1792,13 +1797,18 @@
 		 */
 		public function get_sale_price($quantity = 1, $customer_group_id = null)
 		{
-			$price = $this->get_sale_price_no_tax($quantity, $customer_group_id);
-			
+			return self::get_sale_price_proxiable($this, $quantity = 1, $customer_group_id = null);
+
+		}
+
+		public function get_sale_price_proxiable($proxy, $quantity = 1, $customer_group_id = null ){
+			$price = self::get_sale_price_no_tax_proxiable($quantity, $customer_group_id);
+
 			$include_tax = Shop_CheckoutData::display_prices_incl_tax();
 			if (!$include_tax)
 				return $price;
 
-			return Shop_TaxClass::get_total_tax($this->tax_class_id, $price) + $price;
+			return Shop_TaxClass::get_total_tax($proxy->tax_class_id, $price) + $price;
 		}
 		
 		/**
@@ -1823,7 +1833,11 @@
 		 */
 		public function is_on_sale()
 		{
-			return $this->price_no_tax() <> $this->get_sale_price_no_tax(1);
+			return self::is_on_sale_proxiable($this);
+		}
+
+		public function is_on_sale_proxiable($proxy){
+			return self::price_no_tax_proxiable($proxy) <> self::get_sale_price_no_tax_proxiable($proxy, 1);
 		}
 		
 		/**
@@ -1851,9 +1865,12 @@
 		 */
 		public function get_sale_reduction($quantity, $customer_group_id = null)
 		{
-			$sale_price = $this->get_sale_price_no_tax($quantity, $customer_group_id);
-			$original_price = $this->price_no_tax($quantity, $customer_group_id);
+			return self::get_sale_reduction_proxiable($this, $quantity, $customer_group_id);
+		}
 
+		public function get_sale_reduction_proxiable($proxy, $quantity, $customer_group_id = null){
+			$sale_price = self::get_sale_price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
+			$original_price = self::price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
 			return $original_price - $sale_price;
 		}
 		
@@ -2737,16 +2754,20 @@
 		 */
 		public function price_no_tax($quantity = 1, $customer_group_id = null)
 		{
+			return self::price_no_tax_proxiable($this, $quantity, $customer_group_id);
+		}
+		
+		public static function price_no_tax_proxiable($proxy, $quantity=1, $customer_group_id = null){
 			if ($customer_group_id === null)
 				$customer_group_id = Cms_Controller::get_customer_group_id();
 
-			$price = $this->eval_tier_price($customer_group_id, $quantity);
+			$price = self::eval_tier_price_proxiable($proxy, $customer_group_id, $quantity);
 			$price_adjusted = Backend::$events->fire_event(array('name' => 'shop:onGetProductPriceNoTax', 'type'=>'filter'), array(
-				'product' => $this,
+				'product' => $proxy,
 				'price' => $price,
 				'quantity' => $quantity,
 				'customer_group_id' => $customer_group_id
-				));
+			));
 			return ($price_adjusted['price']) ? $price_adjusted['price'] : $price;
 		}
 
@@ -2773,15 +2794,18 @@
 		 * @param integer $customer_group_id Specifies an identifier of a {@link Shop_CustomerGroup customer group}.
 		 * @return float Returns the product base price.
 		 */
-		public function price($quantity = 1, $customer_group_id = null)
-		{
-			$price = $this->price_no_tax($quantity, $customer_group_id);
+		public function price($quantity = 1, $customer_group_id = null) {
+			return self::price_proxiable($this, $quantity, $customer_group_id);
+		}
+		
+		public static function price_proxiable($proxy, $quantity = 1, $customer_group_id = null){
+			$price = self::price_no_tax_proxiable($proxy, $quantity, $customer_group_id);
 
 			$include_tax = Shop_CheckoutData::display_prices_incl_tax();
 			if (!$include_tax)
 				return $price;
 
-			return Shop_TaxClass::get_total_tax($this->tax_class_id, $price) + $price;
+			return Shop_TaxClass::get_total_tax($proxy->tax_class_id, $price) + $price;
 		}
 		
 		/**
@@ -3469,9 +3493,13 @@
 		
 		public static function get_set_sale_price($original_price, $sale_price_or_discount)
 		{
+			return self::get_set_sale_price_proxiable(null, $original_price, $sale_price_or_discount);
+		}
+
+		public static function get_set_sale_price_proxiable($proxy,$original_price, $sale_price_or_discount){
 			if(!isset($sale_price_or_discount) || !strlen($sale_price_or_discount) || $error = self::is_sale_price_or_discount_invalid($sale_price_or_discount))
 				return $original_price;
-			
+
 			$price = $original_price;
 			$percentage_sign = strpos($sale_price_or_discount, '%');
 			if($percentage_sign !== false)
@@ -3490,7 +3518,7 @@
 			{
 				$price = $original_price + $sale_price_or_discount;
 			}
-			
+
 			return $price > 0 ? round($price,2) : 0;
 		}
 		
