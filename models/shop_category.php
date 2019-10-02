@@ -566,7 +566,7 @@
 		
 		public static function page_url_proxiable($proxy, $default)
 		{
-			$page_url = Cms_PageReference::get_page_url($proxy, 'page_id', $proxy->page_url);
+			$page_url = Cms_PageReference::get_page_url($proxy, 'page_id', $default);
 			
 			$url_name = $proxy->get_url_name();
 			if (substr($url_name, 0, 1) == '/')
