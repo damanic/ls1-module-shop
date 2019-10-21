@@ -118,6 +118,7 @@
 		 *  - total_item_num Specifies total number of items in the shopping cart
 		 *  - cart_items a list of cart items (Shop_CartItem objects)
 		 *  - is_business Determines whether the shipping address is a business address
+		 *  - currency ISO currency code (three character alpha) for the returned shipping rate. If left blank, shop currency is assumed.
 		 * @return mixed
 		 */
 		abstract public function get_quote($parameters);
