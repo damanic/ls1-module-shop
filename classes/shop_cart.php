@@ -689,6 +689,7 @@
 			return $result;
 		}
 
+
 		/**
 		 * Removes all active items from the cart.
 		 * @documentable
@@ -984,11 +985,19 @@
 		public static function total_volume($cart_name = 'main')
 		{
 			$items = self::list_items($cart_name);
+			return self::total_items_volume($items);
+		}
+
+		public static function total_items_volume($items, $ignore_free_shipping = false){
 			$result = 0;
-			foreach ($items as $item)
-			{
-				if (!$item->postponed)
-					$result += $item->total_volume();
+			foreach ($items as $item) {
+				if($ignore_free_shipping && $item->free_shipping){
+					continue;
+				}
+				if ($item->postponed){
+					continue;
+				}
+				$result += $item->total_volume();
 			}
 
 			return $result;
@@ -1003,13 +1012,20 @@
 		public static function total_weight($cart_name = 'main')
 		{
 			$items = self::list_items($cart_name);
-			$result = 0;
-			foreach ($items as $item)
-			{
-				if (!$item->postponed)
-					$result += $item->total_weight();
-			}
+			self::total_items_weight($items);
+		}
 
+		public static function total_items_weight($items, $ignore_free_shipping = false){
+			$result = 0;
+			foreach ($items as $item) {
+				if($ignore_free_shipping && $item->free_shipping){
+					continue;
+				}
+				if ($item->postponed){
+					continue;
+				}
+				$result += $item->total_weight();
+			}
 			return $result;
 		}
 		
@@ -1022,13 +1038,20 @@
 		public static function total_depth($cart_name = 'main')
 		{
 			$items = self::list_items($cart_name);
-			$result = 0;
-			foreach ($items as $item)
-			{
-				if (!$item->postponed)
-					$result += $item->total_depth();
-			}
+			return self::total_items_depth($items);
+		}
 
+		public static function total_items_depth($items, $ignore_free_shipping = false){
+			$result = 0;
+			foreach ($items as $item) {
+				if($ignore_free_shipping && $item->free_shipping){
+					continue;
+				}
+				if ($item->postponed){
+					continue;
+				}
+				$result += $item->total_depth();
+			}
 			return $result;
 		}
 		
@@ -1041,13 +1064,20 @@
 		public static function total_width($cart_name = 'main')
 		{
 			$items = self::list_items($cart_name);
-			$result = 0;
-			foreach ($items as $item)
-			{
-				if (!$item->postponed)
-					$result += $item->total_width();
-			}
+			return self::total_items_width($items);
+		}
 
+		public static function total_items_width($items, $ignore_free_shipping = false){
+			$result = 0;
+			foreach ($items as $item) {
+				if($ignore_free_shipping && $item->free_shipping){
+					continue;
+				}
+				if ($item->postponed){
+					continue;
+				}
+				$result += $item->total_width();
+			}
 			return $result;
 		}
 		
@@ -1060,13 +1090,20 @@
 		public static function total_height($cart_name = 'main')
 		{
 			$items = self::list_items($cart_name);
-			$result = 0;
-			foreach ($items as $item)
-			{
-				if (!$item->postponed)
-					$result += $item->total_height();
-			}
+			return self::total_items_height($items);
+		}
 
+		public static function total_items_height($items, $ignore_free_shipping = false){
+			$result = 0;
+			foreach ($items as $item) {
+				if($ignore_free_shipping && $item->free_shipping){
+					continue;
+				}
+				if ($item->postponed){
+					continue;
+				}
+				$result += $item->total_height();
+			}
 			return $result;
 		}
 
