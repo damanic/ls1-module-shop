@@ -1302,7 +1302,7 @@
 				$no_shipping_option = Shop_ShippingOption::find_by_api_code('no_shipping_required');
 
 				if ($no_shipping_option && $shipping_method && $shipping_method->id == $no_shipping_option->id)
-					Shop_CheckoutData::reset_shiping_method();
+					Shop_CheckoutData::reset_shipping_method();
 			}
 
 			/*
