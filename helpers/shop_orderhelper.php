@@ -97,7 +97,7 @@ class Shop_OrderHelper{
 			$order->shipping_quote = 0;
 			$order->shipping_tax = 0;
 
-			$methods = self::getAvailableShippingMethods($order, $deferred_session_key);
+			$methods = $order->list_available_shipping_options($deferred_session_key);
 
 			$shipping_method_id = $order->shipping_method_id;
 			$sub_option_hash = null;
@@ -221,77 +221,13 @@ class Shop_OrderHelper{
 	}
 
 
-	public static function getAvailableShippingMethods($order, $deferred_session_key=null)
-	{
-
-		$items = empty($deferred_session_key) ? $order->items : $order->list_related_records_deferred('items', $deferred_session_key);
-
-		$total_price = 0;
-		$total_volume = 0;
-		$total_weight = 0;
-		$total_item_num = 0;
-		foreach ($items as $item)
-		{
-			$total_price += $item->single_price*$item->quantity;
-
-			$total_volume += $item->om('volume')*$item->quantity;
-			$total_weight += $item->om('weight')*$item->quantity;
-
-			$total_item_num += $item->quantity;
-
-			$product_extras = $item->get_extra_options();
-			foreach ($product_extras as $extra_info)
-			{
-				$extra_key = md5($extra_info[1]);
-				$option = Shop_ExtraOption::find_product_extra_option($item->product, $extra_key);
-				if ($option)
-				{
-					$total_volume += $option->volume()*$item->quantity;
-					$total_weight += $option->weight*$item->quantity;
-				}
-			}
-		}
-
-		$cart_items = self::items_to_cart_items_array($items);
-
-		$coupon = $order->coupon_id ? Shop_Coupon::create()->find($order->coupon_id) : null;
-		$coupon_code = $coupon ? $coupon->code : null;
-
-		Shop_CheckoutData::set_coupon_code($coupon_code);
-
-		$shipping_info = new Shop_CheckoutAddressInfo();
-		$shipping_info->country = $order->shipping_country_id;
-		$shipping_info->state = $order->shipping_state_id;
-		$shipping_info->city = $order->shipping_city;
-		$shipping_info->zip = $order->shipping_zip;
-		$shipping_info->is_business = $order->shipping_addr_is_business;
-
-		Shop_CheckoutData::set_shipping_info($shipping_info);
-		if ($order->payment_method_id)
-			Shop_CheckoutData::set_payment_method($order->payment_method_id);
-
-		$customer = $order->customer_id ? Shop_Customer::create()->find($order->customer_id) : null;
-
-		$result = Shop_ShippingOption::list_applicable(
-			$order->shipping_country_id,
-			$order->shipping_state_id,
-			$order->shipping_zip,
-			$order->shipping_city,
-			$total_price,
-			$total_volume,
-			$total_weight,
-			$total_item_num,
-			false,
-			false,
-			$cart_items,
-			null,
-			$customer,
-			null,
-			$order->shipping_addr_is_business,
-			true
-		);
-
-		return $result;
+	/**
+	 * Gets shipping methods available for order
+	 * @documentable
+	 * @deprecated Use {@link Shop_Order::list_available_shipping_options()} method instead.
+	 */
+	public static function getAvailableShippingMethods($order, $deferred_session_key=null) {
+		return $order->list_available_shipping_options($deferred_session_key);
 	}
 
 	public static function items_to_cart_items_array($items){

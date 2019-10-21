@@ -49,6 +49,9 @@
 		public $quote = 0;
 		public $quote_no_tax = 0;
 		public $quote_tax_incl = 0;
+		public $quote_no_discount = 0;
+		public $discount = 0;
+		protected $currency_code = null;
 
 		public $sub_options = array();
 		public $multi_option = false;
@@ -253,8 +256,824 @@
 			$this->config_data = $document->asXML();
 		}
 
+		public function add_field($code, $title, $side = 'full', $type = db_text)
+		{
+			$this->custom_columns[$code] = $type;
+			$this->_columns_def = null;
+			$this->define_column($code, $title)->validation();
+			$form_field = $this->add_form_field($code, $side)->tab('Configuration')->optionsMethod('get_added_field_options')->optionStateMethod('get_added_field_option_state');
+			$this->added_fields[$code] = $form_field;
+
+			return $form_field;
+		}
+
+		public function get_added_field_options($db_name)
+		{
+			$obj = $this->get_shippingtype_object();
+			$method_name = "get_{$db_name}_options";
+			if (!method_exists($obj, $method_name))
+				throw new Phpr_SystemException("Method {$method_name} is not defined in {$this->class_name} class.");
+
+			return $obj->$method_name(-1, $this);
+		}
+
+		public function get_added_field_option_state($db_name, $key_value)
+		{
+			$obj = $this->get_shippingtype_object();
+			$method_name = "get_{$db_name}_option_state";
+			if (!method_exists($obj, $method_name))
+				throw new Phpr_SystemException("Method {$method_name} is not defined in {$this->class_name} class.");
+
+			return $obj->$method_name($key_value);
+		}
+
+		public function get_shippingtype_object()
+		{
+			if ($this->shipping_type_obj !== null)
+				return $this->shipping_type_obj;
+
+			if (!Phpr::$classLoader->load($this->class_name))
+				throw new Phpr_ApplicationException("Class {$this->class_name} not found.");
+
+			$class_name = $this->class_name;
+
+			return $this->shipping_type_obj = new $class_name();
+		}
+
+		public function eval_shipping_type_name()
+		{
+			$obj = $this->get_shippingtype_object();
+			$info = $obj->get_info();
+			if (array_key_exists('name', $info))
+				return $info['name'];
+
+			return null;
+		}
+
+		protected static function option_visible_for_customer_group($option_id, $customer_group_id)
+		{
+			if (self::$customer_group_filter_cache === null)
+			{
+				self::$customer_group_filter_cache = array();
+				$filter_records = Db_DbHelper::objectArray('select * from shop_shippingoptions_customer_groups');
+				foreach ($filter_records as $record)
+				{
+					if (!array_key_exists($record->shop_sh_option_id, self::$customer_group_filter_cache))
+						self::$customer_group_filter_cache[$record->shop_sh_option_id] = array();
+
+					self::$customer_group_filter_cache[$record->shop_sh_option_id][] = $record->customer_group_id;
+				}
+			}
+
+			if (!array_key_exists($option_id, self::$customer_group_filter_cache))
+				return true;
+
+			return in_array($customer_group_id, self::$customer_group_filter_cache[$option_id]);
+		}
+
+		public function list_enabled_options()
+		{
+			$options = $this->get_shippingtype_object()->list_enabled_options($this);
+			if (!$options)
+			{
+				$result = array('method_id'=>$this->id, 'method_name'=>$this->name, 'option_id'=>null, 'option_name'=>null);
+				$result = (object)$result;
+
+				return array($this->id=>$result);
+			}
+
+			$result = array();
+			foreach ($options as $option)
+			{
+				if (!array_key_exists('name', $option) || !array_key_exists('id', $option))
+					continue;
+
+				$item = array('method_id'=>$this->id, 'method_name'=>$this->name, 'option_id'=>$option['id'], 'option_name'=>$option['name']);
+				$item = (object)$item;
+
+				$result[$this->id.'_'.$item->option_id] = $item;
+			}
+
+			return $result;
+		}
+
+		public function before_delete($id=null)
+		{
+			$bind = array(
+				'id'=>$this->id
+			);
+
+			$count = Db_DbHelper::scalar('select count(*) from shop_orders where shipping_method_id=:id', $bind);
+			if ($count)
+				throw new Phpr_ApplicationException('Cannot delete this shipping option because there are orders referring to it.');
+		}
+
+		public static function is_taxable($id)
+		{
+			if (array_key_exists($id, self::$is_taxable_cache))
+				return self::$is_taxable_cache[$id];
+
+			return self::$is_taxable_cache[$id] = Db_DbHelper::scalar('select taxable from shop_shipping_options where id=:id', array('id'=>$id));
+		}
+
+		protected function load_xml_data()
+		{
+			if (!strlen($this->config_data))
+				return;
+
+			$object = new SimpleXMLElement($this->config_data);
+			foreach ($object->children() as $child)
+			{
+				$code = $child->id;
+				$value = base64_decode($child->value, true);
+				$this->$code = unserialize($value ? $value : $child->value);
+				$code_array = (array)$code;
+				$this->fetched_data[$code_array[0]] = $this->$code;
+			}
+
+			$this->get_shippingtype_object()->validate_config_on_load($this);
+		}
+
+		protected function load_order_label_xml_data($order)
+		{
+			$this->load_xml_data();
+
+			$params = Shop_OrderShippingLabelParams::find_by_order_and_method($order, $this);
+			if (!$params)
+			{
+				$this->get_shippingtype_object()->init_order_label_parameters($this, $order);
+				return;
+			}
+
+			$parameter_list = $params->get_parameters();
+
+			foreach ($parameter_list as $name=>$value)
+				$this->$name = $value;
+		}
+
+		public function after_modify($operation, $deferred_session_key)
+		{
+			Shop_Module::update_catalog_version();
+		}
+
+		public function supports_shipping_labels()
+		{
+			return $this->get_shippingtype_object()->supports_shipping_labels();
+		}
+
+		public function generate_shipping_labels($order, $parameters)
+		{
+			/*
+			 * Populate the shipping label parameters
+			 */
+
+			$obj = $this->get_shippingtype_object();
+			$obj->build_print_label_ui($this, $this->order);
+			$label_fields = array_keys($this->added_fields);
+
+			/*
+			 * Generate shipping labels
+			 */
+
+			$this->define_form_fields(null);
+			$labels = $obj->generate_shipping_labels($this, $order, $parameters);
+
+			/*
+			 * Save order shipping label parameters
+			 */
+
+			$label_parameters = array();
+			foreach ($label_fields as $label_field)
+			{
+				if (!isset($parameters[$label_field]))
+					continue;
+
+				$label_parameters[$label_field] = $parameters[$label_field];
+			}
+
+			Shop_OrderShippingLabelParams::save_parameters($order, $this, $label_parameters);
+
+			/*
+			 * Return labels
+			 */
+
+			return $labels;
+		}
+
+		public function get_grid_autocomplete_values($db_name, $column, $term, $row_data)
+		{
+			$obj = $this->get_shippingtype_object();
+			if ($obj && method_exists($obj, 'get_grid_autocomplete_values'))
+				return $obj->get_grid_autocomplete_values($db_name, $column, $term, $row_data);
+		}
+
+		public function get_widget_model_class()
+		{
+			return $this->class_name;
+		}
+
+
+		protected function create_cache_key($data=array()){
+
+			// Add external considerations to cache key
+			$event_data = $data;
+			$event_data['host_obj'] = $this;
+			$event_results = Backend::$events->fireEvent('shop:onAppendShippingQuoteCacheKey', $event_data);
+			$append_key  = '';
+			foreach($event_results as $string) {
+				if(!empty($string) && is_string($string)) {
+					$append_key .= $string;
+				}
+			}
+
+			foreach($data as $key => $value){
+				if(is_object($value)){
+					if($value instanceof Countable){
+						$data[$key] = count($value);
+					} else if ($value->id) {
+						$data[$key] = $value->id;
+					} else {
+						$data[$key] = get_class($value);
+					}
+				}
+			}
+
+			return $this->id.base64_encode(serialize($data)).$append_key;
+		}
+		protected function set_quote_cache($key, $value){
+			self::$quote_cache[$key] = $value;
+
+			if (Phpr::$config->get('CACHE_SHIPPING_METHODS', false)) {
+				$cache_data = Phpr::$session->get( 'shipping_options_cache' );
+
+				if ( !is_array( $cache_data ) ) {
+					$cache_data = array();
+				}
+				$cache_entry = array('key'=>$key, 'options'=>$value);
+				$cache_data[$this->id] = $cache_entry;
+				Phpr::$session->set( 'shipping_options_cache', $cache_data );
+			}
+		}
+
+		protected function get_quote_cache($key){
+			if (isset(self::$quote_cache[$key])) {
+				return self::$quote_cache[$key];
+			}
+
+			if (Phpr::$config->get('CACHE_SHIPPING_METHODS', false)) {
+				$cache_data = Phpr::$session->get( 'shipping_options_cache' );
+				if ( $cache_data && is_array( $cache_data ) && isset( $cache_data[$this->id] ) && $cache_data[$this->id]['key'] == $key ) {
+					return self::$quote_cache[$key] = $cache_data[$this->id]['options'];
+				}
+			}
+
+			return null;
+		}
+
+		protected function _get_quote($params){
+			$default_request_params = array(
+				'host_obj' => $this,
+				'shipping_info' => null,
+				'total_price'=>null,
+				'total_volume'=>null,
+				'total_weight'=>null,
+				'total_item_num'=>null,
+				'cart_items'=>null, //this forces orders to convert order items to cart items when fetching quotes - not great!
+				'is_business'=>null,
+				'customer'=>null,
+				'customer_id'=>null,
+			);
+
+
+			$request_params = array_merge($default_request_params,$params);
+			$shipping_info = $request_params['shipping_info'];
+			$request_params['country_id'] = $shipping_info->country;
+			$request_params['state_id'] = $shipping_info->state;
+			$request_params['zip'] = $shipping_info->zip;
+			$request_params['city'] = $shipping_info->city;
+
+			$cached_params = array(
+				'country_id'=>$request_params['country_id'],
+				'state_id'=>$request_params['state_id'],
+				'zip'=>$request_params['zip'],
+				'city'=>$request_params['city'],
+				'total_price'=>$request_params['total_price'],
+				'total_volume'=>$request_params['total_volume'],
+				'total_weight'=>$request_params['total_weight'],
+				'total_item_num'=>$request_params['total_item_num'],
+				'is_business'=>$request_params['is_business'],
+				'customer_id'=>$request_params['customer_id'],
+			);
+
+			$cache_key = $this->create_cache_key($cached_params);
+			$cached = $this->get_quote_cache($cache_key);
+			if($cached){
+				return $cached;
+			}
+
+			$quote = $this->fetch_quote($request_params);
+			$this->set_quote_cache($cache_key,$quote);
+			return $quote;
+		}
+
+
+		/**
+		 * Fetches the quote from host provider
+		 * @ignore
+		 */
+		protected function fetch_quote($params){
+			$default_request_params = array(
+				'host_obj'       => $this,
+				'shipping_info'  => null,
+				'country_id'     => null,
+				'state_id'       => null,
+				'zip'            => null,
+				'city'           => null,
+				'total_price'    => null,
+				'total_volume'   => null,
+				'total_weight'   => null,
+				'total_item_num' => null,
+				'cart_items'     => null,
+				'is_business'    => null
+			);
+			$request_params         = array_merge( $default_request_params, $params );
+
+			$shipping_info      = $request_params['shipping_info'];
+			$cart_items      = $request_params['cart_items'];
+			$shipping_type = $this->get_shippingtype_object();
+
+			if ( $shipping_type->config_countries() ) {
+				$country_ids = Db_DbHelper::scalarArray( 'select shop_country_id from shop_shippingoptions_countries where shop_shipping_option_id=:id', array( 'id' => $this->id ) );
+				if ( $country_ids && !in_array( $request_params['country_id'], $country_ids ) ) {
+					return;
+				}
+			}
+
+			// Prepare event parameters
+			$event_params = array(
+				'option_id'       => null,
+				'option_name'     => null,
+				'shipping_option' => $this,
+				'handling_fee'    => $this->handling_fee,
+				'country_id'      => $request_params['country_id'],
+				'state_id'        =>  $request_params['state_id'],
+				'zip'             =>  $request_params['zip'],
+				'city'            =>  $request_params['city'],
+				'total_price'     =>  $request_params['total_price'],
+				'total_volume'    =>  $request_params['total_volume'],
+				'total_weight'    =>  $request_params['total_weight'],
+				'total_item_num'  =>  $request_params['total_item_num'],
+				'cart_items'      =>  $cart_items,
+				'updated_items'   => $cart_items,
+				'is_business'     => $request_params['is_business'],
+			);
+
+			$event_results = Backend::$events->fireEvent( 'shop:onBeforeShippingQuote', $this, $event_params );
+			foreach ( $event_results as $event_result ) {
+				if ( is_array( $event_result ) ) {
+					//update the param arrays
+					$request_params = array_merge( $request_params, $event_result );
+					$event_params   = array_merge( $event_params, $event_result );
+				}
+			}
+			// Overwrite local variables with updated results
+			extract( $event_params ); // more info
+
+			$result = $shipping_type->get_quote( $request_params );
+
+			if ( $result === null ) {
+				return null;
+			}
+
+			$updated_result = null;
+
+
+			/*
+			 * Trigger the shop:onUpdateShippingQuote event
+			 */
+
+			if ( !is_array( $result ) ) {
+				//quote is assumed to be in shop currency
+				$event_params['quote'] = $result;
+				$updated_quote         = Backend::$events->fireEvent( 'shop:onUpdateShippingQuote', $this, $event_params );
+				foreach ( $updated_quote as $updated_quote_value ) {
+					if ( strlen( $updated_quote_value ) ) {
+						$result = $updated_quote_value;
+						break;
+					}
+				}
+			} else {
+				$shop_currency_code = Shop_CurrencySettings::get()->code;
+				$currency_converter  = Shop_CurrencyConverter::create();
+				foreach ( $result as $name => &$option_obj ) {
+					$event_params['quote']       = $option_obj['quote'];
+					$event_params['option_id']   = $option_obj['id'];
+					$event_params['option_name'] = $name;
+
+					//check if quote is returned in currency other than shop currency.
+					if(isset($option_obj['currency']) && strlen($option_obj['currency']) == 3){
+						if($option_obj['currency'] !== $shop_currency_code){ //convert to shop currency
+							$option_obj['quote'] = $currency_converter->convert( $option_obj['quote'] , $option_obj['currency'], $shop_currency_code );
+						}
+					}
+
+					$updated_quote               = Backend::$events->fireEvent( 'shop:onUpdateShippingQuote', $this, $event_params );
+					foreach ( $updated_quote as $updated_quote_value ) {
+						if ( strlen( $updated_quote_value ) ) {
+							$option_obj['quote'] = $updated_quote_value;
+							break;
+						}
+					}
+				}
+			}
+
+
+			return $result;
+		}
+
+
+		protected function apply_quote($quote, $params){
+
+			$discount_info      = Shop_CartPriceRule::evaluate_discount(
+				$params['payment_method_obj'],
+				$this,
+				$params['cart_items'],
+				$params['shipping_info'],
+				$params['coupon_code'],
+				$params['customer'],
+				$params['total_price']
+			);
+
+
+			/*
+			 * Calculate per product fees
+			 */
+
+			$total_per_product_cost = 0;
+			$active_items = $params['cart_items'];
+			foreach ( $active_items as $item ) {
+				$product = $item->product;
+				if ( $product ) {
+					$total_per_product_cost += $product->get_shipping_cost( $params['country_id'], $params['state_id'], $params['zip'] ) * $item->quantity;
+				}
+			}
+
+
+			//calculate quote
+			if ( !is_array( $quote ) ) {
+				$quote += $total_per_product_cost;
+				if(is_numeric($this->handling_fee)){
+					$quote += $this->handling_fee;
+				}
+				$discounted_quote          = max( ( $quote - $discount_info->shipping_discount ), 0 );
+				$this->quote_no_discount = $quote;
+				$this->quote_no_tax      = $discounted_quote;
+				$this->quote             = $discounted_quote;
+				$this->quote_tax_incl    = $discounted_quote;
+				$this->discount          = min($discount_info->shipping_discount,$this->quote_no_discount);
+
+				$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $this->id, $params['shipping_info'], $quote );
+				$this->quote_tax_incl += Shop_TaxClass::eval_total_tax( $shipping_taxes );
+				if ( $params['display_prices_including_tax'] ) {
+					$this->quote += Shop_TaxClass::eval_total_tax( $shipping_taxes );
+				}
+
+			} else {
+				//quotes might be returned in foreign currency
+
+				$this->multi_option = true;
+				$this->sub_options  = array();
+
+				foreach ( $quote as $name => $rate ) {
+					$sub_option        = (object) $rate;
+					$sub_option->name = $name;
+					$sub_option->suboption_id = $sub_option->id;
+					$sub_option->id = $this->id . '_' . md5( $name );
+
+					$sub_option->quote += $total_per_product_cost;
+					if ( is_numeric( $this->handling_fee ) ) {
+						$sub_option->quote += $this->handling_fee;
+					}
+					$discounted_quote          = max( ( $sub_option->quote - $discount_info->shipping_discount ), 0 );
+					$sub_option->quote_no_discount = $sub_option->quote;
+					$sub_option->quote_no_tax      = $discounted_quote;
+					$sub_option->quote             = $discounted_quote;
+					$sub_option->quote_tax_incl    = $discounted_quote;
+					$sub_option->discount          = min($discount_info->shipping_discount,$sub_option->quote_no_discount);
+
+					$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $this->id, $params['shipping_info'], $sub_option->quote );
+					$sub_option->quote_tax_incl += Shop_TaxClass::eval_total_tax( $shipping_taxes );
+					if ( $params['display_prices_including_tax'] ) {
+						$sub_option->quote += Shop_TaxClass::eval_total_tax( $shipping_taxes );
+					}
+
+					$this->sub_options[] = $sub_option;
+				}
+			}
+
+			//apply free options
+			if ( $this->multi_option ) {
+				foreach ( $this->sub_options as $sub_option ) {
+					$sub_option_id = $this->id . '_' . $sub_option->suboption_id;
+
+					if ( array_key_exists( $sub_option_id, $discount_info->free_shipping_options ) || $sub_option->quote == 0 ) {
+						$sub_option->is_free = true;
+					}
+				}
+			} else {
+				if ( array_key_exists( $this->id, $discount_info->free_shipping_options ) || $this->quote == 0 ) {
+					$this->is_free = true;
+				}
+			}
+
+			//converts quotes to active currency if specified in request parameters
+			$currency_converter  = Shop_CurrencyConverter::create();
+			$shop_currency_code = Shop_CurrencySettings::get()->code;
+			$active_currency_code = (strlen($params['currency_code']) == 3) ? $params['currency_code'] : $shop_currency_code;
+			if($this->get_quote_currency() !== $active_currency_code){
+				$this->convert_to_currency($active_currency_code);
+			}
+		}
+
+		/**
+		 * Fetches fully considered quote based on current checkout state,
+		 * and applies the quote to this option model
+		 * @documentable
+		 * @param string $cart_name Cart name to consider
+		 * @return boolean Returns TRUE if quote applied.
+		 */
+		public function apply_checkout_quote($cart_name = 'main'){
+			$payment_method = Shop_CheckoutData::get_payment_method();
+			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::create()->find($payment_method->id) : null;
+			$shipping_info = Shop_CheckoutData::get_shipping_info();
+
+			//run eval discounts on cart items to mark free shipping items, updates by reference
+			$cart_items = Shop_Cart::list_active_items($cart_name);
+			Shop_CheckoutData::eval_discounts($cart_name, $cart_items);
+
+			$total_price = Shop_Cart::total_price_no_tax($cart_name, false);
+			$total_volume = Shop_Cart::total_items_volume($cart_items);
+			$total_weight = Shop_Cart::total_items_weight($cart_items);
+			$total_item_num = Shop_Cart::get_item_total_num($cart_name);
+			$currency_code = Shop_CheckoutData::get_currency($as_object=false);
+			$customer = Cms_Controller::get_customer();
+
+
+			$request_params = array(
+				'display_prices_including_tax' =>  Shop_CheckoutData::display_prices_incl_tax(),
+				'payment_method_obj' => $payment_method_obj,
+				'shipping_info' => $shipping_info,
+				'country_id'=>$shipping_info->country,
+				'state_id'=>$shipping_info->state,
+				'zip'=>$shipping_info->zip,
+				'city'=>$shipping_info->city,
+				'total_price'=>$total_price,
+				'total_volume'=>$total_volume,
+				'total_weight'=>$total_weight,
+				'total_item_num'=>$total_item_num,
+				'cart_items'=>$cart_items,
+				'is_business'=>$shipping_info->is_business,
+				'customer' => is_object($customer) ? $customer : null,
+				'customer_id' => is_object($customer) ? $customer->id : $customer,
+				'currency_code'=> $currency_code,
+				'coupon_code' => Shop_CheckoutData::get_coupon_code()
+			);
+			$quote = $this->_get_quote($request_params);
+			if ($quote === null)
+				throw new Cms_Exception('Shipping method is not applicable.');
+
+			$this->apply_quote($quote, $request_params);
+			return true;
+		}
+
+		/**
+		 * Fetches fully considered quote based on order details,
+		 * and applies the quote to this option model
+		 * @documentable
+		 * @param Shop_Order $order Specifies the order to consider
+		 * @return boolean Returns TRUE if quote applied.
+		 */
+		public function apply_order_quote($order,  $deferred_session_key = null){
+			$items = $order->items;
+			$deferred_items = empty($deferred_session_key) ? false : $order->list_related_records_deferred('items', $deferred_session_key);
+			if($deferred_items && $deferred_items->count){
+				$order->items = $deferred_items; //consider deferred assignments in these calculations
+			}
+			$include_tax= false;
+			$payment_method_obj = $order->get_payment_method();
+			$shipping_info = new Shop_AddressInfo();
+			$shipping_info->load_from_order($order, false);
+			$customer = $order->customer_id ? Shop_Customer::create()->find($order->customer_id) : null;
+
+			$request_params = array(
+				'shipping_info' => $shipping_info,
+				'country_id'=>$shipping_info->country,
+				'state_id'=>$shipping_info->state,
+				'zip'=>$shipping_info->zip,
+				'city'=>$shipping_info->city,
+				'is_business'=>$shipping_info->is_business,
+				'total_price' =>  $order->eval_subtotal_before_discounts(),
+				'total_volume' => $order->get_total_volume(),
+				'total_weight'=> $order->get_total_weight(),
+				'total_item_num' => $order->get_item_count(),
+				'display_prices_including_tax' => $include_tax ? $include_tax : Shop_CheckoutData::display_prices_incl_tax(), //out of scope
+				'order_items' => $items,
+				'cart_items' =>  Shop_OrderHelper::items_to_cart_items_array($items),
+				'customer' => is_object($customer) ? $customer : null,
+				'customer_id' => is_object($customer) ? $customer->id : $customer,
+				'payment_method_obj' => $payment_method_obj,
+				'currency_code' => $order->get_currency_code(),
+			);
+
+			if($deferred_items){
+				$this->items = $items; //restore items
+			}
+
+			$quote = $this->_get_quote($request_params);
+			if ($quote === null)
+				throw new Cms_Exception('Shipping method is not applicable.');
+
+			$this->apply_quote($quote, $request_params);
+			return true;
+		}
+
+		public static function get_applicable_options($params){
+			$defaults = array(
+				'shipping_info' => null,
+				'total_price' => null,
+				'total_volume' => null,
+				'total_item_num' => null,
+				'include_tax' => null,
+				'display_prices_including_tax' => null,
+				'return_disabled' => null,
+				'cart_items' => null,
+				'customer_group_id' => null,
+				'customer' => null,
+				'customer_id' => null,
+				'shipping_option_id' => null,
+				'backend_only' => null,
+				'payment_method' => null,
+				'coupon_code' => null,
+			);
+
+			$params = array_merge($defaults, $params);
+
+			$shipping_options = Shop_ShippingOption::create();
+			if ( !$params['backend_only'] && !$params['return_disabled'] ) {
+				$shipping_options->where( 'enabled = 1' );
+			}
+			if ( $params['backend_only'] && !$params['return_disabled'] ) {
+				$shipping_options->where( 'backend_enabled = 1' );
+			}
+			if ( $params['shipping_option_id'] ) {
+				$shipping_options->where( 'shop_shipping_options.id = ?', $params['shipping_option_id'] );
+			}
+			$apply_customer_group_filter = strlen( $params['customer_group_id'] );
+			$shipping_options->where( '(min_weight_allowed is null or min_weight_allowed <= ?)', $params['total_weight'] );
+			$shipping_options->where( '(max_weight_allowed is null or max_weight_allowed >= ?)', $params['total_weight']  );
+			$shipping_options = $shipping_options->find_all();
+
+			return self::filter_applicable_options($shipping_options, $params);
+		}
+
+
+		protected static function filter_applicable_options( $shipping_options, $params){
+			$default_params = array(
+				'shipping_info'=>null,
+				'total_price'=>null,
+				'total_volume'=>null,
+				'total_weight'=>null,
+				'total_item_num'=>null,
+				'cart_items'=>null,
+				'order_items'=>null,
+				'customer'=>null,
+				'customer_id'=>null,
+				'customer_group_id' => null,
+				'currency_code'=> null,
+				'payment_method' => null,
+				'payment_method_obj' => null,
+				'coupon_code' => null,
+				'display_prices_including_tax' => null,
+			);
+
+			$params = array_merge($default_params,$params);
+
+			$payment_method = is_object($params['payment_method']) ? $params['payment_method'] : null;
+			$params['payment_method'] = $payment_method_obj = $payment_method ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
+			$shipping_info = $params['shipping_info'];
+			$params['country_id'] = $shipping_info->country;
+			$params['state_id'] = $shipping_info->state;
+			$params['zip'] = $shipping_info->zip;
+			$params['city'] = $shipping_info->city;
+			$params['is_business'] = $shipping_info->is_business;
+
+
+			$processed_options = array();
+			$result = array();
+
+			foreach ( $shipping_options as $option ) {
+
+				if(isset($processed_options[$option->id])) {
+					continue;
+				}
+				$processed_options[$option->id] = $option;
+
+				$apply_customer_group_filter = strlen( $params['customer_group_id'] );
+				if ( $apply_customer_group_filter && !self::option_visible_for_customer_group( $option->id, $params['customer_group_id'] ) ) {
+					continue;
+				}
+
+				$option->define_form_fields();
+				try {
+					$quote = $option->_get_quote( $params );
+					if($quote === null){
+						continue;
+					}
+					$option->apply_quote($quote, $params);
+					$result[$option->id] = $option;
+				} catch ( exception $ex ) {
+					$option->error_hint  = $ex->getMessage();
+					$result[$option->id] = $option;
+					continue;
+				}
+			}
+
+			uasort( $result, 'phpr_sort_order_shipping_options' );
+
+			/*
+			 * Trigger api events
+			 */
+			$params['options'] = $result; //required for shop:onFilterShippingOptions
+			if(empty($params['order_items'])){
+				$params['order_items'] = $params['cart_items']; //backward compat
+			}
+
+			$updated_options = Backend::$events->fireEvent( 'shop:onFilterShippingOptions', $params );
+			foreach ( $updated_options as $updated_option_list ) {
+				$result = $updated_option_list;
+				break;
+			}
+
+			$updated_options = Backend::$events->fire_event(array('name' => 'shop:onUpdateShippingOptions', 'type' => 'update_result'), $result, $params);
+			if($updated_options){
+				$result = $updated_options;
+			}
+
+			return $result;
+		}
+
+
+		public function get_quote_currency(){
+			if(empty($this->currency_code)){
+				$shop_currency_code = Shop_CurrencySettings::get()->code;
+				$this->currency_code = $shop_currency_code;
+			}
+			return $this->currency_code;
+		}
+
+		public function convert_to_currency($to_currency_code){
+			if(!strlen(trim($to_currency_code)) == 3){
+				return false;
+			}
+			$to_currency_code = strtoupper(trim($to_currency_code));
+			if($this->get_quote_currency() !== $to_currency_code){
+				$currency_converter  = Shop_CurrencyConverter::create();
+				$from_currency = $this->get_quote_currency();
+				$this->quote = $currency_converter->convert( $this->quote, $from_currency, $to_currency_code );
+				$this->quote_no_tax = $currency_converter->convert( $this->quote_no_tax, $from_currency, $to_currency_code );
+				$this->quote_tax_incl = $currency_converter->convert( $this->quote_tax_incl, $from_currency, $to_currency_code );
+				$this->quote_no_discount = $currency_converter->convert( $this->quote_no_discount, $from_currency, $to_currency_code );
+				$this->discount = $currency_converter->convert( $this->discount, $from_currency, $to_currency_code );
+				$this->currency_code = $to_currency_code;
+
+				if($this->multi_option){
+					foreach($this->sub_options as $sub_option){
+						$sub_option->quote = $currency_converter->convert( $sub_option->quote, $from_currency, $to_currency_code );
+						$sub_option->quote_no_tax = $currency_converter->convert( $sub_option->quote_no_tax, $from_currency, $to_currency_code );
+						$sub_option->quote_tax_incl = $currency_converter->convert( $sub_option->quote_tax_incl, $from_currency, $to_currency_code );
+						$sub_option->quote_no_discount = $currency_converter->convert( $sub_option->quote_no_discount, $from_currency, $to_currency_code );
+						$sub_option->discount = $currency_converter->convert( $sub_option->discount, $from_currency, $to_currency_code );
+						$sub_option->currency_code = $to_currency_code;
+					}
+				}
+			}
+
+		}
+
+		/*
+		 * Deprecated Methods
+		 */
+
+		/**
+		 * Returns a fully considered quote
+		 * @ignore
+		 * @deprecated Use {@link Shop_ShippingOption::apply_checkout_quote()} and  {@link Shop_ShippingOption::apply_order_quote()} instead.
+		 *
+		 */
 		public function get_quote($country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $cart_items, $customer = null, $is_business = false)
 		{
+			traceLog('Warning: use of deprecated function - Shop_ShippingOption::get_quote()');
+
 			$request_params = array(
 				'host_obj'=>$this,
 				'country_id'=>$country_id,
@@ -270,51 +1089,43 @@
 				'customer_id'=>is_object($customer) ? $customer->id : $customer
 			);
 
-			$global_cache_key = '_'.$country_id.'_'.$state_id.'_'.$zip.'_'.$city.'_'.$total_price.'_'.$total_volume.'_'.$total_weight.'_'.$total_item_num.'_'.$is_business.'_'.count($cart_items);
-			$cache_key = $this->id.$global_cache_key;
+			$cached_params = array(
+				'country_id'=>$request_params['country_id'],
+				'state_id'=>$request_params['state_id'],
+				'zip'=>$request_params['zip'],
+				'city'=>$request_params['city'],
+				'total_price'=>$request_params['total_price'],
+				'total_volume'=>$request_params['total_volume'],
+				'total_weight'=>$request_params['total_weight'],
+				'total_item_num'=>$request_params['total_item_num'],
+				'is_business'=>$request_params['is_business'],
+				'customer_id'=>$request_params['customer_id'],
+			);
 
-			$event_results = Backend::$events->fireEvent('shop:onAppendShippingQuoteCacheKey', $request_params);
-			// Add external considerations to cache key
-			foreach($event_results as $string) {
-				if(!empty($string) && is_string($string)) {
-					$cache_key .= $string;
-				}
+			$cache_key = $this->create_cache_key($cached_params);
+			$cached = $this->get_quote_cache($cache_key);
+			if($cached){
+				return $cached;
 			}
-
-			if (array_key_exists($cache_key, self::$quote_cache))
-				return self::$quote_cache[$cache_key];
-				
-			if (Phpr::$config->get('CACHE_SHIPPING_METHODS', false))
-			{
-				$cache_data = Phpr::$session->get('shipping_options_cache');
-				
-				if ($cache_data && is_array($cache_data) && isset($cache_data[$this->id]) && $cache_data[$this->id]['key'] == $global_cache_key)
-					return self::$quote_cache[$cache_key] = $cache_data[$this->id]['options'];
-			}
-
-			$result = self::$quote_cache[$cache_key] = $this->eval_quote($country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $cart_items, $customer, $is_business);
-
-			if (Phpr::$config->get('CACHE_SHIPPING_METHODS', false))
-			{
-				$cache_data = Phpr::$session->get('shipping_options_cache');
-
-				if (!is_array($cache_data))
-					$cache_data = array();
-					
-				$cache_data[$this->id] = array('key'=>$global_cache_key, 'options'=>$result);
-				Phpr::$session->set('shipping_options_cache', $cache_data);
-			}
-			
-			return $result;
+			$quote = $this->eval_quote($country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $cart_items, $customer, $is_business);
+			$this->set_quote_cache($cache_key,$quote);
+			return $quote;
 		}
-		
+
+		/**
+		 * Fetches the quote from host provider
+		 * @ignore
+		 * @deprecated Use {@link Shop_ShippingOption::fetch_quote()} method instead.
+		 */
 		protected function eval_quote($country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $cart_items, $customer = null, $is_business = false)
 		{
+			traceLog('Warning: use of deprecated function - Shop_ShippingOption::eval_quote()');
+
 			$obj = $this->get_shippingtype_object();
 			if ($obj->config_countries())
 			{
 				$country_ids = Db_DbHelper::scalarArray('select shop_country_id from shop_shippingoptions_countries where shop_shipping_option_id=:id', array('id'=>$this->id));
-				
+
 				if ($country_ids && !in_array($country_id, $country_ids))
 					return;
 			}
@@ -332,11 +1143,11 @@
 				'cart_items'=>$cart_items,
 				'is_business'=>$is_business
 			);
-				
+
 			/*
 			 * Apply per-product free shipping
 			 */
-			
+
 			$payment_method = Shop_CheckoutData::get_payment_method();
 
 			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id($payment_method->id) : null;
@@ -346,11 +1157,11 @@
 			}
 
 			Shop_CartPriceRule::evaluate_discount(
-				$payment_method_obj, 
-				$this, 
+				$payment_method_obj,
+				$this,
 				$cart_items,
 				$shipping_info,
-				Shop_CheckoutData::get_coupon_code(), 
+				Shop_CheckoutData::get_coupon_code(),
 				$customer ? $customer : Cms_Controller::get_customer(),
 				$total_price);
 
@@ -415,7 +1226,7 @@
 			{
 				try
 				{
- 					if ($total_weight > 0 || $total_price > 0 || $total_item_num > 0 || $total_item_num > 0)
+					if ($total_weight > 0 || $total_price > 0 || $total_item_num > 0 || $total_item_num > 0)
 					{
 						$request_params = array(
 							'host_obj'=>$this,
@@ -468,7 +1279,7 @@
 			{
 				$event_params['quote'] = $result;
 				$updated_quote = Backend::$events->fireEvent('shop:onUpdateShippingQuote', $this, $event_params);
-				foreach ($updated_quote as $updated_quote_value) 
+				foreach ($updated_quote as $updated_quote_value)
 				{
 					if (strlen($updated_quote_value))
 					{
@@ -483,7 +1294,7 @@
 					$event_params['option_id'] = $option_obj['id'];
 					$event_params['option_name'] = $name;
 					$updated_quote = Backend::$events->fireEvent('shop:onUpdateShippingQuote', $this, $event_params);
-					foreach ($updated_quote as $updated_quote_value) 
+					foreach ($updated_quote as $updated_quote_value)
 					{
 						if (strlen($updated_quote_value))
 						{
@@ -493,7 +1304,7 @@
 					}
 				}
 			}
-			
+
 			/*
 			 * Apply handling fee
 			 */
@@ -506,421 +1317,41 @@
 					$option_obj['quote'] += $handling_fee;
 				}
 			}
-
 			return $result;
 		}
 
-		public function add_field($code, $title, $side = 'full', $type = db_text)
-		{
-			$this->custom_columns[$code] = $type;
-			$this->_columns_def = null;
-			$this->define_column($code, $title)->validation();
-			$form_field = $this->add_form_field($code, $side)->tab('Configuration')->optionsMethod('get_added_field_options')->optionStateMethod('get_added_field_option_state');
-			$this->added_fields[$code] = $form_field;
-			
-			return $form_field;
-		}
-		
-		public function get_added_field_options($db_name)
-		{
-			$obj = $this->get_shippingtype_object();
-			$method_name = "get_{$db_name}_options";
-			if (!method_exists($obj, $method_name))
-				throw new Phpr_SystemException("Method {$method_name} is not defined in {$this->class_name} class.");
-				
-			return $obj->$method_name(-1, $this);
-		}
-		
-		public function get_added_field_option_state($db_name, $key_value)
-		{
-			$obj = $this->get_shippingtype_object();
-			$method_name = "get_{$db_name}_option_state";
-			if (!method_exists($obj, $method_name))
-				throw new Phpr_SystemException("Method {$method_name} is not defined in {$this->class_name} class.");
-				
-			return $obj->$method_name($key_value);
-		}
-		
-		public function get_shippingtype_object()
-		{
-			if ($this->shipping_type_obj !== null)
-			 	return $this->shipping_type_obj;
-			
-			if (!Phpr::$classLoader->load($this->class_name))
-				throw new Phpr_ApplicationException("Class {$this->class_name} not found.");
-				
-			$class_name = $this->class_name;
-				
-			return $this->shipping_type_obj = new $class_name();
-		}
-		
-		public function eval_shipping_type_name()
-		{
-			$obj = $this->get_shippingtype_object();
-			$info = $obj->get_info();
-			if (array_key_exists('name', $info))
-				return $info['name'];
-			
-			return null;
-		}
-		
-		protected static function option_visible_for_customer_group($option_id, $customer_group_id)
-		{
-			if (self::$customer_group_filter_cache === null)
-			{
-				self::$customer_group_filter_cache = array();
-				$filter_records = Db_DbHelper::objectArray('select * from shop_shippingoptions_customer_groups');
-				foreach ($filter_records as $record)
-				{
-					if (!array_key_exists($record->shop_sh_option_id, self::$customer_group_filter_cache))
-						self::$customer_group_filter_cache[$record->shop_sh_option_id] = array();
-						
-					self::$customer_group_filter_cache[$record->shop_sh_option_id][] = $record->customer_group_id;
-				}
-			}
-			
-			if (!array_key_exists($option_id, self::$customer_group_filter_cache))
-				return true;
-				
-			return in_array($customer_group_id, self::$customer_group_filter_cache[$option_id]);
-		}
+		/**
+		 * Returns shipping options available for given parameters
+		 * @documentable
+		 * @deprecated Use {@link Shop_ShippingOption::get_applicable_options()} method instead.
+		 */
+		public static function list_applicable( $country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $include_tax = 1, $return_disabled = false, $cart_items = array(), $customer_group_id = null, $customer = null, $shipping_option_id = null, $is_business = false, $backend_only = false ) {
+			traceLog('Warning: use of deprecated function - Shop_ShippingOption::list_applicable()');
+			$shipping_info = new Shop_AddressInfo();
+			$shipping_info->country = $country_id;
+			$shipping_info->state = $state_id;
+			$shipping_info->zip = $zip;
+			$shipping_info->city = $city;
 
-		public static function list_applicable( $country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $include_tax = 1, $return_disabled = false, $order_items = array(), $customer_group_id = null, $customer = null, $shipping_option_id = null, $is_business = false, $backend_only = false ) {
-			$display_prices_including_tax = Shop_CheckoutData::display_prices_incl_tax();
-			if ( $include_tax !== 1 ) {
-				$display_prices_including_tax = $include_tax;
-			}
-
-			$shipping_info = Shop_CheckoutData::get_shipping_info();
-
-			$result = array();
-
-			$shipping_options = Shop_ShippingOption::create();
-			if ( !$backend_only && !$return_disabled ) {
-				$shipping_options->where( 'enabled = 1' );
-			}
-			if ( $backend_only && !$return_disabled ) {
-				$shipping_options->where( 'backend_enabled = 1' );
-			}
-
-			if ( $shipping_option_id ) {
-				$shipping_options->where( 'shop_shipping_options.id = ?', $shipping_option_id );
-			}
-
-			$apply_customer_group_filter = strlen( $customer_group_id );
-
-			$shipping_options->where( '(min_weight_allowed is null or min_weight_allowed <= ?)', $total_weight );
-			$shipping_options->where( '(max_weight_allowed is null or max_weight_allowed >= ?)', $total_weight );
-
-			$total_per_product_cost = 0;
-			foreach ( $order_items as $item ) {
-				$product = $item->product;
-				if ( $product ) {
-					$total_per_product_cost += $product->get_shipping_cost( $country_id, $state_id, $zip ) * $item->quantity;
-				}
-			}
-
-			$shipping_options = $shipping_options->find_all();
-			$payment_method     = Shop_CheckoutData::get_payment_method();
-			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
-			$coupon_code = Shop_CheckoutData::get_coupon_code();
-
-			//start allow discount rules to add hidden shipping options
-			if ( !$return_disabled ) {
-				$discount_info = Shop_CartPriceRule::evaluate_discount(
-					$payment_method_obj,
-					null,
-					$order_items,
-					$shipping_info,
-					$coupon_code,
-					$customer,
-					$total_price
-				);
-
-				if ( isset( $discount_info->add_shipping_options ) && count( $discount_info->add_shipping_options ) ) {
-					foreach ( $discount_info->add_shipping_options as $option_id ) {
-						$option = Shop_ShippingOption::create()->find( $option_id );
-						if ( $option ) {
-							$shipping_options->objectArray[] = $option;
-						}
-					}
-				}
-			}
-			//end allow discount rules to add hidden shipping options
-
-			$processed_options = array();
-			foreach ( $shipping_options as $option ) {
-				if(isset($processed_options[$option->id])) {
-					continue;
-				}
-				$processed_options[$option->id] = $option;
-
-				if ( $apply_customer_group_filter && !self::option_visible_for_customer_group( $option->id, $customer_group_id ) ) {
-					continue;
-				}
-
-				$option->define_form_fields();
-
-				try {
-					$quote = $option->get_quote( $country_id, $state_id, $zip, $city, $total_price, $total_volume, $total_weight, $total_item_num, $order_items, $customer, $is_business );
-				} catch ( exception $ex ) {
-					$option->error_hint  = $ex->getMessage();
-					$result[$option->id] = $option;
-					continue;
-				}
-
-
-				//FETCH SHIPPING DISCOUNTS
-				$discount_info      = Shop_CartPriceRule::evaluate_discount(
-					$payment_method_obj,
-					$option,
-					$order_items,
-					$shipping_info,
-					$coupon_code,
-					$customer,
-					$total_price );
-
-
-				//calculate quote
-				if ( $quote !== null ) {
-					if ( !is_array( $quote ) ) {
-						$quote += $total_per_product_cost;
-						$discounted_quote = max(($quote - $discount_info->shipping_discount), 0);
-
-						$option->quote_no_discount = $quote;
-						$option->quote_no_tax   = $discounted_quote;
-						$option->quote          = $discounted_quote;
-						$option->quote_tax_incl = $discounted_quote;
-						$option->discount   = $discount_info->shipping_discount;
-
-						$shiping_taxes = Shop_TaxClass::get_shipping_tax_rates( $option->id, $shipping_info, $quote );
-						if ( $display_prices_including_tax ) {
-							$option->quote += Shop_TaxClass::eval_total_tax( $shiping_taxes );
-						}
-
-						$option->quote_tax_incl += Shop_TaxClass::eval_total_tax( $shiping_taxes );
-					} else {
-						$option->multi_option = true;
-						$option->sub_options  = array();
-
-						foreach ( $quote as $name => $rate ) {
-							$suboption_id = $option->id . '_' . md5( $name );
-
-							$rate['quote'] += $total_per_product_cost;
-							$rate['quote_no_discount'] = $rate['quote'];
-							$discounted = $rate['quote'] - $discount_info->shipping_discount;
-							$rate['quote'] = ($discounted < 0) ? 0 : $discounted;
-							$rate['discount'] = $discount_info->shipping_discount;
-
-							$quote_tax_incl = $quote_no_tax = $quote = $rate['quote'];
-							$shiping_taxes  = Shop_TaxClass::get_shipping_tax_rates( $option->id, $shipping_info, $quote );
-
-							if ( $display_prices_including_tax ) {
-								$quote += Shop_TaxClass::eval_total_tax( $shiping_taxes );
-							}
-
-							$quote_tax_incl += Shop_TaxClass::eval_total_tax( $shiping_taxes );
-
-							$suboption_obj         = array_merge( $rate, array( 'name' => $name, 'quote_tax_incl' => $quote_tax_incl, 'quote_no_tax' => $quote_no_tax, 'quote' => $quote, 'id' => $suboption_id, 'suboption_id' => $rate['id'], 'is_free' => false ) );
-							$option->sub_options[] = (object) $suboption_obj;
-						}
-					}
-
-					//apply free options
-					if ( $option->multi_option ) {
-						foreach ( $option->sub_options as $sub_option ) {
-							$sub_option_id = $option->id . '_' . $sub_option->suboption_id;
-
-							if ( array_key_exists( $sub_option_id, $discount_info->free_shipping_options ) || $sub_option->quote == 0 ) {
-								$sub_option->is_free = true;
-							}
-						}
-					} else {
-						if ( array_key_exists( $option->id, $discount_info->free_shipping_options ) || $option->quote == 0 ) {
-							$option->is_free = true;
-						}
-					}
-
-					$result[$option->id] = $option;
-				}
-			}
-
-
-
-			uasort( $result, 'phpr_sort_order_shipping_options' );
-
-			/*
-			 * Trigger the shop:onFilterShippingOptions event
-			 */
-
-			$event_params = array(
-				'options'           => $result,
-				'country_id'        => $country_id,
-				'state_id'          => $state_id,
-				'zip'               => $zip,
-				'city'              => $city,
-				'total_price'       => $total_price,
-				'total_volume'      => $total_volume,
-				'total_weight'      => $total_weight,
-				'total_item_num'    => $total_item_num,
-				'order_items'       => $order_items,
-				'customer_group_id' => $customer_group_id
+			$params = array(
+				'shipping_info' => $shipping_info,
+				'total_price' => $total_price,
+				'total_volume' => $total_volume,
+				'total_item_num' => $total_item_num,
+				'include_tax' => $include_tax,
+				'display_prices_including_tax' => $include_tax ? $include_tax : Shop_CheckoutData::display_prices_incl_tax(),
+				'return_disabled' => $return_disabled,
+				'cart_items' => $cart_items,
+				'customer_group_id' => $customer_group_id,
+				'customer' => is_object($customer) ? $customer : null,
+				'customer_id' => is_object($customer) ? $customer->id : $customer,
+				'shipping_option_id' => $shipping_option_id,
+				'backend_only' => $backend_only,
+				'payment_method' => Shop_CheckoutData::get_payment_method(), //out of scope
+				'coupon_code' => Shop_CheckoutData::get_coupon_code(), //out of scope
 			);
 
-
-			$updated_options = Backend::$events->fireEvent( 'shop:onFilterShippingOptions', $event_params );
-			foreach ( $updated_options as $updated_option_list ) {
-				$result = $updated_option_list;
-				break;
-			}
-
-			$updated_options = Backend::$events->fire_event(array('name' => 'shop:onUpdateShippingOptions', 'type' => 'update_result'), $result, $event_params);
-			if($updated_options){
-				$result = $updated_options;
-			}
-
-			return $result;
-		}
-		
-		public function list_enabled_options()
-		{
-			$options = $this->get_shippingtype_object()->list_enabled_options($this);
-			if (!$options)
-			{
-				$result = array('method_id'=>$this->id, 'method_name'=>$this->name, 'option_id'=>null, 'option_name'=>null);
-				$result = (object)$result;
-
-				return array($this->id=>$result);
-			}
-
-			$result = array();
-			foreach ($options as $option)
-			{
-				if (!array_key_exists('name', $option) || !array_key_exists('id', $option))
-					continue;
-				
-				$item = array('method_id'=>$this->id, 'method_name'=>$this->name, 'option_id'=>$option['id'], 'option_name'=>$option['name']);
-				$item = (object)$item;
-				
-				$result[$this->id.'_'.$item->option_id] = $item;
-			}
-			
-			return $result;
-		}
-		
-		public function before_delete($id=null) 
-		{
-			$bind = array(
-				'id'=>$this->id
-			);
-
-			$count = Db_DbHelper::scalar('select count(*) from shop_orders where shipping_method_id=:id', $bind);
-			if ($count)
-				throw new Phpr_ApplicationException('Cannot delete this shipping option because there are orders referring to it.');
-		}
-		
-		public static function is_taxable($id)
-		{
-			if (array_key_exists($id, self::$is_taxable_cache))
-				return self::$is_taxable_cache[$id];
-			
-			return self::$is_taxable_cache[$id] = Db_DbHelper::scalar('select taxable from shop_shipping_options where id=:id', array('id'=>$id));
-		}
-		
-		protected function load_xml_data()
-		{
-			if (!strlen($this->config_data))
-				return;
-				
-			$object = new SimpleXMLElement($this->config_data);
-			foreach ($object->children() as $child)
-			{
-				$code = $child->id;
-				$value = base64_decode($child->value, true);
-				$this->$code = unserialize($value ? $value : $child->value);
-				$code_array = (array)$code;
-				$this->fetched_data[$code_array[0]] = $this->$code;
-			}
-			
-			$this->get_shippingtype_object()->validate_config_on_load($this);
-		}
-		
-		protected function load_order_label_xml_data($order)
-		{
-			$this->load_xml_data();
-
-			$params = Shop_OrderShippingLabelParams::find_by_order_and_method($order, $this);
-			if (!$params)
-			{
-				$this->get_shippingtype_object()->init_order_label_parameters($this, $order);
-				return;
-			}
-
-			$parameter_list = $params->get_parameters();
-
-			foreach ($parameter_list as $name=>$value)
-				$this->$name = $value;
-		}
-		
-		public function after_modify($operation, $deferred_session_key)
-		{
-			Shop_Module::update_catalog_version();
-		}
-		
-		public function supports_shipping_labels()
-		{
-			return $this->get_shippingtype_object()->supports_shipping_labels();
-		}
-		
-		public function generate_shipping_labels($order, $parameters)
-		{
-			/*
-			 * Populate the shipping label parameters
-			 */
-
-			$obj = $this->get_shippingtype_object();
-			$obj->build_print_label_ui($this, $this->order);
-			$label_fields = array_keys($this->added_fields);
-
-			/*
-			 * Generate shipping labels
-			 */
-
-			$this->define_form_fields(null);
-			$labels = $obj->generate_shipping_labels($this, $order, $parameters);
-
-			/*
-			 * Save order shipping label parameters
-			 */
-			
-			$label_parameters = array();
-			foreach ($label_fields as $label_field)
-			{
-				if (!isset($parameters[$label_field]))
-					continue;
-				
-				$label_parameters[$label_field] = $parameters[$label_field];
-			}
-			
-			Shop_OrderShippingLabelParams::save_parameters($order, $this, $label_parameters);
-			
-			/*
-			 * Return labels
-			 */
-			
-			return $labels;
-		}
-		
-		public function get_grid_autocomplete_values($db_name, $column, $term, $row_data)
-		{
-			$obj = $this->get_shippingtype_object();
-			if ($obj && method_exists($obj, 'get_grid_autocomplete_values'))
-				return $obj->get_grid_autocomplete_values($db_name, $column, $term, $row_data);
-		}
-		
-		public function get_widget_model_class()
-		{
-			return $this->class_name;
+			return self::get_applicable_options($params);
 		}
 		
 		/*
@@ -1328,4 +1759,7 @@
 
 		return 1;
 	}
+
+
+
 ?>

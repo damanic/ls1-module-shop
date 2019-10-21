@@ -2,6 +2,13 @@
 /*
  * This helper requires PHP v5.4+
  */
+
+/*
+ * @TODO
+ * Allow for config 'max volume' and/or 'max items' that halts attempt to pack
+ * if scale of items too vast to calculate efficiently.
+ * Allow this constraint to be ignored in construct
+ */
 if (version_compare(phpversion(), '5.4.0', '<')) {
 	return;
 }

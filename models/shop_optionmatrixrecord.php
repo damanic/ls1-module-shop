@@ -499,7 +499,6 @@
 			$override_product = Backend::$events->fireEvent('shop:onGetOptionMatrixProduct', $this);
 			foreach ($override_product as $use_product) {
 				if (is_a($use_product,'Shop_Product')) {
-					traceLog('WARNING: frequent response to shop:onGetOptionMatrixProduct can be resource intensive');
 					$product = $use_product;
 					break;
 				}

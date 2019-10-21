@@ -1,6 +1,6 @@
 <li class="field radio full reference" id="form_field_shipping_method_idShop_Order">
 	<?
-		$shipping_options = Shop_OrderHelper::getAvailableShippingMethods($form_model,$this->formGetEditSessionKey());
+		$shipping_options = $form_model->list_available_shipping_options($this->formGetEditSessionKey());
 		
 		$local_methods = array();
 		foreach ($shipping_options as $index=>$option)
@@ -39,7 +39,7 @@
 					<? foreach ($option->sub_options as $sub_option): ?>
 						<li class="selectable <?= ($option->id == $form_model->shipping_method_id && $sub_option->id == $form_model->shipping_sub_option_id) ? 'current' : null ?>" onclick="record_selector_click(this)">
 							<?= h($sub_option->name) ?>
-							<span class="right"><?= $form_model->format_currency($sub_option->quote) ?></span>
+							<span class="right"><?= (isset($sub_option->discount) &&  $sub_option->discount)? '<del>'.$form_model->format_currency($sub_option->quote_no_discount).'</del>' : null ?> <?= $form_model->format_currency($sub_option->quote) ?></span>
 							<input type="hidden" value="<?= $sub_option->id ?>"/>
 						</li>
 					<? endforeach ?>

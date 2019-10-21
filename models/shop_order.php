@@ -1291,6 +1291,18 @@ class Shop_Order extends Db_ActiveRecord
 		Backend::$events->fireEvent('shop:onOrderSetAppliedCartRules', $this);
 	}
 
+	public function get_payment_method(){
+		$payment_method = null;
+		if ($this->payment_method_id){
+			if($this->payment_method && ($this->payment_method->id == $this->payment_method_id)){
+				$payment_method = $this->payment_method;
+			} else {
+				$this->payment_method = $payment_method = Shop_PaymentMethod::create()->find($this->payment_method_id);
+			}
+		}
+		return $payment_method;
+	}
+
 	/**
 	 * Returns URL of the order payment page URL.
 	 * Use this method for creating links to the payment page for unpaid orders. Payment page is a page based on {@link action@shop:pay} action.
@@ -1301,7 +1313,7 @@ class Shop_Order extends Db_ActiveRecord
 	public function get_payment_page_url()
 	{
 		$custom_pay_page = null;
-		$payment_method = Shop_PaymentMethod::create()->find($this->payment_method_id);
+		$payment_method = $this->get_payment_method();
 		if ($payment_method)
 		{
 			$payment_method->define_form_fields();
@@ -1860,6 +1872,16 @@ class Shop_Order extends Db_ActiveRecord
 		Shop_TaxClass::set_customer_context($customer);
 
 		/*
+		 * Set order items
+		 */
+
+		$session_key = $session_key ? $session_key : uniqid('front_end_order', true);
+		foreach ($items as $item)
+			$order->items->add($item, $session_key);
+
+		$cart_items = Shop_OrderHelper::items_to_cart_items_array($items);
+
+		/*
 		 * Set shipping and payment methods
 		 */
 
@@ -1871,42 +1893,7 @@ class Shop_Order extends Db_ActiveRecord
 		/*
 		 * Calculate shipping cost
 		 */
-
-		$total_price = 0;
-		$total_volume = 0;
-		$total_weight = 0;
-		$total_item_num = 0;
-
-
-
-		foreach ($items as $item)
-		{
-			$total_price += $item->single_price*$item->quantity;
-			$total_volume += $item->product->volume()*$item->quantity;
-			$total_weight += $item->product->weight*$item->quantity;
-			$total_item_num += $item->quantity;
-		}
-
-		$cart_items = Shop_OrderHelper::items_to_cart_items_array($items);
-
-		$shipping_options = Shop_ShippingOption::list_applicable(
-			$order->shipping_country_id,
-			$order->shipping_state_id,
-			$order->shipping_zip,
-			$order->shipping_city,
-			$total_price,
-			$total_volume,
-			$total_weight,
-			$total_item_num,
-			false,
-			false,
-			$cart_items,
-			null,
-			null,
-			$order->shipping_method_id,
-			$order->shipping_addr_is_business,
-			true
-		);
+		$shipping_options = $order->list_available_shipping_options($session_key);
 
 		if (!array_key_exists($order->shipping_method_id, $shipping_options))
 			throw new Phpr_ApplicationException('Shipping method '.$this->shipping_method->name.' is not applicable.');
@@ -1991,13 +1978,7 @@ class Shop_Order extends Db_ActiveRecord
 
 		$tax_info = Shop_TaxClass::calculate_taxes($cart_items, $shipping_info, true);
 
-		/*
-		 * Set order items
-		 */
 
-		$session_key = $session_key ? $session_key : uniqid('front_end_order', true);
-		foreach ($items as $item)
-			$order->items->add($item, $session_key);
 
 		/*
 		 * Apply tax
@@ -2264,6 +2245,64 @@ class Shop_Order extends Db_ActiveRecord
 			return 0;
 		}
 		return max(($this->shipping_discount + $this->get_extended_shipping_discounts()),0);
+	}
+
+
+	public function get_item_count(){
+		$total_item_num = 0;
+		foreach ($this->items as $item) {
+			$total_item_num += $item->quantity;
+		}
+		return $total_item_num;
+	}
+
+	public function get_total_volume(){
+		$total_volume = 0;
+		foreach($this->items as $item){
+			$total_volume += $item->total_volume();
+		}
+		return $total_volume;
+	}
+
+	public function list_available_shipping_options($deferred_session_key=null){
+
+		$items = $this->items;
+		$deferred_items = empty($deferred_session_key) ? false : $this->list_related_records_deferred('items', $deferred_session_key);
+		if($deferred_items && $deferred_items->count){
+			$this->items = $deferred_items; //consider deferred assignments in these calculations
+		}
+		$include_tax= false;
+		$payment_method = $this->get_payment_method();
+		$shipping_info = new Shop_AddressInfo();
+		$shipping_info->load_from_order($this, false);
+		$coupon = $this->coupon_id ? Shop_Coupon::create()->find($this->coupon_id) : null;
+		$coupon_code = $coupon ? $coupon->code : null;
+		$customer = $this->customer_id ? Shop_Customer::create()->find($this->customer_id) : null;
+
+		$params = array(
+			'shipping_info' => $shipping_info,
+			'total_price' =>  $this->eval_subtotal_before_discounts(),
+			'total_volume' => $this->get_total_volume(),
+			'total_weight'=> $this->get_total_weight(),
+			'total_item_num' => $this->get_item_count(),
+			'include_tax' => $include_tax,
+			'display_prices_including_tax' => $include_tax ? $include_tax : Shop_CheckoutData::display_prices_incl_tax(), //out of scope
+			'return_disabled' => false,
+			'order_items' => $items,
+			'cart_items' =>  Shop_OrderHelper::items_to_cart_items_array($items),
+			'customer_group_id' => null,
+			'customer' => $customer,
+			'shipping_option_id' => null,
+			'backend_only' => null,
+			'payment_method' => $payment_method,
+			'currency_code' => $this->get_currency_code(),
+			'coupon_code' => $coupon_code,
+		);
+		$result = Shop_ShippingOption::get_applicable_options($params);
+		if($deferred_items){
+			$this->items = $items; //restore items
+		}
+		return $result;
 	}
 
 	public function eval_order_reference(){
