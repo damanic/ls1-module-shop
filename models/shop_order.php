@@ -460,7 +460,7 @@ class Shop_Order extends Db_ActiveRecord
 		$this->discount = array_key_exists('discount', $data) ? $data['discount'] : 0;
 		$this->free_shipping = array_key_exists('free_shipping', $data) ? $data['free_shipping'] : 0;
 		$currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : null;
-		$this->set_currency_code($currency_code);
+		$this->set_currency($currency_code);
 	}
 
 	public function get_shipping_state_options($key_value = -1)
@@ -737,7 +737,7 @@ class Shop_Order extends Db_ActiveRecord
 
 			if(Shop_CheckoutData::is_currency_set()){
 				$currency_code = Shop_CheckoutData::get_currency(false);
-				$order->set_currency_code($currency_code);
+				$order->set_currency($currency_code);
 			}
 
 			$order->customer_id = $customer->id;
@@ -1025,7 +1025,7 @@ class Shop_Order extends Db_ActiveRecord
 		/*
 		 * Add default currency if not already set
 		 */
-		$this->set_currency_code();
+		$this->set_currency();
 	}
 
 	public function before_update($session_key = null)
@@ -1118,8 +1118,7 @@ class Shop_Order extends Db_ActiveRecord
 	}
 
 	/**
-	 * Get the currency code that applies to totals stored on the order
-	 * @return string Returns the currency code in alpha ISO-4217.
+	 * Set the currency code that applies to totals stored on the order
 	 */
 	public function set_currency_code($code=null){
 		if(empty($code)){
@@ -1135,11 +1134,74 @@ class Shop_Order extends Db_ActiveRecord
 			throw new Phpr_ApplicationException( 'Invalid currency code given' );
 		}
 		$this->currency_code = $currency->code;
+		$this->shop_currency_code = $this->get_shop_currency_code(); //unlikely the shops base currency will change, but recording base currency at time of order just in case.
 
+	}
+
+	/**
+	 * Set the currency code and exchange rate for totals stored on the order
+	 */
+	public function set_currency($code=null, $rate=null){
+		$this->set_currency_code($code);
+		$this->set_currency_rate($rate);
+	}
+
+	/*
+	 * This rate is used to convert order totals back to native shop currency.
+	 * order_totals * this_rate = shop_currency
+	 */
+	protected function set_currency_rate($rate=null){
+		if(is_numeric($rate)){
+			$this->shop_currency_rate = $rate;
+			return;
+		}
+		//this rate field is used to convert totals back to shop currency
+		$from_currency_code =  $this->get_currency_code();
+		$to_currency_code = $this->get_shop_currency_code();
+		$rate = 1;
+		if($from_currency_code !== $to_currency_code){
+			$rate = 1;
+			$currency_converter = Shop_CurrencyConverter::create();
+			$rate = $currency_converter->convert(1, $from_currency_code, $to_currency_code, 4);
+		}
+		$this->shop_currency_rate = $rate;
+	}
+
+	protected function get_shop_currency_code(){
+		return $this->shop_currency_code ? $this->shop_currency_code : Shop_CurrencySettings::get()->code;
 	}
 
 	public function format_currency($value){
 		return Shop_CurrencyHelper::format_currency($value,2, $this->get_currency_code());
+	}
+
+	public function display_in_shop_currency($value){
+		$value = $this->convert_to_shop_currency($value);
+		return Shop_CurrencyHelper::format_currency($value,2, $this->get_shop_currency_code());
+	}
+
+	public function convert_to_shop_currency($value){
+		if(!is_numeric($value)){
+			return null;
+		}
+
+		$order_shop_currency_code = $this->get_shop_currency_code();
+		$active_shop_currency_code = Shop_CurrencySettings::get()->code;
+
+		if($this->get_currency_code() !== $active_shop_currency_code){ //conversion required
+			if($order_shop_currency_code == $active_shop_currency_code){
+				//use stored rate
+				$value = round(($value * $this->shop_currency_rate), 4);
+			} else {
+				//use todays rate
+				$currency_converter = Shop_CurrencyConverter::create();
+				$from_currency_code =  $this->get_currency_code();
+				$to_currency_code = $active_shop_currency_code;
+				$value = $currency_converter->convert(1, $from_currency_code, $to_currency_code, 4);
+			}
+
+		}
+		return $value;
 	}
 
 	public function displayField($dbName, $media = 'form') {

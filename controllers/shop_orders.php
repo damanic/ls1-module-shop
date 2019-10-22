@@ -1451,7 +1451,7 @@
 				$currencies = new Shop_CurrencySettings();
 				$currency = $currencies->find( $currency_id );
 				if($currency){
-					$model->set_currency_code($currency->code);
+					$model->set_currency($currency->code);
 				}
 			}
 			
