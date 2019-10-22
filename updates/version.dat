@@ -989,3 +989,4 @@
 #1.33.19 Improves customer notification logging. Plus bugfix for backend product preview
 #1.33.20 Fixes issue with customer contact from order preview
 #1.33.21 New event: shop:onOptionMatrixGetSalePrice
+#1.33.22 Improvements to shipping and order currency determination
