@@ -294,25 +294,23 @@
 		}
 
 		/**
-		 * If the order is in a foreign currency, you can have the payment gateway update
-		 * the order with an exchange rate which can be used by reports to convert order totals
-		 * back to the shops assigned/default currency.
+		 * A gateway can provide a settlement exchange rate
+		 * when converting foreign currency payments to local bank account currency.
+		 * This method can be used to update the conversion rate stored on the order
+		 * with the actual rate used by the payment gateway for conversion.
+		 * The orders stored currency rate will only update if the given currency code matches the
+		 * orders currency code
 		 *
 		 * @param $order ActiveRecord object Shop_Order
-		 * @param string $currency_code ISO currency code
-		 * @param string $exchange_rate Exchange rate from given currency code to shops base currency
+		 * @param string $payment_currency_code ISO currency code for payment
+		 * @param string $exchange_rate Exchange rate from payment currency to this shops base currency
 		 */
-		public function update_currency_data($order, $currency_code, $exchange_rate){
-			if(!empty($currency_code)) {
-				$currency = new Shop_CurrencySettings();
-				$currency             = $currency->where( 'code = :code || iso_4217_code = :code', array('code' => $currency_code) )->limit(1)->find_all();
-				if($currency) {
-					$order->currency_code = $currency_code->code;
-				}
+		public function update_currency_data( $order, $payment_currency_code, $exchange_rate){
+			if(!empty($payment_currency_code) && ($order->get_currency_code() == $payment_currency_code)) {
+				$order->set_currency($payment_currency_code, $exchange_rate);
 			}
-			$order->shop_currency_rate = is_numeric($exchange_rate) ? $exchange_rate : 1;
-			$order->save();
 		}
+
 
 		/**
 		 * This method should return TRUE if the payment gateway supports requesting a status of a specific transaction.
