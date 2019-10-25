@@ -203,7 +203,10 @@ class Shop_Product extends Db_ActiveRecord
 		'get_sale_reduction',
 		'price_no_tax',
 		'price',
-		'get_image'
+		'get_image',
+		'is_out_of_stock',
+		'list_group_price_tiers',
+		'list_related_products'
 	);
 
 	public static function create()
@@ -2946,12 +2949,13 @@ class Shop_Product extends Db_ActiveRecord
 	 * Returns the first product image association
 	 * This function is proxiable
 	 * @documentable
-	 * @param string $deferred_session_key for deferred bindings.
+	 * @param string optional name of image relation group
 	 * @return string Returns first image object if found or FALSE
 	 */
-	public function get_image($deferred_session_key = null){
-		$images = $this->list_related_records_deferred('images' , $deferred_session_key);
+	public function get_image(){
+		$images = property_exists($this, 'images') ? $this->images : $this->load_relation('images');
 		if($images){
+			$this->images = $images;
 			return $images->first;
 		}
 		return false;
@@ -3807,7 +3811,7 @@ class Shop_Product extends Db_ActiveRecord
 		if (!$options)
 		{
 			$options = array();
-			foreach ($this->options as $option)
+			foreach ($this->__get('options') as $option)
 			{
 				$values = $option->list_values(false);
 				if (count($values))
