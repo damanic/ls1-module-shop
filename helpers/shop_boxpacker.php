@@ -168,28 +168,6 @@ class Shop_BoxPacker {
 		return $this->unpackable_items;
 	}
 
-	public static function get_items_total_volume($items){
-		$volume = 0;
-		foreach ( $items as $item ) {
-			$shipping_enabled = $item->product->product_type->shipping;
-			if($shipping_enabled) {
-				$volume += $item->total_volume();
-			}
-			$extras = false;
-			if(isset($item->extra_options)){
-				$extras = $item->extra_options;
-			} else if(method_exists($item,'get_extra_option_objects')) {
-				$extras = $item->get_extra_option_objects();
-			}
-			if($extras){
-				foreach ($extras as $extra_item) {
-					$volume += $extra_item->volume();
-				}
-			}
-		}
-		return $volume;
-	}
-
 	public function convert_to_mm( $unit ) {
 		$unit = ($unit && is_numeric($unit)) ? $unit : 0;
 		if(!$unit){
@@ -213,6 +191,55 @@ class Shop_BoxPacker {
 		}
 		$lbs = $unit;
 		return round( $lbs * 453.592, 2 );
+	}
+
+
+	/**
+	 * Returns a collection of packed boxes for a given Shop_Order
+	 * This method allows you to calculate shipping dimensions and weight based on packing boxes available
+	 * @documentable
+	 * @param Shop_Order $order The order to pack
+	 * @return PackedBoxList Returns collection of PackedBox.
+	 */
+	public static function pack_order($order){
+		$packer   = new self();
+		$calculated_packages = false;
+		$items_shipping = $order->get_items_shipping();
+		try {
+			$calculated_packages = $packer->pack( $items_shipping );
+		} catch ( Exception $e ) {
+			throw new Phpr_ApplicationException('No package calculations could be determined ('.$e->getMessage().')');
+		}
+		return $calculated_packages;
+	}
+
+	/**
+	 * Returns total volume for a collection of Shop_OrderItem
+	 * This method allows you to calculate shipping dimensions and weight based on packing boxes available
+	 * @documentable
+	 * @param array $items A collection of Shop_OrderItem
+	 * @return float Volume
+	 */
+	public static function get_items_total_volume($items){
+		$volume = 0;
+		foreach ( $items as $item ) {
+			$shipping_enabled = $item->product->product_type->shipping;
+			if($shipping_enabled) {
+				$volume += $item->total_volume();
+			}
+			$extras = false;
+			if(isset($item->extra_options)){
+				$extras = $item->extra_options;
+			} else if(method_exists($item,'get_extra_option_objects')) {
+				$extras = $item->get_extra_option_objects();
+			}
+			if($extras){
+				foreach ($extras as $extra_item) {
+					$volume += $extra_item->volume();
+				}
+			}
+		}
+		return $volume;
 	}
 
 

@@ -575,7 +575,7 @@
 				'shipping_info' => $shipping_info,
 				'total_price'=>Shop_Cart::total_price_no_tax($cart_name, false),
 				'total_volume'=>Shop_Cart::total_items_volume($cart_items, true),
-				'total_weight'=>Shop_Cart::total_items_weight($cart_items, false),
+				'total_weight'=>Shop_Cart::total_items_weight($cart_items, true),
 				'total_item_num'=>Shop_Cart::get_item_total_num($cart_name),
 				'cart_items'=>$cart_items,
 				'customer' => is_object($customer) ? $customer : null,
