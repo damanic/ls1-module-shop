@@ -97,7 +97,7 @@ class Shop_OrderHelper{
 			$order->shipping_quote = 0;
 			$order->shipping_tax = 0;
 
-			$methods = $order->list_available_shipping_options($deferred_session_key);
+			$methods = $order->list_available_shipping_options($deferred_session_key, false);
 
 			$shipping_method_id = $order->shipping_method_id;
 			$sub_option_hash = null;
@@ -227,7 +227,7 @@ class Shop_OrderHelper{
 	 * @deprecated Use {@link Shop_Order::list_available_shipping_options()} method instead.
 	 */
 	public static function getAvailableShippingMethods($order, $deferred_session_key=null) {
-		return $order->list_available_shipping_options($deferred_session_key);
+		return $order->list_available_shipping_options($deferred_session_key, false);
 	}
 
 	public static function items_to_cart_items_array($items){

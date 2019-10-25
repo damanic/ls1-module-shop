@@ -1,6 +1,6 @@
 <li class="field radio full reference" id="form_field_shipping_method_idShop_Order">
 	<?
-		$shipping_options = $form_model->list_available_shipping_options($this->formGetEditSessionKey());
+		$shipping_options = $form_model->list_available_shipping_options($this->formGetEditSessionKey(), false);
 		
 		$local_methods = array();
 		foreach ($shipping_options as $index=>$option)

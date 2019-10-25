@@ -1955,7 +1955,7 @@ class Shop_Order extends Db_ActiveRecord
 		/*
 		 * Calculate shipping cost
 		 */
-		$shipping_options = $order->list_available_shipping_options($session_key);
+		$shipping_options = $order->list_available_shipping_options($session_key,false);
 
 		if (!array_key_exists($order->shipping_method_id, $shipping_options))
 			throw new Phpr_ApplicationException('Shipping method '.$this->shipping_method->name.' is not applicable.');
@@ -2326,7 +2326,7 @@ class Shop_Order extends Db_ActiveRecord
 		return $total_volume;
 	}
 
-	public function list_available_shipping_options($deferred_session_key=null){
+	public function list_available_shipping_options( $deferred_session_key=null, $frontend_only = false){
 
 		$items = $this->items;
 		$deferred_items = empty($deferred_session_key) ? false : $this->list_related_records_deferred('items', $deferred_session_key);
@@ -2355,7 +2355,7 @@ class Shop_Order extends Db_ActiveRecord
 			'customer_group_id' => null,
 			'customer' => $customer,
 			'shipping_option_id' => null,
-			'backend_only' => null,
+			'backend_only' => $frontend_only ? null : true,
 			'payment_method' => $payment_method,
 			'currency_code' => $this->get_currency_code(),
 			'coupon_code' => $coupon_code,

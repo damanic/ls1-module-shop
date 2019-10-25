@@ -2038,7 +2038,7 @@
 					throw new Phpr_ApplicationException('Please enter a valid shipping quote or disable the "Override shipping quote" option');
 
 			} else {
-				$shipping_methods = $order->list_available_shipping_options($deferred_session_key);
+				$shipping_methods = $order->list_available_shipping_options($deferred_session_key, false);
 
 				$shipping_method_found = false;
 				foreach ($shipping_methods as $method)
@@ -2720,7 +2720,7 @@
 		 */
 		protected function getAvailableShippingMethods($order)
 		{
-			return $order->list_available_shipping_options($this->formGetEditSessionKey());
+			return $order->list_available_shipping_options($this->formGetEditSessionKey(), false);
 		}
 
 
