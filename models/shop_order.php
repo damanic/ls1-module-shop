@@ -2287,7 +2287,7 @@ class Shop_Order extends Db_ActiveRecord
 	}
 
 	public function get_shipping_quote_no_discount(){
-		return max(($this->get_shipping_quote() + $this->get_shipping_discount()), 0);
+		return max(($this->get_shipping_quote() + $this->get_shipping_discount(false)), 0);
 	}
 
 	public function eval_shipping_quote_discounted(){
@@ -2299,14 +2299,17 @@ class Shop_Order extends Db_ActiveRecord
 	}
 
 	public function eval_total_shipping_discount(){
-		return $this->get_shipping_discount();
+		return $this->get_shipping_discount(true);
 	}
 
-	public function get_shipping_discount(){
+	public function get_shipping_discount( $extended = true){
 		if($this->has_shipping_quote_override()){
 			return 0;
 		}
-		return max(($this->shipping_discount + $this->get_extended_shipping_discounts()),0);
+		if($extended){
+			return max(($this->shipping_discount + $this->get_extended_shipping_discounts()),0);
+		}
+		return $this->shipping_discount;
 	}
 
 
