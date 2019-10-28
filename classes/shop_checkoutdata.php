@@ -640,7 +640,7 @@
 				foreach ( $discount_info->add_shipping_options as $option_id ) {
 					$option = Shop_ShippingOption::create()->find( $option_id );
 					if ( $option ) {
-						$shipping_options->objectArray[] = $option;
+						$shipping_options[] = $option;
 					}
 				}
 			}

@@ -746,6 +746,7 @@
 
 				foreach ( $quote as $name => $rate ) {
 					$sub_option        = (object) $rate;
+					$sub_option->is_free = false;
 					$sub_option->name = $name;
 					$sub_option->suboption_id = $sub_option->id;
 					$sub_option->id = $this->id . '_' . md5( $name );
