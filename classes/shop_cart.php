@@ -991,7 +991,7 @@
 		public static function total_items_volume($items, $ignore_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if($ignore_free_shipping && $item->free_shipping){
+				if(!$ignore_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1018,7 +1018,7 @@
 		public static function total_items_weight($items, $ignore_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if($ignore_free_shipping && $item->free_shipping){
+				if(!$ignore_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1044,7 +1044,7 @@
 		public static function total_items_depth($items, $ignore_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if($ignore_free_shipping && $item->free_shipping){
+				if(!$ignore_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1070,7 +1070,7 @@
 		public static function total_items_width($items, $ignore_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if($ignore_free_shipping && $item->free_shipping){
+				if(!$ignore_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1096,7 +1096,7 @@
 		public static function total_items_height($items, $ignore_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if($ignore_free_shipping && $item->free_shipping){
+				if(!$ignore_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
