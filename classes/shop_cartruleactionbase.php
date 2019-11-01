@@ -65,7 +65,7 @@
 		 * @return boolean
 		 */
 		public function has_applied(){
-			if($this->action_applied == null){
+			if($this->action_applied === null){
 				return true; //maintains expected behaviour from unsupported discount actions
 			}
 			return $this->action_applied ? true : false;
