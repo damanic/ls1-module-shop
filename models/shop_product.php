@@ -206,8 +206,12 @@ class Shop_Product extends Db_ActiveRecord
 		'get_image',
 		'is_out_of_stock',
 		'list_group_price_tiers',
-		'list_related_products'
+		'list_related_products',
+		'set_customer_group_context',
+		'get_customer_group_context'
 	);
+
+	protected $customer_group_context = null;
 
 	public static function create()
 	{
@@ -1390,7 +1394,7 @@ class Shop_Product extends Db_ActiveRecord
 	 */
 	public function apply_customer_group_visibility()
 	{
-		$customer_group_id = Cms_Controller::get_customer_group_id();
+		$customer_group_id = $this->get_customer_group_context();
 		$this->where('
 				((shop_products.enable_customer_group_filter is null or shop_products.enable_customer_group_filter=0) or (
 					shop_products.enable_customer_group_filter = 1 and
@@ -1524,6 +1528,23 @@ class Shop_Product extends Db_ActiveRecord
 	}
 
 	/**
+	 * Set the customer group id which should be used for determining sale prices and filtering
+	 * @documentable
+	 * @param int $customer_group_id Specifies the Shop_CustomerGroup ID.
+	 */
+	public function set_customer_group_context($customer_group_id){
+		$this->customer_group_context = $customer_group_id;
+	}
+
+	/**
+	 * Get the customer group id which is being used for determining sale prices and filtering
+	 * @documentable
+	 */
+	public function get_customer_group_context(){
+		return $this->customer_group_context = $this->customer_group_context ? $this->customer_group_context : Cms_Controller::get_customer_group_id();
+	}
+
+	/**
 	 * Simplifies ordering products by their current price.
 	 * The following code example outputs all products sorted by price in reverse order:
 	 * <pre>
@@ -1545,7 +1566,8 @@ class Shop_Product extends Db_ActiveRecord
 		if ($direction !== 'asc' && $direction != 'desc')
 			$direction = 'asc';
 
-		return $this->order(sprintf(Shop_Product::$price_sort_query, Cms_Controller::get_customer_group_id()).' '.$direction);
+		$customer_group_id = $this->get_customer_group_context();
+		return $this->order(sprintf(Shop_Product::$price_sort_query, $customer_group_id).' '.$direction);
 	}
 
 	public function compile_tier_prices($session_key)
@@ -1713,7 +1735,7 @@ class Shop_Product extends Db_ActiveRecord
 	public function get_sale_price_no_tax($quantity, $customer_group_id = null)
 	{
 		if ($customer_group_id === null )
-			$customer_group_id = Cms_Controller::get_customer_group_id();
+			$customer_group_id = $this->get_customer_group_context();
 
 		$api_result = Backend::$events->fireEvent('shop:onGetProductSalePrice', $this, $quantity, $customer_group_id);
 		if (is_array($api_result))
@@ -2722,7 +2744,7 @@ class Shop_Product extends Db_ActiveRecord
 			return $this->price($customer_group_id);
 
 		if ($customer_group_id === null)
-			$customer_group_id = Cms_Controller::get_customer_group_id();
+			$customer_group_id = $this->get_customer_group_context();
 
 		foreach ($index_data as $index_record)
 		{
@@ -2753,7 +2775,7 @@ class Shop_Product extends Db_ActiveRecord
 	public function price_no_tax($quantity = 1, $customer_group_id = null)
 	{
 		if ($customer_group_id === null)
-			$customer_group_id = Cms_Controller::get_customer_group_id();
+			$customer_group_id = $this->get_customer_group_context();
 
 		$price = $this->eval_tier_price($customer_group_id, $quantity);
 		$price_adjusted = Backend::$events->fire_event(array('name' => 'shop:onGetProductPriceNoTax', 'type'=>'filter'), array(
@@ -3158,7 +3180,7 @@ class Shop_Product extends Db_ActiveRecord
 		$group_products = array_key_exists('group_products', $options) ? $options['group_products'] : true;
 
 		$obj->apply_filters($group_products);
-		$obj->where(sprintf(Shop_Product::$is_on_sale_query, Cms_Controller::get_customer_group_id()).' = 1');
+		$obj->where(sprintf(Shop_Product::$is_on_sale_query, $obj->get_customer_group_context()).' = 1');
 
 		$sorting = array_key_exists('sorting', $options) ?
 			$options['sorting'] :
@@ -3176,7 +3198,7 @@ class Shop_Product extends Db_ActiveRecord
 				continue;
 
 			if (strpos($sorting_column, 'price') !== false)
-				$sorting_column = str_replace('price', sprintf(Shop_Product::$price_sort_query, Cms_Controller::get_customer_group_id()), $sorting_column);
+				$sorting_column = str_replace('price', sprintf(Shop_Product::$price_sort_query, $obj->get_customer_group_context()), $sorting_column);
 			elseif(strpos($sorting_column, 'manufacturer') !== false)
 				$sorting_column = str_replace('manufacturer', 'manufacturer_link_calculated', $sorting_column);
 			elseif (strpos($sorting_column, '.') === false && strpos($sorting_column, 'rand()') === false)
@@ -3202,7 +3224,7 @@ class Shop_Product extends Db_ActiveRecord
 
 	public function visible_for_customer(){
 		$visible = true;
-		$customer_group_id = Cms_Controller::get_customer_group_id();
+		$customer_group_id = $this->get_customer_group_context();
 		$customer = Cms_Controller::get_customer();
 		if (!$this->visible_for_customer_group($customer_group_id)) {
 			$visible = false;
@@ -3356,7 +3378,7 @@ class Shop_Product extends Db_ActiveRecord
 		}
 
 		if ($group_id === null)
-			$group_id = Cms_Controller::get_customer_group_id();
+			$group_id = $this->get_customer_group_context();
 
 		if (!array_key_exists($group_id, $rule_map))
 			return array();
