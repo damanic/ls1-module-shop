@@ -40,6 +40,7 @@
 		 */
 		public function eval_discount(&$params, $host_obj, &$item_discount_map, &$item_discount_tax_incl_map, $product_conditions)
 		{
+			$this->set_applied(true);
 			return $host_obj->discount_amount;
 		}
 	}

@@ -96,6 +96,9 @@
 				}
 			}
 
+			$applied = $total_discount ? true : false;
+			$this->set_applied($applied);
+
 			return $total_discount;
 		}
 	}

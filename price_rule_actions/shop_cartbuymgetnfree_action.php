@@ -108,7 +108,9 @@
 					$item_discount_tax_incl_map[$item->key] += $total_discount_incl_tax;
 				}
 			}
-			
+
+			$applied = $total_discount ? true : false;
+			$this->set_applied($applied);
 			return $total_discount;
 		}
 	}

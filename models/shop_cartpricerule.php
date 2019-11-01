@@ -594,6 +594,8 @@
 			$current_subtotal = $subtotal;
 			$item_discount_map = array();
 			$item_discount_tax_incl_map = array();
+			$active_rules = array();
+			$active_rules_info = array();
 			$applied_rules = array();
 			$applied_rules_info = array();
 			$free_shipping_options = array();
@@ -635,10 +637,14 @@
 						$current_discount += $discount;
 					}
 
-					$applied_rules[] = $rule->id;
+					$active_rules[] = $rule->id;
 					$rule_info = array('rule'=>$rule, 'discount'=>$discount, 'action' => $action);
+					$active_rules_info[] = (object)$rule_info;
 
-					$applied_rules_info[] = (object)$rule_info;
+					if($rule->active && $action->has_applied()){
+						$applied_rules[] = $rule->id;
+						$applied_rules_info[] = (object)$rule_info;
+					}
 
 					$rule_free_shipping_options = $rule->free_shipping_options;
 					if (!is_array($rule_free_shipping_options))
@@ -679,8 +685,10 @@
 			$result->cart_discount_incl_tax = round($cart_discount_incl_tax, 2);
 			$result->item_price_map = array();
 			$result->applied_rules = $applied_rules;
-			$result->free_shipping_options = $free_shipping_options;
+			$result->active_rules = $active_rules;
 			$result->applied_rules_info = $applied_rules_info;
+			$result->active_rules_info = $active_rules_info;
+			$result->free_shipping_options = $free_shipping_options;
 			$result->shipping_discount = $shipping_discount;
 			$result->add_shipping_options = $add_shipping_options;
 

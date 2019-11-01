@@ -36,6 +36,7 @@
 			if (!array_key_exists('cart_items', $params))
 				throw new Phpr_ApplicationException('Apply free shipping to the cart products.');
 
+			$applied = false;
 			$cart_items = $params['cart_items'];
 
 			foreach ($cart_items as $item)
@@ -55,9 +56,11 @@
 				if ($this->is_active_for_product($item->product, $product_conditions, $current_product_price, $rule_params))
 				{
 					$item->free_shipping = true;
+					$applied = true;
 				}
 			}
-			
+
+			$this->set_applied($applied);
 			return 0;
 		}
 	}

@@ -2,6 +2,7 @@
 
 	class Shop_CartRuleActionBase extends Shop_RuleActionBase
 	{
+		protected $action_applied = null;
 		/**
 		 * This method should return true if the action evaluates a 
 		 * discount value per each product in the shopping cart
@@ -47,6 +48,27 @@
 		public function eval_discount(&$params, $host_obj, &$item_discount_map, &$item_discount_tax_incl_map, $product_conditions)
 		{
 			return null;
+		}
+
+
+		/**
+		 * All discount actions should set this to true of false depending on the actions outcome
+		 * @param boolean $params Specifies if the actions eval_discount affected the cart in any way.
+		 * @return void
+		 */
+		public function set_applied($boolean){
+			$this->action_applied = $boolean ? true : false;
+		}
+
+		/**
+		 * Used after discounts are applied to determine if the action affected the cart in any way
+		 * @return boolean
+		 */
+		public function has_applied(){
+			if($this->action_applied == null){
+				return true; //maintains expected behaviour from unsupported discount actions
+			}
+			return $this->action_applied ? true : false;
 		}
 	}
 
