@@ -45,6 +45,10 @@
 		public $custom_columns = array(
 			'grid_data'=>db_text
 		);
+
+		public static $proxiable_methods = array(
+			'get_options'
+		);
 		
 		public static function create()
 		{
@@ -505,7 +509,7 @@
 			}
 
 			if ( $customer_group_id === null ) {
-				$customer_group_id = Cms_Controller::get_customer_group_id();
+				$customer_group_id = $product->get_customer_group_context();
 			}
 
 
@@ -546,7 +550,7 @@
 
 			$price = null;
 			if ($customer_group_id === null )
-				$customer_group_id = Cms_Controller::get_customer_group_id();
+				$customer_group_id = $product->get_customer_group_context();
 
 			$prices = Backend::$events->fireEvent('shop:onOptionMatrixGetSalePrice', $this , $product, $quantity, $customer_group_id);
 			foreach ($prices as $use_price) {
@@ -927,6 +931,7 @@
 			if ($product_update_time)
 			{
 				$cache = Core_CacheBase::create();
+				$product_update_time = is_a($product_update_time, 'Phpr_DateTime') ? $product_update_time : new Phpr_DateTime($product_update_time);
 				$cache->set($cache_key, array('mtime'=>$product_update_time->getInteger(), 'data'=>$graph), 3600);
 			}
 
@@ -944,6 +949,7 @@
 				return false;
 			
 			$product_update_time = $product->updated_at ? $product->updated_at : $product->created_at;
+			$product_update_time = is_a($product_update_time, 'Phpr_DateTime') ? $product_update_time : new Phpr_DateTime($product_update_time);
 			if (!$product_update_time)
 				return false;
 

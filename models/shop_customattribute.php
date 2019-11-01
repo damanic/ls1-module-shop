@@ -22,6 +22,10 @@
 
 		protected static $id_name_cache = array();
 
+		public static $proxiable_methods = array(
+			'list_values'
+		);
+
 		public static function create()
 		{
 			return new self();
