@@ -670,7 +670,7 @@
 			if (!$product->track_inventory)
 				return false;
 
-			$in_stock = SHop_OptionMatrix::get_property($this, 'in_stock', $product);
+			$in_stock = Shop_OptionMatrix::get_property($this, 'in_stock', $product);
 
 			if ($product->stock_alert_threshold !== null)
 				return $in_stock <= $product->stock_alert_threshold;
