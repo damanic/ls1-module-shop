@@ -1896,7 +1896,7 @@ class Shop_Product extends Db_ActiveRecord
 
 	public function calc_net_unit_price($price){
 		$net_unit_quantity = is_numeric($this->net_unit_quantity) ? $this->net_unit_quantity : 1;
-		if($net_unit_quantity > 1){
+		if($net_unit_quantity > 0){
 			$price = round($price / $net_unit_quantity, 2);
 		}
 		return $price;
