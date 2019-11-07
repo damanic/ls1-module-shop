@@ -208,7 +208,9 @@ class Shop_Product extends Db_ActiveRecord
 		'list_group_price_tiers',
 		'list_related_products',
 		'set_customer_group_context',
-		'get_customer_group_context'
+		'get_customer_group_context',
+		'get_net_unit',
+		'calc_net_unit_price'
 	);
 
 	protected $customer_group_context = null;
@@ -322,6 +324,9 @@ class Shop_Product extends Db_ActiveRecord
 		$this->define_column('visibility_catalog', 'Visible in the catalog')->invisible();
 
 		$this->define_column('shipping_hs_code', 'Harmonized System Code')->defaultInvisible();
+
+		$this->define_column('net_unit_quantity', 'Net Quantity')->defaultInvisible();
+		$this->define_column('net_unit_code', 'Net Quantity Unit')->defaultInvisible();
 
 		$this->defined_column_list = array();
 		Backend::$events->fireEvent('shop:onExtendProductModel', $this);
@@ -439,11 +444,17 @@ class Shop_Product extends Db_ActiveRecord
 				$this->add_form_field('files')->renderAs(frm_file_attachments)->tab('Files')->fileDownloadBaseUrl(url('ls_backend/files/get/'));
 			}
 
-			$this->add_form_section('Dimensions are used for evaluating shipping cost.')->tab('Shipping');
-			$this->add_form_field('weight', 'left')->tab('Shipping');
-			$this->add_form_field('width', 'right')->tab('Shipping');
-			$this->add_form_field('height', 'left')->tab('Shipping');
-			$this->add_form_field('depth', 'right')->tab('Shipping');
+			$this->add_form_section('Dimensions are used for evaluating shipping cost.')->tab('Measurements');
+			$this->add_form_field('weight', 'left')->tab('Measurements');
+			$this->add_form_field('width', 'right')->tab('Measurements');
+			$this->add_form_field('height', 'left')->tab('Measurements');
+			$this->add_form_field('depth', 'right')->tab('Measurements');
+
+			$this->add_form_section('You can use the following net quantity fields to quantify the amount of consumable content contained in this product. This can be used for content description and price breakdowns, eg. price per gram, or price per meter.')->tab('Measurements');
+			$this->add_form_field('net_unit_quantity', 'left')->tab('Measurements');
+			$this->add_form_field('net_unit_code', 'right')->renderAs( frm_dropdown )->emptyOption( '- optional select -' )->tab('Measurements');
+
+
 			$shipping_params = Shop_ShippingParams::get();
 			if($shipping_params->enable_hs_codes) {
 				$this->add_form_field( 'shipping_hs_code' )->renderAs( frm_dropdown )->emptyOption( '- please select -' )->cssClassName( 'search-contains--false' )->tab( 'Shipping' )->comment( 'This code may be required for customs clearance when shipping internationally' );
@@ -643,6 +654,29 @@ class Shop_Product extends Db_ActiveRecord
 		}
 	}
 
+
+	public function get_net_unit_code_options ($key_value=-1){
+		$result = array();
+		$obj = Shop_MeasurementUnit::create();
+
+		if ($key_value == -1) {
+			$measurements = $obj->find_all();
+			foreach ( $measurements as $measurement ) {
+				$result[$measurement->code] = $measurement->name;
+			}
+		} else {
+			if ($key_value == null)
+				return $result;
+
+			$obj = $obj->find_by_code($key_value);
+
+			if ($obj)
+				return h($obj->name);
+		}
+
+		return $result;
+	}
+
 	public function get_page_options($key_value=-1)
 	{
 		return Cms_Page::create()->get_page_tree_options($key_value);
@@ -657,6 +691,7 @@ class Shop_Product extends Db_ActiveRecord
 
 		return true;
 	}
+
 
 	public function validate_in_stock($name, $value)
 	{
@@ -1849,6 +1884,22 @@ class Shop_Product extends Db_ActiveRecord
 	public function get_discounted_price($quantity = 1, $customer_group_id = null)
 	{
 		return $this->get_sale_price($quantity, $customer_group_id);
+	}
+
+	public function get_net_unit(){
+		$default_unit = Shop_MeasurementUnit::create(); //creates obj with default values
+		if($this->net_unit_code){
+			$unit = $default_unit->find_by_code($this->net_unit_code);
+		}
+		return $unit ? $unit : $default_unit;
+	}
+
+	public function calc_net_unit_price($price){
+		$net_unit_quantity = is_numeric($this->net_unit_quantity) ? $this->net_unit_quantity : 1;
+		if($net_unit_quantity > 1){
+			$price = round($price / $net_unit_quantity, 2);
+		}
+		return $price;
 	}
 
 	/**
