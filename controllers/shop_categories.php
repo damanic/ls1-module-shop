@@ -185,6 +185,11 @@
 			{
 				return ($model->category_is_hidden ? 'disabled' : null);
 			}
+			if ($model instanceof Shop_Product)
+			{
+				$result = 'product_'.($model->enabled ? 'enabled' : 'disabled').' ';
+				return $result.($model->enabled ? null : 'disabled');
+			}
 		}
 
 		public function getPreviewUrl()
