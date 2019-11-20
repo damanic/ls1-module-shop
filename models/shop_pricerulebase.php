@@ -201,23 +201,42 @@
 				));
 			}
 		}
-		
+
+		/**
+		 * @deprecated Use {@link Shop_PriceRuleBase::is_active_now()} method.
+		 */
 		public function is_active_today()
+		{
+			$current_user_time = Phpr_Date::userDate(Phpr_DateTime::now());
+			return $this->is_active_now($current_user_time);
+		}
+
+		/**
+		 * Checks if rule is currently active at this time.
+		 * @documentable
+		 * @param Phpr_DateTime $user_datetime Optional, the users datetime to consider, otherwise system time is used.
+		 * @return boolean Returns TRUE if active. Returns FALSE otherwise.
+		 */
+		public function is_active_now($user_datetime=null)
 		{
 			if (!$this->date_start && !$this->date_end)
 				return true;
 
-			$current_user_time = Phpr_Date::userDate(Phpr_DateTime::now());
+			$now = Phpr_DateTime::now(); //system time
+
+			if($user_datetime && is_a($user_datetime,'Phpr_DateTime')){
+				$now = $user_datetime; //users time
+			}
 
 			if ($this->date_start && $this->date_end)
-				return $this->date_start->compare($current_user_time) <= 0 && $this->date_end->compare($current_user_time) >= 0;
-				
+				return $this->date_start->compare($now) <= 0 && $this->date_end->compare($now) >= 0;
+
 			if ($this->date_start)
-				return $this->date_start->compare($current_user_time) <= 0;
+				return $this->date_start->compare($now) <= 0;
 
 			if ($this->date_end)
-				return $this->date_end->compare($current_user_time) >= 0;
-				
+				return $this->date_end->compare($now) >= 0;
+
 			return false;
 		}
 		

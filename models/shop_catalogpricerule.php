@@ -33,8 +33,8 @@
 			$this->define_column('description', 'Description')->validation()->fn('trim')->required('Please specify the rule description');
 			$this->define_column('sort_order', 'Sort Order')->order('asc')->invisible();
 			$this->define_column('active', 'Active');
-			$this->define_column('date_start', 'From Date')->validation();
-			$this->define_column('date_end', 'To Date')->validation();
+			$this->define_column('date_start', 'From Date')->timeFormat('%H:%M')->validation();
+			$this->define_column('date_end', 'To Date')->timeFormat('%H:%M')->validation();
 			$this->define_column('terminating', 'Terminating Rule');
 			$this->define_multi_relation_column('customer_groups', 'customer_groups', 'Customer Groups', '@name');
 			$this->define_multi_relation_column('customer_group_ids', 'customer_groups', 'Customer Group Ids', '@id');
@@ -61,8 +61,8 @@
 			$this->add_form_field('active')->tab('Rule Settings');
 			$this->add_form_field('name')->tab('Rule Settings');
 			$this->add_form_field('description')->tab('Rule Settings')->size('tiny');
-			$this->add_form_field('date_start', 'left')->tab('Rule Settings');
-			$this->add_form_field('date_end', 'right')->tab('Rule Settings');
+			$this->add_form_field('date_start', 'left')->placeholder('00:00','time')->tab('Rule Settings')->comment('Optional time in 24 hour format hh:mm. Default 00:00 (midnight)');
+			$this->add_form_field('date_end', 'right')->placeholder('00:00','time')->tab('Rule Settings')->comment('Optional time in 24 hour format hh:mm. Default 00:00 (midnight)');
 			$this->add_form_field('customer_groups')->tab('Rule Settings')->comment('Please select customer groups the rule is enabled for. Do not select any group to make the rule enabled for all customer groups.', 'above');
 			
 			$this->add_form_field('rule_conditions_field')->tab('Conditions');
@@ -377,7 +377,7 @@
 			self::$active_rules = array();
 			foreach ($rules as $rule)
 			{
-				if (!$rule->is_active_today())
+				if (!$rule->is_active_now()) //catalog price rules are applied on system time
 					continue;
 
 				$rule->define_form_fields();

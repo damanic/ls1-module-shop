@@ -992,3 +992,4 @@
 #1.33.22 Improvements to shipping and order currency determination
 #1.33.23 Discount actions now report if applied. Improvements to proxy methods implementation.
 #1.33.24 Support for net quantity measurements on Shop Products
+#1.33.25 Discounts allow for start and end time

@@ -55,9 +55,9 @@
 			$this->define_column('description', 'Description')->validation()->fn('trim')->required('Please specify the rule description');
 			$this->define_column('sort_order', 'Sort Order')->order('asc')->invisible();
 			$this->define_column('active', 'Active');
-			$this->define_column('date_start', 'From Date')->validation();
-			$this->define_column('date_end', 'To Date')->validation();
-			
+			$this->define_column('date_start', 'From Date')->timeFormat('%H:%M')->validation();
+			$this->define_column('date_end', 'To Date')->timeFormat('%H:%M')->validation();
+
 			$front_end = Db_ActiveRecord::$execution_context == 'front-end';
 
 			if (!$front_end)
@@ -102,8 +102,8 @@
 				$this->add_form_field('active')->tab('Rule Settings');
 				$this->add_form_field('name')->tab('Rule Settings');
 				$this->add_form_field('description')->tab('Rule Settings')->size('tiny');
-				$this->add_form_field('date_start', 'left')->tab('Rule Settings');
-				$this->add_form_field('date_end', 'right')->tab('Rule Settings');
+				$this->add_form_field('date_start', 'left')->placeholder('00:00','time')->tab('Rule Settings')->comment('Optional time in 24 hour format hh:mm. Default 00:00 (midnight)');
+				$this->add_form_field('date_end', 'right')->placeholder('00:00','time')->tab('Rule Settings')->comment('Optional time in 24 hour format hh:mm. Default 00:00 (midnight)');
 
 				if (!$front_end)
 					$this->add_form_field('coupon')->tab('Rule Settings');
@@ -326,9 +326,10 @@
 				$customer_group_id = Shop_CustomerGroup::get_guest_group()->id;
 
 			$result = array();
+			$current_user_time = Phpr_Date::userDate(Phpr_DateTime::now());
 			foreach ($rules as $rule)
 			{
-				if (!$rule->is_active_today())
+				if (!$rule->is_active_now($current_user_time))
 					continue;
 
 				if ($rule->max_coupon_uses && strlen($rule->coupon_code))
@@ -416,19 +417,19 @@
 			$customer_group_id = $customer ? $customer->customer_group_id : $guest_group_id;
 
 			$current_user_time = Phpr_Date::userDate(Phpr_DateTime::now());
-			$timezone_name = ' ('.Phpr::$config->get('TIMEZONE').')';
+			$timezone_name = ' ('.Phpr_Date::getUserTimezone()->getName().')';
 			$active_rule_found = false;
 			$error = 'The coupon cannot be used at this time.';
 			foreach ($rules as $rule)
 			{
-				if (!$rule->is_active_today())
+				if (!$rule->is_active_now($current_user_time))
 				{
 					if ($rule->date_start && $rule->date_end)
 					{
 						if ($rule->date_start->compare($rule->date_end) === 0)
 						{
 							$error = 'This coupon is not active yet. You can use it on '.
-								$rule->date_start->format('%x').
+								Phpr_Date::display($rule->date_start, '%c').
 								$timezone_name.'.';
 							continue;
 						}
@@ -436,16 +437,16 @@
 						if ($rule->date_start->compare($current_user_time) > 0)
 						{
 							$error = 'This coupon is not active yet. You can use it between '.
-								$rule->date_start->format('%x').' and '.
-								$rule->date_end->format('%x').
+								Phpr_Date::display($rule->date_start, '%c').' and '.
+								Phpr_Date::display($rule->date_end, '%c').
 								$timezone_name.'.';
 							continue;
 						}
 
 						if ($rule->date_end->compare($current_user_time) < 0)
 						{
-							$error = 'This coupon has expired on '.
-								$rule->date_end->format('%x').
+							$error = 'This coupon expired on '.
+								Phpr_Date::display($rule->date_end, '%c').
 								$timezone_name.'.';
 							continue;
 						}
@@ -456,7 +457,7 @@
 						if ($rule->date_start->compare($current_user_time) > 0)
 						{
 							$error = 'This coupon is not active yet.  It can be used starting on '.
-								$rule->date_start->format('%x').
+								Phpr_Date::display($rule->date_start, '%c').
 								$timezone_name.'.';
 							continue;
 						}
@@ -466,8 +467,8 @@
 					{
 						if ($rule->date_end->compare($current_user_time) < 0)
 						{
-							$error = 'This coupon has expired on '.
-								$rule->date_end->format('%x').
+							$error = 'This coupon expired on '.
+								Phpr_Date::display($rule->date_end, '%c').
 								$timezone_name.'.';
 							continue;
 						}
