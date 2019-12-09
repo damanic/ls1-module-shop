@@ -301,38 +301,170 @@
 			return 0;
 		}
 
+
+		/**
+		 * Returns the volume of one cart item.
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @documentable
+		 * @return float Returns the item volume.
+		 */
+		public function volume($include_free_shipping = true){
+			if($this->free_shipping && !$include_free_shipping){
+				return 0;
+			}
+			$result = $this->om('volume');
+			foreach ($this->extra_options as $option)
+				$result += $option->volume();
+			return $result;
+		}
+
 		/**
 		 * Returns the total volume of the cart item.
-		 * The total depth is <em>unit volume * quantity</em>.
+		 * The total volume is <em>unit volume * quantity</em>.
 		 * @documentable
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
 		 * @return float Returns the item total volume.
 		 */
-		public function total_volume()
+		public function total_volume($include_free_shipping = true)
 		{
-			$result = $this->om('volume')*$this->quantity;
-			
+			$volume = $this->volume($include_free_shipping);
+			if(!$volume){
+				return 0;
+			}
+			return $volume*$this->quantity;
+		}
+
+		/**
+		 * Returns the weight of one cart item.
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @documentable
+		 * @return float Returns the item weight.
+		 */
+		public function weight($include_free_shipping = true){
+			if($this->free_shipping && !$include_free_shipping){
+				return 0;
+			}
+			$result = $this->om('weight');
 			foreach ($this->extra_options as $option)
-				$result += $option->volume()*$this->quantity;
-			
+				$result += $option->weight;
 			return $result;
 		}
 
 		/**
 		 * Returns the total weight of the cart item.
-		 * The total depth is <em>unit weight * quantity</em>.
+		 * The total weight is <em>unit weight * quantity</em>.
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
 		 * @documentable
 		 * @return float Returns the item total weight.
 		 */		
-		public function total_weight()
+		public function total_weight($include_free_shipping = true)
 		{
-			$result = $this->om('weight')*$this->quantity;
+			$weight = $this->weight($include_free_shipping);
+			if(!$weight){
+				return 0;
+			}
+			return $weight*$this->quantity;
+		}
 
+
+		/**
+		 * Returns the depth of one cart item.
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @documentable
+		 * @return float Returns the item depth.
+		 */
+		public function depth($include_free_shipping = true){
+			if($this->free_shipping && !$include_free_shipping){
+				return 0;
+			}
+			$result = $this->om('depth');
 			foreach ($this->extra_options as $option)
-				$result += $option->weight*$this->quantity;
-			
+				$result += $option->depth;
 			return $result;
 		}
-		
+		/**
+		 * Returns the total depth of the cart item.
+		 * The total depth is <em>unit depth * quantity</em>.
+		 * @documentable
+	     * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @return float Returns the item total depth.
+		 */
+		public function total_depth($include_free_shipping = true)
+		{
+			$depth = $this->depth($include_free_shipping);
+			if(!$depth){
+				return 0;
+			}
+			return $depth*$this->quantity;
+		}
+
+
+		/**
+		 * Returns the width of one cart item.
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @documentable
+		 * @return float Returns the item width.
+		 */
+		public function width($include_free_shipping = true){
+			if($this->free_shipping && !$include_free_shipping){
+				return 0;
+			}
+			$result = $this->om('width');
+			foreach ($this->extra_options as $option)
+				$result += $option->width;
+			return $result;
+		}
+
+		/**
+		 * Returns the total width of the cart item.
+		 * The total width is <em>unit width * quantity</em>.
+		 * @documentable
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @return float Returns the item total width.
+		 */
+		public function total_width($include_free_shipping = true)
+		{
+			$width = $this->width($include_free_shipping);
+			if(!$width){
+				return 0;
+			}
+			return $width*$this->quantity;
+		}
+
+		/**
+		 * Returns the height of one cart item.
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @documentable
+		 * @return float Returns the item height.
+		 */
+		public function height($include_free_shipping = true){
+			if($this->free_shipping && !$include_free_shipping){
+				return 0;
+			}
+			$result = $this->om('height');
+			foreach ($this->extra_options as $option)
+				$result += $option->height;
+			return $result;
+		}
+
+
+		/**
+		 * Returns the total height of the cart item.
+		 * The total height is <em>unit height * quantity</em>.
+		 * @documentable
+		 * @param boolean $include_free_shipping Set to false if free shipping items should be excluded from calculations
+		 * @return float Returns the item total height.
+		 */
+		public function total_height($include_free_shipping = true)
+		{
+			$height = $this->height($include_free_shipping);
+			if(!$height){
+				return 0;
+			}
+			return $height*$this->quantity;
+		}
+
+
 		/**
 		 * Returns TRUE of the item price has been overridden by a custom module
 		 */
@@ -341,7 +473,7 @@
 			if ($this->price_preset === false)
 			{
 				$external_price = Backend::$events->fireEvent('shop:onGetCartItemPrice', $this);
-				foreach ($external_price as $price) 
+				foreach ($external_price as $price)
 				{
 					if (strlen($price))
 						return true;
@@ -349,9 +481,9 @@
 
 				$effective_quantity = $effective_quantity ? $effective_quantity : $this->get_effective_quantity();
 				$result = $this->product->price_no_tax($effective_quantity);
-				
+
 				$updated_price = Backend::$events->fireEvent('shop:onUpdateCartItemPrice', $this, $result);
-				foreach ($updated_price as $price) 
+				foreach ($updated_price as $price)
 				{
 					if (strlen($price))
 						return true;
@@ -360,55 +492,7 @@
 
 			return false;
 		}
-		
-		/**
-		 * Returns the total depth of the cart item.
-		 * The total depth is <em>unit depth * quantity</em>.
-		 * @documentable
-		 * @return float Returns the item total depth.
-		 */
-		public function total_depth()
-		{
-			$result = $this->om('depth')*$this->quantity;
-			
-			foreach ($this->extra_options as $option)
-				$result += $option->depth*$this->quantity;
-			
-			return $result;
-		}
-		
-		/**
-		 * Returns the total width of the cart item.
-		 * The total depth is <em>unit depth * quantity</em>.
-		 * @documentable
-		 * @return float Returns the item total width.
-		 */
-		public function total_width()
-		{
-			$result = $this->om('width')*$this->quantity;
-			
-			foreach ($this->extra_options as $option)
-				$result += $option->width*$this->quantity;
-			
-			return $result;
-		}
-		
-		/**
-		 * Returns the total width of the cart item.
-		 * The total height is <em>unit height * quantity</em>.
-		 * @documentable
-		 * @return float Returns the item total height.
-		 */
-		public function total_height()
-		{
-			$result = $this->om('height')*$this->quantity;
-			
-			foreach ($this->extra_options as $option)
-				$result += $option->height*$this->quantity;
-			
-			return $result;
-		}
-		
+
 		/**
 		 * Evaluates total price of the item
 		 */

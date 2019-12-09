@@ -988,10 +988,10 @@
 			return self::total_items_volume($items);
 		}
 
-		public static function total_items_volume($items, $ignore_free_shipping = false){
+		public static function total_items_volume($items, $include_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if(!$ignore_free_shipping && $item->free_shipping){
+				if(!$include_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1015,10 +1015,10 @@
 			self::total_items_weight($items);
 		}
 
-		public static function total_items_weight($items, $ignore_free_shipping = false){
+		public static function total_items_weight($items, $include_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if(!$ignore_free_shipping && $item->free_shipping){
+				if(!$include_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1041,10 +1041,10 @@
 			return self::total_items_depth($items);
 		}
 
-		public static function total_items_depth($items, $ignore_free_shipping = false){
+		public static function total_items_depth($items, $include_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if(!$ignore_free_shipping && $item->free_shipping){
+				if(!$include_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1067,10 +1067,10 @@
 			return self::total_items_width($items);
 		}
 
-		public static function total_items_width($items, $ignore_free_shipping = false){
+		public static function total_items_width($items, $include_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if(!$ignore_free_shipping && $item->free_shipping){
+				if(!$include_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){
@@ -1093,10 +1093,10 @@
 			return self::total_items_height($items);
 		}
 
-		public static function total_items_height($items, $ignore_free_shipping = false){
+		public static function total_items_height($items, $include_free_shipping = false){
 			$result = 0;
 			foreach ($items as $item) {
-				if(!$ignore_free_shipping && $item->free_shipping){
+				if(!$include_free_shipping && $item->free_shipping){
 					continue;
 				}
 				if ($item->postponed){

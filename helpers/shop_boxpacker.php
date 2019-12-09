@@ -48,6 +48,10 @@ class Shop_BoxPacker {
 			throw new Phpr_ApplicationException('Packing failed. Some items did not have valid height, width, depth dimensions');
 		}
 
+		if(!count($packable_list['items'])){
+			return false;
+		}
+
 		$packable_items = $packable_list['items'];
 		foreach ( $items as $item ) {
 			$item_key = property_exists($item,'key') ? $item->key : $item->id;
