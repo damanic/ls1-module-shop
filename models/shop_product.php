@@ -1888,6 +1888,7 @@ class Shop_Product extends Db_ActiveRecord
 
 	public function get_net_unit(){
 		$default_unit = Shop_MeasurementUnit::create(); //creates obj with default values
+		$unit = null;
 		if($this->net_unit_code){
 			$unit = $default_unit->find_by_code($this->net_unit_code);
 		}
