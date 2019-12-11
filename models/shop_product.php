@@ -1219,7 +1219,6 @@ class Shop_Product extends Db_ActiveRecord
 			else
 				return $this->manufacturer_link;
 
-			return $this->grouped_attribute_name;
 		}
 
 		if ($name == 'bundle_items')
@@ -4804,5 +4803,3 @@ class Shop_Product extends Db_ActiveRecord
 	 */
 	private function event_onProductVisibleForCustomer() {}
 }
-
-?>
