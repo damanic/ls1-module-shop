@@ -47,7 +47,8 @@
 		);
 
 		public static $proxiable_methods = array(
-			'get_options'
+			'get_options',
+			'get_sale_price'
 		);
 		
 		public static function create()
@@ -508,10 +509,10 @@
 				}
 			}
 
+
 			if ( $customer_group_id === null ) {
 				$customer_group_id = $product->get_customer_group_context();
 			}
-
 
 			$prices = Backend::$events->fireEvent('shop:onOptionMatrixGetPrice', $this , $product, $quantity, $customer_group_id);
 			foreach ($prices as $use_price) {
@@ -519,6 +520,7 @@
 					$price = $use_price;
 				}
 			}
+
 
 			if(!$price) {
 				$price = $this->eval_tier_price( $product, $customer_group_id, $quantity );
@@ -568,65 +570,58 @@
 				return $no_tax ? $price : Shop_TaxClass::apply_tax_conditional($product->tax_class_id, $price);
 			}
 
+
 			/*
 			 * If this record has no applied price rules, fallback to the standard record or product price.
 			 * (It is possible that we should fallback to the product's sale price instead)
 			 */
 
 			$price_rules = null;
-			try
-			{
-				$price_rules = unserialize($this->price_rules_compiled);
+			$tier_price_layers = null;
+
+			try {
+				if($this->price_rules_compiled) {
+					$price_rules = unserialize( $this->price_rules_compiled );
+				}
 			} catch (Exception $ex) {}
+
 
 			if (!$price_rules) {
 
-				$tier_price_layers = null;
-				try
-				{
-					$tier_price_layers = unserialize($this->tier_price_compiled);
+				try {
+					if($this->tier_price_compiled) {
+						$tier_price_layers = unserialize( $this->tier_price_compiled );
+					}
 				} catch (Exception $ex) {}
 
-				if (!Phpr::$config->get('OM_SALE_PRICE_FALLBACK') || strlen($this->base_price) || $tier_price_layers)
+
+				if (!Phpr::$config->get('OM_SALE_PRICE_FALLBACK') || strlen($this->base_price) || $tier_price_layers){
 					return $this->get_price($product, $quantity, $customer_group_id, $no_tax);
-				else {
+				} else {
 					$product = is_object($product) ? $product : Shop_Product::find_by_id($product);
 					if ($no_tax)
 						return $product->get_sale_price_no_tax($quantity, $customer_group_id);
 
 					return $product->get_sale_price($quantity, $customer_group_id);
 				}
-			}
 
-			$price_rules = array();
-			try
-			{
-				$price_rules = unserialize($this->price_rules_compiled);
-			} catch (Exception $ex)
-			{
-				$product = is_object($product) ? $product : Shop_Product::find_by_id($product);
-				throw new Phpr_ApplicationException('Error loading price rules for the "'.$product->name.'" product');
-			}
-			
-			if (!array_key_exists($customer_group_id, $price_rules))
-				return $this->get_price($product, $quantity, $customer_group_id, $no_tax);
+			} else if (array_key_exists($customer_group_id, $price_rules)){
 
-			$price_tiers = $price_rules[$customer_group_id];
-			$price_tiers = array_reverse($price_tiers, true);
+				$price_tiers = $price_rules[$customer_group_id];
+				$price_tiers = array_reverse($price_tiers, true);
 
-			foreach ($price_tiers as $tier_quantity=>$price)
-			{
-				if ($tier_quantity <= $quantity)
-				{
-					$price = round($price, 2);
-					$price = $no_tax ? $price : Shop_TaxClass::apply_tax_conditional($product->tax_class_id, $price);
-					$prices = Backend::$events->fireEvent('shop:onOptionMatrixReturnCompiledPrice', $this , $quantity, $customer_group_id, $price);
-					foreach ($prices as $use_price) {
-						if (is_numeric($use_price)) {
-							$price = $use_price;
+				foreach ($price_tiers as $tier_quantity=>$price) {
+					if ($tier_quantity <= $quantity) {
+						$price = round($price, 2);
+						$price = $no_tax ? $price : Shop_TaxClass::apply_tax_conditional($product->tax_class_id, $price);
+						$prices = Backend::$events->fireEvent('shop:onOptionMatrixReturnCompiledPrice', $this , $quantity, $customer_group_id, $price);
+						foreach ($prices as $use_price) {
+							if (is_numeric($use_price)) {
+								$price = $use_price;
+							}
 						}
+						return $price;
 					}
-					return $price;
 				}
 			}
 
