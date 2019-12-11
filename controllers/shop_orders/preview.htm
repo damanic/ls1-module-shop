@@ -101,7 +101,7 @@
 
 				<a class="imageLink lorry img_noBottomPading" href="<?= url('shop/orders/packing_slip/'.$form_model->id) ?>">Print packing slip</a>
 				
-				<? if ($form_model->shipping_method->supports_shipping_labels()): ?>
+				<? if ($form_model->shipping_method && $form_model->shipping_method->supports_shipping_labels()): ?>
 					<a class="imageLink shipping_label img_noBottomPading" href="#" onclick="new PopupForm('preview_onLoadShippingLabelForm', {closeByEsc: false}); return false;">Print shipping label</a>
 				<? else: ?>
 					<a class="imageLink shipping_label img_noBottomPading" href="<?= url('shop/orders/shipping_label/'.$form_model->id) ?>">Print shipping label</a>
