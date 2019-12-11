@@ -14,6 +14,7 @@ class Shop_MeasurementUnit {
 	public $symbol = null;
 	public $code = null;
 
+	protected static $_instance;
 	protected static $measurement_units = array(
 		//length
 		'm' => array(
@@ -106,23 +107,25 @@ class Shop_MeasurementUnit {
 
 	private static $measurement_units_extended = false;
 
-	public function __construct(){
-		if(!self::$measurement_units_extended) {
-			$this->extend_measurement_units();
-		}
-	}
+	public function __construct(){}
 
 	public static function create(){
-		$obj = new self();
-		$obj->name = 'Unit';
-		$obj->name_plural = 'Units';
-		$obj->symbol = 'unit';
-		$obj->code = 'unit';
-		return $obj;
+		if(!self::$_instance){
+			$obj = new self();
+			$obj->name = 'Unit';
+			$obj->name_plural = 'Units';
+			$obj->symbol = 'unit';
+			$obj->code = 'unit';
+			self::$_instance = $obj;
+		}
+		return self::$_instance;
 	}
 
 	public function find_all(){
 		$results = array();
+		if(!self::$measurement_units_extended) {
+			$this->extend_measurement_units();
+		}
 		foreach(self::$measurement_units as $code => $data){
 			$results[] = $this->convert_to_obj($code,$data);
 		}
@@ -130,9 +133,15 @@ class Shop_MeasurementUnit {
 	}
 
 	public function find_by_code($code){
-		if(isset(self::$measurement_units[$code])){
-			$data = self::$measurement_units[$code];
-			return $this->convert_to_obj($code, $data);
+		if($code){
+			if(isset(self::$measurement_units[$code])){
+				$data = self::$measurement_units[$code];
+				return $this->convert_to_obj($code, $data);
+			}
+			if(!self::$measurement_units_extended) {
+				$this->extend_measurement_units();
+				return $this->find_by_code($code); //try again now extended
+			}
 		}
 		return false;
 	}
@@ -162,7 +171,7 @@ class Shop_MeasurementUnit {
 		if ( $updated_measurements && is_array( $updated_measurements ) ) {
 			self::$measurement_units = array_merge( $uom, $updated_measurements );
 		}
-		$measurement_units_extended = true;
+		self::$measurement_units_extended = true;
 	}
 
 	/**
