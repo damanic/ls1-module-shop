@@ -48,7 +48,10 @@
 
 		public static $proxiable_methods = array(
 			'get_options',
-			'get_sale_price'
+			'get_sale_price',
+			'is_on_sale',
+			'is_out_of_stock',
+			'list_group_price_tiers'
 		);
 		
 		public static function create()
