@@ -993,3 +993,4 @@
 #1.33.23 Discount actions now report if applied. Improvements to proxy methods implementation.
 #1.33.24 Support for net quantity measurements on Shop Products
 #1.33.25 Discounts allow for start and end time
+#1.33.26 Adds new variable to email templates
