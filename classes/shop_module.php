@@ -540,6 +540,7 @@
 				),
 				'Order variables'=>array(
 					'order_total'=>array('Outputs order total amount', format_currency(125.96)),
+					'order_payment_due' => array('Outputs order payment due amount', format_currency(125.96)),
 					'order_subtotal'=>array('Outputs order subtotal amount', format_currency(99.99)),
 					'order_shipping_quote'=>array('Outputs order shipping quote', format_currency(15.99)),
 					'order_shipping_tax'=>array('Outputs order shipping tax', format_currency(3.99)),

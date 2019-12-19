@@ -1417,6 +1417,7 @@ class Shop_Order extends Db_ActiveRecord
 		$include_tax = Shop_CheckoutData::display_prices_incl_tax($this);
 
 		$message_text = str_replace('{order_total}', $this->format_currency($this->total), $message_text);
+		$message_text = str_replace('{order_payment_due}', $this->format_currency($this->get_payment_due()), $message_text);
 		$message_text = str_replace('{order_id}', $this->id, $message_text);
 		$message_text = str_replace('{order_reference}', $this->get_order_reference(), $message_text);
 		$message_text = str_replace('{order_date}', $this->order_datetime->format('%x'), $message_text);
