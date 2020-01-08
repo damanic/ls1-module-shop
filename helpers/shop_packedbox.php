@@ -119,4 +119,58 @@ class Shop_PackedBox {
 		}
 	}
 
+	/*
+	 * This uses the boxpacker class to pack order items into shipping boxes, returning an array of Shop_PackedBox objects
+	 */
+	public static function calculate_order_packed_boxes( $order ){
+		$order_packed_boxes = array();
+		$packages = Shop_BoxPacker::pack_order($order);
+		if(!$packages){
+			throw new Phpr_ApplicationException('Could not calculate boxes');
+		}
+		$shipping_params  = Shop_ShippingParams::get();
+		$shipping_boxes = $shipping_params->shipping_boxes;
+		$shipping_boxes_indexed = array();
+		foreach($shipping_boxes as $shipping_box){
+			$shipping_boxes_indexed[$shipping_box->id] = $shipping_box;
+		}
+
+		$order_items_indexed = array();
+		foreach($order->items as $order_item){
+			$order_items_indexed[$order_item->id] = $order_item;
+		}
+
+		foreach($packages as $package){
+			$packer_box = $package->getBox();
+			if($packer_box->box_id && isset($shipping_boxes_indexed[$packer_box->box_id])){
+				$shipping_box = $shipping_boxes_indexed[$packer_box->box_id];
+			} else {
+				$shipping_box = Shop_ShippingBox::create();
+				$shipping_box->id = $packer_box->box_id;
+				$shipping_box->length = $packer_box->getOuterLength(true);
+				$shipping_box->width = $packer_box->getOuterLength(true);
+				$shipping_box->depth = $packer_box->getOuterLength(true);
+				$shipping_box->max_weight = $packer_box->getMaxWeight(true);
+			}
+
+			$shop_items = array();
+			$packer_items = $package->getItems();
+			foreach($packer_items as $packer_item){
+				if($packer_item->item_id && isset($order_items_indexed[$packer_item->item_id])){
+					$shop_item = $order_items_indexed[$packer_item->item_id];
+					$shop_item->quantity = 1;
+					$shop_items[] = $shop_item;
+				}
+			}
+			$packed_box = new self($shipping_box,$shop_items);
+			$box_weight = $packer_box->native_weight($packer_box->getEmptyWeight());
+			if($box_weight){
+				$packed_box->set_weight($packed_box->get_weight() + $box_weight);
+			}
+			$order_packed_boxes[] = $packed_box;
+		}
+
+		return $order_packed_boxes;
+	}
+
 }
