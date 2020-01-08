@@ -119,8 +119,12 @@ class Shop_PackedBox {
 		}
 	}
 
-	/*
-	 * This uses the boxpacker class to pack order items into shipping boxes, returning an array of Shop_PackedBox objects
+	/**
+	 * This uses the Shop_BoxPacker class to place order items into packed boxes
+	 * Requires PHP v5.4+
+	 * @documentable
+	 * @param Shop_Order $order Specifies the order to calculate
+	 * @return array of Shop_PackedBox objects
 	 */
 	public static function calculate_order_packed_boxes( $order ){
 		$order_packed_boxes = array();
