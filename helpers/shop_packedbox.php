@@ -17,9 +17,6 @@ class Shop_PackedBox {
 		$ship_params = Shop_ShippingParams::get();
 		$this->native_dimension_unit = $ship_params->dimension_unit;
 		$this->native_weight_unit = $ship_params->weight_unit;
-
-
-
 	}
 
 	public function set_weight($weight){
