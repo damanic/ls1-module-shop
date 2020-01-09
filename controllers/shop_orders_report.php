@@ -11,7 +11,8 @@
 			'coupon'=>array('name'=>'Coupon', 'class_name'=>'Shop_CouponFilter', 'prompt'=>'Please choose coupons you want to include to the list. Orders with other coupons will be hidden.', 'added_list_title'=>'Added Coupons', 'cancel_if_all'=>false),
 			'billing_country'=>array('name'=>'Billing country', 'class_name'=>'Shop_OrderBillingCountryFilter', 'prompt'=>'Please choose countries you want to include to the list. Orders with other billing countries will be hidden.', 'added_list_title'=>'Added Countries'),
 			'shipping_country'=>array('name'=>'Shipping country', 'class_name'=>'Shop_OrderShippingCountryFilter', 'prompt'=>'Please choose countries you want to include to the list. Orders with other shipping countries will be hidden.', 'added_list_title'=>'Added Countries'),
-			'products'=>array('name'=>'Product', 'class_name'=>'Shop_OrderProductFilter', 'prompt'=>'Please choose products you want to include to the report. Orders that don\'t contain the selected products will be excluded.', 'added_list_title'=>'Added Products')
+			'products'=>array('name'=>'Product', 'class_name'=>'Shop_OrderProductFilter', 'prompt'=>'Please choose products you want to include to the report. Orders that don\'t contain the selected products will be excluded.', 'added_list_title'=>'Added Products'),
+			'product_skus'=>array('name'=>'Product SKU', 'class_name'=>'Shop_OrderSKUFilter', 'prompt'=>'Please choose product SKUs you want to include in the report. Orders that don\'t contain a product with the selected SKU reference will be excluded. This filter includes SKUs assigned to option matrix selections.', 'added_list_title'=>'Added Product SKUs'),
 		);
 		
 		protected $timeline_charts = array(Backend_ChartController::rt_line);
