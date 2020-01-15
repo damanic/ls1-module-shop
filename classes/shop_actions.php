@@ -554,7 +554,7 @@
 			$this->data['subtotal_no_discounts'] = Shop_Cart::total_price($cart_name, false);
 			$this->data['cart_total'] = $cart_total = $this->data['subtotal'];
 			$this->data['applied_discount_rules'] = $discount_info->applied_rules_info;
-			$this->data['active_discount_rules'] = $discount_info->active_discount_rules;
+			$this->data['active_discount_rules'] = $discount_info->active_rules_info;
 			$this->data['cart_total_tax_incl'] = Shop_Cart::total_price($cart_name, true, null, true);
 			$this->data['cart_tax'] = Shop_Cart::total_tax($cart_name);
 			$cart_taxes_details = Shop_TaxClass::calculate_taxes(Shop_Cart::list_active_items($cart_name), Shop_CheckoutData::get_shipping_info());
@@ -1570,7 +1570,7 @@
 			}
 
 			$this->data['applied_discount_rules'] = $discount_info->applied_rules_info;
-			$this->data['active_discount_rules'] = $discount_info->active_discount_rules;
+			$this->data['active_discount_rules'] = $discount_info->active_rules_info;
 		}
 
 		public function on_copyBillingInfo()
@@ -2072,7 +2072,7 @@
 			$this->data['payment_methods'] = $payment_methods;
 			$this->data['payment_method'] = Shop_CheckoutData::get_payment_method();
 			$this->data['applied_discount_rules'] = $discount_info->applied_rules_info;
-			$this->data['active_discount_rules'] = $discount_info->active_discount_rules;
+			$this->data['active_discount_rules'] = $discount_info->active_rules_info;
 
 			$this->setCheckoutFollowUpInfo();
 
