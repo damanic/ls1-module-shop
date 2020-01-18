@@ -989,7 +989,35 @@
 		}
 
 		/*
-		 * Commercial Document
+		 * Returns raw document output without surrounding CMS layout
+		 */
+
+		public function document($order_id_string, $variant)
+		{
+			try {
+				$this->layoutsPath = PATH_APP.'/modules/shop/layouts';
+				$this->layout = 'document';
+				$orders = $this->_orderdoc_get_orders($order_id_string);
+
+				if (!count($orders))
+					throw new Phpr_ApplicationException('No orders found');
+
+				if (count($orders) == 1)
+					$this->app_page_title = 'Document '.$variant.': Order #'.$orders[0]->id;
+				else {
+					$this->app_page_title = 'Document '.$variant.': Multiple orders';
+				}
+				$this->viewData['order_id_string'] = $order_id_string;
+				$this->_orderdoc_add_viewdata($orders, $variant);
+
+			}
+			catch (exception $ex) {
+				$this->handlePageError($ex);
+			}
+		}
+
+		/*
+		 * Commercial Document Viewer
 		 */
 
 		public function orderdoc($order_id_string, $variant)
