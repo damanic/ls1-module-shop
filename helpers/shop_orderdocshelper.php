@@ -165,4 +165,32 @@ class Shop_OrderDocsHelper{
 		return self::get_template_dir($template_id).'/partials/'.$partial.'.htm';
 	}
 
+
+	public static function get_document_urls($template_info, $order_ids, $variant=null){
+
+		$order_ids = is_array($order_ids) ? $order_ids : array($order_ids);
+		$order_id_string = urlencode(implode('|', $order_ids));
+		if($template_info['custom_render']){
+			$results = Backend::$events->fire_event('shop:onGetCustomOrderDocUrl', $template_info, $order_ids, $variant );
+
+
+			if($results){
+				$urls = array();
+				foreach($results as $result){
+					if(is_array($result)){
+						foreach($result as $url){
+							$urls[] = $url;
+						}
+					} else {
+						$urls[] = $result;
+					}
+				}
+				return $urls;
+			}
+		}
+
+		return array(root_url(url('/shop/orders/document/'.$order_id_string.'/'.$variant), true));
+	}
+
+
 }
