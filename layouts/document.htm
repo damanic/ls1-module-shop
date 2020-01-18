@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title><?= strlen($this->app_page_title) ? h($this->app_page_title).' | ' : null ?> LemonStand</title>
+
+		<base href="<?= Phpr::$request->getRootUrl().Phpr::$request->getSubdirectory() ?>" />
+		
+		<link rel="stylesheet" href="modules/backend/resources/css/backend.css?<?= module_build('backend') ?>" type="text/css"/>
+		<link rel="stylesheet" href="modules/backend/resources/css/print.css?<?= module_build('backend') ?>" type="text/css" media="print"/>
+		<link rel="stylesheet" href="phproad/resources/css/phproad.css?<?= module_build('core') ?>" type="text/css"/>
+
+		<script type="text/javascript" src="modules/backend/resources/javascript/mootools.js?<?= module_build('backend') ?>"></script>
+		<script type="text/javascript" src="modules/backend/resources/javascript/jquery.js?<?= module_build('backend') ?>"></script>
+		<script src="https://code.jquery.com/jquery-migrate-1.4.1.js"></script>
+		<?= Phpr_View::includeJavaScript(array('popups.js', 'phproad.js'), module_build('core')) ?>
+		<script type="text/javascript">jQuery.noConflict();</script>
+
+		<?= $this->loadResources() ?>
+
+		<?= Phpr_View::block("head") ?>
+
+	</head>
+	<body class="no-drag backend <?= $this->viewDataElement('body_class') ?> <?= Phpr_Html::css_browser_selector() ?>">
+
+			<?= Phpr_View::block("view") ?>
+
+	</body>
+</html>

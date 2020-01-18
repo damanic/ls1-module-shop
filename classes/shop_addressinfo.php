@@ -88,6 +88,9 @@
 		 */
 		public $is_business;
 
+		protected $loaded_relations = null;
+
+
 
 		/**
 		 * Loads address information from a {@link Shop_Customer customer} object.
@@ -245,6 +248,32 @@
 				$address_info->is_business == $this->is_business;
 		}
 
+		public function get($field, $default = null){
+			$relation_fields = array(
+				'country' => 'Shop_Country',
+				'state' => 'Shop_CountryState'
+			);
+			if( isset($relation_fields[$field])){
+				if(isset($this->loaded_relations[$field])){
+					$model = $this->loaded_relations[$field];
+				} else if(is_numeric($this->$field)){
+					$relation = $relation_fields[$field];
+					$id = $this->$field;
+					$model = $relation::create()->find($id);
+				}
+
+				if($model){
+					$this->loaded_relations[$field] = $model;
+					return $model->name;
+				}
+			}
+
+			if(property_exists($this, $field)){
+				return $this->$field;
+			}
+			return $default;
+		}
+
 		/**
 		 * Returns the address information as a formatted address string.
 		 * @documentable
@@ -255,39 +284,78 @@
 			if (!strlen($this->first_name))
 				return null;
 
-			if (strlen($this->state))
-			{
-				$state = Shop_CountryState::create()->find($this->state);
-				if (!$state)
-					throw new Exception('State not found');
-			}
-
-			$country = Shop_Country::create()->find($this->country);
-			if (!$country)
-				throw new Exception('Country not found');
-
 			$parts = array();
-			$parts[] = $this->first_name.' '.$this->last_name;
-			if (strlen($this->company))
-				$parts[] = $this->company;
 
-			$parts[] = $this->zip;
-			$parts[] = $this->street_address;
-			$parts[] = $this->city;
-			$parts[] = $country->name;
-			if (strlen($this->state))
-				$parts[] = $state->name;
+			$name = trim($this->get('first_name').' '.$this->get('last_name'));
+			if(!empty($name)) {
+				$parts[] = $name;
+			}
+			$company = $this->get('company');
+			if ($company)
+				$parts[] = $company;
 
+			$parts[] = $this->get('zip');
+			$parts[] = $this->get('street_address');
+			$parts[] = $this->get('city');
+			$parts[] = $this->get('country');
+			$state = $this->get('state');
+			if($state) {
+				$parts[] = $this->get( 'state' );
+			}
 			$result = array();
 			$result[] = implode(', ', $parts);
 
-			if (strlen($this->email))
-				$result[] = $this->email;
+			$email = $this->get('email');
+			if (strlen($email))
+				$result[] = $email;
 
-			if (strlen($this->phone))
-				$result[] = 'Phone: '.$this->phone;
+			$phone = $this->get('phone');
+			if (strlen($phone))
+				$result[] = $phone;
 
 			return implode('. ', $result);
+		}
+
+		/**
+		 * Displays the address information
+		 * @documentable
+		 * @return string Returns the address as string.
+		 */
+		public function display_address($vars=array(), $options = array()){
+			$default_vars = array(
+				'street_address',
+				'city',
+				'state',
+				'zip',
+				'country',
+			);
+			$vars = array_merge($default_vars,$vars);
+
+			$default_options = array(
+				'html' => true,
+				'show_field_names' => false,
+			);
+			$options = array_merge($default_options, $options);
+
+
+			$line_end = $options['html'] ? '<br/>' : "\r\n";
+
+			$output = '';
+			foreach($vars as $var){
+				if(property_exists($this,$var)){
+					$field_name = ucwords(str_replace('_',' ',$var));
+					$field_value = $this->get($var);
+					if($options['show_field_name']) {
+						$output .= $options['html'] ? '<b>' . $field_name : $field_name;
+						$output .= $options['html'] ? '</b>: ' : ": ";
+					}
+					$output .=  $options['html'] ? nl2br(h($field_value)) : h($field_value);
+					$output .= $options['html'] ? '<br/> ' : "\r\n";
+				}
+			}
+
+			echo $output;
+
 		}
 
 		/**
@@ -338,6 +406,45 @@
 			$this->zip = $shipping_params->default_shipping_zip;
 			$this->country = $shipping_params->default_shipping_country_id;
 			$this->state = $shipping_params->default_shipping_state_id;
+		}
+
+		/**
+		 * Returns a new address info object with transliterated values
+		 * Note: The returned object will replace country/state IDs with transliterated names.
+		 * @documentable
+		 * @return Shop_AddressInfo Returns an address info object with transliterated values
+		 */
+		public function get_transliterated_info(){
+
+			if ( !method_exists( 'Core_String', 'transliterate' ) ) {
+				traceLog( 'Warning: Update CORE version >= 1.13.26 to support transliteration' );
+				return $this;
+			}
+
+			$transliterate_fields = array(
+				'first_name',
+				'last_name',
+				'company',
+				'country',
+				'state',
+				'street_address',
+				'city',
+				'zip'
+			);
+
+			$reflection = new ReflectionObject($this);
+			$properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
+
+			$info = new self();
+			foreach($properties as $property){
+				$property_name = $property->getName();
+				if(in_array($property_name,$transliterate_fields)){
+					$info->$property_name = Core_String::transliterate($this->get($property_name));
+				} else {
+					$info->$property_name = $this->$property_name;
+				}
+			}
+			return $info;
 		}
 	}
 
