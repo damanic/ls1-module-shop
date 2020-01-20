@@ -254,17 +254,18 @@
 				'state' => 'Shop_CountryState'
 			);
 			if( isset($relation_fields[$field])){
+				$relation = false;
 				if(isset($this->loaded_relations[$field])){
-					$model = $this->loaded_relations[$field];
+					$relation = $this->loaded_relations[$field];
 				} else if(is_numeric($this->$field)){
 					$relation = $relation_fields[$field];
 					$id = $this->$field;
-					$model = $relation::create()->find($id);
+					$relation = $relation::create()->find($id);
 				}
 
-				if($model){
-					$this->loaded_relations[$field] = $model;
-					return $model->name;
+				if($relation){
+					$this->loaded_relations[$field] = $relation;
+					return $relation->name;
 				}
 			}
 
@@ -345,7 +346,7 @@
 				if(property_exists($this,$var)){
 					$field_name = ucwords(str_replace('_',' ',$var));
 					$field_value = $this->get($var);
-					if($options['show_field_name']) {
+					if($options['show_field_names']) {
 						$output .= $options['html'] ? '<b>' . $field_name : $field_name;
 						$output .= $options['html'] ? '</b>: ' : ": ";
 					}
