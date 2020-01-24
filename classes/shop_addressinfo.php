@@ -88,7 +88,26 @@
 		 */
 		public $is_business;
 
+		/**
+		 * @var boolean When set to true, get methods will transliterate foreign characters to latin.
+		 * @documentable
+		 */
+		public $transliterate = false;
+
+		public $transliterate_fields = array(
+			'first_name',
+			'last_name',
+			'company',
+			'country',
+			'state',
+			'street_address',
+			'city',
+			'zip'
+		);
+
 		protected $loaded_relations = null;
+
+		protected $serialized = null;
 
 
 
@@ -249,6 +268,8 @@
 		}
 
 		public function get($field, $default = null){
+			$value = null;
+
 			$relation_fields = array(
 				'country' => 'Shop_Country',
 				'state' => 'Shop_CountryState'
@@ -257,22 +278,27 @@
 				$relation = false;
 				if(isset($this->loaded_relations[$field])){
 					$relation = $this->loaded_relations[$field];
-				} else if(is_numeric($this->$field)){
+				} else if(is_numeric($this->{$field})){
 					$relation = $relation_fields[$field];
-					$id = $this->$field;
+					$id = $this->{$field};
 					$relation = $relation::create()->find($id);
 				}
-
 				if($relation){
 					$this->loaded_relations[$field] = $relation;
-					return $relation->name;
+					$value = $relation->name;
 				}
+
 			}
 
-			if(property_exists($this, $field)){
-				return $this->$field;
+			if(!$value && property_exists($this, $field)){
+				$value = $this->{$field};
 			}
-			return $default;
+
+			if($this->transliterate && in_array($field, $this->transliterate_fields)){
+				$value = $this->transliterate($value);
+			}
+
+			return $value ? $value : $default;
 		}
 
 		/**
@@ -409,44 +435,97 @@
 			$this->state = $shipping_params->default_shipping_state_id;
 		}
 
+
+		protected function transliterate($value){
+			if ( !method_exists( 'Core_String', 'transliterate' ) ) {
+				traceLog( 'Warning: Update CORE version >= 1.13.26 to support transliteration' );
+				return $value;
+			}
+
+			return Core_String::transliterate($value);
+
+		}
+
+
+
+		protected function get_public_properties(){
+			$reflection = new ReflectionObject($this);
+			$properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
+
+			$property_array = array();
+			foreach($properties as $property){
+				$property_array[] = $property->getName();
+			}
+			return $property_array;
+		}
+
+		/*
+		 * Magic functions facilitate storage of AddressInfo object in SESSION
+		 */
+
+		public function __sleep() {
+			$record = array();
+			$properties = $this->get_public_properties();
+
+			foreach($properties as $property_name){
+				$property_value = $this->{$property_name};
+
+				if(is_object($property_value)){
+					//objects are not expected in AddressInfo, attempt to save record ID instead
+					$property_value = property_exists($property_value, 'id') ? $property_value->id : null;
+				}
+
+				$record[$property_name] = $this->{$property_name};
+			}
+
+			$this->serialized = $record;
+			return array('serialized');
+		}
+
+		public function __wakeup() {
+			if (isset($this->serialized)) {
+				$properties = $this->get_public_properties();
+				foreach($this->serialized as $key => $value){
+					if (in_array($key, $properties))
+						$this->{$key} = $value;
+				}
+				$this->serialized = null;
+			}
+		}
+
+
 		/**
+		 * @deprecated Set the $transliterate property to true, and use get() methods instead!
+		 *
 		 * Returns a new address info object with transliterated values
 		 * Note: The returned object will replace country/state IDs with transliterated names.
-		 * @documentable
+		 *
 		 * @return Shop_AddressInfo Returns an address info object with transliterated values
 		 */
 		public function get_transliterated_info(){
+
+			$this->transliterate = true;
 
 			if ( !method_exists( 'Core_String', 'transliterate' ) ) {
 				traceLog( 'Warning: Update CORE version >= 1.13.26 to support transliteration' );
 				return $this;
 			}
 
-			$transliterate_fields = array(
-				'first_name',
-				'last_name',
-				'company',
-				'country',
-				'state',
-				'street_address',
-				'city',
-				'zip'
-			);
-
-			$reflection = new ReflectionObject($this);
-			$properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
+			$properties = $this->get_public_properties();
 
 			$info = new self();
-			foreach($properties as $property){
-				$property_name = $property->getName();
-				if(in_array($property_name,$transliterate_fields)){
-					$info->$property_name = Core_String::transliterate($this->get($property_name));
-				} else {
-					$info->$property_name = $this->$property_name;
-				}
+			foreach($properties as $property_name){
+				$info->{$property_name} = $this->get($property_name);
 			}
+
+			$this->transliterate = false;
+
 			return $info;
 		}
+
 	}
+
+
+
 
 ?>
