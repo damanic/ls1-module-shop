@@ -176,7 +176,7 @@
 			$query = "
 			select 
 						COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
-						".$this->get_stock_name_sql()." AS graph_name, 
+						CONCAT(COALESCE(shop_option_matrix_records.sku, shop_products.sku) , ' | ', ".$this->get_stock_name_sql().") AS graph_name, 
 						'serie' as series_id, 
 						'serie' as series_value, 
 						$amountField as record_value
