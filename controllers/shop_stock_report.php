@@ -6,7 +6,7 @@
 		public $list_no_data_message = 'No products found';
 		public $list_data_context = null;
 		public $list_no_setup_link = true;
-		public $list_columns = array('grouped_name', 'sku', 'items_ordered', 'in_stock');
+		public $list_columns = array('stock_name', 'stock_sku', 'items_ordered', 'stock_in_stock');
 		
 		protected $chart_types = array(
 			Backend_ChartController::rt_column,
@@ -25,6 +25,9 @@
 			'billing_country'=>array('name'=>'Billing country', 'class_name'=>'Shop_OrderBillingCountryFilter', 'prompt'=>'Please choose countries you want to include to the list. Orders with other billing countries will be hidden.', 'added_list_title'=>'Added Countries'),
 			'shipping_country'=>array('name'=>'Shipping country', 'class_name'=>'Shop_OrderShippingCountryFilter', 'prompt'=>'Please choose countries you want to include to the list. Orders with other shipping countries will be hidden.', 'added_list_title'=>'Added Countries')
 		);
+
+		protected $grouped_name_sql = "if (shop_products.grouped = 1, concat(shop_products.name, ' (', shop_products.grouped_option_desc,')'), shop_products.name)";
+		protected $stock_name_sql = "if (shop_option_matrix_records.sku = '' OR shop_option_matrix_records.sku IS NULL, :grouped_name  , CONCAT(:grouped_name, ' (' ,shop_option_matrix_options.option_value, ')' ))";
 
 		public function __construct()
 		{
@@ -77,13 +80,19 @@
 		{
 			$obj = Shop_Product::create();
 			$obj->calculated_columns['items_ordered'] = array('sql'=>"sum(shop_order_items.quantity)", 'type'=>db_number);
+			$obj->calculated_columns['stock_sku'] = array('sql'=>"COALESCE(shop_option_matrix_records.sku, shop_products.sku)", 'type'=>db_varchar);
+			$obj->calculated_columns['stock_in_stock'] = array('sql'=>"COALESCE(shop_option_matrix_records.in_stock, shop_products.in_stock)", 'type'=>db_number);
+			$obj->calculated_columns['stock_name'] = array('sql'=>$this->get_stock_name_sql(), 'type'=>db_varchar);
+
 			$this->list_data_context = 'stock_report_data';
 
 			$obj->join('shop_order_items', 'shop_products.id=shop_order_items.shop_product_id');
 			$obj->join('shop_orders', 'shop_orders.id=shop_order_items.shop_order_id');
 			$obj->join('shop_customers', 'shop_customers.id=shop_orders.customer_id');
-			
-			$obj->group('shop_products.id');
+			$obj->join('shop_option_matrix_records', 'shop_order_items.option_matrix_record_id = shop_option_matrix_records.id');
+			$obj->join('shop_option_matrix_options', 'shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id');
+
+			$obj->group('COALESCE(shop_option_matrix_records.sku, shop_products.sku)');
 			$this->filterApplyToModel($obj, 'product_report');
 			$this->applyIntervalToModel($obj);
 			return $obj;
@@ -95,6 +104,16 @@
 			{
 				$this->list_data_context = 'stock_report_data';
 				$model->calculated_columns['items_ordered'] = array('sql'=>"sum(shop_order_items.quantity)", 'type'=>db_number);
+
+				$model->define_column('stock_sku', 'SKU')->invisible();
+				$model->calculated_columns['stock_sku'] = array('sql'=>"COALESCE(shop_option_matrix_records.sku, shop_products.sku)", 'type'=>db_varchar);
+
+				$model->define_column('stock_name', 'SKU')->invisible();
+				$model->calculated_columns['stock_name'] = array('sql'=>$this->get_stock_name_sql(), 'type'=>db_varchar);
+
+				$model->define_column('stock_in_stock', 'Units In Stock')->invisible();
+				$model->calculated_columns['stock_in_stock'] = array('sql'=>"COALESCE(shop_option_matrix_records.in_stock, shop_products.in_stock)", 'type'=>db_number);
+
 			}
 				
 			return $model;
@@ -130,7 +149,7 @@
 				if (!$model->track_inventory)
 					return;
 					
-				if ($model->items_ordered > $model->in_stock)
+				if ($model->items_ordered > $model->stock_in_stock)
 					return 'important error';
 			}
 		}
@@ -139,8 +158,8 @@
 		{
 			$this->xmlData();
 			$chartType = $this->viewData['chart_type'] = $this->getChartType();
-			
-			$filterStr = $this->filterAsString();
+
+			$filterStr = $this->filterAsString('product_report');
 
 			$paidFilter = $this->getOrderPaidStatusFilter();
 			if ($paidFilter)
@@ -156,26 +175,28 @@
 
 			$query = "
 			select 
-				shop_products.id as graph_code, 
-				'serie' as series_id, 
-				'serie' as series_value, 
-				concat(shop_products.sku, ', ', shop_products.name) as graph_name, 
-				$amountField as record_value
+						COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
+						".$this->get_stock_name_sql()." AS graph_name, 
+						'serie' as series_id, 
+						'serie' as series_value, 
+						$amountField as record_value
 			from 
 				shop_order_statuses,
 				report_dates
-			left join shop_orders on report_date = shop_orders.order_date
-			left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id
-			left join shop_products on shop_products.id = shop_order_items.shop_product_id
-			left join shop_customers on shop_customers.id=shop_orders.customer_id
+				left join shop_orders on report_date = shop_orders.order_date
+				left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id
+				left join shop_products on shop_products.id = shop_order_items.shop_product_id	   
+				LEFT JOIN shop_option_matrix_records ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
+				LEFT JOIN shop_option_matrix_options ON shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
+				left join shop_customers on shop_customers.id=shop_orders.customer_id
 			where
 				shop_orders.deleted_at is null and
 				shop_order_statuses.id = shop_orders.status_id and
 				$intervalLimit
 				$filterStr
 				$paidFilter
-			group by shop_products.id
-			order by report_date, shop_products.id
+				GROUP BY graph_code
+				order by report_date, shop_products.id, shop_option_matrix_records.id
 		";
 
 			$bind = array();
@@ -185,13 +206,24 @@
 		protected function renderReportTotals()
 		{
 			$intervalLimit = $this->intervalQueryStrOrders();
-			$filterStr = $this->filterAsString();
+			$filterStr     = $this->filterAsString( 'product_report' );
 			
 			$paidFilter = $this->getOrderPaidStatusFilter();
 			if ($paidFilter)
 				$paidFilter = 'and '.$paidFilter;
-				
-			$query_str = "from shop_orders, shop_order_statuses, shop_order_items, shop_products, shop_customers where shop_customers.id=customer_id and shop_orders.deleted_at is null and shop_products.id = shop_order_items.shop_product_id and shop_order_statuses.id = shop_orders.status_id and shop_order_items.shop_order_id = shop_orders.id and $intervalLimit $filterStr $paidFilter";
+
+			$query_str = "FROM shop_orders
+							LEFT JOIN shop_order_items 
+							ON shop_order_items.shop_order_id = shop_orders.id 
+							LEFT JOIN shop_order_statuses
+							ON shop_order_statuses.id = shop_orders.status_id 
+							LEFT JOIN shop_products
+							ON shop_products.id = shop_order_items.shop_product_id 
+							LEFT JOIN shop_option_matrix_records
+							ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
+							LEFT JOIN shop_customers 
+							ON shop_customers.id=shop_orders.customer_id  
+						    WHERE $intervalLimit $filterStr $paidFilter";
 
 			$query = "
 				select ifnull((select sum(shop_order_items.quantity) $query_str), 0) as items_sold,
@@ -201,6 +233,12 @@
 			$this->viewData['totals_data'] = Db_DbHelper::object($query);
 			$this->renderPartial('chart_totals');
 		}
+
+
+		protected function get_stock_name_sql(){
+			return str_replace(':grouped_name', $this->grouped_name_sql, $this->stock_name_sql);
+		}
+
 	}
 
 ?>

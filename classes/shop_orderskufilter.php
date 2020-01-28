@@ -16,6 +16,13 @@
 		public function applyToModel($model, $keys, $context = null)
 		{
 			$skus = Db_DbHelper::scalarArray("SELECT sku FROM shop_products WHERE id IN (?)", array($keys));
+
+
+			if ($context == 'product_report') {
+				$model->where('COALESCE(shop_option_matrix_records.sku, shop_products.sku) IN (?)', array($skus));
+				return;
+			}
+
 			$model->where('( EXISTS 
 								(
 									SELECT COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS product_sku 
@@ -33,6 +40,12 @@
 		public function asString($keys, $context = null)
 		{
 			$skus = Db_DbHelper::scalarArray("SELECT sku FROM shop_products WHERE id IN (?)", array($keys));
+
+
+			if ($context == 'product_report') {
+				return 'AND (COALESCE(shop_option_matrix_records.sku, shop_products.sku) IN  '.$this->keysToStr($skus).')';
+			}
+
 			return 'AND (
 							EXISTS 
 								(
