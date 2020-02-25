@@ -616,8 +616,8 @@
 		 * You can use the result of the method for further processing, for example for paginating the category products list. 
 		 * Please read the {@link http://lemonstand.com/docs/displaying_a_list_of_products Displaying a list of products} article for the examples.
 		 * 
-		 * You can pass an array of options to the method. The supported options are  <em>sorting</em>, <em>manufacturer_url_name</em> and
-		 * <em>apply_top_products</em>. 
+		 * You can pass an array of options to the method. The supported options are  <em>sorting</em>, <em>manufacturer_url_name</em>,
+		 * <em>apply_top_products</em> and <em>include_child_category_products</em>.
 		 * By default the product list is sorted by product name. You can sort products by another field. Also, you can sort the product list by
 		 * multiple fields.
 		 * <pre>
@@ -673,7 +673,12 @@
 		 */
 		public function list_products($options = array())
 		{
-			$apply_top_products = array_key_exists('apply_top_products', $options) ? 
+
+			$include_child_category_products = array_key_exists('include_child_category_products', $options) ?
+				$options['include_child_category_products'] :
+				false;
+
+			$apply_top_products = array_key_exists('apply_top_products', $options) ?
 				$options['apply_top_products'] : 
 				true;
 
@@ -690,12 +695,13 @@
 
 			$allowed_sorting_columns = Shop_Product::list_allowed_sort_columns();
 
-			foreach ($sorting as &$sorting_column)
+			foreach ($sorting as $key => $sorting_column)
 			{
 				$test_name = mb_strtolower($sorting_column);
 				$test_name = trim(str_replace('desc', '', str_replace('asc', '', $test_name)));
 				
 				if (!in_array($test_name, $allowed_sorting_columns))
+					unset($sorting[$key]);
 					continue;
 				
 				$custom_sorting_query = false;
@@ -709,19 +715,30 @@
 				if (!$custom_sorting_query)
 				{
 					if (strpos($sorting_column, 'price') !== false)
-						$sorting_column = str_replace('price', sprintf(Shop_Product::$price_sort_query, Cms_Controller::get_customer_group_id()), $sorting_column);
+						$sorting[$key] = str_replace('price', sprintf(Shop_Product::$price_sort_query, Cms_Controller::get_customer_group_id()), $sorting_column);
 					elseif(strpos($sorting_column, 'manufacturer') !== false)
-						$sorting_column = str_replace('manufacturer', 'manufacturer_link_calculated', $sorting_column);
+						$sorting[$key] = str_replace('manufacturer', 'manufacturer_link_calculated', $sorting_column);
 					elseif (strpos($sorting_column, '.') === false && strpos($sorting_column, 'rand()') === false)
-						$sorting_column = 'shop_products.'.$sorting_column;
+						$sorting[$key] = 'shop_products.'.$sorting_column;
 				} else
-					$sorting_column = $custom_sorting_query;
+					$sorting[$key] = $custom_sorting_query;
 			}
 			
 			if (!$sorting)
 				$sorting = array('name');
 
-			$product_obj = $this->products_list;
+			if($include_child_category_products){
+				$product_obj = Shop_Product::create();
+				$product_obj->join('shop_products_categories','shop_products.id = shop_products_categories.shop_product_id');
+				$product_obj->where($this->has_and_belongs_to_many['products']['conditions']);
+				$child_category_ids = $this->get_children_ids($this->id);
+				$category_ids = ($child_category_ids && is_array($child_category_ids)) ? $child_category_ids : array();
+				array_push($category_ids,$this->id);
+				$product_obj->where('shop_products_categories.shop_category_id IN (?)', array($category_ids));
+			} else {
+				$product_obj = $this->products_list;
+			}
+
 			$product_obj->reset_order();
 			$product_obj->apply_customer_visibility()->apply_catalog_visibility();
 
