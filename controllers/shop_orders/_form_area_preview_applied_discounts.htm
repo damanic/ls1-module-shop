@@ -1,0 +1,35 @@
+<?php $applied_discounts = $form_model->get_applied_cart_rules(); ?>
+<?php if(!count($applied_discounts)){return;} ?>
+
+<h3 class="formReportLayoutHeader described" style="margin-top:1em;">
+	Applied Discounts
+</h3>
+
+<table class="simpleList">
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>Name</th>
+			<th>Description</th>
+			<th class="last">Coupon</th>
+		</tr>
+	</thead>
+	<tbody>
+		<?
+			foreach ($applied_discounts as $discount):
+		?>
+		<tr class="<?= Backend_Html::zebra('applied_discount_rules') ?>">
+			<td><?= $discount ? $discount->id : 'Deleted' ?></td>
+			<td><?= $discount->name ? h($discount->name) : '[NO NAME / RULE DELETED]' ?></td>
+			<td><?= $discount->description ? h($discount->description) : '' ?></td>
+			<td><?= isset($discount->coupon) ? $discount->coupon->code : '' ?></td>
+		</tr>
+		<?
+			endforeach;
+		?>
+		
+		<? if (!count($applied_discounts)): ?>
+			<tr class="noData"><td colspan="4">No records found</td></tr>
+		<? endif ?>
+	</tbody>
+</table>

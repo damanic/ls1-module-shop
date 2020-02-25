@@ -1,0 +1,7 @@
+<div class="toolbar">
+	<?= backend_ctr_button('Export as CSV', 'document_export', array(
+		'onclick'=>alt_click_link(url('shop/customers_report/export_customers/iwork'), url('shop/customers_report/export_customers')),
+		'class'=>'tooltip',
+		'title'=>'Hold down the <strong>ALT</strong> key to export a semicolon separated file')) ?>
+	<div class="clear"></div>
+</div>

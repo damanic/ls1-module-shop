@@ -177,8 +177,8 @@
 				<li class="round"><a href="#payment_transactions" onclick="return false">Payment Transactions</a></li>
 				<li class="round"><a href="#notifications" onclick="return false">Customer Notifications</a></li>
 				<li class="round"><a href="#notes" onclick="return false">Notes</a></li>
-				<li class="round  "><a href="#shipping" onclick="return false">Shipping Tracking Codes</a></li>
-				
+				<li class="round"><a href="#shipping" onclick="return false">Shipping Tracking Codes</a></li>
+
 				<? if ($form_model->invoices_supported()): ?>
 					<li class="round  "><a href="#invoices" onclick="return false">Invoices</a></li>
 				<? endif ?>
@@ -208,6 +208,7 @@
 						
 						<? $this->renderPartial('form_field_preview_items') ?>
 						<? $this->renderPartial('form_area_preview_tax_summary') ?>
+						<? $this->renderPartial('form_area_preview_applied_discounts') ?>
 					</form>
 				</li>
 				<li class="form_page_preview" id="history">
