@@ -215,69 +215,72 @@ class Shop_Order extends Db_ActiveRecord
 		if ($context == 'invoice' || $context == 'for-customer')
 			$context = null;
 
-		if (strlen($context))
-		{
-			$this->add_form_field('order_datetime', 'left')->tab('Order Details')->noForm();
-			$this->add_form_field('status', 'right')->tab('Order Details')->noForm()->previewNoRelation();
+		if (strlen($context)) {
+			$this->add_form_field( 'order_datetime', 'left' )->tab( 'Order Details' )->noForm();
+			$this->add_form_field( 'status', 'right' )->tab( 'Order Details' )->noForm()->previewNoRelation();
 
-			$this->add_form_field('customer_ip')->tab('Order Details')->noForm();
+			$this->add_form_field( 'customer_ip' )->tab( 'Order Details' )->noForm();
 
 
-			$this->add_form_field('subtotal_before_discounts', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Subtotal before discounts</strong><br/>The sum of all order items without discounts applied');
-			$this->add_form_field('discount', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Discount</strong><br/>Total amount of discount');
-			$this->add_form_field('subtotal', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Order subtotal</strong><br/>Subtotal is a sum of all order items, taking into account applied discounts');
-			$this->add_form_field('goods_tax', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Sales tax</strong><br/>Sum of all taxes applied to all order items');
+			$this->add_form_field( 'subtotal_before_discounts', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Subtotal before discounts</strong><br/>The sum of all order items without discounts applied' );
+			$this->add_form_field( 'discount', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Discount</strong><br/>Total amount of discount' );
+			$this->add_form_field( 'subtotal', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Order subtotal</strong><br/>Subtotal is a sum of all order items, taking into account applied discounts' );
+			$this->add_form_field( 'goods_tax', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Sales tax</strong><br/>Sum of all taxes applied to all order items' );
 
-			$this->add_form_field('shipping_quote_no_discount', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Shipping Price</strong><br/>The shipping quote calculated before any discounts applied');
-			$this->add_form_field('total_shipping_discount', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Shipping Discount</strong><br/>Total amount of shipping discount applied');
+			$this->add_form_field( 'shipping_quote_no_discount', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Shipping Price</strong><br/>The shipping quote calculated before any discounts applied' );
+			$this->add_form_field( 'total_shipping_discount', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Shipping Discount</strong><br/>Total amount of shipping discount applied' );
 
-			$this->add_form_field('shipping_quote_discounted', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Cost of shipping</strong><br/>The cost of shipping, including handling fee, if applicable');
-			$this->add_form_field('shipping_tax', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Shipping tax</strong><br/>Sum of all taxes applied to the shipping service');
+			$this->add_form_field( 'shipping_quote_discounted', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Cost of shipping</strong><br/>The cost of shipping, including handling fee, if applicable' );
+			$this->add_form_field( 'shipping_tax', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Shipping tax</strong><br/>Sum of all taxes applied to the shipping service' );
 
-			$this->add_form_field('tax_total', 'right')->tab('Order Details')->noForm()->previewHelp('<strong>Total tax amount</strong><br/>Tax  total = Sales Tax + Shipping Tax');
-			$this->add_form_field('total', 'left')->tab('Order Details')->noForm()->previewHelp('<strong>Total order amount</strong><br/>Total = Subtotal + Shipping Quote + Tax Total');
+			$this->add_form_field( 'tax_total', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Total tax amount</strong><br/>Tax  total = Sales Tax + Shipping Tax' );
+			$this->add_form_field( 'total', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Total order amount</strong><br/>Total = Subtotal + Shipping Quote + Tax Total' );
 
-			if ($this->tax_exempt)
-				$this->add_form_field('tax_exempt')->tab('Order Details');
+			if ( $this->tax_exempt ) {
+				$this->add_form_field( 'tax_exempt' )->tab( 'Order Details' );
+			}
 
-			$this->add_form_field('coupon')->tab('Order Details')->noForm()->previewNoOptionsMessage('<a coupon code was not specified>');
+			$this->add_form_field( 'coupon' )->tab( 'Order Details' )->noForm()->previewNoOptionsMessage( '<a coupon code was not specified>' );
 
-			$this->add_form_field('customer_notes')->tab('Order Details')->noForm()->nl2br(true);
+			$this->add_form_field( 'customer_notes' )->tab( 'Order Details' )->noForm()->nl2br( true );
 
 //				$this->add_form_field('items')->tab('Order')->noForm();
 //				$this->add_form_custom_area('tax_summary')->tab('Order Details')->noForm();
 
-			$this->add_form_field('payment_method')->tab('Billing Information');
-			$this->add_form_field('billing_first_name', 'left')->tab('Billing Information');
-			$this->add_form_field('billing_last_name', 'right')->tab('Billing Information');
-			$this->add_form_field('billing_email')->tab('Billing Information');
-			$this->add_form_field('billing_company', 'left')->tab('Billing Information');
-			$this->add_form_field('billing_phone', 'right')->tab('Billing Information');
-			$this->add_form_field('billing_country', 'left')->tab('Billing Information');
-			$this->add_form_field('billing_state', 'right')->tab('Billing Information');
-			$this->add_form_field('billing_street_addr')->tab('Billing Information')->nl2br(true);
-			$this->add_form_field('billing_city', 'left')->tab('Billing Information');
-			$this->add_form_field('billing_zip', 'right')->tab('Billing Information');
+			$this->add_form_field( 'payment_method' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_first_name', 'left' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_last_name', 'right' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_email' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_company', 'left' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_phone', 'right' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_country', 'left' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_state', 'right' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_street_addr' )->tab( 'Billing Information' )->nl2br( true );
+			$this->add_form_field( 'billing_city', 'left' )->tab( 'Billing Information' );
+			$this->add_form_field( 'billing_zip', 'right' )->tab( 'Billing Information' );
 
-			if ($context == 'preview')
-				$this->add_form_field('payment_page_url')->tab('Billing Information');
+			if ( $context == 'preview' ) {
+				$this->add_form_field( 'payment_page_url' )->tab( 'Billing Information' );
+			}
 
-			$this->add_form_field('shipping_method')->tab('Shipping Information');
+			$this->add_form_field( 'shipping_method' )->tab( 'Shipping Information' );
 
-			if (strlen($this->shipping_sub_option))
-				$this->add_form_field('shipping_sub_option')->tab('Shipping Information')->noForm();
+			if ( strlen( $this->shipping_sub_option ) ) {
+				$this->add_form_field( 'shipping_sub_option' )->tab( 'Shipping Information' )->noForm();
+			}
 
-			$this->add_form_field('shipping_first_name', 'left')->tab('Shipping Information');
-			$this->add_form_field('shipping_last_name', 'right')->tab('Shipping Information');
-			$this->add_form_field('shipping_company', 'left')->tab('Shipping Information');
-			$this->add_form_field('shipping_phone', 'right')->tab('Shipping Information');
-			if ($this->shipping_addr_is_business)
-				$this->add_form_field('shipping_addr_is_business')->tab('Shipping Information');
-			$this->add_form_field('shipping_country', 'left')->tab('Shipping Information');
-			$this->add_form_field('shipping_state', 'right')->tab('Shipping Information');
-			$this->add_form_field('shipping_street_addr')->tab('Shipping Information')->nl2br(true);
-			$this->add_form_field('shipping_city', 'left')->tab('Shipping Information');
-			$this->add_form_field('shipping_zip', 'right')->tab('Shipping Information');
+			$this->add_form_field( 'shipping_first_name', 'left' )->tab( 'Shipping Information' );
+			$this->add_form_field( 'shipping_last_name', 'right' )->tab( 'Shipping Information' );
+			$this->add_form_field( 'shipping_company', 'left' )->tab( 'Shipping Information' );
+			$this->add_form_field( 'shipping_phone', 'right' )->tab( 'Shipping Information' );
+			if ( $this->shipping_addr_is_business ) {
+				$this->add_form_field( 'shipping_addr_is_business' )->tab( 'Shipping Information' );
+			}
+			$this->add_form_field( 'shipping_country', 'left' )->tab( 'Shipping Information' );
+			$this->add_form_field( 'shipping_state', 'right' )->tab( 'Shipping Information' );
+			$this->add_form_field( 'shipping_street_addr' )->tab( 'Shipping Information' )->nl2br( true );
+			$this->add_form_field( 'shipping_city', 'left' )->tab( 'Shipping Information' );
+			$this->add_form_field( 'shipping_zip', 'right' )->tab( 'Shipping Information' );
 
 			Backend::$events->fireEvent('shop:onExtendOrderForm', $this, $context);
 		} else {
@@ -747,7 +750,7 @@ class Shop_Order extends Db_ActiveRecord
 
 			$order->shipping_method_id = $shipping_method->id;
 			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
-			$order->shipping_discount = round($shipping_method->discount, 2);
+			$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
 
 			$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, $shipping_info, $shipping_method->quote_no_tax);
 			$order->apply_shipping_tax_array($shipping_taxes);
@@ -1348,9 +1351,32 @@ class Shop_Order extends Db_ActiveRecord
 		foreach ($rules as $rule_id)
 		{
 			$bind['rule_id'] = $rule_id;
-			Db_DbHelper::query('insert into shop_order_applied_rules(shop_order_id, shop_cart_rule_id) values (:id, :rule_id)', $bind);
+			$rule = Shop_CartPriceRule::create()->find($rule_id);
+			$bind['rule_serialized']  = ($rule && $rule->id) ? serialize($rule->serialize(false)) : null;
+			$sql = 'INSERT INTO shop_order_applied_rules (shop_order_id, shop_cart_rule_id, shop_cart_rule_serialized) VALUES (:id, :rule_id, :rule_serialized)';
+			Db_DbHelper::query($sql, $bind);
 		}
 		Backend::$events->fireEvent('shop:onOrderSetAppliedCartRules', $this);
+	}
+
+	public function get_applied_cart_rules(){
+		$rules = array();
+		$results = Db_DbHelper::queryArray('SELECT * FROM shop_order_applied_rules WHERE shop_order_id=?', $this->id);
+		if($results){
+			foreach($results as $rule_data){
+				if(!empty($rule_data['shop_cart_rule_serialized'])){
+					$rule = Shop_CartPriceRule::create()->unserialize(unserialize($rule_data['shop_cart_rule_serialized']));
+				} else {
+					$rule = Shop_CartPriceRule::create()->find($rule_data['shop_cart_rule_id']);
+					if(!$rule){
+						$rule = Shop_CartPriceRule::create();
+						$rule->id = $rule_data['shop_cart_rule_id'];
+					}
+				}
+				$rules[] = $rule;
+			}
+		}
+		return $rules;
 	}
 
 	public function get_payment_method(){
@@ -1966,7 +1992,7 @@ class Shop_Order extends Db_ActiveRecord
 		if (!$shipping_method->multi_option)
 		{
 			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
-			$order->shipping_discount = round($shipping_method->discount, 2);
+			$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
 			$order->shipping_sub_option = null;
 			$order->internal_shipping_suboption_id = $order->shipping_method_id;
 		} else {
