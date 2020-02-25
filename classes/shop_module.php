@@ -661,6 +661,7 @@
 				return array();
 			
 			return array(
+				'customers'=>'Customers',
 				'orders'=>'Orders',
 				'products'=>'Products',
 				'stock'=>'Stock',

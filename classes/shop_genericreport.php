@@ -32,7 +32,17 @@
 		{
 			return url('shop/'.preg_replace('/^shop_/', '', mb_strtolower(get_class($this))));
 		}
-		
+
+		public function listPrepareData()
+		{
+			$obj = Shop_Order::create();
+			$this->filterApplyToModel($obj);
+			$this->applyIntervalToModel($obj);
+			$obj->where('shop_orders.deleted_at is null');
+
+			return $obj;
+		}
+
 		public function export_orders($format = null)
 		{
 			$this->list_name = get_class($this).'_index_list';
@@ -49,16 +59,6 @@
 			$this->listExportCsv('orders.csv', $options, null, true, array('headerCallback' => array('Shop_Order', 'export_orders_and_products_header'), 'rowCallback' => array('Shop_Order', 'export_orders_and_products_row')));
 		}
 
-		public function listPrepareData()
-		{
-			$obj = Shop_Order::create();
-			$this->filterApplyToModel($obj);
-			$this->applyIntervalToModel($obj);
-			$obj->where('shop_orders.deleted_at is null');
-			
-			return $obj;
-		}
-		
 		public function export_customers($format = null)
 		{
 			$this->listExportCsv('customers.csv', array(
