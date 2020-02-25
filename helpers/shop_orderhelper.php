@@ -120,7 +120,7 @@ class Shop_OrderHelper{
 				if (!$shipping_method->multi_option)
 				{
 					$order->shipping_quote = round($quote, 2);
-					$order->shipping_discount = round($shipping_method->discount, 2);
+					$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
 					$order->shipping_sub_option = null;
 					$order->internal_shipping_suboption_id = $shipping_method_id;
 				}
