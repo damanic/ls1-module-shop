@@ -4,11 +4,10 @@
  *
  * @author Doug Wright
  */
-
 namespace DVDoug\BoxPacker;
 
 /**
- * List of possible packed box choices, ordered by utilisation (item count, volume).
+ * List of packed boxes.
  *
  * @author Doug Wright
  */
@@ -20,6 +19,13 @@ class PackedBoxList extends \SplMinHeap
      * @var float
      */
     protected $meanWeight;
+
+    /**
+     * Average (mean) item weight of boxes.
+     *
+     * @var float
+     */
+    protected $meanItemWeight;
 
     /**
      * Compare elements in order to place them correctly in the heap while sifting up.
@@ -34,18 +40,25 @@ class PackedBoxList extends \SplMinHeap
     public function compare($boxA, $boxB)
     {
         $choice = $boxA->getItems()->count() - $boxB->getItems()->count();
-        if ($choice === 0) {
-            $choice = $boxB->getBox()->getInnerVolume() - $boxA->getBox()->getInnerVolume();
+        if ($choice == 0) {
+            $choice = $boxA->getInnerVolume() - $boxB->getInnerVolume();
         }
-        if ($choice === 0) {
-            $choice = $boxA->getWeight() - $boxB->getWeight();
+        if ($choice == 0) {
+            $choice = $boxB->getWeight() - $boxA->getWeight();
+        }
+
+        if ($choice == 0) {
+            $choice = PHP_MAJOR_VERSION > 5 ? -1 : 1;
         }
 
         return $choice;
+
     }
 
     /**
      * Reversed version of compare.
+     *
+     * @deprecated
      *
      * @param PackedBox $boxA
      * @param PackedBox $boxB
@@ -83,6 +96,25 @@ class PackedBoxList extends \SplMinHeap
         return $this->meanWeight /= $this->count();
     }
 
+
+    /**
+     * Calculate the average (mean) weight of the boxes.
+     *
+     * @return float
+     */
+    public function getMeanItemWeight()
+    {
+        if (!is_null($this->meanItemWeight)) {
+            return $this->meanItemWeight;
+        }
+
+        foreach (clone $this as $box) {
+            $this->meanItemWeight += $box->getItemWeight();
+        }
+
+        return $this->meanItemWeight /= $this->count();
+    }
+
     /**
      * Calculate the variance in weight between these boxes.
      *
@@ -114,7 +146,7 @@ class PackedBoxList extends \SplMinHeap
         foreach (clone $this as $box) {
             $boxVolume += $box->getBox()->getInnerVolume();
 
-            /** @var PackedItem $item */
+            /** @var Item $item */
             foreach (clone $box->getItems() as $item) {
                 $itemVolume += $item->getVolume();
             }

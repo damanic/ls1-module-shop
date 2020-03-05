@@ -4,15 +4,16 @@
  *
  * @author Doug Wright
  */
-
 namespace DVDoug\BoxPacker;
+
+use JsonSerializable;
 
 /**
  * An item to be packed.
  *
  * @author Doug Wright
  */
-class OrientatedItem
+class OrientatedItem implements JsonSerializable
 {
     /**
      * @var Item
@@ -35,6 +36,16 @@ class OrientatedItem
     protected $depth;
 
     /**
+     * @var int
+     */
+    protected $surfaceFootprint;
+
+    /**
+     * @var bool[]
+     */
+    protected static $stabilityCache = [];
+
+    /**
      * Constructor.
      *
      * @param Item $item
@@ -48,6 +59,7 @@ class OrientatedItem
         $this->width = $width;
         $this->length = $length;
         $this->depth = $depth;
+        $this->surfaceFootprint = $width * $length;
     }
 
     /**
@@ -91,13 +103,51 @@ class OrientatedItem
     }
 
     /**
-     * Is this orientation stable (low centre of gravity)
+     * Calculate the surface footprint of the current orientation.
+     *
+     * @return int
+     */
+    public function getSurfaceFootprint()
+    {
+        return $this->surfaceFootprint;
+    }
+
+    /**
+     * Is this item stable (low centre of gravity), calculated as if the tipping point is >15 degrees.
+     *
      * N.B. Assumes equal weight distribution.
      *
      * @return bool
      */
     public function isStable()
     {
-        return $this->getDepth() <= min($this->getLength(), $this->getWidth());
+        $cacheKey = $this->width . '|' . $this->length . '|' . $this->depth;
+
+        if (!isset(static::$stabilityCache[$cacheKey])) {
+            static::$stabilityCache[$cacheKey] = (atan(min($this->length, $this->width) / ($this->depth ?: 1)) > 0.261);
+        }
+
+         return static::$stabilityCache[$cacheKey];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'item' => $this->item,
+            'width' => $this->width,
+            'length' => $this->length,
+            'depth' => $this->depth,
+        ];
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->width . '|' . $this->length . '|' . $this->depth;
     }
 }

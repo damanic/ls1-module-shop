@@ -3,12 +3,6 @@
  * This helper requires PHP v5.4+
  */
 
-/*
- * @TODO
- * Allow for config 'max volume' and/or 'max items' that halts attempt to pack
- * if scale of items too vast to calculate efficiently.
- * Allow this constraint to be ignored in construct
- */
 if (version_compare(phpversion(), '5.4.0', '<')) {
 	return;
 }
@@ -19,6 +13,8 @@ use DVDoug\BoxPacker\Item as BoxPackerItem;
 
 class Shop_BoxPacker {
 
+
+	public $max_items_to_distribute = 100; //lower this value if experiencing slow packing calculations
 	protected $shipping_params = null;
 	protected $weights_in_kg = false;
 	protected $dimensions_in_cm = false;
@@ -34,6 +30,7 @@ class Shop_BoxPacker {
 	}
 
 	public function pack( $items, $boxes = null ) {
+		$item_count = 0;
 		$this->unpackable_items = array();
 		$packer = new BoxPacker();
 		$boxes = $boxes ? $boxes : $this->shipping_params->shipping_boxes;
@@ -44,6 +41,7 @@ class Shop_BoxPacker {
 			$packer->addBox( $this->make_box_compat($box) );
 		}
 		$packable_list = $this->get_packable_items_list($items);
+
 		if($packable_list['failed_compat']){
 			throw new Phpr_ApplicationException('Packing failed. Some items did not have valid height, width, depth dimensions');
 		}
@@ -60,13 +58,18 @@ class Shop_BoxPacker {
 				while ( $quantity > 0 ) {
 					$quantity--;
 					$packer->addItem( $packable_items[$item_key]['item'] );
+					$item_count++;
 				}
 				if ( isset( $packable_items[$item_key]['extras'] ) ) {
 					foreach ( $packable_items[$item_key]['extras'] as $extra ) {
 						$packer->addItem( $extra );
+						$item_count++;
 					}
 				}
 			}
+		}
+		if($item_count > $this->max_items_to_distribute){
+			$packer->setMaxBoxesToBalanceWeight(0); //disable weight distribution to avoid potential slow down
 		}
 		$packed_boxes = $packer->pack();
 		return $packed_boxes;
@@ -141,9 +144,9 @@ class Shop_BoxPacker {
 			$weight = $item->weight;
 		}
 
-			if(!$force && (!$width || !$length || !$depth)){
-				return false; // cannot pack items with no given dimensions
-			}
+		if(!$force && (!$width || !$length || !$depth)){
+			return false; // cannot pack items with no given dimensions
+		}
 
 		$keep_flat = false;
 		$result = Backend::$events->fireEvent('shop:onBoxPackerGetKeepFlat', $item); //return true if item should be packed upright
@@ -153,19 +156,19 @@ class Shop_BoxPacker {
 				break;
 			}
 		}
-			$description = $item->om('sku').' | ';
-			$description .= is_a($item, 'Shop_ExtraOption' ) ? 'Extra Option: '.$item->description : $item->product->name;
-			$bp_item = new Shop_BoxPacker_Item(
-				$description,
-				$this->convert_to_mm( $width ),
-				$this->convert_to_mm( $length ),
-				$this->convert_to_mm( $depth ),
-				$this->convert_to_grams( $weight ),
-				$keep_flat
-			);
+		$description = $item->om('sku').' | ';
+		$description .= is_a($item, 'Shop_ExtraOption' ) ? 'Extra Option: '.$item->description : $item->product->name;
+		$bp_item = new Shop_BoxPacker_Item(
+			$description,
+			$this->convert_to_mm( $width ),
+			$this->convert_to_mm( $length ),
+			$this->convert_to_mm( $depth ),
+			$this->convert_to_grams( $weight ),
+			$keep_flat
+		);
 
-			$bp_item->item_id = property_exists($item,'key') ? $item->key : $item->id;
-			return $bp_item;
+		$bp_item->item_id = property_exists($item,'key') ? $item->key : $item->id;
+		return $bp_item;
 	}
 
 	public function get_unpackable_items(){
@@ -506,12 +509,12 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 
 class Shop_BoxPacker_Item implements BoxPackerItem
 {
- 	use Shop_BoxPacker_NativeUnits;
+	use Shop_BoxPacker_NativeUnits;
 
 	/**
 	 * @var string
 	 */
- 	public $item_id;
+	public $item_id;
 
 	/**
 	 * @var string

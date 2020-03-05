@@ -40,9 +40,24 @@ class ItemList extends \SplMaxHeap
     }
 
     /**
+     * Do a bulk create.
+     *
+     * @param  Item[]   $items
+     * @return ItemList
+     */
+    public static function fromArray(array $items)
+    {
+        $list = new static();
+        foreach ($items as $item) {
+            $list->insert($item);
+        }
+        return $list;
+    }
+
+    /**
      * Get copy of this list as a standard PHP array.
      *
-     * @return array
+     * @return Item[]
      */
     public function asArray()
     {
@@ -52,5 +67,48 @@ class ItemList extends \SplMaxHeap
         }
 
         return $return;
+    }
+
+    /**
+     * @internal
+     *
+     * @param  int      $n
+     * @return ItemList
+     */
+    public function topN($n)
+    {
+        $workingList = clone $this;
+        $topNList = new self();
+        $i = 0;
+        while(!$workingList->isEmpty() && $i < $n) {
+            $topNList->insert($workingList->extract());
+            $i++;
+        }
+
+        return $topNList;
+    }
+
+    /**
+     * Remove item from list.
+     *
+     * @param Item $item
+     */
+    public function remove(Item $item)
+    {
+        $workingSet = [];
+
+        foreach ($this as $that) {
+            if ($that === $item) {
+                $this->extract();
+                break;
+            } else {
+                $workingSet[] = $that;
+            }
+        }
+
+        foreach ($workingSet as $workingSetItem) {
+            $this->insert($workingSetItem);
+        }
+
     }
 }

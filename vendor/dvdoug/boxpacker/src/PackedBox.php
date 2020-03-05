@@ -4,7 +4,6 @@
  *
  * @author Doug Wright
  */
-
 namespace DVDoug\BoxPacker;
 
 /**
@@ -34,6 +33,13 @@ class PackedBox
      * @var int
      */
     protected $weight;
+
+    /**
+     * Total weight of items in the box.
+     *
+     * @var int
+     */
+    protected $itemWeight;
 
     /**
      * Remaining width inside box for another item.
@@ -85,6 +91,11 @@ class PackedBox
     protected $usedDepth;
 
     /**
+     * @var PackedItemList
+     */
+    protected $packedItemList;
+
+    /**
      * Get box used.
      *
      * @return Box
@@ -111,17 +122,26 @@ class PackedBox
      */
     public function getWeight()
     {
-        if (!is_null($this->weight)) {
-            return $this->weight;
+        return $this->box->getEmptyWeight() + $this->getItemWeight();
+    }
+
+    /**
+     * Get packed weight of the items only.
+     *
+     * @return int weight in grams
+     */
+    public function getItemWeight()
+    {
+        if (!is_null($this->itemWeight)) {
+            return $this->itemWeight;
+        }
+        $this->itemWeight = 0;
+        /** @var Item $item */
+        foreach (clone $this->items as $item) {
+            $this->itemWeight += $item->getWeight();
         }
 
-        $this->weight = $this->box->getEmptyWeight();
-        $items = clone $this->items;
-        foreach ($items as $item) {
-            $this->weight += $item->getWeight();
-        }
-
-        return $this->weight;
+        return $this->itemWeight;
     }
 
     /**
@@ -203,6 +223,32 @@ class PackedBox
     }
 
     /**
+     * Get used volume of the packed box.
+     *
+     * @return int
+     */
+    public function getUsedVolume()
+    {
+        $volume = 0;
+        /** @var PackedItem $item */
+        foreach (clone $this->items as $item) {
+            $volume += $item->getVolume();
+        }
+
+        return $volume;
+    }
+
+    /**
+     * Get unused volume of the packed box.
+     *
+     * @return int
+     */
+    public function getUnusedVolume()
+    {
+        return $this->getInnerVolume() - $this->getUsedVolume();
+    }
+
+    /**
      * Get volume utilisation of the packed box.
      *
      * @return float
@@ -217,6 +263,25 @@ class PackedBox
         }
 
         return round($itemVolume / $this->box->getInnerVolume() * 100, 1);
+    }
+
+    /**
+     * @return PackedItemList
+     */
+    public function getPackedItems()
+    {
+        if (!$this->packedItemList instanceof PackedItemList) {
+            throw new RuntimeException('No PackedItemList was set. Are you using the old constructor?');
+        }
+        return $this->packedItemList;
+    }
+
+    /**
+     * @param PackedItemList $packedItemList
+     */
+    public function setPackedItems(PackedItemList $packedItemList)
+    {
+        $this->packedItemList = $packedItemList;
     }
 
     /**
@@ -261,6 +326,8 @@ class PackedBox
      *
      * @param Box            $box
      * @param PackedItemList $packedItems
+     *
+     * @return self
      */
     public static function fromPackedItemList(Box $box, PackedItemList $packedItems)
     {
@@ -284,6 +351,7 @@ class PackedBox
             $maxLength,
             $maxDepth
         );
+        $packedBox->setPackedItems($packedItems);
 
         return $packedBox;
     }

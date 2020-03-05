@@ -4,7 +4,6 @@
  *
  * @author Doug Wright
  */
-
 namespace DVDoug\BoxPacker;
 
 use DVDoug\BoxPacker\Test\TestItem;
@@ -64,19 +63,19 @@ class ItemListTest extends TestCase
     public function testCount()
     {
         $itemList = new ItemList();
-        self::assertEquals(0, count($itemList));
+        self::assertCount(0, $itemList);
 
         $item1 = new TestItem('Item A', 20, 20, 2, 100, true);
         $itemList->insert($item1);
-        self::assertEquals(1, count($itemList));
+        self::assertCount(1, $itemList);
 
         $item2 = new TestItem('Item B', 20, 20, 2, 100, true);
         $itemList->insert($item2);
-        self::assertEquals(2, count($itemList));
+        self::assertCount(2, $itemList);
 
         $item3 = new TestItem('Item C', 20, 20, 2, 100, true);
         $itemList->insert($item3);
-        self::assertEquals(3, count($itemList));
+        self::assertCount(3, $itemList);
     }
 
     /**
@@ -89,7 +88,30 @@ class ItemListTest extends TestCase
         $itemList->insert($item1);
 
         self::assertEquals($item1, $itemList->top());
-        self::assertEquals(1, count($itemList));
+        self::assertCount(1, $itemList);
+    }
+
+    /**
+     * Test that we can retrieve an accurate count of items in the list.
+     */
+    public function testTopN()
+    {
+        $itemList = new ItemList();
+
+        $item1 = new TestItem('Item A', 20, 20, 2, 100, true);
+        $itemList->insert($item1);
+
+        $item2 = new TestItem('Item B', 20, 20, 2, 100, true);
+        $itemList->insert($item2);
+
+        $item3 = new TestItem('Item C', 20, 20, 2, 100, true);
+        $itemList->insert($item3);
+
+        $top2 = $itemList->topN(2);
+
+        self::assertCount(2, $top2);
+        self::assertSame($item1, $top2->extract());
+        self::assertSame($item2, $top2->extract());
     }
 
     /**
@@ -102,6 +124,6 @@ class ItemListTest extends TestCase
         $itemList->insert($item1);
 
         self::assertEquals($item1, $itemList->extract());
-        self::assertEquals(0, count($itemList));
+        self::assertCount(0, $itemList);
     }
 }

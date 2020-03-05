@@ -4,7 +4,6 @@
  *
  * @author Doug Wright
  */
-
 namespace DVDoug\BoxPacker;
 
 use DVDoug\BoxPacker\Test\TestBox;
@@ -32,6 +31,22 @@ class BoxListTest extends TestCase
 
         $sorted = iterator_to_array($list, false);
         self::assertEquals([$box1, $box3, $box2], $sorted);
+    }
+
+    /**
+     * Test that when there are spatially identical boxes that hold the same contents, prefer the one that weighs least.
+     */
+    public function testPickLighterBoxAllElseEqual()
+    {
+        $box1 = new TestBox('Strong Box', 200, 200, 200, 20, 200, 200, 200, 500);
+        $box2 = new TestBox('Lightweight Box', 200, 200, 200, 5, 200, 200, 200, 200);
+
+        $list = new BoxList();
+        $list->insert($box1);
+        $list->insert($box2);
+
+        $sorted = iterator_to_array($list, false);
+        self::assertEquals([$box2, $box1], $sorted);
     }
 
     /**
@@ -74,5 +89,27 @@ class BoxListTest extends TestCase
 
         $sorted = iterator_to_array($list, false);
         self::assertEquals([$box1, $box3, $box2], $sorted);
+    }
+
+    /**
+     * Test that sorting of boxes with identical dimensions works as expected i.e. order by maximum weight capacity.
+     */
+    public function testIssue163()
+    {
+        $boxA = new TestBox('Box A', 202, 152, 32, 10, 200, 150, 30, 100);
+        $boxB = new TestBox('Box B', 202, 152, 32, 5, 200, 150, 30, 100);
+        $boxC = new TestBox('Box C', 202, 152, 32, 10, 200, 150, 30, 250);
+        $boxD = new TestBox('Box D', 202, 152, 32, 10, 200, 150, 30, 50);
+        $boxE = new TestBox('Box E', 202, 152, 32, 10, 200, 150, 30, 90);
+
+        $list = new BoxList();
+        $list->insert($boxA);
+        $list->insert($boxB);
+        $list->insert($boxC);
+        $list->insert($boxD);
+        $list->insert($boxE);
+
+        $sorted = iterator_to_array($list, false);
+        self::assertEquals([$boxB, $boxD, $boxE, $boxA, $boxC], $sorted);
     }
 }

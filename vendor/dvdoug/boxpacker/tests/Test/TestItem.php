@@ -8,8 +8,10 @@
 namespace DVDoug\BoxPacker\Test;
 
 use DVDoug\BoxPacker\Item;
+use JsonSerializable;
+use stdClass;
 
-class TestItem implements Item
+class TestItem implements Item, JsonSerializable
 {
     /**
      * @var string
@@ -46,6 +48,19 @@ class TestItem implements Item
      */
     private $volume;
 
+    /*
+     * Test objects that recurse.
+     * @var stdClass
+     */
+    private $a;
+
+    /**
+     * Test objects that recurse.
+     *
+     * @var stdClass
+     */
+    private $b;
+
     /**
      * TestItem constructor.
      *
@@ -54,9 +69,15 @@ class TestItem implements Item
      * @param int    $length
      * @param int    $depth
      * @param int    $weight
-     * @param int    $keepFlat
+     * @param bool   $keepFlat
      */
-    public function __construct($description, $width, $length, $depth, $weight, $keepFlat)
+    public function __construct(
+        $description,
+        $width,
+        $length,
+        $depth,
+        $weight,
+        $keepFlat)
     {
         $this->description = $description;
         $this->width = $width;
@@ -66,6 +87,11 @@ class TestItem implements Item
         $this->keepFlat = $keepFlat;
 
         $this->volume = $this->width * $this->length * $this->depth;
+        $this->a = new stdClass();
+        $this->b = new stdClass();
+
+        $this->a->b = $this->b;
+        $this->b->a = $this->a;
     }
 
     /**
@@ -117,10 +143,25 @@ class TestItem implements Item
     }
 
     /**
-     * @return int
+     * @return bool
      */
     public function getKeepFlat()
     {
         return $this->keepFlat;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'description' => $this->description,
+            'width' => $this->width,
+            'length' => $this->length,
+            'depth' => $this->depth,
+            'weight' => $this->weight,
+            'keepFlat' => $this->keepFlat,
+        ];
     }
 }
