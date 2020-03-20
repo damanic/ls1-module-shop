@@ -529,6 +529,7 @@
 			
 			return array(
 				'Customer variables'=>array(
+					'customer_reference'=>array('Outputs customer reference', '100'),
 					'customer_name'=>array('Outputs a full customer name', Phpr::$security->getUser()->firstName.' '.Phpr::$security->getUser()->lastName),
 					'customer_first_name'=>array('Outputs a first customer name', Phpr::$security->getUser()->firstName),
 					'customer_last_name'=>array('Outputs a last customer name', Phpr::$security->getUser()->lastName),

@@ -41,7 +41,11 @@
 		public $auto_footprints_visible = true;
 		public $auto_footprints_default_invisible = true;
 
-		public $custom_columns = array('password_confirm'=>db_varchar, 'full_name'=>db_varchar);
+		public $custom_columns = array(
+			'password_confirm'=>db_varchar,
+			'full_name'=>db_varchar,
+			'customer_reference' => db_text,
+		);
 
 		public $calculated_columns = array(
 			'order_count'=>array('sql'=>"(select count(*) from shop_orders where shop_orders.customer_id=shop_customers.id AND shop_orders.deleted_at IS NULL)", 'type'=>db_number)
@@ -244,7 +248,23 @@
 
 			return $customer->find();
 		}
-		
+
+		/**
+		 * Used to find a customer using foreign/custom reference code
+		 * @return Shop_Customer Returns the customer if found or FALSE otherwise.
+		 */
+		public static function find_by_customer_reference($customer_ref){
+			$lookup = Backend::$events->fireEvent('shop:onCustomerFindByOrderReference', $customer_ref);
+			foreach ($lookup as $customer) {
+				if ( $customer && is_a($customer,'Shop_Customer') ) {
+					return $customer;
+				}
+			}
+			$customer = Shop_Customer::create()->find($customer_ref);
+			return $customer ? $customer : false;
+		}
+
+
 		public function get_group_options($key_value = -1)
 		{
 			if ($key_value != -1)
@@ -380,6 +400,20 @@
 				return $this->first_name.' '.$this->last_name;
 			
 			return parent::__get($name);
+		}
+
+		/**
+		 * Can be used to return a foreign/custom reference id for the customer
+		 * @return string Returns the customer reference.
+		 */
+		public function get_customer_reference(){
+			$lookup = Backend::$events->fireEvent('shop:onGetCustomerReference', $this);
+			foreach ($lookup as $result) {
+				if(!empty($result) && (is_string($result) || is_numeric($result))) {
+					return $result;
+				}
+			}
+			return $this->id;
 		}
 
 		/**
@@ -642,6 +676,7 @@
 			$email_scope_vars = array('customer'=>$this);
 			$message_text = System_CompoundEmailVar::apply_scope_variables($message_text, 'shop:customer', $email_scope_vars);
 
+			$message_text = str_replace('{customer_reference}', h($this->get_customer_reference()), $message_text);
 			$message_text = str_replace('{customer_name}', h($this->name), $message_text);
 			$message_text = str_replace('{customer_first_name}', h($this->first_name), $message_text);
 			$message_text = str_replace('{customer_last_name}', h($this->last_name), $message_text);
@@ -760,7 +795,12 @@
 		{
 			return $this->first_name.' '.$this->last_name;
 		}
-		
+
+		public function eval_customer_reference(){
+			return $this->get_customer_reference();
+		}
+
+
 		public function after_update() 
 		{
 			Backend::$events->fireEvent('shop:onCustomerUpdated', $this);
