@@ -356,7 +356,7 @@
 				'zip',
 				'country',
 			);
-			$vars = array_merge($default_vars,$vars);
+			$vars = empty($vars) ? $default_vars : $vars;
 
 			$default_options = array(
 				'html' => true,
