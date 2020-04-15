@@ -105,6 +105,11 @@
 			'zip'
 		);
 
+		protected $relation_fields = array(
+			'country' => 'Shop_Country',
+			'state' => 'Shop_CountryState'
+		);
+
 		protected $loaded_relations = null;
 
 		protected $serialized = null;
@@ -270,24 +275,11 @@
 		public function get($field, $default = null){
 			$value = null;
 
-			$relation_fields = array(
-				'country' => 'Shop_Country',
-				'state' => 'Shop_CountryState'
-			);
-			if( isset($relation_fields[$field])){
-				$relation = false;
-				if(isset($this->loaded_relations[$field])){
-					$relation = $this->loaded_relations[$field];
-				} else if(is_numeric($this->{$field})){
-					$relation = $relation_fields[$field];
-					$id = $this->{$field};
-					$relation = $relation::create()->find($id);
+			if( isset($this->relation_fields[$field])){
+				$relation_obj = $this->get_relation_obj($field);
+				if($relation_obj){
+					$value = $relation_obj->name;
 				}
-				if($relation){
-					$this->loaded_relations[$field] = $relation;
-					$value = $relation->name;
-				}
-
 			}
 
 			if(!$value && property_exists($this, $field)){
@@ -300,6 +292,24 @@
 
 			return $value ? $value : $default;
 		}
+
+		public function get_relation_obj($field){
+			if( isset($this->relation_fields[$field])){
+				if(isset($this->loaded_relations[$field])){
+					return $this->loaded_relations[$field];
+				} else if(is_numeric($this->{$field})){
+					$relation_class = $this->relation_fields[$field];
+					$id = $this->{$field};
+					$relation_obj = $relation_class::create()->find($id);
+					if($relation_obj){
+						return $this->loaded_relations[$field] =  $relation_class::create()->find($id);
+					}
+				}
+			}
+			return null;
+		}
+
+
 
 		/**
 		 * Returns the address information as a formatted address string.
