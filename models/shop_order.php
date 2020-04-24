@@ -195,8 +195,9 @@ class Shop_Order extends Db_ActiveRecord
 		$this->define_column('shipping_quote_no_discount', 'Shipping Quote Before Discounts')->currency(true)->invisible();
 
 
-		$this->define_column('currency_code', 'currency_code', 'Currency')->invisible();
-		$this->define_column('shop_currency_rate', 'shop_currency_rate', 'Currency Exchange Rate')->invisible();
+		$this->define_column('currency_code', 'Order Currency Code')->defaultInvisible();
+		$this->define_column('shop_currency_rate', 'Base Currency Exchange Rate')->defaultInvisible();
+		$this->define_column('shop_currency_code', 'Base Currency Code')->defaultInvisible();
 
 		$has_notes_column = $this->define_column('has_notes', 'Has Notes')->listNoTitle()->defaultInvisible();
 		if($context == 'list_settings')
