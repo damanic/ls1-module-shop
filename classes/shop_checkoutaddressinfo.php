@@ -63,47 +63,17 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 	 * @param Shop_Customer $customer Specifies the customer object if it is presented.
 	 */
 	public function set_from_post( $customer = null ) {
-		$validation = new Phpr_Validation();
 
-		if ( !$customer || isset( $_POST['first_name'] ) ) {
-			$validation->add( 'first_name', 'First Name' )->fn( 'trim' )->required( "Please specify a first name." );
+		$data = $_POST;
+		if($customer){
+			$data['first_name'] = post('first_name', $customer->first_name);
+			$data['last_name'] = post('last_name', $customer->last_name);
+			$data['email'] = post('email', $customer->email);
 		}
-
-		if ( !$customer || isset( $_POST['last_name'] ) ) {
-			$validation->add( 'last_name', 'Last Name' )->fn( 'trim' )->required( "Please specify a last name." );
-		}
-
-		if ( !$customer ) {
-			if ( $this->act_as_billing_info ) {
-				$validation->add( 'email', 'Email' )->fn( 'trim' )->fn( 'mb_strtolower' )->required( "Please specify an email address." )->email();
-			}
-		}
-
-		$validation->add( 'company', 'Company' )->fn( 'trim' );
-		$validation->add( 'phone', 'Phone' )->fn( 'trim' );
-		$validation->add( 'street_address', 'Street Address' )->fn( 'trim' )->required( "Please specify a street address." );
-		$validation->add( 'city', 'City' )->fn( 'trim' )->required( "Please specify a city." );
-		$validation->add( 'zip', 'Zip/Postal Code' )->fn( 'trim' )->required( "Please specify a ZIP/postal code." );
-		$validation->add( 'country', 'Country' )->required( "Please select a country." );
-
-		if ( !$validation->validate( $_POST ) ) {
-			$validation->throwException();
-		}
-
-		if ( !$customer || isset( $_POST['first_name'] ) ) {
-			$this->first_name = $validation->fieldValues['first_name'];
-		}
-
-		if ( !$customer || isset( $_POST['last_name'] ) ) {
-			$this->last_name = $validation->fieldValues['last_name'];
-		}
-
-		if ( !$customer ) {
-			if ( $this->act_as_billing_info ) {
-				$this->email = $validation->fieldValues['email'];
-			}
-		}
-
+		$validation = $this->validate($data);
+		$this->first_name = $validation->fieldValues['first_name'];
+		$this->last_name = $validation->fieldValues['last_name'];
+		$this->email = $validation->fieldValues['email'];
 		$this->company        = $validation->fieldValues['company'];
 		$this->phone          = $validation->fieldValues['phone'];
 		$this->street_address = $validation->fieldValues['street_address'];
@@ -112,6 +82,25 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 		$this->country        = $validation->fieldValues['country'];
 		$this->is_business    = post( 'is_business' );
 		$this->state          = post( 'state' );
+	}
+
+	public function validate($data=null){
+		$validation = new Phpr_Validation();
+		$validation->add( 'first_name', 'First Name' )->fn( 'trim' )->required( "Please specify a first name." );
+		$validation->add( 'last_name', 'Last Name' )->fn( 'trim' )->required( "Please specify a last name." );
+		$validation->add( 'email', 'Email' )->fn( 'trim' )->fn( 'mb_strtolower' )->required( "Please specify an email address." )->email();
+		$validation->add( 'company', 'Company' )->fn( 'trim' );
+		$validation->add( 'phone', 'Phone' )->fn( 'trim' );
+		$validation->add( 'street_address', 'Street Address' )->fn( 'trim' )->required( "Please specify a street address." );
+		$validation->add( 'city', 'City' )->fn( 'trim' )->required( "Please specify a city." );
+		$validation->add( 'zip', 'Zip/Postal Code' )->fn( 'trim' )->required( "Please specify a ZIP/postal code." );
+		$validation->add( 'country', 'Country' )->required( "Please select a country." );
+
+		$data = $data ? $data : $this;
+		if ( !$validation->validate( $data ) ) {
+			$validation->throwException();
+		}
+		return $validation;
 	}
 
 }
