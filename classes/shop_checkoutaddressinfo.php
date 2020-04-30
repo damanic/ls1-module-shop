@@ -73,7 +73,9 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 		$validation = $this->validate($data);
 		$this->first_name = $validation->fieldValues['first_name'];
 		$this->last_name = $validation->fieldValues['last_name'];
-		$this->email = $validation->fieldValues['email'];
+		if($this->act_as_billing_info) {
+			$this->email = $validation->fieldValues['email'];
+		}
 		$this->company        = $validation->fieldValues['company'];
 		$this->phone          = $validation->fieldValues['phone'];
 		$this->street_address = $validation->fieldValues['street_address'];
@@ -88,7 +90,9 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 		$validation = new Phpr_Validation();
 		$validation->add( 'first_name', 'First Name' )->fn( 'trim' )->required( "Please specify a first name." );
 		$validation->add( 'last_name', 'Last Name' )->fn( 'trim' )->required( "Please specify a last name." );
-		$validation->add( 'email', 'Email' )->fn( 'trim' )->fn( 'mb_strtolower' )->required( "Please specify an email address." )->email();
+		if($this->act_as_billing_info ) {
+			$validation->add( 'email', 'Email' )->fn( 'trim' )->fn( 'mb_strtolower' )->required( "Please specify an email address." )->email();
+		}
 		$validation->add( 'company', 'Company' )->fn( 'trim' );
 		$validation->add( 'phone', 'Phone' )->fn( 'trim' );
 		$validation->add( 'street_address', 'Street Address' )->fn( 'trim' )->required( "Please specify a street address." );
