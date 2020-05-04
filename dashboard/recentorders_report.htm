@@ -23,7 +23,7 @@
 		<? else: ?>
 			<? foreach ($orders as $index=>$order): 
 				$url = url('shop/orders/preview/'.$order->id.'?'.uniqid());
-				$total += $order->total;
+				$total += $order->convert_to_shop_currency($order->total);
 			?>
 				<tr class="<?= Backend_Html::zebra('orders') ?> <?= $index == $orders->count-1 ? 'last' : null ?>">
 					<td class="order_status">
@@ -31,7 +31,7 @@
 					</td>
 					<td class="link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= $order->id ?></a></td>
 					<td class="link current date" <?= click_link($url) ?>><a href="<?= $url ?>"><?= $order->order_datetime->format('%x') ?></a></td>
-					<td class="float link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= format_currency($order->total) ?></a></td>
+					<td class="float link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= $order->format_currency($order->total) ?></a></td>
 					<td class="last link" <?= click_link($url) ?>><a href="<?= $url ?>"><?= h($order->displayField('status')) ?></a></td>
 				</tr>
 			<? endforeach ?>
