@@ -51,7 +51,7 @@
 		);
 		
 		public $has_many = array(
-			'outcoming_transitions'=>array('class_name'=>'Shop_StatusTransition', 'foreign_key'=>'from_state_id', 'delete'=>true, 'order'=>'id')
+			'outcoming_transitions'=>array('class_name'=>'Shop_StatusTransition', 'foreign_key'=>'from_state_id', 'delete'=>true, 'order'=>'name')
 		);
 		
 		public $has_and_belongs_to_many = array(
