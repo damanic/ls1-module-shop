@@ -1,6 +1,6 @@
 <?php
 
-class Shop_ShippingHSCodes extends Db_ActiveRecord {
+class Shop_ShippingHSCode extends Db_ActiveRecord {
 
 	public $table_name = 'shop_shipping_hs_codes';
 
