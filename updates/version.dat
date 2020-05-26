@@ -999,3 +999,4 @@
 #1.33.29|@1.33.29 New customer report view. Applied discounts shown on order preview
 #1.33.30 New methods for fetching customer reference
 #1.33.31 Minor improvements and fixes
+#1.33.32 Allows locked orders to be copied to new orders
