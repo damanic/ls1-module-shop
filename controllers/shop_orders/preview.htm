@@ -148,18 +148,32 @@
 					<? endif; ?>
 				<? else:?>
 					<? if ($this->currentUser->get_permission('shop', 'lock_orders')): ?>
-				<a class="imageLink mark_unlocked"
-				   onclick="return $(this).getForm().sendPhpr('onUnlockOrder', {
-						   	confirm: 'Orders are usually locked for good reason. Are you sure?',
-						   	loadIndicator: {show: false},
-						   	extraFields: {url: window.location.href},
-						   	onBeforePost: function(){
-						   		LightLoadingIndicator.show('Loading...')
-						   	},
-						   	onComplete: LightLoadingIndicator.hide,
-						   	onFailure: popupAjaxError
-						   })" href="#">Unlock</a>
+						<a class="imageLink mark_unlocked"
+						   onclick="return $(this).getForm().sendPhpr('onUnlockOrder', {
+									confirm: 'Orders are usually locked for good reason. Are you sure?',
+									loadIndicator: {show: false},
+									extraFields: {url: window.location.href},
+									onBeforePost: function(){
+										LightLoadingIndicator.show('Loading...')
+									},
+									onComplete: LightLoadingIndicator.hide,
+									onFailure: popupAjaxError
+								   })" href="#">Unlock</a>
 					<? endif; ?>
+
+				<a class="imageLink order_copy"
+				   onclick="return $(this).getForm().sendPhpr('onCopyOrder', {
+										confirm: 'This order will be copied to create a new order for this customer. Are you sure?',
+										loadIndicator: {show: false},
+										extraFields: {url: window.location.href},
+										onBeforePost: function(){
+											LightLoadingIndicator.show('Copying to new order...')
+										},
+										onFailure: function(){
+											LightLoadingIndicator.hide;
+											popupAjaxError;
+										}
+									   })" href="#">Copy to new order</a>
 				<?endif?>
 				
 				<? Backend::$events->fireEvent('shop:onExtendOrderPreviewToolbar', $this, $form_model) ?>

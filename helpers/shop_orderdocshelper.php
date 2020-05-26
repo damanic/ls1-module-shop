@@ -170,7 +170,7 @@ class Shop_OrderDocsHelper{
 
 		$order_ids = is_array($order_ids) ? $order_ids : array($order_ids);
 		$order_id_string = urlencode(implode('|', $order_ids));
-		if($template_info['custom_render']){
+		if(isset($template_info['custom_render']) && $template_info['custom_render']){
 			$results = Backend::$events->fire_event('shop:onGetCustomOrderDocUrl', $template_info, $order_ids, $variant );
 
 

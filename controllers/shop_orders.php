@@ -95,7 +95,8 @@
 			'onUpdateBundleProductList',
 			'onUnlockOrder',
 			'onLockOrder',
-			'onToggleOrderDoc'
+			'onToggleOrderDoc',
+			'onCopyOrder'
 		);
 
 		protected $required_permissions = array('shop:manage_orders_and_customers');
@@ -2027,6 +2028,18 @@
 				$order->lock_order();
 				$order->save();
 				Phpr::$response->redirect( Phpr::$request->getReferer( post( 'url' ) ) );
+			}
+			catch (Exception $ex) {
+				$this->handlePageError($ex);
+			}
+		}
+
+		protected function onCopyOrder($order_id){
+			try {
+				$order = $this->getOrderObj( $order_id );
+				$session_key = $this->formGetEditSessionKey();
+				$order_copy = $order->create_order_copy();
+				Phpr::$response->redirect( url('/shop/orders/edit/'.$order_copy->id) );
 			}
 			catch (Exception $ex) {
 				$this->handlePageError($ex);

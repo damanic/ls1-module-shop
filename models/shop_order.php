@@ -1930,20 +1930,13 @@ class Shop_Order extends Db_ActiveRecord
 		return $transition->created_at;
 	}
 
-	/**
-	 * Creates a sub-order
-	 * @param array $items An array containing a list of order items (Shop_OrderItem)
-	 * @return Shop_Order Returns a new Shop_Order object
-	 */
-	public function create_sub_order($items, $save = true, $session_key = null, $order = null, $apply_discounts = true)
-	{
-		if (!$order)
-		{
+	public function create_order_copy( $items = array(), $save = true, $session_key = null, $order = null, $apply_discounts = true ) {
+
+		if ( !$order ) {
 			$order = self::create();
 			$order->init_columns_info();
 		}
 
-		$order->parent_order_id = $this->id;
 		$order->coupon_id = $this->coupon_id;
 
 		/*
@@ -1951,31 +1944,41 @@ class Shop_Order extends Db_ActiveRecord
 		 */
 
 		$customer = $this->customer;
-		if (!$customer)
-			throw new Phpr_ApplicationException('Customer for order #'.$this->id.' not found.');
+		if ( !$customer ) {
+			throw new Phpr_ApplicationException( 'Customer for order #' . $this->id . ' not found.' );
+		}
 
-		$customer->copy_from_order($this);
-		$customer->copy_to_order($order);
+		$customer->copy_from_order( $this );
+		$customer->copy_to_order( $order );
 		$order->customer_id = $this->customer_id;
 
-		Shop_TaxClass::set_tax_exempt($this->tax_exempt);
-		Shop_TaxClass::set_customer_context($customer);
+		Shop_TaxClass::set_tax_exempt( $this->tax_exempt );
+		Shop_TaxClass::set_customer_context( $customer );
 
 		/*
 		 * Set order items
 		 */
+		if ( !$items ) {
+			$items = array();
+			foreach ( $this->items as $item ) {
+				$new_item = Shop_OrderItem::create()->copy_from( $item );
+				$new_item->save();
+				$items[] = $new_item;
+			}
+		}
 
-		$session_key = $session_key ? $session_key : uniqid('front_end_order', true);
-		foreach ($items as $item)
-			$order->items->add($item, $session_key);
+		$session_key = $session_key ? $session_key : uniqid( 'front_end_order', true );
+		foreach ( $items as $item ) {
+			$order->items->add( $item, $session_key );
+		}
 
-		$cart_items = Shop_OrderHelper::items_to_cart_items_array($items);
+		$cart_items = Shop_OrderHelper::items_to_cart_items_array( $items );
 
 		/*
 		 * Set shipping and payment methods
 		 */
 
-		$order->shipping_method_id = $this->shipping_method_id;
+		$order->shipping_method_id  = $this->shipping_method_id;
 		$order->shipping_sub_option = $this->shipping_sub_option;
 
 		$order->payment_method_id = $this->payment_method_id;
@@ -1983,91 +1986,89 @@ class Shop_Order extends Db_ActiveRecord
 		/*
 		 * Calculate shipping cost
 		 */
-		$shipping_options = $order->list_available_shipping_options($session_key,false);
+		$shipping_options = $order->list_available_shipping_options( $session_key, false );
 
-		if (!array_key_exists($order->shipping_method_id, $shipping_options))
-			throw new Phpr_ApplicationException('Shipping method '.$this->shipping_method->name.' is not applicable.');
+		if ( !array_key_exists( $order->shipping_method_id, $shipping_options ) ) {
+			throw new Phpr_ApplicationException( 'Shipping method ' . $this->shipping_method->name . ' is not applicable.' );
+		}
 
 		$shipping_method = $shipping_options[$order->shipping_method_id];
 
-		if (!$shipping_method->multi_option)
-		{
-			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
-			$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
-			$order->shipping_sub_option = null;
+		if ( !$shipping_method->multi_option ) {
+			$order->shipping_quote                 = round( $shipping_method->quote_no_tax, 2 );
+			$order->shipping_discount              = isset( $shipping_method->discount ) ? round( $shipping_method->discount, 2 ) : 0;
+			$order->shipping_sub_option            = null;
 			$order->internal_shipping_suboption_id = $order->shipping_method_id;
 		} else {
-			$sub_option_id = md5($order->shipping_sub_option);
-			$option_found = false;
+			$sub_option_id = md5( $order->shipping_sub_option );
+			$option_found  = false;
 
-			foreach ($shipping_method->sub_options as $sub_option)
-			{
-				if ($sub_option->id == $order->shipping_method_id.'_'.$sub_option_id)
-				{
-					$order->shipping_quote = round($sub_option->quote_no_tax, 2);
-					$order->shipping_discount = round($sub_option->discount, 2);
-					$order->shipping_sub_option = $sub_option->name;
-					$order->internal_shipping_suboption_id = $order->shipping_method_id.'_'.$sub_option->suboption_id;
-					$option_found = true;
+			foreach ( $shipping_method->sub_options as $sub_option ) {
+				if ( $sub_option->id == $order->shipping_method_id . '_' . $sub_option_id ) {
+					$order->shipping_quote                 = round( $sub_option->quote_no_tax, 2 );
+					$order->shipping_discount              = round( $sub_option->discount, 2 );
+					$order->shipping_sub_option            = $sub_option->name;
+					$order->internal_shipping_suboption_id = $order->shipping_method_id . '_' . $sub_option->suboption_id;
+					$option_found                          = true;
 					break;
 				}
 			}
 
-			if (!$option_found)
-				throw new Phpr_ApplicationException('Shipping method '.$this->shipping_method->name.'/'.$order->shipping_sub_option.' is not applicable.');
+			if ( !$option_found ) {
+				throw new Phpr_ApplicationException( 'Shipping method ' . $this->shipping_method->name . '/' . $order->shipping_sub_option . ' is not applicable.' );
+			}
 		}
 
 		/*
 		 * Apply shipping tax
 		 */
 
-		$shipping_info = new Shop_CheckoutAddressInfo();
+		$shipping_info                      = new Shop_CheckoutAddressInfo();
 		$shipping_info->act_as_billing_info = false;
-		$shipping_info->load_from_customer($customer);
+		$shipping_info->load_from_customer( $customer );
 
-		$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, $shipping_info, $order->shipping_quote);
-		$order->apply_shipping_tax_array($shipping_taxes);
-		$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
+		$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $shipping_method->id, $shipping_info, $order->shipping_quote );
+		$order->apply_shipping_tax_array( $shipping_taxes );
+		$order->shipping_tax = Shop_TaxClass::eval_total_tax( $shipping_taxes );
 
-		if ($this->free_shipping)
-		{
-			$order->shipping_quote = 0;
+		if ( $this->free_shipping ) {
+			$order->shipping_quote    = 0;
 			$order->shipping_discount = 0;
-			$order->shipping_tax = 0;
+			$order->shipping_tax      = 0;
 		}
 
 		/*
 		 * Calculate discounts
 		 */
 
-		if ($apply_discounts)
-		{
-			$payment_method_obj = Shop_PaymentMethod::find_by_id($this->payment_method_id);
+		if ( $apply_discounts ) {
+			$payment_method_obj = Shop_PaymentMethod::find_by_id( $this->payment_method_id );
 
-			$cart_items = Shop_OrderHelper::items_to_cart_items_array($items);
+			$cart_items = Shop_OrderHelper::items_to_cart_items_array( $items );
 
 			$subtotal = 0;
-			foreach ($cart_items as $cart_item)
-				$subtotal += $cart_item->total_price_no_tax(false);
+			foreach ( $cart_items as $cart_item ) {
+				$subtotal += $cart_item->total_price_no_tax( false );
+			}
 
 			$discount_info = Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj,
 				$shipping_method,
 				$cart_items,
 				$shipping_info,
-				$this->columnValue('coupon'),
+				$this->columnValue( 'coupon' ),
 				$customer,
-				$subtotal);
+				$subtotal );
 
 			$order->discount = $discount_info->cart_discount;
 
-			$order->free_shipping = array_key_exists($order->internal_shipping_suboption_id, $discount_info->free_shipping_options);
-			foreach ($cart_items as $cart_item)
+			$order->free_shipping = array_key_exists( $order->internal_shipping_suboption_id, $discount_info->free_shipping_options );
+			foreach ( $cart_items as $cart_item ) {
 				$cart_item->order_item->discount = $cart_item->total_discount_no_tax();
+			}
 		}
 
-		$tax_info = Shop_TaxClass::calculate_taxes($cart_items, $shipping_info, true);
-
+		$tax_info = Shop_TaxClass::calculate_taxes( $cart_items, $shipping_info, true );
 
 
 		/*
@@ -2075,12 +2076,12 @@ class Shop_Order extends Db_ActiveRecord
 		 */
 
 		$order->goods_tax = $goods_tax = $tax_info->tax_total;
-		$order->set_sales_taxes($tax_info->taxes);
+		$order->set_sales_taxes( $tax_info->taxes );
 
-		foreach ($items as $item_index=>$item)
-		{
-			if (array_key_exists($item_index, $tax_info->item_taxes))
-				$item->apply_tax_array($tax_info->item_taxes[$item_index]);
+		foreach ( $items as $item_index => $item ) {
+			if ( array_key_exists( $item_index, $tax_info->item_taxes ) ) {
+				$item->apply_tax_array( $tax_info->item_taxes[$item_index] );
+			}
 
 			$item->save();
 			$item->eval_custom_columns();
@@ -2090,25 +2091,40 @@ class Shop_Order extends Db_ActiveRecord
 		 * Save the order
 		 */
 
-		$discount = 0;
-		$subtotal = 0;
+		$discount   = 0;
+		$subtotal   = 0;
 		$total_cost = 0;
-		foreach ($items as $item)
-		{
-			$subtotal += $item->subtotal;
-			$discount += $item->discount;
-			$total_cost += $item->product->cost*$item->quantity;
+		foreach ( $items as $item ) {
+			$subtotal   += $item->subtotal;
+			$discount   += $item->discount;
+			$total_cost += $item->product->cost * $item->quantity;
 		}
 
 		$order->total_cost = $total_cost;
-		$order->subtotal = $subtotal;
-		$order->discount = $order->subtotal - $this->subtotal_before_discounts;
-		$order->total = $order->get_order_total();
+		$order->subtotal   = $subtotal;
+		$order->discount   = $order->subtotal - $this->subtotal_before_discounts;
+		$order->total      = $order->get_order_total();
 
-		if ($save)
-			$order->save(null, $session_key);
+		if ( $save ) {
+			$order->save( null, $session_key );
+		}
 
 		return $order;
+	}
+
+	/**
+	 * Creates a sub-order
+	 * @param array $items An array containing a list of order items (Shop_OrderItem)
+	 * @return Shop_Order Returns a new Shop_Order object
+	 */
+	public function create_sub_order($items = array(), $save = true, $session_key = null, $order = null, $apply_discounts = true) {
+		$session_key = $session_key ? $session_key : uniqid( 'front_end_order', true );
+		$sub_order = $this->create_order_copy($items, false, $session_key, $order, $apply_discounts);
+		$sub_order->parent_order_id = $this->id;
+		if ($save)
+			$sub_order->save(null, $session_key);
+
+		return $sub_order;
 	}
 
 	public function get_total_weight()
