@@ -157,7 +157,10 @@ class Shop_BoxPacker {
 			}
 		}
 		$description = $item->om('sku').' | ';
-		$description .= is_a($item, 'Shop_ExtraOption' ) ? 'Extra Option: '.$item->description : $item->product->name;
+
+		if(!is_a($item, 'Db_ActiverecordProxy')) {
+			$description .= is_a( $item, 'Shop_ExtraOption' ) ? 'Extra Option: ' . $item->description : $item->product->name;
+		}
 		$bp_item = new Shop_BoxPacker_Item(
 			$description,
 			$this->convert_to_mm( $width ),

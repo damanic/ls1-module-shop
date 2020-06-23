@@ -7,13 +7,12 @@
 li.state_colors ul {
 	padding: 0 0;
 	margin-top: -8px;
+	list-style-type: none;
+	display: flex;
+	flex-wrap: wrap;
 	
 	li {
-		float: left;
 		text-indent: -10000em;
-		clear: none!important;
-		padding: 5px!important;
-		margin: 15px 14px 0 0;
 		cursor: pointer;
 		
 		span {
@@ -29,7 +28,15 @@ li.state_colors ul {
 		background-color: #cecece;
 	}
 
-	li:nth-child(10n) {margin-right: 0;}
+	li.color {
+		padding: 5px;
+		margin: 15px 14px 0 0;
+	}
+	li.break {
+		flex-basis: 100%;
+		margin:0;
+		padding:0;
+	}
 }
 
 /*

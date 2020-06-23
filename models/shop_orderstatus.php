@@ -78,6 +78,7 @@
 			$this->define_column('notify_customer', 'Notify Customer')->validation();
 			$this->define_column('notify_recipient', 'Notify Transition Recipients')->validation(); 
 			$this->define_column('update_stock', 'Update Stock')->validation();
+			$this->define_column('requires_payment_transaction_refunds', 'Requires Payment Refunds')->validation();
 			$this->define_column('order_lock_action', 'Order Lock Action')->validation();
 
 			$this->define_relation_column('customer_message_template', 'customer_message_template', 'Customer Message Template', db_varchar, '@code')->validation()->method('validate_message_template');
@@ -97,12 +98,17 @@
 		public function define_form_fields($context = null)
 		{
 			$this->add_form_field('name')->tab('Order Status');
-			$this->add_form_field('update_stock')->tab('Order Status')->comment('Update stock values when an order enters this status.', 'above');
-			$this->add_form_field('order_lock_action')->renderAs(frm_dropdown)->emptyOption('no action')->tab('Order Status')->comment('Order transitions can be set to lock or unlock the order from being edited', 'above');
 			$this->add_form_field('color')->tab('Order Status')->renderAs('state_colors')->comment('Color for indicating the status in the order list.', 'above');
-
 			if ($this->code != self::status_new && $this->code != self::status_paid)
 				$this->add_form_field('code')->tab('Order Status')->comment('You can use the API code for identifying the status in API calls.', 'above');
+
+
+			$this->add_form_field('update_stock')->tab('Actions')->comment('Update stock values when an order enters this status.', 'above');
+			$this->add_form_field('order_lock_action')->renderAs(frm_dropdown)->emptyOption('no action')->tab('Actions')->comment('Order transitions can be set to lock or unlock the order from being edited', 'above');
+
+
+			$this->add_form_field('requires_payment_transaction_refunds')->tab('Requirements')->comment('When an order has payment transaction records, ticking this box will require those transactions to be refunded before allowing this status to be applied.', 'above');
+
 
 			$this->add_form_field('transitions')->tab('Transitions')->renderAs('status_transitions')->comment('A list of order statuses an order can be transferred from this status and user roles responsible for transitions.', 'above')->referenceSort('id');
 			$this->add_form_field('notify_customer')->tab('Notifications')->comment('Notify customer when orders enter this status.');
@@ -175,6 +181,25 @@
 				return true;
 			}
 			return false;
+		}
+
+		public function accepts_order($order, $throw_exception=false){
+
+			if($this->requires_payment_transaction_refunds && $order->transaction_operations_allowed()){
+				$payment_type = $order->payment_method->get_paymenttype_object();
+				if($payment_type && $payment_type->supports_multiple_payments()){
+					$paid = $payment_type->get_total_paid($order) ;
+					$refunded = $payment_type->get_refunds_total($order);
+					if(($payment_type->get_total_paid($order) > 0)  && ($payment_type->get_total_paid($order) !== $payment_type->get_refunds_total($order))){
+						if($throw_exception){
+							throw new Phpr_ApplicationException('Payment transactions on this order must be refunded before progressing to this status.');
+						}
+						return false;
+					}
+				}
+			}
+
+			return true;
 		}
 		
 		public function before_delete($id=null)
@@ -342,6 +367,18 @@
 			$status = Shop_OrderStatus::create()->find_by_code($code);  
 			
 			return self::$code_cache[$code] = $status;
+		}
+
+		/**
+		 * Checks if an order meets the status requirements
+		 * @documentable
+		 * @param string $status_id Specifies the status ID.
+         * @param Shop_Order $order Specifies the status ID.
+		 * @return mixed True if accepted, Exception if not accepted
+		 */
+		public static function order_meets_status_requirements($status_id, $order){
+			$status = Shop_OrderStatus::create()->find_proxy($status_id);
+			return $status->accepts_order($order, true);
 		}
 
 		/*

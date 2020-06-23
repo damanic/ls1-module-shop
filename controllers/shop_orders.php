@@ -487,20 +487,20 @@
 					{
 						$order = Shop_Order::create()->find($order_id);
 						if (!$order)
-							throw new Phpr_ApplicationException('Order #'.$order_id.' not found');
+							throw new Phpr_ApplicationException('not found');
 
 						if ($data['status_id'] == $order->status_id)
-							throw new Phpr_ApplicationException('Order #'.$order_id.': new order status should not match current order status.');
+							throw new Phpr_ApplicationException('new order status should not match current order status.');
 
 						if (!Shop_StatusTransition::listAvailableTransitions($this->currentUser->shop_role_id, $order->status_id, $data['status_id'])->count)
-							throw new Phpr_ApplicationException('Order #'.$order_id.': you cannot transfer the order to the selected status.');
+							throw new Phpr_ApplicationException('you cannot transfer the order to the selected status.');
 
 						Shop_OrderStatusLog::create_record($data['status_id'], $order, $data['comment'], $data['send_notifications'], $data);
 						$orders_processed++;
 					}
 					catch (Exception $ex)
 					{
-						Phpr::$session->flash['error'] = $ex->getMessage();
+						Phpr::$session->flash['error'] = 'Order #'.$order_id.': '.$ex->getMessage();
 						break;
 					}
 				}
@@ -1261,7 +1261,7 @@
 
 				if (!Shop_StatusTransition::listAvailableTransitions($this->currentUser->shop_role_id, $order->status_id, $data['status_id'])->count)
 					throw new Phpr_ApplicationException('You cannot transfer the order to the selected status.');
-					
+
 				Shop_OrderStatusLog::create_record($data['status_id'], $order, $data['comment'], $data['send_notifications'], $data);
 				Db_UserParameters::set('orders_email_on_status_change', $data['send_notifications']);
 
