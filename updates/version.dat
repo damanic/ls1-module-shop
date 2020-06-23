@@ -1000,3 +1000,4 @@
 #1.33.30 New methods for fetching customer reference
 #1.33.31 Minor improvements and fixes
 #1.33.32 Allows locked orders to be copied to new orders
+#1.33.33 Adds new requirements to order status configuration
