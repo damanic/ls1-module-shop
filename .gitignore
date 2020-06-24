@@ -3,3 +3,4 @@
 'composer.lock'
 'composer.phar'
 '.DS_Store'
+/behaviors/shop_currencybehavior/resources/css/.sass-cache/
