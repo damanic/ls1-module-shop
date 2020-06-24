@@ -1001,3 +1001,4 @@
 #1.33.31 Minor improvements and fixes
 #1.33.32 Allows locked orders to be copied to new orders
 #1.33.33 Adds new requirements to order status configuration
+#1.33.34 Adds support for multi currency price records

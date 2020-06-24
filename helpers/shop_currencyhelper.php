@@ -36,4 +36,6 @@ class Shop_CurrencyHelper{
 		}
 		return null;
 	}
+
+
 }

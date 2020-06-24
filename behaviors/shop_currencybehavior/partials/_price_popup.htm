@@ -1,0 +1,39 @@
+<div id="prices_form">
+	<h2>Multi-Currency Prices</h2>
+	<div class="content">
+		<div class="form300">
+			<?= Phpr_Form::openTag() ?>
+			<? if (!isset($fatalError)): ?>
+				<? foreach($prices as $currency_id => $obj): ?>
+					<p>
+						<label for="<?= $this->formGetUniquePrefix() ?>shop_currency_prices_<?= $currency_id ?>">
+							<?= $obj->code ?>:
+							<input id="<?= $this->formGetUniquePrefix() ?>shop_currency_prices_<?= $currency_id ?>"
+								   name="<?= $this->formGetUniquePrefix()?>shop_currency_prices[<?= $currency_id ?>][price]"
+								   value="<?= $obj->value ?>"
+								   placeholder="<?= $obj->placeholder ?>"
+							/>
+							<input name="<?= $this->formGetUniquePrefix()?>shop_currency_prices[<?= $currency_id ?>][id]" value="<?= $obj->id ?>" type="hidden"/>
+						</label>
+					</p>
+				<? endforeach ?>
+				<?= backend_ajax_button('Save', 'onSavePriceFields', array('id'=>'save_prices_btn'), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: cancelPopup
+					") ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+				<input type="hidden" name="form_prefix" value="<?= h($this->formGetUniquePrefix()) ?>">
+				<input type="hidden" name="edit_session_key" value="<?= h($edit_session_key) ?>"/>
+				<input type="hidden" name="master_object_class" value="<?= h($master_object_class) ?>"/>
+				<input type="hidden" name="master_object_id" value="<?= h($master_object_id) ?>"/>
+				<input type="hidden" name="field" value="<?= h($field) ?>"/>
+			<? else: ?>
+				<?= flash() ?>
+				<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+				<div class="clear"></div>
+			<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

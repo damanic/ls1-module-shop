@@ -1,0 +1,57 @@
+.shop-currency {
+
+	/* Normalize margins because LS doesn't */
+	input[type=text] {
+		margin: 0;
+	}
+
+
+	&__clicker{
+		&-wrapper{
+			height: 100%;
+			left: 0;
+			top: 0;
+			position: absolute;
+			padding: 1px 0 1px 1px;
+			box-sizing: border-box;
+		}
+
+		height: 100%;
+		display: block;
+		padding-left:3px;
+		padding-right:3px;
+		text-align: center;
+		font-size: 16px;
+		line-height: 28px;
+		border-right: 1px solid #AAA;
+		background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #cccccc), color-stop(0.92, #eeeeee));
+		background: -moz-linear-gradient(center bottom, #cccccc 0%, #eeeeee 92%);
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+		border-bottom-left-radius: 2px;
+		border-top-left-radius: 2px;
+		background-clip: padding-box;
+		color: #333;
+		cursor: pointer;
+
+		&:hover {
+			background: -webkit-gradient(linear, left bottom, left top, color-stop(0, #2865c1), color-stop(0.92, #5791e0));
+			background: -moz-linear-gradient(center bottom, #2865c1 0%, #5791e0 92%);
+			color: #fff;
+		}
+
+	}
+
+}
+
+
+#ui-grid-tier-price-form-element .scrollableList .prices_clicker_wrapper {
+	padding: 0;
+}
+
+#ui-grid-tier-price-form-element .scrollableList .prices_clicker {
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+	-border-radius: 0;
+}
+

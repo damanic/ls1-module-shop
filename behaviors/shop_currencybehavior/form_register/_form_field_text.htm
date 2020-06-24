@@ -1,0 +1,31 @@
+<div class="shop_form_field_text" style="position: relative;">
+	<?
+	$columnDefinition = $form_field->getColDefinition();
+	$columnInfo = $columnDefinition->getColumnInfo();
+	$maxLength = $columnInfo->length !== null ? 'maxlength="'.$columnInfo->length.'"' : null;
+	$currency_enabled =   isset($columnDefinition->currency) && $columnDefinition->currency;
+	$block_arclight_js = $currency_enabled && class_exists('ArclightMC_Module') ? 'currency-enabled="true"' : null;
+	?>
+
+	<input autocomplete="off" <?= $form_field->disabled ? 'disabled="disabled"' : null ?> <?=$block_arclight_js?> <?= $maxLength ?>
+		   value="<?= h($form_model->displayField($form_field->dbName)) ?>"
+		   class="<?= $columnDefinition->type ?> <?= $currency_enabled ? 'currency' : null ?>"
+		   type="text" id="<?= $this->formGetElementId($form_model_class.'_'.$form_field->dbName) ?>"
+		   name="<?= $form_model_class ?>[<?= $form_field->dbName ?>]"
+		   placeholder="<?= h($form_field->getPlaceholder()) ?>">
+
+	<?
+	if(!$currency_enabled){
+		return;
+	}
+	$currency = Shop_CurrencySettings::get();
+	?>
+	<span class="shop-currency__clicker-wrapper">
+		<a class="shop-currency__clicker"
+		   data-model-class="<?=h($form_model_class)?>"
+		   data-model-id="<?=h($form_model->id)?>"
+		   data-model-field="<?=h($form_field->dbName)?>">
+			<?=$currency->code?>
+		</a>
+	</span>
+</div>
