@@ -288,7 +288,6 @@ class Shop_Customers_Report extends Shop_GenericReport {
 					COUNT(DISTINCT(shop_orders.id)) AS orders_count 
 					$query_str";
 
-		traceLog($query);
 
 		$this->viewData['totals_data'] = Db_DbHelper::object( $query );
 		$this->renderPartial( 'chart_totals' );
