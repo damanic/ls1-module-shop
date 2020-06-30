@@ -34,7 +34,23 @@ class Shop_CurrencyPriceRecord extends Db_ActiveRecord {
 			throw new Phpr_SystemException('Cannot execute method "getPrice" for field '.$field.' - the field is not defined as a currency price field.');
 		}
 	}
-	public static function find_records(Db_ActiveRecord $model, $field, $options=array()){
+
+	public static function find_record($model, $field, $currency_code){
+		$params = array(
+			'currency_code' => $currency_code
+		);
+		$records = self::find_records($model,$field, $params);
+		if($records) {
+			if ( is_a( $records, 'Shop_CurrencyPriceRecord' ) ) {
+				return $record = $records;
+			} else {
+				return $records->first();
+			}
+		}
+		return null;
+	}
+
+	public static function find_records($model, $field, $options=array()){
 		$default_options = array(
 			'currency_code' => null,
 			'currency_id' => null,
@@ -53,7 +69,7 @@ class Shop_CurrencyPriceRecord extends Db_ActiveRecord {
 
 		if($options['currency_code']){
 			$records->join('shop_currency_settings', 'shop_currency_price_records.currency_id=shop_currency_settings.id');
-			$records->where('shop_currency_settings.currency_code = ?', $options['currency_code']);
+			$records->where('shop_currency_settings.code = :code || shop_currency_settings.iso_4217_code = :code', array('code'=> $options['currency_code']));
 		}
 
 		if($options['currency_id']){
