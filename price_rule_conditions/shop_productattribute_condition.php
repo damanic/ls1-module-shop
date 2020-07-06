@@ -38,7 +38,7 @@
 				return 'multi_value';
 			}
 			
-			if ($attribute == 'on_sale')
+			if ($attribute == ('on_sale' || 'bulky_shipping_item'))
 				return 'dropdown';
 			
 			return parent::get_value_control_type($host_obj);
@@ -47,7 +47,7 @@
 		public function get_custom_text_value($parameters_host)
 		{
 			$attribute = $parameters_host->subcondition;
-			if ($attribute == 'on_sale')
+			if ($attribute == ('on_sale' || 'bulky_shipping_item'))
 			{
 				return $parameters_host->value == 'true' ? 'TRUE' : 'FALSE';
 			}
@@ -67,7 +67,7 @@
 
 			if (!isset($definitions[$attribute]) || $attribute == 'on_sale')
 			{
-				if ($attribute != 'product' && $attribute != 'on_sale')
+				if ($attribute != 'product' && $attribute != ('on_sale' || 'bulky_shipping_item'))
 					$options = array('none'=>'Unknown attribute selected');
 				elseif ($attribute == 'product')
 				{
@@ -75,7 +75,7 @@
 						'one_of'=>'is one of',
 						'not_one_of'=>'is not one of'
 					);
-				} elseif ($attribute == 'on_sale')
+				} elseif ($attribute == ('on_sale' || 'bulky_shipping_item'))
 				{
 					$options = array(
 						'is'=>'is'
@@ -109,6 +109,8 @@
 			} elseif ($attribute == 'on_sale')
 			{
 				return array('false'=>'FALSE (there are NO Catalog Price Rules defined for the product)', 'true'=>'TRUE (there are Catalog Price Rules defined for the product)');
+			} else if($attribute == 'bulky_shipping_item'){
+				return array('false'=>'FALSE', 'true'=>'TRUE');
 			}
 			
 			return parent::get_value_dropdown_options($host_obj, $controller);
@@ -128,7 +130,7 @@
 				$this->reference_info['columns'] = array('name');
 				
 				return $this->reference_info = (object)$this->reference_info;
-			} elseif ($attribute == 'on_sale')
+			} elseif ($attribute == ('on_sale' || 'bulky_shipping_item'))
 			{
 				return null;
 			}
@@ -170,7 +172,16 @@
 				
 			$attribute = $host_obj->subcondition;
 
-			if ($attribute != 'current_price' && $attribute != 'product' && $attribute != 'categories' && $attribute != 'on_sale' && $attribute != 'manufacturer_link')
+			$extended_attributes = array(
+				'current_price',
+				'product',
+				'categories',
+				'on_sale',
+				'manufacturer_link',
+				'bulky_shipping_item'
+			);
+
+			if (!in_array($attribute, $extended_attributes))
 			{
 				/*
 				 * If om_record (Option Matrix record) key exists in the parameters, try to load the attribute value from it,
@@ -189,6 +200,13 @@
 					}
 
 				return parent::eval_is_true($params['product'], $host_obj, $attribute_value);
+			}
+
+			if($attribute == 'bulky_shipping_item'){
+				if($params['product']->bulky_shipping_item){
+					return true;
+				}
+				return false;
 			}
 
 			if ($attribute == 'on_sale')

@@ -159,7 +159,7 @@ class Shop_BoxPacker {
 		$description = $item->om('sku').' | ';
 
 		if(!is_a($item, 'Db_ActiverecordProxy')) {
-			$description .= is_a( $item, 'Shop_ExtraOption' ) ? 'Extra Option: ' . $item->description : $item->product->name;
+			$description .= is_a( $item, 'Shop_ExtraOption' ) ? 'Extra Option: ' . $item->description : $item->om('name');
 		}
 		$bp_item = new Shop_BoxPacker_Item(
 			$description,

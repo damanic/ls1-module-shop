@@ -266,6 +266,7 @@ class Shop_Product extends Db_ActiveRecord
 		$this->define_column('height', 'Height')->defaultInvisible()->validation()->fn('trim');
 		$this->define_column('depth', 'Depth')->defaultInvisible()->validation()->fn('trim');
 
+		$this->define_column('bulky_shipping_item', 'Bulky Shipping Item')->defaultInvisible()->validation()->fn('trim');
 		$this->define_column('enable_perproduct_shipping_cost', 'Enable per product shipping cost')->invisible();
 		$this->define_column('perproduct_shipping_cost', 'Shipping cost')->invisible()->validation();
 		$this->define_column('perproduct_shipping_cost_use_parent', 'Use parent product per product shipping cost settings')->invisible();
@@ -459,6 +460,7 @@ class Shop_Product extends Db_ActiveRecord
 			if($shipping_params->enable_hs_codes) {
 				$this->add_form_field( 'shipping_hs_code' )->renderAs( frm_dropdown )->emptyOption( '- please select -' )->cssClassName( 'search-contains--false' )->tab( 'Shipping' )->comment( 'This code may be required for customs clearance when shipping internationally' );
 			}
+			$this->add_form_field( 'bulky_shipping_item' )->tab( 'Shipping' )->comment( 'Bulky/oversize items can be excluded from discount offers' );
 
 			if ($context == 'grouped')
 				$this->add_form_field('perproduct_shipping_cost_use_parent')->tab('Shipping');
@@ -2070,7 +2072,8 @@ class Shop_Product extends Db_ActiveRecord
 			'categories',
 			'current_price',
 			'manufacturer_link',
-			'product_type'
+			'product_type',
+			'bulky_shipping_item'
 		);
 
 		$result = array();
