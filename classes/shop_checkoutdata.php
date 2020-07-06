@@ -619,22 +619,24 @@
 		 * Allows discount rules to expose hidden shipping options
 		 * @ignore
 		 * @param array $shipping_options Specifies the shipping option list to flatten.
-		 * @param array $params Specifies the shipping calculation paramaters.
+		 * @param array $params Specifies the shipping calculation parameters.
 		 * @return array Returns an updated array of shipping options.
 		 */
-		protected static function add_discount_applied_shipping_options($shipping_options, $params){
+		protected static function add_discount_applied_shipping_options($shipping_options, $params=array()){
 
 			$payment_method = is_object($params['payment_method']) ? $params['payment_method'] : null;
 			$payment_method_obj = $payment_method ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
+			$cart_name = isset($params['cart_name'])? $params['cart_name'] : 'main';
+			$customer_id = isset($params['customer_id']) ? $params['customer_id'] : Cms_Controller::get_customer();
 
 			$discount_info = Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj,
 				null,
-				$params['cart_items'],
-				$params['shipping_info'],
-				$params['coupon_code'],
-				$params['customer_id'],
-				$params['total_price']
+				isset($params['cart_items']) ? $params['cart_items'] : Shop_Cart::list_active_items($cart_name),
+				isset($params['shipping_info']) ? $params['shipping_info'] : Shop_CheckoutData::get_shipping_info(),
+				isset($params['coupon_code']) ? $params['coupon_code'] : Shop_CheckoutData::get_coupon_code(),
+				$customer_id,
+				isset($params['total_price']) ? $params['total_price'] : Shop_Cart::total_price_no_tax($cart_name, false)
 			);
 			if ( isset( $discount_info->add_shipping_options ) && count( $discount_info->add_shipping_options ) ) {
 				foreach ( $discount_info->add_shipping_options as $option_id ) {
@@ -645,6 +647,19 @@
 				}
 			}
 			return $shipping_options;
+		}
+
+		public static function get_discount_applied_shipping_options($cart_name = 'main'){
+			//run eval discounts on cart items to mark free shipping items, updates by reference
+			$cart_items = Shop_Cart::list_active_items($cart_name);
+			self::eval_discounts($cart_name, $cart_items);
+			$options = array();
+			$params = array(
+				'cart_name' => $cart_name,
+				'cart_items' => $cart_items,
+				'payment_method' =>Shop_CheckoutData::get_payment_method(),
+			);
+			return self::add_discount_applied_shipping_options($options, $params);
 		}
 
 		/**
