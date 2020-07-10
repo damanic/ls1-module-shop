@@ -118,6 +118,8 @@
 
 			$this->define_column('order_count', 'Order Count')->defaultInvisible();
 
+			$this->define_column('preferred_currency_code', 'Preferred Currency')->defaultInvisible();
+
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('shop:onExtendCustomerModel', $this, $context);
 			$this->api_added_columns = array_keys($this->defined_column_list);
@@ -363,6 +365,25 @@
 				$result[$state->id] = $state->name;
 				
 			return $result;
+		}
+
+		public function set_preferred_currency($currency, $save=true){
+			$currency_code = null;
+			if(is_a($currency,'Shop_CurrencySettings')){
+				$currency_code = $currency->code;
+			} else {
+				$valid_currency_code = Db_DbHelper::scalar('SELECT shop_currency_settings.code FROM shop_currency_settings WHERE shop_currency_settings.code = ?', $currency);
+				if($valid_currency_code){
+					$currency_code = $valid_currency_code;
+				}
+			}
+			if($currency_code){
+				$this->preferred_currency_code = $currency_code;
+				if($save){
+					$this->password = null;
+					$this->save();
+				}
+			}
 		}
 		
 		public function before_save($deferred_session_key = null)

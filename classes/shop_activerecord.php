@@ -52,13 +52,11 @@ class Shop_ActiveRecord extends Db_ActiveRecord{
 			return $price_record->value;
 		}
 
-		return $this->$db_name;
-
 		//do a currency conversion
 		$currency_converter = Shop_CurrencyConverter::create();
 		$from_currency_code =  $this->get_currency_code();
 		$to_currency_code = $currency_code;
-		return $currency_converter->convert(1, $from_currency_code, $to_currency_code, 4);
+		return $currency_converter->convert($this->$db_name, $from_currency_code, $to_currency_code, 4);
 	}
 
 	/**

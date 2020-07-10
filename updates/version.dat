@@ -1003,3 +1003,4 @@
 #1.33.33 Adds new requirements to order status configuration
 #1.33.34 Adds support for multi currency price records
 #1.33.35 Add bulky shipping item flag to products
+#1.33.36 Add customer currency preference to customer model
