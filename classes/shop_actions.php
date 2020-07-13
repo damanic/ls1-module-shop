@@ -847,6 +847,8 @@
 			$customer->init_columns_info('front_end');
 			$customer->validation->focusPrefix = null;
 			$customer->validation->getRule('email')->focusId('signup_email');
+			$customer->validation->getRule('first_name')->method('validate_customer_name');
+			$customer->validation->getRule('last_name')->method('validate_customer_name');
 
 			if (!array_key_exists('password', $_POST))
 				$customer->generate_password();

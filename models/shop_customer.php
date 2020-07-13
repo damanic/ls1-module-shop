@@ -237,6 +237,24 @@
 			return true;
 		}
 
+		public function validate_customer_name($field, $value){
+
+			if(empty($value)){
+				return;
+			}
+			if(str_word_count($value)>1){
+				$this->validation->setError("Please enter a single name", $field, true);
+			}
+
+			//No urls
+			$result = preg_match("~^(http|https|ftp|ssh|sftp|etc)\://([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&amp;%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.(com|edu|gov|int|mil|net|org|biz|arpa|info|name|pro|aero|coop|museum|[a-zA-Z]{2}))(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&amp;%\$#\=_\-]+))*$~", mb_strtolower($value)) ? true : false;
+			if ( $result ) {
+				$this->validation->setError("Invalid name given", $field, true);
+			}
+
+			return true;
+		}
+
 		/**
 		 * Finds a registered customer by its email address.
 		 * @documentable
