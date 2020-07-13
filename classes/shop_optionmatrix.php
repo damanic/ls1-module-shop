@@ -19,6 +19,7 @@
 		 */
 		public static function get_property($options, $property_name, $product, $option_keys = false)
 		{
+
 			if (is_array($options))
 			{
 				$options_cache_key = sha1(serialize($options).'_'.$product->id).'_'.($option_keys ? 'keys' : 'values');
@@ -30,6 +31,9 @@
 				$om_record = $options;
 			else
 				throw new Phpr_SystemException('Invalid argument passed to Shop_OptionMatrix::get_property() first parameter.');
+
+
+
 
 			if ($om_record)
 			{
@@ -64,6 +68,9 @@
 				if ($property_name == 'is_out_of_stock')
 					return $om_record->is_out_of_stock($product);
 
+				if ($property_name == 'is_low_stock')
+					return $om_record->is_low_stock( $product );
+
 				if ($property_name == 'volume')
 					return $om_record->get_volume($product);
 
@@ -95,10 +102,10 @@
 			if ($property_name == 'disabled' && $product->has_om_records())
 				return true;
 
-			/* 
+			/*
 			 * If record is not found, fallback to the product's property
 			 */
-			
+
 			return self::get_product_property($product, $property_name);
 		}
 		
@@ -112,6 +119,8 @@
 		
 		protected static function get_product_property($product, $property_name)
 		{
+
+
 			$product = is_object($product) ? $product : Shop_Product::find_by_id($product);
 			if (!$product)
 				return null;
@@ -127,6 +136,9 @@
 				
 			if ($property_name == 'is_out_of_stock')
 				return $product->is_out_of_stock();
+
+			if ($property_name == 'is_low_stock')
+				return $product->is_low_stock();
 
 			if ($property_name == 'volume')
 				return $product->volume();

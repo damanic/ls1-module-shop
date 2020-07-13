@@ -242,6 +242,7 @@
 				'sale_price',
 				'is_on_sale',
 				'is_out_of_stock',
+				'is_low_stock',
 				'volume'
 			);
 			if (in_array($field_name, $supported_fields))
