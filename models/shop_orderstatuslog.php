@@ -63,11 +63,6 @@
 			if ($status_id == $order->status_id)
 				return false;
 
-
-			if(!Shop_OrderStatus::order_meets_status_requirements($status_id, $order)){
-				throw new Phpr_ApplicationException('The order does not meet the requirements for this status transition.');
-			}
-
 			$prev_status = $order->status_id;
 			$return = Backend::$events->fireEvent('shop:onOrderBeforeStatusChanged', $order, $status_id, $prev_status, $comment, $send_notifications);
 			foreach ($return as $result)
@@ -75,6 +70,12 @@
 				if($result === false)
 					return false;
 			}
+
+
+			if(!Shop_OrderStatus::order_meets_status_requirements($status_id, $order)){
+				throw new Phpr_ApplicationException('The order does not meet the requirements for this status transition.');
+			}
+
 
 			$log_record = self::create();
 			$log_record->init_columns_info();
