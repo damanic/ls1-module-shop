@@ -39,7 +39,7 @@
 			$applied = false;
 			$cart_items = $params['cart_items'];
 
-			foreach ($cart_items as $item)
+			foreach ( $params['cart_items'] as $key => $item)
 			{
 				$original_product_price = $item->total_single_price();
 				$current_product_price = max($original_product_price - $item_discount_map[$item->key], 0);
@@ -56,6 +56,7 @@
 				if ($this->is_active_for_product($item->product, $product_conditions, $current_product_price, $rule_params))
 				{
 					$item->free_shipping = true;
+					$params['cart_items'][$key] = $item;
 					$applied = true;
 				}
 			}
