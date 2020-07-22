@@ -48,7 +48,7 @@ class Shop_CurrencyHelper{
 		$currency_converter = Shop_CurrencyConverter::create();
 		$to_currency = null;
 
-		if(!is_numeric($price) || !($currency_code)){
+		if(!is_numeric($price) || !$currency_code){
 			throw new Phpr_ApplicationException('Cannot convert price: Invalid price/currency parameters given');
 		}
 
