@@ -27,19 +27,16 @@
 		{
 			$attribute = $host_obj->subcondition;
 			$operator = $host_obj->operator;
+			$multi_value_attributes = array('product');
+			$dropdown_attributes = array('on_sale', 'bulky_shipping_item');
 
-			/*
-			$product = $this->get_model_obj();
-			$definitions = $product->get_column_definitions();
-			*/
-			
-			if ($attribute == 'product')
-			{
+			if (in_array($attribute , $multi_value_attributes)) {
 				return 'multi_value';
 			}
-			
-			if ($attribute == ('on_sale' || 'bulky_shipping_item'))
+
+			if (in_array($attribute , $dropdown_attributes)) {
 				return 'dropdown';
+			}
 			
 			return parent::get_value_control_type($host_obj);
 		}
@@ -47,8 +44,9 @@
 		public function get_custom_text_value($parameters_host)
 		{
 			$attribute = $parameters_host->subcondition;
-			if ($attribute == ('on_sale' || 'bulky_shipping_item'))
-			{
+			$dropdown_attributes = array('on_sale', 'bulky_shipping_item');
+
+			if (in_array($attribute , $dropdown_attributes)) {
 				return $parameters_host->value == 'true' ? 'TRUE' : 'FALSE';
 			}
 			
@@ -57,31 +55,27 @@
 
 		public function get_operator_options($host_obj = null)
 		{
-			$options = array();
+			$options = array('none'=>'Unknown attribute selected');
 			$attribute = $host_obj->subcondition;
-
 			$current_operator_value = $host_obj->operator;
 
 			$model = $this->get_model_obj();
 			$definitions = $model->get_column_definitions();
+			$is_attributes = array('on_sale', 'bulky_shipping_item');
+			$one_of_attributes = array('price');
+			$custom_option_attributes = array_merge($is_attributes, $one_of_attributes);
 
-			if (!isset($definitions[$attribute]) || $attribute == 'on_sale')
-			{
-				if ($attribute != 'product' && $attribute != ('on_sale' || 'bulky_shipping_item'))
-					$options = array('none'=>'Unknown attribute selected');
-				elseif ($attribute == 'product')
-				{
+			if (!isset($definitions[$attribute]) || in_array($attribute,$custom_option_attributes)) {
+				if (in_array($attribute, $one_of_attributes)) {
 					$options = array(
 						'one_of'=>'is one of',
 						'not_one_of'=>'is not one of'
 					);
-				} elseif ($attribute == ('on_sale' || 'bulky_shipping_item'))
-				{
+				} elseif (in_array($attribute , $is_attributes)) {
 					$options = array(
 						'is'=>'is'
 					);
 				}
-				
 				return $options;
 			}
 			else
@@ -93,27 +87,27 @@
 			return Shop_RuleConditionBase::type_product;
 		}
 
-		public function get_value_dropdown_options($host_obj, $controller)
-		{
+		public function get_value_dropdown_options( $host_obj, $controller ) {
 			$attribute = $host_obj->subcondition;
 
-			if ($attribute == 'product')
-			{
-				$products = Db_DbHelper::objectArray('select id, name from shop_products where grouped is null and (disable_completely is null or disable_completely=0) order by name');
-				
+			if ( $attribute == 'product' ) {
+				$products = Db_DbHelper::objectArray( 'select id, name from shop_products where grouped is null and (disable_completely is null or disable_completely=0) order by name' );
+
 				$result = array();
-				foreach ($products as $product)
-					$result[$product->id] = h($product->name);
-					
+				foreach ( $products as $product ) {
+					$result[$product->id] = h( $product->name );
+				}
+
 				return $result;
-			} elseif ($attribute == 'on_sale')
-			{
-				return array('false'=>'FALSE (there are NO Catalog Price Rules defined for the product)', 'true'=>'TRUE (there are Catalog Price Rules defined for the product)');
-			} else if($attribute == 'bulky_shipping_item'){
-				return array('false'=>'FALSE', 'true'=>'TRUE');
+			} elseif ( $attribute == 'on_sale' ) {
+				return array( 'false' => 'FALSE (there are NO Catalog Price Rules defined for the product)', 'true' => 'TRUE (there are Catalog Price Rules defined for the product)' );
+			} else {
+				if ( $attribute == 'bulky_shipping_item' ) {
+					return array( 'false' => 'FALSE', 'true' => 'TRUE' );
+				}
 			}
-			
-			return parent::get_value_dropdown_options($host_obj, $controller);
+
+			return parent::get_value_dropdown_options( $host_obj, $controller );
 		}
 		
 		public function prepare_reference_list_info($host_obj)
@@ -122,16 +116,14 @@
 				return $this->reference_info;
 				
 			$attribute = $host_obj->subcondition;
+			$exclude_attributes = array('on_sale', 'bulky_shipping_item');
 
-			if ($attribute == 'product')
-			{
+			if ($attribute == 'product') {
 				$this->reference_info = array();
 				$this->reference_info['reference_model'] = new Shop_Product();
 				$this->reference_info['columns'] = array('name');
-				
 				return $this->reference_info = (object)$this->reference_info;
-			} elseif ($attribute == ('on_sale' || 'bulky_shipping_item'))
-			{
+			} elseif (in_array($attribute,$exclude_attributes)) {
 				return null;
 			}
 			
