@@ -22,6 +22,7 @@
 			$this->define_column('description', 'Description')->validation()->fn('trim');
 			$this->define_column('rates', 'Rates')->invisible()->validation()->required();
 			$this->define_column('is_default', 'Default');
+			$this->define_column('code', 'API Code');
 
 			$this->defined_column_list = array();
 			Backend::$events->fireEvent('shop:onExtendTaxClassModel', $this, $context);
@@ -51,6 +52,12 @@
 					'compound'=>array('title'=>'Compound', 'type'=>'checkbox', 'width'=>'80')
 				)
 			))->noLabel();
+
+			$api_code = $this->add_form_field('code')->tab('Tax Class');
+			if($this->code == Shop_TaxClass::shipping){
+				$api_code->disabled();
+			}
+
 
 			Backend::$events->fireEvent('shop:onExtendTaxClassForm', $this, $context);
 			foreach ($this->api_added_columns as $column_name) {

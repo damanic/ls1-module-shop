@@ -1005,3 +1005,5 @@
 #1.33.35 Add bulky shipping item flag to products
 #1.33.36 Add customer currency preference to customer model
 #1.33.37 Extends OM property support
+#1.33.38 Add api code to TaxClass form
+#1.33.39 Adds dispute and liability shift flags to payment transaction records

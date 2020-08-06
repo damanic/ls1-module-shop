@@ -59,8 +59,31 @@
 		 */
 		public $transaction_void;
 
-		public function __construct($transaction_status_code=null, $transaction_status_name=null, $data_1 = null, $value = null, $complete = null, $refund = null, $void=null)
-		{
+		/**
+		 * @var int Has disputes
+		 * indicates if transaction has been disputed or requires investigation
+		 * @documentable
+		 */
+		public $has_disputes;
+
+
+		/**
+		 * @var array of Shop_TransactionDisputeUpdate
+		 * A collection of dispute records if available
+		 * @documentable
+		 */
+		protected $disputes;
+
+		/**
+		 * @var int Liability Shifted
+		 * indicates if transaction has protections from chargebacks
+		 * Eg. 3DS liability shift, Payal Seller Protection
+		 * @documentable
+		 */
+		public $liability_shifted;
+
+
+		public function __construct($transaction_status_code=null, $transaction_status_name=null, $data_1 = null, $value = null, $complete = null, $refund = null, $void=null) {
 			$this->transaction_status_code = $transaction_status_code;
 			$this->transaction_status_name = $transaction_status_name;
 			$this->transaction_value = $value;
@@ -70,13 +93,32 @@
 			$this->data_1 = $data_1;
 		}
 
+		public function set_has_disputes(){
+			$this->has_disputes = 1;
+		}
+
+		public function add_disputes(Shop_TransactionDisputeUpdate $dispute){
+			$this->disputes[] = $dispute;
+			$this->has_disputes = 1;
+		}
+
+		public function get_disputes(){
+			return $this->disputes;
+		}
+
+		public function set_liability_shifted(){
+			$this->liability_shifted = 1;
+		}
+
 		public function is_same_status($old_status){
 			$relevant_fields = array(
 				'transaction_status_code',
 				'transaction_value',
 				'transaction_complete',
 				'transaction_refund',
-				'transaction_void'
+				'transaction_void',
+				'has_disputes',
+				'liability_shifted'
 			);
 
 			foreach($relevant_fields as $field){

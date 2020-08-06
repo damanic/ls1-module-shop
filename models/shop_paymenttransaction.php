@@ -8,6 +8,10 @@
 		public $auto_footprints_user_not_found_name = 'system';
 		public $auto_footprints_visible = true;
 
+		public $has_many = array(
+			'disputes'=>array('class_name'=>'Shop_PaymentTransactionDispute', 'foreign_key'=>'shop_payment_transaction_id', 'order'=>'shop_payment_transaction_disputes.created_at desc, shop_payment_transaction_disputes.id desc', 'delete'=>true)
+		);
+
 		public $custom_columns = array('actual_user_name'=>db_text);
 
 		public static function create()
@@ -32,6 +36,8 @@
 			$this->define_column('transaction_complete', 'Settled');
 			$this->define_column('transaction_refund', 'Is Refund');
 			$this->define_column('transaction_void', 'Is Void');
+			$this->define_column('has_disputes', 'Has Disputes');
+			$this->define_column('liability_shifted', 'Liability Shifted');
 		}
 
 		public function define_form_fields($context = null)
@@ -54,29 +60,67 @@
 			$obj->payment_method_id = $payment_method_id;
 			$obj->user_note = $user_note;
 			$obj->data_1 = $data;
-
 			$obj->save();
 		}
 
 		public static function add_transaction($order, $payment_method_id, $transaction_id, $transaction_data, $user_note = null){
-			$obj = new self();
-			$obj->order_id = $order->id;
-			$obj->payment_method_id = $payment_method_id;
-			$obj->user_note = $user_note;
-			$obj->transaction_id = $transaction_id;
-			$obj->transaction_status_name = $transaction_data->transaction_status_name;
-			$obj->transaction_status_code = $transaction_data->transaction_status_code;
-			$obj->transaction_value = isset($transaction_data->transaction_value) ? $transaction_data->transaction_value : null;
-			$obj->transaction_complete = isset($transaction_data->transaction_complete) ? $transaction_data->transaction_complete : null;
-			$obj->transaction_refund =  isset($transaction_data->transaction_refund) ? $transaction_data->transaction_refund : null;
-			$obj->transaction_void =  isset($transaction_data->transaction_void) ? $transaction_data->transaction_void : null;
-			$obj->data_1 = isset($transaction_data->data_1) ? $transaction_data->data_1 : null;
-			if(isset($transaction_data->created_at) && !empty($transaction_data->created_at)){
-				$obj->auto_create_timestamps  = array(); //use gateway timestamp
-				$obj->created_at              = $transaction_data->created_at;
-			}
-			$obj->save();
+
+				if ( !is_a( $transaction_data, 'Shop_TransactionUpdate' ) ) {
+					throw new Phpr_ApplicationException( 'Invalid transaction data given, must be instance of Shop_TransactionUpdate' );
+				}
+
+				$obj                          = new self();
+				$obj->order_id                = $order->id;
+				$obj->payment_method_id       = $payment_method_id;
+				$obj->user_note               = $user_note;
+				$obj->transaction_id          = $transaction_id;
+				$obj->transaction_status_name = $transaction_data->transaction_status_name;
+				$obj->transaction_status_code = $transaction_data->transaction_status_code;
+				$obj->transaction_value       = $transaction_data->transaction_value;
+				$obj->transaction_complete    = $transaction_data->transaction_complete;
+				$obj->transaction_refund      = $transaction_data->transaction_refund;
+				$obj->transaction_void        = $transaction_data->transaction_void;
+				$obj->has_disputes            = $transaction_data->has_disputes;
+				$obj->liability_shifted       = $transaction_data->liability_shifted;
+				$obj->data_1                  = $transaction_data->data_1;
+				if ( isset( $transaction_data->created_at ) && !empty( $transaction_data->created_at ) ) {
+					$obj->auto_create_timestamps = array(); //use gateway timestamp
+					$obj->created_at             = $transaction_data->created_at;
+				}
+				$obj->save();
+				if ( $obj->has_disputes ) {
+					foreach ( $obj->disputes as $dispute_update ) {
+						$obj->add_dispute( $dispute_update );
+					}
+				}
 			return $obj;
+		}
+
+		public function add_dispute(Shop_TransactionDisputeUpdate $dispute_update){
+
+			$bind = array(
+				'tid' => $this->transaction_id,
+				'case_id' => $dispute_update->case_id
+			);
+
+			$dispute = Shop_PaymentTransactionDispute::create()->where('api_transaction_id = :tid AND case_id = :case_id', $bind);
+			if(!$dispute){
+				$dispute = Shop_PaymentTransactionDispute::create();
+			}
+
+			$dispute->shop_payment_transaction_id = $this->id;
+			$dispute->payment_method_id = $this->payment_method_id;
+			$dispute->api_transaction_id = $this->transaction_id;
+			$dispute->case_id = $dispute_update->case_id ? $dispute_update->case_id : $this->transaction_id;
+			$dispute->amount_disputed = $dispute_update->amount_disputed;
+			$dispute->amount_lost = $dispute_update->amount_lost;
+			$dispute->status_description = $dispute_update->status_description;
+			$dispute->reason_desription = $dispute_update->reason_desription;
+			$dispute->case_closed = $dispute_update->case_closed;
+			$dispute->notes = $dispute_update->notes;
+			$dispute->gateway_api_data = $dispute_update->gateway_api_data;
+			$dispute->save();
+			$this->disputes->add($dispute);
 		}
 
 		public static function get_unique_transactions($order){
@@ -189,7 +233,7 @@
 			{
 				$message = Core_String::finalize($ex->getMessage());
 				
-				$message = "The transaction has been succesfully updated on the payment gateway, but an error occured during updating the transaction status in the LemonStand database: ".$message;
+				$message = "The transaction has been successfully updated on the payment gateway, but an error occurred during updating the transaction status in the LemonStand database: ".$message;
 				
 				if (strlen($new_order_status_id))
 					$message .= " The order status has not been updated.";

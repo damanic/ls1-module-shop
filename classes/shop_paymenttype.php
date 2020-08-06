@@ -322,6 +322,15 @@
 		}
 
 		/**
+		 * This method should return TRUE if the payment gateway supports requesting a status of a specific transaction dispute.
+		 * The payment module must implement the request_dispute_status() method if this method returns true.
+		 */
+		public function supports_transaction_disputes()
+		{
+			return false;
+		}
+
+		/**
 		 * This method should return TRUE if the payment method logs successful payment/refund values that can be used
 		 * to calculate payment due and assist in refunds. For example: situations where products added/removed from order change the order total after initial payment.
 		 */
@@ -458,13 +467,25 @@
 		}
 
 		/**
-		 * Request a status of a specific transaction a specific transaction.
+		 * Request a status of a specific transaction.
 		 * The method must return an instance of the Shop_TransactionUpdate class
 		 * @param $host_obj ActiveRecord object containing configuration fields values
 		 * @param string $transaction_id Specifies a transaction identifier returned by the payment gateway. Example: kjkls
 		 * @return Shop_TransactionUpdate Transaction update information
 		 */
 		public function request_transaction_status($host_obj, $transaction_id)
+		{
+			return null;
+		}
+
+		/**
+		 * Request a status of a specific transaction dispute.
+		 * The method must return an instance of the Shop_TransactionDisputeUpdate class
+		 * @param $host_obj ActiveRecord object containing configuration fields values
+		 * @param string $dispute_case_id Specifies a dispute case identifier returned by the payment gateway.
+		 * @return Shop_TransactionDisputeUpdate Dispute update information
+		 */
+		public function request_dispute_status($host_obj, $dispute_case_id)
 		{
 			return null;
 		}
