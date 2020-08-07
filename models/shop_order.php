@@ -82,7 +82,7 @@ class Shop_Order extends Db_ActiveRecord
 	);
 
 	public $has_many = array(
-		'log_records'=>array('class_name'=>'Shop_OrderStatusLog', 'foreign_key'=>'order_id', 'order'=>'shop_order_status_log_records.created_at desc', 'delete'=>true),
+		'log_records'=>array('class_name'=>'Shop_OrderStatusLog', 'foreign_key'=>'order_id', 'order'=>'shop_order_status_log_records.created_at DESC, id DESC', 'delete'=>true),
 		'items'=>array('class_name'=>'Shop_OrderItem', 'foreign_key'=>'shop_order_id', 'delete'=>true, 'order'=>'shop_order_items.id'),
 		'payment_attempts'=>array('class_name'=>'Shop_PaymentLogRecord', 'foreign_key'=>'order_id', 'order'=>'shop_order_payment_log.created_at desc', 'delete'=>true),
 		'customer_notifications'=>array('class_name'=>'Shop_OrderNotification', 'foreign_key'=>'order_id', 'order'=>'created_at', 'delete'=>true),
