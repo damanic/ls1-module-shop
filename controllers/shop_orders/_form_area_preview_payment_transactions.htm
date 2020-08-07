@@ -13,7 +13,7 @@
 			<? endif ?>
 
 		
-		<? if ($request_allowed && !$form_model->is_order_locked()): ?>
+		<? if ($request_allowed): ?>
 			<a class="imageLink load_transaction_status img_noBottomPading" href="#" onclick="$(this).getForm().sendPhpr(
 				'preview_onRequestTransactionStatus',
 				{
