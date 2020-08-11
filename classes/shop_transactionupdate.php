@@ -103,7 +103,7 @@
 		}
 
 		public function get_disputes(){
-			return $this->disputes;
+			return $this->disputes ? $this->disputes : array();
 		}
 
 		public function set_liability_shifted(){

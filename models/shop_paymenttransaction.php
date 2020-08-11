@@ -69,31 +69,31 @@
 					throw new Phpr_ApplicationException( 'Invalid transaction data given, must be instance of Shop_TransactionUpdate' );
 				}
 
-				$obj                          = new self();
-				$obj->order_id                = $order->id;
-				$obj->payment_method_id       = $payment_method_id;
-				$obj->user_note               = $user_note;
-				$obj->transaction_id          = $transaction_id;
-				$obj->transaction_status_name = $transaction_data->transaction_status_name;
-				$obj->transaction_status_code = $transaction_data->transaction_status_code;
-				$obj->transaction_value       = $transaction_data->transaction_value;
-				$obj->transaction_complete    = $transaction_data->transaction_complete;
-				$obj->transaction_refund      = $transaction_data->transaction_refund;
-				$obj->transaction_void        = $transaction_data->transaction_void;
-				$obj->has_disputes            = $transaction_data->has_disputes;
-				$obj->liability_shifted       = $transaction_data->liability_shifted;
-				$obj->data_1                  = $transaction_data->data_1;
+				$payment_transaction                          = new self();
+				$payment_transaction->order_id                = $order->id;
+				$payment_transaction->payment_method_id       = $payment_method_id;
+				$payment_transaction->user_note               = $user_note;
+				$payment_transaction->transaction_id          = $transaction_id;
+				$payment_transaction->transaction_status_name = $transaction_data->transaction_status_name;
+				$payment_transaction->transaction_status_code = $transaction_data->transaction_status_code;
+				$payment_transaction->transaction_value       = $transaction_data->transaction_value;
+				$payment_transaction->transaction_complete    = $transaction_data->transaction_complete;
+				$payment_transaction->transaction_refund      = $transaction_data->transaction_refund;
+				$payment_transaction->transaction_void        = $transaction_data->transaction_void;
+				$payment_transaction->has_disputes            = $transaction_data->has_disputes;
+				$payment_transaction->liability_shifted       = $transaction_data->liability_shifted;
+				$payment_transaction->data_1                  = $transaction_data->data_1;
 				if ( isset( $transaction_data->created_at ) && !empty( $transaction_data->created_at ) ) {
-					$obj->auto_create_timestamps = array(); //use gateway timestamp
-					$obj->created_at             = $transaction_data->created_at;
+					$payment_transaction->auto_create_timestamps = array(); //use gateway timestamp
+					$payment_transaction->created_at             = $transaction_data->created_at;
 				}
-				$obj->save();
-				if ( $obj->has_disputes ) {
-					foreach ( $obj->disputes as $dispute_update ) {
-						$obj->add_dispute( $dispute_update );
+				$payment_transaction->save();
+				if ( $transaction_data->has_disputes ) {
+					foreach ( $transaction_data->get_disputes() as $dispute_update ) {
+						$payment_transaction->add_dispute( $dispute_update );
 					}
 				}
-			return $obj;
+			return $payment_transaction;
 		}
 
 		public function add_dispute(Shop_TransactionDisputeUpdate $dispute_update){
@@ -103,7 +103,7 @@
 				'case_id' => $dispute_update->case_id
 			);
 
-			$dispute = Shop_PaymentTransactionDispute::create()->where('api_transaction_id = :tid AND case_id = :case_id', $bind);
+			$dispute = Shop_PaymentTransactionDispute::create()->where('api_transaction_id = :tid AND case_id = :case_id', $bind)->find();
 			if(!$dispute){
 				$dispute = Shop_PaymentTransactionDispute::create();
 			}
