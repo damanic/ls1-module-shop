@@ -97,7 +97,7 @@
 			$this->has_disputes = 1;
 		}
 
-		public function add_disputes(Shop_TransactionDisputeUpdate $dispute){
+		public function add_dispute(Shop_TransactionDisputeUpdate $dispute){
 			$this->disputes[] = $dispute;
 			$this->has_disputes = 1;
 		}
