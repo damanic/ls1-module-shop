@@ -1,5 +1,5 @@
 <?php
-class Shop_PaymentTransactionDispute {
+class Shop_PaymentTransactionDispute extends Db_ActiveRecord {
 
 	public $table_name = 'shop_payment_transaction_disputes';
 	public $implement = 'Db_AutoFootprints';
