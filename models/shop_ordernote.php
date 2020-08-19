@@ -45,35 +45,54 @@
 		{
 			if (!$this->notification_users)
 				return;
-				
-			$notification_users = array();
-			foreach ($this->notification_users as $user_id)
-			{
-				$user = Users_User::create()->find($user_id);
-				if ($user)
-					$notification_users[] = $user->email;
-			}
-			
-			if (!$notification_users)
+
+			$users = Users_User::create()->where('id IN (?)', array($this->notification_users))->find_all_proxy();
+			if ($users)
+				$this->notify_users($users);
+
+		}
+
+		public function notify_users($users){
+
+			if(!$this->id){
+				//Defer for after create
+				foreach($users as $user){
+					if($user->id){
+						$this->notification_users[] = $user->id;
+					}
+				}
 				return;
-			
+			}
+
+			$notification_emails = array();
+			foreach ($users as $user) {
+				if($user->email) {
+					$notification_emails[] = $user->email;
+				}
+			}
+
+			if (!$notification_emails)
+				return;
+
 			$template = System_EmailTemplate::create()->find_by_code('shop:order_note_internal');
 			if (!$template)
 				return;
 
-			$currentUser = Phpr::$security->getUser();
+			$userSending = Phpr::$security->getUser();
+			$fromEmail = $userSending ? $userSending->email : null;
+			$fromName = $userSending ? $userSending->name : null;
 
 			$message = $this->set_email_variables($template->content);
 			$template->subject = $this->set_email_variables($template->subject);
-			
-			$template->send_to_team($notification_users, $message, $currentUser->email, $currentUser->name);
+			$template->send_to_team($notification_emails, $message, $fromEmail,$fromName);
 		}
 		
 		protected function set_email_variables($message)
 		{
-			$currentUser = Phpr::$security->getUser();
+			$userSending = Phpr::$security->getUser();
+			$fromName = $userSending ? $userSending->name : 'System';
 
-			$message = str_replace('{order_note_author}', h($currentUser->name), $message);
+			$message = str_replace('{order_note_author}', h($fromName), $message);
 			$message = str_replace('{order_note_id}', h($this->order_id), $message);
 			$message = str_replace('{order_note_text}', nl2br(h($this->note)), $message);
 

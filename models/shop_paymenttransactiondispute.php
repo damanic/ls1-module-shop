@@ -5,6 +5,8 @@ class Shop_PaymentTransactionDispute extends Db_ActiveRecord {
 	public $implement = 'Db_AutoFootprints';
 	public $auto_footprints_visible = true;
 
+
+
 	public static function create() {
 		return new self();
 	}
