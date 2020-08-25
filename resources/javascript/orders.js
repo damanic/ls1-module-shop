@@ -105,6 +105,14 @@ function refresh_list()
 
 function change_status()
 {
+	//this presents an opportunity to block the default behaviour
+	try{
+		window.fireEvent('onBeforeOrdersChangeStatus');
+	}
+	catch(err) {
+		return false;
+	}
+
 	if (!orders_selected())
 	{
 		alert('Please select orders to change status.');
@@ -243,6 +251,7 @@ function select_orders(e, select_type)
 
 window.addEvent('domready', function(){
 	var el = window.document.html;
-	if (el)
+	if (el) {
 		$(el).bindKeys({'ctrl+alt+s': change_status});
+	}
 });
