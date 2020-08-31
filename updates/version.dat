@@ -1009,3 +1009,4 @@
 #1.33.39 Adds dispute and liability shift flags to payment transaction records
 #1.33.40 Improved payment dispute logging
 #1.33.41 Minor improvements for extension
+#1.33.42 Minor improvements for address info
