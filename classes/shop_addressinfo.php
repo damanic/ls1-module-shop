@@ -290,6 +290,10 @@
 				$value = $this->transliterate($value);
 			}
 
+			if($field == 'full_name'){
+				$value = $this->get('first_name').' '.$this->get('last_name');
+			}
+
 			return $value ? $value : $default;
 		}
 
@@ -392,7 +396,7 @@
 
 			$address = '';
 			foreach($vars as $var){
-				if(property_exists($this,$var)){
+				if(property_exists($this,$var) || $var == 'full_name'){
 					$field_name = ucwords(str_replace('_',' ',$var));
 					$field_value = $this->get($var);
 					if($options['show_field_names']) {
