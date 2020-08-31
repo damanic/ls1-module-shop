@@ -354,11 +354,24 @@
 		}
 
 		/**
-		 * Displays the address information
+		 * Displays formatted  address information
 		 * @documentable
-		 * @return string Returns the address as string.
+		 * @param Array $vars Array of address fields to include
+		 * @param Array $options Array of formatting options
+		 * @return string Outputs a formatted address.
 		 */
 		public function display_address($vars=array(), $options = array()){
+			echo $this->get_formatted_address($vars, $options);
+		}
+
+		/**
+		 * Gets formatted address information
+		 * @documentable
+		 * @param Array $vars Array of address fields to include
+		 * @param Array $options Array of formatting options
+		 * @return string Returns a formatted address.
+		 */
+		public function get_formatted_address($vars=array(), $options = array()){
 			$default_vars = array(
 				'street_address',
 				'city',
@@ -377,22 +390,21 @@
 
 			$line_end = $options['html'] ? '<br/>' : "\r\n";
 
-			$output = '';
+			$address = '';
 			foreach($vars as $var){
 				if(property_exists($this,$var)){
 					$field_name = ucwords(str_replace('_',' ',$var));
 					$field_value = $this->get($var);
 					if($options['show_field_names']) {
-						$output .= $options['html'] ? '<b>' . $field_name : $field_name;
-						$output .= $options['html'] ? '</b>: ' : ": ";
+						$address .= $options['html'] ? '<b>' . $field_name : $field_name;
+						$address .= $options['html'] ? '</b>: ' : ": ";
 					}
-					$output .=  $options['html'] ? nl2br(h($field_value)) : h($field_value);
-					$output .= $options['html'] ? '<br/> ' : "\r\n";
+					$address .=  $options['html'] ? nl2br(h($field_value)) : h($field_value);
+					$address .= $options['html'] ? '<br/> ' : "\r\n";
 				}
 			}
 
-			echo $output;
-
+			return $address;
 		}
 
 		/**

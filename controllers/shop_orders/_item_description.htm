@@ -27,6 +27,6 @@
 
 <? if ($item->product->om('is_out_of_stock', $posted_options)): ?>
 	<div class="hint">
-		<p class="last">This product is out of stock. Number of units in stock: <?= h($item->product->om('in_stock', $posted_options)) ?></p>
+		<p class="last" >This product is out of stock. Number of units in stock: <?= h($item->product->om('in_stock', $posted_options)) ?></p>
 	</div>
 <? endif ?>
