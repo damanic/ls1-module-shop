@@ -70,14 +70,22 @@ class Shop_OrderHelper{
 
 	}
 
-	public static function evalOrderTotals($order, $items = null, $deferred_session_key=null, $discount_data=false)
+	public static function evalOrderTotals($order, $items = null, $deferred_session_key=null, $discount_data=false, $options = array())
 	{
+		$default_options = array(
+			'recalculate_shipping' => true,
+		);
+		$options = array_merge($default_options,$options);
 		Shop_TaxClass::set_tax_exempt($order->tax_exempt);
 		Shop_TaxClass::set_customer_context(self::find_customer($order, true));
 
 
 		$order->goods_tax = 0;
 		$total_cost = 0;
+		$discount = 0;
+		$subtotal = 0;
+		$subtotal_before_discounts = 0;
+
 
 		$shipping_info = array();
 		$shipping_info['country'] = $order->shipping_country_id;
@@ -91,7 +99,7 @@ class Shop_OrderHelper{
 			$order->manual_shipping_quote = round(trim($order->manual_shipping_quote), 2);
 		}
 
-		if (strlen($order->shipping_method_id) && strlen($order->shipping_country_id)) {
+		if ($options['recalculate_shipping'] && strlen($order->shipping_method_id) && strlen($order->shipping_country_id)) {
 
 			//recalc all
 			$order->shipping_quote = 0;
@@ -145,8 +153,6 @@ class Shop_OrderHelper{
 			}
 		}
 
-		$discount = 0;
-		$subtotal = 0;
 		if (!$items)
 		{
 			$items = empty($deferred_session_key) ? $order->items : $order->list_related_records_deferred('items', $deferred_session_key);
@@ -159,6 +165,7 @@ class Shop_OrderHelper{
 		{
 			$discount += $item->discount*$item->quantity;
 			$subtotal += $item->eval_total_price();
+			$subtotal_before_discounts += $item->single_price*$item->quantity;
 			$total_cost += $item->quantity*$item->cost;
 		}
 
@@ -184,6 +191,7 @@ class Shop_OrderHelper{
 
 		$order->discount = $discount;
 		$order->subtotal = $subtotal;
+		$order->subtotal_before_discounts = $subtotal_before_discounts;
 		$order->total_cost = $total_cost;
 		$order->total = $order->get_order_total();
 

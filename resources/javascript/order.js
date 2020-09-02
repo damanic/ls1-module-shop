@@ -1,9 +1,34 @@
-var shipping_info_changed = false;
+var update_shipping_quotes = false;
 var billing_info_changed = false;
 var intialization = true;
 
 var prev_item_quantity_value = null;
 var item_price_request_timer = null;
+
+function trigger_shipping_info_changed(){
+	update_shipping_quotes = true;
+	on_shipping_info_changed();
+}
+
+function on_shipping_info_changed(){
+	//force shipping method re-select
+	if(is_shipping_selector_active()){
+		var shippingMethodInput = $('shipping_method_id');
+		if(shippingMethodInput){
+			shippingMethodInput.value = null;
+		}
+	}
+
+}
+
+function is_shipping_selector_active(){
+	var quoteSelector = $('shipping_option_selector');
+	if(quoteSelector) {
+		return true;
+	}
+	return false;
+}
+
 
 function assign_billing_country_handler()
 {
@@ -21,7 +46,7 @@ function assign_billing_country_handler()
 function assign_shipping_country_handler()
 {
 	$('Shop_Order_shipping_country_id').addEvent('change', function(){
-		shipping_info_changed = true;
+		trigger_shipping_info_changed();
 		billing_info_changed = true;
 
 		$('Shop_Order_shipping_country_id').getForm().sendPhpr(
@@ -37,7 +62,7 @@ function assign_shipping_country_handler()
 	})
 	
 	$('Shop_Order_shipping_addr_is_business').addEvent('click', function(){
-		shipping_info_changed = true;
+		trigger_shipping_info_changed();
 		updateTotals();
 	})
 }
@@ -46,7 +71,7 @@ function assign_shipping_state_handler()
 {
 	$('Shop_Order_shipping_state_id').addEvent('change', function(){
 		billing_info_changed = true;
-		shipping_info_changed = true;
+		trigger_shipping_info_changed();
 
 		updateTotals();
 	});
@@ -56,7 +81,7 @@ function assign_shipping_zip_handler()
 {
 	$('Shop_Order_shipping_zip').addEvent('change', function(){
 		billing_info_changed = true;
-		shipping_info_changed = true;
+		trigger_shipping_info_changed();
 
 		updateTotals();
 	});
@@ -66,7 +91,7 @@ function assign_shipping_city_handler()
 {
 	$('Shop_Order_shipping_city').addEvent('change', function(){
 		billing_info_changed = true;
-		shipping_info_changed = true;
+		trigger_shipping_info_changed();
 
 		updateTotals();
 	});
@@ -75,7 +100,7 @@ function assign_shipping_city_handler()
 function updateItemList()
 {
 	cancelPopups();
-	shipping_info_changed = true;
+	trigger_shipping_info_changed();
 	billing_info_changed = true;
 
 	$('item_list').getForm().sendPhpr(
@@ -275,6 +300,15 @@ function record_selector_click(item)
 	var master_input = selector_root.getElement('input.master');
 	master_input.value = selected_input.value;
 
+	if (selector_root.id == 'shipping_option_selector') {
+		var shippingRate = item.dataset.price;
+		var suboptionName = item.dataset.suboptionname;
+		var quote_input = $('shipping_method_quote');
+		quote_input.value = shippingRate;
+		var suboption_input = $('shipping_method_sub_option');
+		suboption_input.value = suboptionName;
+	}
+
 	$(item).addClass('current');
 	window.fireEvent('phpr_recordselector_click', [selector_root]);
 }
@@ -305,8 +339,9 @@ window.addEvent('domready', function(){
 		return;
 		
 	window.addEvent('phpr_recordselector_click', function(selector) {
-		if (selector.id == 'shipping_option_selector')
+		if (selector.id == 'shipping_option_selector'){
 			updateTotals();
+		}
 	})
 	
 	if ($('Shop_Order_tax_exempt'))
@@ -317,7 +352,7 @@ window.addEvent('domready', function(){
 	window.addEvent('phpr_recordfinder_update', function(field_id){
 		if (field_id == 'customer_id')
 		{
-			shipping_info_changed = true;
+			trigger_shipping_info_changed();
 			billing_info_changed = true;
 			$('Shop_Order_customer_id').getForm().sendPhpr(
 				'create_onCustomerChanged',
@@ -374,40 +409,44 @@ window.addEvent('domready', function(){
 	track_shipping_override();
 	
 	$('Shop_Order_shipping_zip').addEvent('change', function(){
-		shipping_info_changed = true;
+		trigger_shipping_info_changed();
 		billing_info_changed = true;
 	});
-	
-	var shipping_tab = $('form_field_shipping_method_idShop_Order').getParent().findParent('li');
 
-	shipping_tab.addEvent('onTabClick', function(){
-		if (shipping_info_changed)
-		{
-			$('item_list').getForm().sendPhpr(
-				'onUpdateShippingOptions',
-				{
-					loadIndicator: {
-						show: true,
-						hideOnSuccess: true
-					},
-					onSuccess: function(){
-						shipping_info_changed = false;
-					},
-					onAfterUpdate: function(){
-						assign_shipping_override_handler();
-						track_shipping_override();
-					}
+	var shipping_method_selector =  $('form_field_shipping_method_idShop_Order');
+	var shipping_tab = shipping_method_selector ? shipping_method_selector.getParent().findParent('li') : false;
+
+	if(shipping_tab) {
+		shipping_tab.addEvent('onTabClick', function () {
+			if (update_shipping_quotes) {
+				if(is_shipping_selector_active()) {
+					$('item_list').getForm().sendPhpr(
+						'onUpdateShippingOptions',
+						{
+							loadIndicator: {
+								show         : true,
+								hideOnSuccess: true
+							},
+							extraFields : {
+								'recalculate_shipping_quotes' : '1',
+							},
+							onSuccess    : function () {
+								update_shipping_quotes = false;
+							},
+							onAfterUpdate: function () {
+								assign_shipping_override_handler();
+								track_shipping_override();
+							}
+						}
+					)
 				}
-			)
-		}
-	});
+			}
+		});
+	}
 	
-	var billing_tab = $('form_field_payment_method_idShop_Order').getParent().findParent('li');
-//	var discounts_tab = $('Shop_Order_discount').selectParent('li.form_page');
-	
-//	discounts_tab.addEvent('onTabClick', update_discount_tab);
+	var payment_tab = $('form_field_payment_method_idShop_Order').getParent().findParent('li');
 
-	billing_tab.addEvent('onTabClick', function(){
+	payment_tab.addEvent('onTabClick', function(){
 		if (billing_info_changed)
 		{
 			$('item_list').getForm().sendPhpr(

@@ -216,8 +216,17 @@
 
 			$order_items = $order->list_related_records_deferred('items', $params['deferred_session_key']);
 			$cart_items = Shop_OrderHelper::items_to_cart_items_array($order_items);
+
 			if($params['deferred_session_key']) {
-				Shop_OrderHelper::evalOrderTotals( $order, null );
+				Shop_OrderHelper::evalOrderTotals(
+					$order,
+					null,
+					$params['deferred_session_key'],
+					post('applied_discounts_data', false),
+					array(
+						'recalculate_shipping' => false
+					)
+				);
 			}
 
 			$country_id = $order->billing_country_id;

@@ -5,7 +5,7 @@
 			{
 				loadIndicator: {show: true, element: $('Shop_Order_shipping_first_name').getForm(), hideOnSuccess: true},
 				onSuccess: function(){ 
-					shipping_info_changed = true; 
+					trigger_shipping_info_changed();
 					assign_shipping_country_handler.delay(500); 
 					assign_shipping_state_handler.delay(500); 
 					assign_shipping_city_handler.delay(500); 

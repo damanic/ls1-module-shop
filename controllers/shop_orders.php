@@ -2057,7 +2057,9 @@
 			$order->shipping_method_id = array_key_exists('shipping_method_id', $orderData) ? $orderData['shipping_method_id'] : null;
 			$order->payment_method_id = array_key_exists('payment_method_id', $orderData) ? $orderData['payment_method_id'] : null;
 			$order->billing_country_id = array_key_exists('billing_country_id', $orderData) ? $orderData['billing_country_id'] : null;
+			$order->shipping_quote = array_key_exists('shipping_quote', $orderData) ? $orderData['shipping_quote'] : $order->shipping_quote;
 			$order->override_shipping_quote = array_key_exists('override_shipping_quote', $orderData) ? $orderData['override_shipping_quote'] : null;
+
 
 			/*
 			 * Validate shipping parameters
@@ -2069,6 +2071,12 @@
 				$parts = explode('_', $order->shipping_method_id);
 				$order->shipping_sub_option_id = $shipping_method_id;
 				$order->shipping_method_id = $parts[0];
+				$shipping_sub_option = array_key_exists('shipping_sub_option', $orderData) ? $orderData['shipping_sub_option'] : false;
+				if($shipping_sub_option !== false){
+					$order->shipping_sub_option = $shipping_sub_option;
+				}
+			} else {
+				$order->shipping_sub_option = null;
 			}
 			
 			if ($order->override_shipping_quote)
@@ -2079,19 +2087,7 @@
 					throw new Phpr_ApplicationException('Please enter a valid shipping quote or disable the "Override shipping quote" option');
 
 			} else {
-				$shipping_methods = $order->list_available_shipping_options($deferred_session_key, false);
-
-				$shipping_method_found = false;
-				foreach ($shipping_methods as $method)
-				{
-					if ($method->id == $order->shipping_method_id)
-					{
-						$shipping_method_found = true;
-						break;
-					}
-				}
-
-				if (!$shipping_method_found)
+				if (!$order->shipping_method_id)
 					throw new Phpr_ApplicationException('Please select shipping method');
 			}
 
@@ -2122,7 +2118,6 @@
 
 			$save = true;
 			Shop_OrderHelper::apply_item_discounts($items, post('applied_discounts_data'), $save);
-
 		}
 		
 		public function formAfterSave($model, $session_key)
@@ -2200,7 +2195,16 @@
 
 		private function evalOrderTotals($order, $items = null)
 		{
-			return Shop_OrderHelper::evalOrderTotals($order,$items,$this->formGetEditSessionKey(),post('applied_discounts_data', false));
+			$options = array(
+				'recalculate_shipping' => false
+			);
+			return Shop_OrderHelper::evalOrderTotals(
+				$order,
+				$items,
+				$this->formGetEditSessionKey(),
+				post('applied_discounts_data', false),
+				$options
+			);
 		}
 		
 		private function renderOrderTotals($order, $items = null)
@@ -2211,11 +2215,19 @@
 
 			$this->renderPartial('order_totals');
 		}
-		
+
 		protected function onUpdateTotals($order_id)
 		{
+
+			$orderPostData = post('Shop_Order', array());
+
 			$order = $this->viewData['form_model'] = $this->getOrderObj($order_id);
-			$order->set_form_data(post('Shop_Order', array()));
+			$order->set_form_data($orderPostData);
+
+			$updateShippingQuote = isset($orderPostData['shipping_quote']) ? $orderPostData['shipping_quote'] : false;
+			if($updateShippingQuote !== false) {
+				$order->shipping_quote = $updateShippingQuote;
+			}
 
 			Shop_TaxClass::set_tax_exempt($order->tax_exempt);
 			Shop_TaxClass::set_customer_context(Shop_OrderHelper::find_customer($order, true));

@@ -1,0 +1,44 @@
+<?php
+$selected_shipping_option = $form_model->shipping_method_id;
+if ($form_model->shipping_sub_option_id)
+	$selected_shipping_option = $form_model->shipping_sub_option_id;
+?>
+
+<ul class="recordSelector">
+			<li class="header">Selected Shipping Method</li>
+				<li>
+					<?= h($selected_shipping_quote_description) ?>
+					<span class="right"><?= $form_model->format_currency($selected_shipping_quote_price) ?></span>
+				</li>
+	</ul>
+
+	<li class="first" style="margin-top: 1rem;">
+		<p class="last">
+			<a class="imageLink calculator" onclick="
+			return $('Shop_Order_shipping_first_name').getForm().sendPhpr(
+				'onUpdateShippingOptions',
+					{
+						loadIndicator: {
+							show         : true,
+							hideOnSuccess: true
+						},
+						extraFields : {'recalculate_shipping_quotes' : '1'},
+						onSuccess    : function () {},
+						onAfterUpdate: function () {
+							assign_shipping_override_handler();
+							track_shipping_override();
+						}
+					}
+			)" href="#">Recalculate Shipping Quotes</a>
+		</p>
+		<p class="imageLinkComment">
+			Click the link to fetch a new selection of shipping quote options for this order.
+			The quotes returned may differ from the quote currently selected. If you do not want
+			the order subtotal to change, use the fixed shipping quote checkbox below to fix the shipping price
+			before fetching new shipping quote options.
+		</p>
+		<div class="clear"></div>
+	</li>
+
+	<input type="hidden" class="master" name="Shop_Order[shipping_method_id]" value="<?= $selected_shipping_option ?>" id="shipping_method_id"/>
+

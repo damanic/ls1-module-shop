@@ -78,7 +78,7 @@
 					update: 'multi',
 					onAfterUpdate: update_tooltips,
 					onSuccess: function(){
-						shipping_info_changed = true;
+						trigger_shipping_info_changed();
 						billing_info_changed = true;
 					},
 					loadIndicator: {

@@ -222,7 +222,6 @@ class Shop_Order extends Db_ActiveRecord
 
 			$this->add_form_field( 'customer_ip' )->tab( 'Order Details' )->noForm();
 
-
 			$this->add_form_field( 'subtotal_before_discounts', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Subtotal before discounts</strong><br/>The sum of all order items without discounts applied' );
 			$this->add_form_field( 'discount', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Discount</strong><br/>Total amount of discount' );
 			$this->add_form_field( 'subtotal', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Order subtotal</strong><br/>Subtotal is a sum of all order items, taking into account applied discounts' );
@@ -330,10 +329,9 @@ class Shop_Order extends Db_ActiveRecord
 			$this->add_form_field('shipping_city', 'left')->tab('Shipping Information');
 			$this->add_form_field('shipping_zip', 'right')->tab('Shipping Information');
 
+			$this->add_form_field('shipping_method')->tab('Shipping Method')->renderAs(frm_radio);
 			$this->add_form_field('override_shipping_quote', 'left')->tab('Shipping Method')->comment('Use this checkbox if you want to enter the shipping quote manually.');
 			$this->add_form_field('manual_shipping_quote', 'right')->tab('Shipping Method')->cssClassName('checkbox_align');
-
-			$this->add_form_field('shipping_method')->tab('Shipping Method')->renderAs(frm_radio);
 
 			$this->add_form_field('payment_method')->tab('Payment Method')->renderAs(frm_radio);
 

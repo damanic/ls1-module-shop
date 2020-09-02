@@ -1,0 +1,63 @@
+<?
+$current_quote = $form_model->shipping_quote;
+$selected_shipping_option = $form_model->shipping_sub_option_id ? $form_model->shipping_sub_option_id : $form_model->shipping_method_id;
+$shipping_options = $form_model->list_available_shipping_options($this->formGetEditSessionKey(), false);
+$local_methods = array();
+foreach ($shipping_options as $index=>$option) {
+	if (!$option->multi_option && !$option->error_hint) {
+		$local_methods[] = $option;
+		unset($shipping_options[$index]);
+	}
+}
+?>
+
+<div id="shipping_option_selector">
+		<ul class="recordSelector">
+			<? if (count($local_methods)): ?>
+				<li class="header">User-defined shipping options</li>
+
+				<? foreach ($local_methods as $option):
+					$ui_selected = ((int)$form_model->shipping_method_id == (int)$option->id) && ($option->quote == $current_quote);
+				?>
+					<li class="selectable <?= $ui_selected ? 'current' : null ?>"
+						onclick="record_selector_click(this)"
+						data-price="<?=$option->quote?>"
+						data-suboptionname="">
+						<?= h($option->name) ?> <span class="right"><?= $option->discount ? '<del>'.$form_model->format_currency($option->quote_no_discount).'</del>' : null ?> <?= $form_model->format_currency($option->quote) ?></span>
+						<input type="hidden" value="<?= $option->id ?>"/>
+					</li>
+				<? endforeach ?>
+			<? endif ?>
+
+			<? foreach ($shipping_options as $option):
+				if (!$option->error_hint && !$option->sub_options)
+					continue;
+				?>
+				<li class="header"><?= h($option->name) ?></li>
+				<? if (!$option->error_hint): ?>
+				<? foreach ($option->sub_options as $sub_option):
+					$ui_selected = ($option->id == $form_model->shipping_method_id && $sub_option->id == $form_model->shipping_sub_option_id) && ($sub_option->quote == $current_quote);
+				?>
+					<li class="selectable <?= $ui_selected ? 'current' : null ?>"
+						onclick="record_selector_click(this)"
+						data-price="<?=$sub_option->quote?>"
+						data-suboptionname="<?=$sub_option->name?>">
+						<?= h($sub_option->name) ?>
+						<span class="right"><?= (isset($sub_option->discount) &&  $sub_option->discount)? '<del>'.$form_model->format_currency($sub_option->quote_no_discount).'</del>' : null ?> <?= $form_model->format_currency($sub_option->quote) ?></span>
+						<input type="hidden" value="<?= $sub_option->id ?>"/>
+					</li>
+				<? endforeach ?>
+			<? else: ?>
+				<li class="error"><?= h($option->error_hint) ?></li>
+			<? endif ?>
+			<? endforeach ?>
+
+			<? if (!count($local_methods) && !count($shipping_options)): ?>
+				<li class="noData">No shipping options available for the selected shipping location.</li>
+			<? endif ?>
+		</ul>
+		<input type="hidden" class="master" name="Shop_Order[shipping_method_id]" value="<?= $ui_selected ? $selected_shipping_option : null ?>" id="shipping_method_id"/>
+		<input type="hidden"  name="Shop_Order[shipping_quote]" value="<?= $form_model->shipping_quote ?>" id="shipping_method_quote"/>
+		<input type="hidden"  name="Shop_Order[shipping_sub_option]" value="<?= $form_model->shipping_sub_option ?>" id="shipping_method_sub_option"/>
+
+</div>
