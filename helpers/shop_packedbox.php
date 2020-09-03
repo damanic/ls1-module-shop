@@ -12,11 +12,15 @@ class Shop_PackedBox {
 			throw new Phpr_ApplicationException('Invalid Box Given, must be instance of Shop_ShippingBox');
 		}
 		$this->box = $box;
-		$this->items = $shop_items;
-
-		$ship_params = Shop_ShippingParams::get();
-		$this->native_dimension_unit = $ship_params->dimension_unit;
-		$this->native_weight_unit = $ship_params->weight_unit;
+		if(count($shop_items)) {
+			foreach ( $shop_items as $item ) {
+				if ( !Db_ActiverecordProxy::is_a( $item, 'Shop_OrderItem' ) && !Db_ActiverecordProxy::is_a( $item, 'Shop_CartItem' ) ) {
+					throw new Phpr_ApplicationException( 'Invalid Item given, must be instance of Shop_CartItem or Shop_OrderItem' );
+				}
+				$this->items[] = $item;
+			}
+		}
+		$this->load_native_units();
 	}
 
 	public function set_weight($weight){
@@ -46,6 +50,12 @@ class Shop_PackedBox {
 			$weight += $item->total_weight();
 		}
 		return $weight;
+	}
+
+	public function add_item($item, $quantity=1){
+		$packed_item = clone $item;
+		$packed_item->quantity = $quantity;
+		$this->items[] = $packed_item;
 	}
 
 	public function get_items(){
@@ -164,6 +174,9 @@ class Shop_PackedBox {
 		}
 
 		foreach($packages as $package){
+
+			$packed_box = new self($shipping_box,array());
+
 			$packer_box = $package->getBox();
 			if($packer_box->box_id && isset($shipping_boxes_indexed[$packer_box->box_id])){
 				$shipping_box = $shipping_boxes_indexed[$packer_box->box_id];
@@ -178,14 +191,22 @@ class Shop_PackedBox {
 
 			$shop_items = array();
 			$packer_items = $package->getItems();
+			$packed_item_counts = array();
 			foreach($packer_items as $packer_item){
 				if($packer_item->item_id && isset($order_items_indexed[$packer_item->item_id])){
-					$shop_item = $order_items_indexed[$packer_item->item_id];
-					$shop_item->quantity = 1;
-					$shop_items[] = $shop_item;
+					if(isset($packed_item_counts[$packer_item->item_id])){
+						$packed_item_counts[$packer_item->item_id]++;
+					} else{
+						$packed_item_counts[$packer_item->item_id] = 1;
+					}
 				}
 			}
-			$packed_box = new self($shipping_box,$shop_items);
+
+			foreach($packed_item_counts as $item_id => $quantity){
+				$shop_item = $order_items_indexed[$item_id];
+				$packed_box->add_item($shop_item, $quantity);
+			}
+
 			$order_packed_boxes[] = $packed_box;
 		}
 
