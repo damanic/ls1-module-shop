@@ -109,8 +109,11 @@ class Shop_BoxPacker {
 		);
 	}
 
+	/** @deprecated
+	 * Use Shop_ShippingBox::get_boxes();
+	 */
 	public function get_boxes() {
-		return Shop_ShippingBox::create()->find_all();
+		return Shop_ShippingBox::get_boxes();
 	}
 
 	public function make_box_compat( Shop_ShippingBox $box ) {

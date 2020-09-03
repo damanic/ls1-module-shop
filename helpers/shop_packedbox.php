@@ -24,18 +24,20 @@ class Shop_PackedBox {
 	}
 
 	public function get_weight($unit='native'){
-		$weight = 0;
-		if($this->weight){
-			$weight = $this->weight;
-		} else {
-			$weight = $this->box->empty_weight ? $this->box->empty_weight : 0;
-			$weight += $this->get_item_weight();
+		if(!$this->weight){
+			$this->weight = $this->get_calculated_weight();
 		}
 
 		if($unit == 'native'){
-			return $weight;
+			return $this->weight;
 		}
-		return $this->convert_weight_unit($weight, $unit);
+		return $this->convert_weight_unit($this->weight, $unit);
+	}
+
+	public function get_calculated_weight(){
+		$weight = $this->box->empty_weight ? $this->box->empty_weight : 0;
+		$weight += $this->get_item_weight();
+		return $weight;
 	}
 
 	protected function get_item_weight(){
@@ -76,6 +78,26 @@ class Shop_PackedBox {
 			return $depth;
 		}
 		return $this->convert_dimension_unit($depth, $unit);
+	}
+
+	public function get_native_dimension_unit(){
+		if(!$this->native_dimension_unit){
+			$this->load_native_units();
+		}
+		return $this->native_dimension_unit;
+	}
+
+	public function get_native_weight_unit(){
+		if(!$this->native_weight_unit){
+			$this->load_native_units();
+		}
+		return $this->native_weight_unit;
+	}
+
+	protected function load_native_units(){
+		$params = Shop_ShippingParams::get();
+		$this->native_dimension_unit = $params->dimension_unit;
+		$this->native_weight_unit = $params->weight_unit;
 	}
 
 	protected function convert_dimension_unit($value, $unit){
@@ -164,10 +186,6 @@ class Shop_PackedBox {
 				}
 			}
 			$packed_box = new self($shipping_box,$shop_items);
-			$box_weight = $packer_box->native_weight($packer_box->getEmptyWeight());
-			if($box_weight){
-				$packed_box->set_weight($packed_box->get_weight() + $box_weight);
-			}
 			$order_packed_boxes[] = $packed_box;
 		}
 

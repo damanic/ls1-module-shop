@@ -48,5 +48,9 @@ class Shop_ShippingBox extends Db_ActiveRecord {
 		return false;
 	}
 
+	public static function get_boxes(){
+		return self::create()->find_all();
+	}
+
 
 }
