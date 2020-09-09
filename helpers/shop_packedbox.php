@@ -161,56 +161,85 @@ class Shop_PackedBox {
 		if(!$packages){
 			throw new Phpr_ApplicationException('Could not calculate boxes');
 		}
-		$shipping_params  = Shop_ShippingParams::get();
-		$shipping_boxes = $shipping_params->shipping_boxes;
-		$shipping_boxes_indexed = array();
-		foreach($shipping_boxes as $shipping_box){
-			$shipping_boxes_indexed[$shipping_box->id] = $shipping_box;
+		return self::_convert_boxpacker_packages($order->items, $packages);
+	}
+
+	/**
+	 * This uses the Shop_BoxPacker class to place order items into packed boxes
+	 * Requires PHP v5.4+
+	 * @documentable
+	 * @param array of Shop_CartItem or Shop_OrderItem
+	 * @return array of Shop_PackedBox objects
+	 */
+	public static function calculate_item_packed_boxes($items){
+		$item_packed_boxes = array();
+		try {
+			$packer   = new Shop_BoxPacker();
+			$packages = $packer->pack( $items );
+			$item_packed_boxes = self::_convert_boxpacker_packages($items, $packages);
+		} catch ( Exception $e ) {
+			traceLog( $e->getMessage() );
 		}
+		return $item_packed_boxes;
+	}
 
-		$order_items_indexed = array();
-		foreach($order->items as $order_item){
-			$order_items_indexed[$order_item->id] = $order_item;
-		}
+	private static function _convert_boxpacker_packages($items, $packages){
+		$packed_boxes = array();
+		if($packages){
+			$shipping_params  = Shop_ShippingParams::get();
+			$shipping_boxes = $shipping_params->shipping_boxes;
 
-		foreach($packages as $package){
-
-			$packed_box = new self($shipping_box,array());
-
-			$packer_box = $package->getBox();
-			if($packer_box->box_id && isset($shipping_boxes_indexed[$packer_box->box_id])){
-				$shipping_box = $shipping_boxes_indexed[$packer_box->box_id];
-			} else {
-				$shipping_box = Shop_ShippingBox::create();
-				$shipping_box->id = $packer_box->box_id;
-				$shipping_box->length = $packer_box->getOuterLength(true);
-				$shipping_box->width = $packer_box->getOuterLength(true);
-				$shipping_box->depth = $packer_box->getOuterLength(true);
-				$shipping_box->max_weight = $packer_box->getMaxWeight(true);
+			$shipping_boxes_indexed = array();
+			foreach($shipping_boxes as $shipping_box){
+				$shipping_boxes_indexed[$shipping_box->id] = $shipping_box;
 			}
 
-			$shop_items = array();
-			$packer_items = $package->getItems();
-			$packed_item_counts = array();
-			foreach($packer_items as $packer_item){
-				if($packer_item->item_id && isset($order_items_indexed[$packer_item->item_id])){
-					if(isset($packed_item_counts[$packer_item->item_id])){
-						$packed_item_counts[$packer_item->item_id]++;
-					} else{
-						$packed_item_counts[$packer_item->item_id] = 1;
+			$items_indexed = array();
+			foreach($items as $item){
+				$id = property_exists($item, 'id') ? $item->id : $item->key;
+				$items_indexed[$id] = $item;
+			}
+
+			foreach($packages as $package){
+
+				$packer_box = $package->getBox();
+				if($packer_box->box_id && isset($shipping_boxes_indexed[$packer_box->box_id])){
+					$shipping_box = $shipping_boxes_indexed[$packer_box->box_id];
+				} else {
+					$shipping_box = Shop_ShippingBox::create();
+					$shipping_box->id = $packer_box->box_id;
+					$shipping_box->length = $packer_box->getOuterLength(true);
+					$shipping_box->width = $packer_box->getOuterLength(true);
+					$shipping_box->depth = $packer_box->getOuterLength(true);
+					$shipping_box->max_weight = $packer_box->getMaxWeight(true);
+				}
+
+				$packed_box = new self($shipping_box,array());
+
+				$shop_items = array();
+				$packer_items = $package->getItems();
+				$packed_item_counts = array();
+				foreach($packer_items as $packer_item){
+					if($packer_item->item_id && isset($items_indexed[$packer_item->item_id])){
+						if(isset($packed_item_counts[$packer_item->item_id])){
+							$packed_item_counts[$packer_item->item_id]++;
+						} else{
+							$packed_item_counts[$packer_item->item_id] = 1;
+						}
 					}
 				}
-			}
 
-			foreach($packed_item_counts as $item_id => $quantity){
-				$shop_item = $order_items_indexed[$item_id];
-				$packed_box->add_item($shop_item, $quantity);
-			}
+				foreach($packed_item_counts as $item_id => $quantity){
+					$shop_item = $items_indexed[$item_id];
+					$packed_box->add_item($shop_item, $quantity);
+				}
 
-			$order_packed_boxes[] = $packed_box;
+				$packed_boxes[] = $packed_box;
+			}
 		}
 
-		return $order_packed_boxes;
+		return $packed_boxes;
 	}
+
 
 }

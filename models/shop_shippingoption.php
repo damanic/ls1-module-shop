@@ -532,26 +532,35 @@
 
 		protected function _get_quote($params){
 			$default_request_params = array(
-				'host_obj' => $this,
-				'shipping_info' => null,
-				'total_price'=>null,
-				'total_volume'=>null,
-				'total_weight'=>null,
-				'total_item_num'=>null,
-				'cart_items'=>null, //this forces orders to convert order items to cart items when fetching quotes - not great!
-				'is_business'=>null,
-				'customer'=>null,
-				'customer_id'=>null,
+				'host_obj'       => $this,
+				'shipping_info'  => null, //instance of Shop_AddressInfo
+				'total_price'    => null,
+				'total_volume'   => null,
+				'total_weight'   => null,
+				'total_item_num' => null,
+				'cart_items'     => null,
+				'customer_id' 	 => null
+			);
+			$deprecated_request_params = array(
+				'country_id'     => null,
+				'state_id'       => null,
+				'zip'            => null,
+				'city'           => null,
+				'is_business'    => null
 			);
 
 
 			$request_params = array_merge($default_request_params,$params);
 			$shipping_info = $request_params['shipping_info'];
-			$request_params['country_id'] = $shipping_info->country;
-			$request_params['state_id'] = $shipping_info->state;
-			$request_params['zip'] = $shipping_info->zip;
-			$request_params['city'] = $shipping_info->city;
+			if($shipping_info) {
+				$request_params['country_id'] = $shipping_info->country;
+				$request_params['state_id']   = $shipping_info->state;
+				$request_params['zip']        = $shipping_info->zip;
+				$request_params['city']       = $shipping_info->city;
+				$request_params['is_business']       = $shipping_info->is_business;
+			}
 
+			//This cache merely covers repeat requests on the same user session
 			$cached_params = array(
 				'country_id'=>$request_params['country_id'],
 				'state_id'=>$request_params['state_id'],
@@ -584,19 +593,23 @@
 		protected function fetch_quote($params){
 			$default_request_params = array(
 				'host_obj'       => $this,
-				'shipping_info'  => null,
-				'country_id'     => null,
-				'state_id'       => null,
-				'zip'            => null,
-				'city'           => null,
+				'shipping_info'  => null, //instance of Shop_AddressInfo
 				'total_price'    => null,
 				'total_volume'   => null,
 				'total_weight'   => null,
 				'total_item_num' => null,
 				'cart_items'     => null,
+				'customer_id' 	 => null
+			);
+			$deprecated_request_params = array(
+				'country_id'     => null,
+				'state_id'       => null,
+				'zip'            => null,
+				'city'           => null,
 				'is_business'    => null
 			);
-			$request_params         = array_merge( $default_request_params, $params );
+			$request_params = array_merge($default_request_params, $deprecated_request_params);
+			$request_params = array_merge( $default_request_params, $params );
 
 			$shipping_info      = $request_params['shipping_info'];
 			$cart_items      = $request_params['cart_items'];
@@ -608,6 +621,7 @@
 					return;
 				}
 			}
+
 
 			// Prepare event parameters
 			$event_params = array(
