@@ -181,29 +181,29 @@ class Shop_BoxPacker {
 		return $this->unpackable_items;
 	}
 
-	public function convert_to_mm( $unit ) {
+	public function convert_to_mm( $unit, $precision=0 ) {
 		$unit = ($unit && is_numeric($unit)) ? $unit : 0;
 		if(!$unit){
 			return $unit;
 		}
 		if ( $this->dimensions_in_cm ) {
-			return round( $unit * 10, 2 );
+			return round( $unit * 10, $precision);
 		}
 		$inches = $unit;
-		return round( $inches * 25.4, 2 );
+		return round( $inches * 25.4, $precision);
 
 	}
 
-	public function convert_to_grams( $unit ) {
+	public function convert_to_grams( $unit, $precision=0 ) {
 		$unit = ($unit && is_numeric($unit)) ? $unit : 0;
 		if(!$unit){
 			return $unit;
 		}
 		if ( $this->weights_in_kg ) {
-			return round( $unit * 1000, 2 );
+			return round( $unit * 1000, $precision );
 		}
 		$lbs = $unit;
-		return round( $lbs * 453.592, 2 );
+		return round( $lbs * 453.592, $precision );
 	}
 
 
@@ -295,20 +295,24 @@ trait Shop_BoxPacker_NativeUnits {
 		return $this->get_native_shipping_params()->weight_unit;
 	}
 
-	public function convert_to_cm($unit){
-		return round($unit / 10, 2);
+	public function convert_to_cm($unit, $precision=null){
+		$val = $unit / 10;
+		return $precision === null ? $val : round($val, $precision);
 	}
 
-	public function convert_to_inches($unit){
-		return round($unit * 0.0393701, 2);
+	public function convert_to_inches($unit, $precision=null){
+		$val = $unit * 0.0393701;
+		return $precision === null ? $val : round($val, $precision);
 	}
 
-	public function convert_to_lbs($unit){
-		return round($unit * 0.00220462, 2);
+	public function convert_to_lbs($unit, $precision=null){
+		$val = $unit * 0.00220462;
+		return $precision === null ? $val : round($val, $precision);
 	}
 
-	public function convert_to_kgs($unit){
-		return round($unit / 1000, 2);
+	public function convert_to_kgs($unit, $precision=null){
+		$val = $unit / 1000;
+		return $precision === null ? $val : round($val, $precision);
 	}
 }
 
