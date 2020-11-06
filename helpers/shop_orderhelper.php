@@ -99,6 +99,7 @@ class Shop_OrderHelper{
 			$order->manual_shipping_quote = round(trim($order->manual_shipping_quote), 2);
 		}
 
+		//recalculating quotes optional
 		if ($options['recalculate_shipping'] && strlen($order->shipping_method_id) && strlen($order->shipping_country_id)) {
 
 			//recalc all
@@ -147,10 +148,15 @@ class Shop_OrderHelper{
 					}
 				}
 
-				$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, (object)$shipping_info, $order->get_shipping_quote());
-				$order->apply_shipping_tax_array($shipping_taxes);
-				$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
 			}
+		}
+
+
+		//Shipping info may have changed, recalculate shipping taxes
+		if($order->shipping_method_id) {
+			$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $order->shipping_method_id, (object) $shipping_info, $order->get_shipping_quote() );
+			$order->apply_shipping_tax_array($shipping_taxes);
+			$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
 		}
 
 		if (!$items)
