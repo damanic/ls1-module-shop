@@ -1013,3 +1013,4 @@
 #1.34.0 Improved order shipping method selection on backend edit/create forms
 #1.34.1 Small improvement to boxpacker calculations
 #1.34.2 Fixes issue applying order shipping tax
+#1.34.3 Fixes issue with shipping estimate
