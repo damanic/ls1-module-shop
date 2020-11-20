@@ -1012,7 +1012,7 @@
 		public static function total_weight($cart_name = 'main')
 		{
 			$items = self::list_items($cart_name);
-			self::total_items_weight($items);
+			return self::total_items_weight($items);
 		}
 
 		public static function total_items_weight($items, $include_free_shipping = false){
