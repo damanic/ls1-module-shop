@@ -1461,8 +1461,8 @@
 				$shipping_method = Shop_CheckoutData::get_shipping_method();
 				$total += $this->data['shipping_quote'] = $shipping_method->is_free ? 0 : $shipping_method->quote_no_tax;
 
-				$shiping_taxes = $this->data['shipping_taxes'] = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
-				$total += $this->data['shipping_tax'] = Shop_TaxClass::eval_total_tax($shiping_taxes);
+				$shipping_taxes = $this->data['shipping_taxes'] = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
+				$total += $this->data['shipping_tax'] = Shop_TaxClass::eval_total_tax($shipping_taxes);
 
 				$payment_methods = Shop_PaymentMethod::list_checkout_applicable($cart_name,$total)->as_array();
 				$this->data['payment_methods'] = $payment_methods;
@@ -2066,8 +2066,8 @@
 			$total += $this->data['subtotal'] = Shop_Cart::total_price_no_tax($cart_name);
 			$total += $this->data['shipping_quote'] = $shipping_method->quote_no_tax;
 
-			$shiping_taxes = $this->data['shipping_taxes'] = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
-			$total += $this->data['shipping_tax'] = Shop_TaxClass::eval_total_tax($shiping_taxes);
+			$shipping_taxes = $this->data['shipping_taxes'] = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
+			$total += $this->data['shipping_tax'] = Shop_TaxClass::eval_total_tax($shipping_taxes);
 
 			$payment_methods = Shop_PaymentMethod::list_checkout_applicable($cart_name,$total)->as_array();
 
