@@ -1014,3 +1014,4 @@
 #1.34.1 Small improvement to boxpacker calculations
 #1.34.2 Fixes issue applying order shipping tax
 #1.34.3 Fixes issue with shipping estimate
+#1.34.4 Adds shipping zone filter to reports
