@@ -15,6 +15,7 @@
 			'billing_state'=>array('name'=>'Billing State', 'class_name'=>'Shop_CustomerBillingStateFilter', 'prompt'=>'Please choose billing states you want to include to the list. Orders with other billing states will be hidden.', 'added_list_title'=>'Added States'),
 			'shipping_country'=>array('name'=>'Shipping country', 'class_name'=>'Shop_OrderShippingCountryFilter', 'prompt'=>'Please choose countries you want to include to the list. Orders with other shipping countries will be hidden.', 'added_list_title'=>'Added Countries'),
 			'shipping_state'=>array('name'=>'Shipping State', 'class_name'=>'Shop_CustomerShippingStateFilter', 'prompt'=>'Please choose shipping states you want to include to the list. Orders with other shipping states will be hidden.', 'added_list_title'=>'Added States'),
+			'shipping_zone'=>array('name'=>'Shipping Zone', 'class_name'=>'Shop_OrderShippingZoneFilter', 'prompt'=>'Please choose shipping zones you want to include in the list. Orders to countries not in the shipping zones will be hidden.', 'added_list_title'=>'Added Shipping Zones')
 		);
 		
 		public function index()
