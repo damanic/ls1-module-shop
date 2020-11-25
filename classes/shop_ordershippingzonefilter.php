@@ -29,7 +29,7 @@
 		}
 
 		protected function get_country_ids($zone_keys){
-			return Db_DbHelper::scalarArray('SELECT id FROM shop_countries WHERE shipping_zone_id IN ('.$this->keysToStr($zone_keys).')');
+			return Db_DbHelper::scalarArray('SELECT id FROM shop_countries WHERE shipping_zone_id IN '.$this->keysToStr($zone_keys));
 		}
 	}
 
