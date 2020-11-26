@@ -631,10 +631,17 @@
 		 */
 		public function listDashboardIndicators()
 		{
-			return array(
-				'ordertotals'=>array('partial'=>'ordertotals_indicator.htm', 'name'=>'Order Totals'),
-				'paidordertotals'=>array('partial'=>'paidordertotals_indicator.htm', 'name'=>'Paid Order Totals'),
-			);
+			$user = Phpr::$security->getUser();
+			$indicators = array();
+
+			if ($user->get_permission('shop', 'access_reports')) {
+				$indicators = array_merge($indicators, array(
+					'ordertotals'=>array('partial'=>'ordertotals_indicator.htm', 'name'=>'Order Totals'),
+					'paidordertotals'=>array('partial'=>'paidordertotals_indicator.htm', 'name'=>'Paid Order Totals'),
+				));
+			}
+
+			return $indicators;
 		}
 		
 		/**
@@ -645,10 +652,22 @@
 		 */
 		public function listDashboardReports()
 		{
-			return array(
-				'recent_orders'=>array('partial'=>'recentorders_report.htm', 'name'=>'Recent Orders'),
-				'product_groups'=>array('partial'=>'productgroups_report.htm', 'name'=>'Custom Product Groups')
-			);
+			$user = Phpr::$security->getUser();
+			$reports = array();
+
+			if ($user->get_permission('shop', 'manage_orders_and_customers')) {
+				$reports = array_merge($reports, array(
+					'recent_orders'=>array('partial'=>'recentorders_report.htm', 'name'=>'Recent Orders'),
+				));
+			}
+
+			if ($user->get_permission('shop', 'manage_products')) {
+				$reports = array_merge($reports, array(
+					'product_groups'=>array('partial'=>'productgroups_report.htm', 'name'=>'Custom Product Groups')
+				));
+			}
+
+			return $reports;
 		}
 
 		/*
