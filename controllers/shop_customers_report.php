@@ -319,7 +319,7 @@ class Shop_Customers_Report extends Shop_GenericReport {
 				$intervalLimit = $customer_ids ? $customer_id_filter : $intervalLimit;
 				$query = "SELECT COUNT(DISTINCT(shop_customers.id)) AS customers_count 
 					FROM shop_customers
-					WHERE $intervalLimit $filterStr";
+					WHERE $intervalLimit";
 
 				$result = Db_DbHelper::object( $query, array($customer_ids) );
 				$totals_data->customers_count = $result ? $result->customers_count : 0;
