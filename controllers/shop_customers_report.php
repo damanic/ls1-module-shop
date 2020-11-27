@@ -51,8 +51,8 @@ class Shop_Customers_Report extends Shop_GenericReport {
 	public function listPrepareData() {
 		$obj                                            = Shop_Customer::create();
 		$this->add_calculated_columns($obj);
-		$this->filterApplyToModel( $obj );
 		$this->applyIntervalToModel( $obj );
+		$this->filterApplyToModel( $obj );
 		$obj->where('shop_customers.deleted_at is null');
 
 		return $obj;
@@ -183,7 +183,7 @@ class Shop_Customers_Report extends Shop_GenericReport {
 		}
 
     	$chartType = $this->viewData['chart_type'] = $this->getChartType();
-		$filterStr = $this->filterAsString();
+		$filterStr = null;
 		$paidFilter = null;
 		$whereFilter = null;
 
@@ -201,6 +201,7 @@ class Shop_Customers_Report extends Shop_GenericReport {
 			if($this->get_interval_context() == 'orders_paid'){
 				$paidFilter = 'AND '.$this->getOrderPaidStatusFilter();
 			}
+			$filterStr = $this->filterAsString();
 		}
 
 
