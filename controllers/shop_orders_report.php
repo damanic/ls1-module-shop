@@ -48,9 +48,6 @@
 			if ($paidFilter)
 				$paidFilter = 'and '.$paidFilter;
 
-			if ($filterStr)
-				$filterStr = 'and '.$filterStr;
-
 			$intervalLimit = $this->intervalQueryStr();
 			$seriesIdField = $this->timeSeriesIdField();
 			$seriesValueField = $this->timeSeriesValueField();
