@@ -1,16 +1,24 @@
+<?php
+$context = $this->get_interval_context();
+?>
 <div class="scoreboardReport">
 	<ul>
 		<li>
 			<h3>Customers</h3>
 			<p><?= $totals_data->customers_count ?></p>
 		</li>
-		<li>
-			<h3>Orders Created</h3>
-			<p> <?= $totals_data->orders_count ?>  </p>
-		</li>
-		<li class="last">
-			<h3>Average Order Value</h3>
-			<p>  <?= $totals_data->average_order_value ?>  </p>
-		</li>
+		<? if($context !== 'account_created') :?>
+			<li>
+				<?
+					$title_context = stristr($context,'placed') ? 'Placed' : 'Paid'
+				?>
+				<h3>Orders <?=$title_context?></h3>
+				<p> <?= $totals_data->orders_count ?>  </p>
+			</li>
+			<li class="last">
+				<h3>Average Order Value</h3>
+				<p>  <?= $totals_data->average_order_value ?>  </p>
+			</li>
+		<? endif;?>
 	</ul>
 </div>

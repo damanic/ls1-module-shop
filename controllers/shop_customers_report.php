@@ -1,5 +1,8 @@
 <?php
 
+/*
+ * @todo orders_placed + orders_paid context is slow
+ */
 class Shop_Customers_Report extends Shop_GenericReport {
 
 	public $list_model_class = 'Shop_Customer';
@@ -11,17 +14,15 @@ class Shop_Customers_Report extends Shop_GenericReport {
 
 
 	protected $chart_types = array(
-//		Backend_ChartController::rt_column,
-//		Backend_ChartController::rt_pie,
 		Backend_ChartController::rt_line
 	);
 
 	protected $display_objects = array(
+		'account_created'  => 'New customers',
 		'orders_placed'    => 'Customers who placed orders',
 		'orders_paid'      => 'Customers with paid orders',
-		'no_orders_placed' => 'Customers with no placed orders',
-		'no_orders_paid'   => 'Customers with no paid orders',
-		'account_created'  => 'New customers',
+		'customers_no_paid_orders'   => 'Customers with no paid orders',
+		'customers_no_placed_orders' => 'Customers with no placed orders',
 	);
 
 	public $filter_filters = array(
@@ -98,33 +99,42 @@ class Shop_Customers_Report extends Shop_GenericReport {
 	}
 
 	protected function applyIntervalToModel( $model ) {
-		$start          = Phpr_DateTime::parse( $this->get_interval_start(), '%x' )->toSqlDate();
-		$end            = Phpr_DateTime::parse( $this->get_interval_end(), '%x' )->toSqlDate();
-		$interval_field = $this->get_interval_field();
 
 		$model->group( 'shop_customers.id' );
 		$model->join( 'shop_orders', 'shop_customers.id=shop_orders.customer_id' );
 
-		if ( $this->is_interval_context_orders() ) {
-			if (  $this->get_interval_context() == 'orders_paid' ) {
-				$paidFilter = $this->getOrderPaidStatusFilter();
-				$model->where( $paidFilter );
-			}
+    	$customer_ids = null;
+		if( $this->get_interval_context() == 'customers_no_placed_orders'){
+			$customer_ids = $this->get_customer_ids_with_no_orders_in_interval(false);
+		}
+		if( $this->get_interval_context() == 'customers_no_paid_orders'){
+			$customer_ids = $this->get_customer_ids_with_no_orders_in_interval(true);
 		}
 
-		$model->where( 'date(' . $interval_field . ') >= ?', $start );
-		$model->where( 'date(' . $interval_field . ') <= ?', $end );
+		if($customer_ids){
+			$model->where('shop_customers.id IN (?)', array($customer_ids));
+		} else {
 
+			$start          = Phpr_DateTime::parse( $this->get_interval_start(), '%x' )->toSqlDate();
+			$end            = Phpr_DateTime::parse( $this->get_interval_end(), '%x' )->toSqlDate();
+			$interval_field = $this->get_interval_field();
 
+			if ( $this->is_interval_context_orders() ) {
+				if ( $this->get_interval_context() == 'orders_paid' ) {
+					$paidFilter = $this->getOrderPaidStatusFilter();
+					$model->where( $paidFilter );
+				}
+			}
+			$model->where( 'date(' . $interval_field . ') >= ?', $start );
+			$model->where( 'date(' . $interval_field . ') <= ?', $end );
+		}
 	}
 
 	protected function get_interval_field_query_string($interval_field = null) {
 		$start = Phpr_DateTime::parse( $this->get_interval_start(), '%x' )->toSqlDate();
 		$end   = Phpr_DateTime::parse( $this->get_interval_end(), '%x' )->toSqlDate();
-
 		$interval_field = $interval_field ? $interval_field : $this->get_interval_field();
 		$result = " DATE(" . $interval_field . ") >= '$start' and DATE(" . $interval_field . ") <= '$end'";
-
 		return $result;
 	}
 
@@ -133,19 +143,17 @@ class Shop_Customers_Report extends Shop_GenericReport {
 		if ( $this->is_interval_context_orders() ) {
 			$interval_field = 'shop_orders.order_datetime';
 		}
-
 		return $interval_field;
 	}
 
 	protected function get_interval_context(){
-		return $this->getReportParameter( 'product_report_display_type', 'orders_placed' );
+		return $this->getReportParameter( 'customers_report_display_type', 'account_created' );
 	}
 
 	protected function is_interval_context_orders() {
 		if ( strstr( $this->get_interval_context(), 'orders' ) ) {
 			return true;
 		}
-
 		return false;
 	}
 
@@ -166,51 +174,39 @@ class Shop_Customers_Report extends Shop_GenericReport {
     	$series = array();
     	$data = array();
 
+    	$contexts_not_supported = array(
+    		'customers_no_paid_orders',
+			'customers_no_placed_orders'
+		);
+    	if(in_array($this->get_interval_context(), $contexts_not_supported)){
+    		return false;
+		}
+
     	$chartType = $this->viewData['chart_type'] = $this->getChartType();
 		$filterStr = $this->filterAsString();
+		$paidFilter = null;
+		$whereFilter = null;
 
-		$paidFilter = $this->getOrderPaidStatusFilter();
-		if ( $paidFilter ) {
-			$paidFilter = 'and ' . $paidFilter;
+
+		$graph_name = 'New Customers';
+		$report_table = 'shop_customers';
+		$report_join = "left join shop_customers on report_date = DATE(shop_customers.created_at)";
+
+		if($this->is_interval_context_orders()){
+			$graph_name = 'Customers';
+			$report_table = 'shop_orders';
+			$report_join = "left join shop_orders on report_date = shop_orders.order_date
+							left join shop_customers on shop_customers.id=shop_orders.customer_id";
+
+			if($this->get_interval_context() == 'orders_paid'){
+				$paidFilter = 'AND '.$this->getOrderPaidStatusFilter();
+			}
 		}
 
-		$displayType = $this->getReportParameter( 'product_report_display_type', 'amount' );
-		if ( $displayType == 'amount' ) {
-			$amountField = 'sum(((shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)*shop_order_items.quantity) * shop_orders.shop_currency_rate)';
-		} else {
-			$amountField = 'sum(shop_order_items.quantity)';
-		}
 
-		if ( $chartType == Backend_ChartController::rt_column || $chartType == Backend_ChartController::rt_pie ) {
 
-			$intervalLimit = $this->intervalQueryStr( false );
-			$data_query = "
-				select 
-					COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
-					'serie' as series_id, 
-					'serie' as series_value, 
-					'amount' AS graph_name, 
-					$amountField as record_value
-				from 
-					shop_order_statuses,
-					report_dates
-				left join shop_orders on report_date = shop_orders.order_date
-				left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id
-				left join shop_products on shop_products.id = shop_order_items.shop_product_id	   
-				LEFT JOIN shop_option_matrix_records ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
-				LEFT JOIN shop_option_matrix_options ON shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
-				left join shop_customers on shop_customers.id=shop_orders.customer_id
-				where
-					shop_orders.deleted_at is null and
-					shop_order_statuses.id = shop_orders.status_id and
-					$intervalLimit
-					$filterStr
-					$paidFilter
-				GROUP BY graph_code
-				order by report_date, shop_products.id, shop_option_matrix_records.id
-			";
+		if ( $chartType == Backend_ChartController::rt_line ) {
 
-		} else {
 			$intervalLimit    = $this->intervalQueryStr();
 			$seriesIdField    = $this->timeSeriesIdField();
 			$seriesValueField = $this->timeSeriesValueField();
@@ -220,34 +216,26 @@ class Shop_Customers_Report extends Shop_GenericReport {
 
 			$data_query = "
 					select
-						COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
-						'amount' AS graph_name,
+						'customer' AS graph_code, 
+						'{$graph_name}' AS graph_name,
 						{$seriesIdField} as series_id,
 						{$seriesValueField} as series_value,
-						$amountField as record_value
+						COUNT(DISTINCT(shop_customers.id)) as record_value
 					from 
-						shop_order_statuses,
 						report_dates
-					left join shop_orders on report_date = shop_orders.order_date
-					left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id
-					left join shop_products on shop_products.id = shop_order_items.shop_product_id
-					LEFT JOIN shop_option_matrix_records ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
-					LEFT JOIN shop_option_matrix_options ON shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
-				    left join shop_customers on shop_customers.id=shop_orders.customer_id
+					$report_join
 
 					where 
 						(
-							(shop_orders.deleted_at is null and
-							shop_order_statuses.id = shop_orders.status_id
+							($report_table.deleted_at is null
 							$paidFilter
 							$filterStr
-							)
-							or shop_orders.id is null
+							$whereFilter)
 						)
 
-						and $intervalLimit
+					and $intervalLimit
 					group by {$seriesIdField}, graph_code
-					order by report_date, shop_products.id, shop_option_matrix_records.id
+					order by report_date
 				";
 
 			$series_query = "
@@ -261,10 +249,9 @@ class Shop_Customers_Report extends Shop_GenericReport {
 				";
 
 			$series = Db_DbHelper::objectArray( $series_query );
+			$bind                         = array();
+			$data = Db_DbHelper::objectArray( $data_query, $bind );
 		}
-
-		$bind                         = array();
-		$data = Db_DbHelper::objectArray( $data_query, $bind );
 
 		return array(
 			'data' => $data,
@@ -280,36 +267,103 @@ class Shop_Customers_Report extends Shop_GenericReport {
 	}
 
 	protected function renderReportTotals() {
-		$paidFilter = null;
+
+    	$totals_data = (object) array(
+    		'average_order_value' => 0,
+			'customers_count' => 0,
+			'orders_count' => 0
+		);
+
+		$order_total_contexts = array(
+			'orders_placed',
+			'orders_paid'
+		);
+
+		$paidFilter    = null;
 		$intervalLimit = $this->get_interval_field_query_string();
 		$filterStr     = $this->filterAsString();
 
-		if (  $this->get_interval_context() == 'orders_paid' ) {
-			$paidFilter = $this->getOrderPaidStatusFilter();
-			if ( $paidFilter ) {
-				$paidFilter = 'and ' . $paidFilter;
-			}
-		}
+		if(in_array($this->get_interval_context(), $order_total_contexts)) {
 
-		$query_str = "FROM shop_customers
+
+			if ( $this->get_interval_context() == 'orders_paid' ) {
+				$paidFilter = $this->getOrderPaidStatusFilter();
+				if ( $paidFilter ) {
+					$paidFilter = 'and ' . $paidFilter;
+				}
+			}
+
+			$query_str = "FROM shop_customers
 					LEFT JOIN shop_orders 
 					ON shop_customers.id = shop_orders.customer_id 
 					WHERE $intervalLimit $filterStr $paidFilter";
 
-		$query = "SELECT 
+			$query = "SELECT 
 					ROUND(AVG(shop_orders.total * shop_orders.shop_currency_rate),2) AS average_order_value,
 					COUNT(DISTINCT(shop_customers.id)) AS customers_count,
 					COUNT(DISTINCT(shop_orders.id)) AS orders_count 
 					$query_str";
 
+			$totals_data = Db_DbHelper::object( $query );
+		} else {
 
-		$this->viewData['totals_data'] = Db_DbHelper::object( $query );
+				$customer_ids = array();
+				$customer_id_filter = 'shop_customers.id IN (?)';
+				if( $this->get_interval_context() == 'customers_no_placed_orders'){
+					$customer_ids = $this->get_customer_ids_with_no_orders_in_interval(false);
+				}
+				if( $this->get_interval_context() == 'customers_no_paid_orders'){
+					$customer_ids = $this->get_customer_ids_with_no_orders_in_interval(true);
+				}
+
+				$intervalLimit = $customer_ids ? $customer_id_filter : $intervalLimit;
+				$query = "SELECT COUNT(DISTINCT(shop_customers.id)) AS customers_count 
+					FROM shop_customers
+					WHERE $intervalLimit $filterStr";
+
+				$result = Db_DbHelper::object( $query, array($customer_ids) );
+				$totals_data->customers_count = $result ? $result->customers_count : 0;
+
+
+		}
+
+		$this->viewData['totals_data'] = $totals_data;
 		$this->renderPartial( 'chart_totals' );
 	}
 
-	protected function get_stock_name_sql() {
-		return str_replace( ':grouped_name', $this->grouped_name_sql, $this->stock_name_sql );
+
+	protected function getOrderPaidStatusFilter($paid=true) {
+
+		if ( !$this->paid_order_status_id ) {
+			$this->paid_order_status_id = Shop_OrderStatus::get_status_paid()->id;
+		}
+
+		if ( !is_numeric( $this->paid_order_status_id ) ) {
+			return null;
+		}
+
+		$qualifier = $paid ? 'EXISTS' : 'NOT EXISTS';
+
+		return "($qualifier (SELECT id FROM shop_order_status_log_records WHERE order_id = shop_orders.id AND status_id=" . $this->paid_order_status_id . "))";
 	}
+
+	protected function get_customer_ids_with_no_orders_in_interval($paid=false){
+    	$paid_filter = $paid ? 'AND '.$this->getOrderPaidStatusFilter() : null;
+    	$interval_limit = $this->get_interval_field_query_string('shop_orders.order_datetime');
+    	$sql = "SELECT DISTINCT(shop_customers.id) 
+				FROM shop_customers
+				WHERE  shop_customers.id NOT IN(
+					SELECT shop_orders.customer_id 
+					FROM shop_orders 
+					WHERE 
+					$interval_limit
+					$paid_filter
+				)";
+    	return Db_DbHelper::scalarArray($sql);
+	}
+
+
+
 }
 
 ?>
