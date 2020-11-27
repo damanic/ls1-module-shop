@@ -162,10 +162,11 @@ class Shop_Customers_Report extends Shop_GenericReport {
 		return 'Customers Report';
 	}
 
-	public function chart_data() {
-		$this->xmlData();
-		$chartType = $this->viewData['chart_type'] = $this->getChartType();
+	protected function getChartData(){
+    	$series = array();
+    	$data = array();
 
+    	$chartType = $this->viewData['chart_type'] = $this->getChartType();
 		$filterStr = $this->filterAsString();
 
 		$paidFilter = $this->getOrderPaidStatusFilter();
@@ -181,14 +182,14 @@ class Shop_Customers_Report extends Shop_GenericReport {
 		}
 
 		if ( $chartType == Backend_ChartController::rt_column || $chartType == Backend_ChartController::rt_pie ) {
-			$intervalLimit = $this->intervalQueryStr( false );
 
-			$query = "
+			$intervalLimit = $this->intervalQueryStr( false );
+			$data_query = "
 				select 
 					COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
 					'serie' as series_id, 
 					'serie' as series_value, 
-					" . $this->get_stock_name_sql() . " AS graph_name, 
+					'amount' AS graph_name, 
 					$amountField as record_value
 				from 
 					shop_order_statuses,
@@ -217,10 +218,10 @@ class Shop_Customers_Report extends Shop_GenericReport {
 			// if ($paidFilter)
 			// 	$paidFilter = 'and '.$paidFilter;
 
-			$query = "
+			$data_query = "
 					select
 						COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
-						" . $this->get_stock_name_sql() . " AS graph_name, 
+						'amount' AS graph_name,
 						{$seriesIdField} as series_id,
 						{$seriesValueField} as series_value,
 						$amountField as record_value
@@ -259,11 +260,23 @@ class Shop_Customers_Report extends Shop_GenericReport {
 					order by report_date
 				";
 
-			$this->viewData['chart_series'] = Db_DbHelper::objectArray( $series_query );
+			$series = Db_DbHelper::objectArray( $series_query );
 		}
 
 		$bind                         = array();
-		$this->viewData['chart_data'] = Db_DbHelper::objectArray( $query, $bind );
+		$data = Db_DbHelper::objectArray( $data_query, $bind );
+
+		return array(
+			'data' => $data,
+			'series' => $series
+		);
+	}
+
+	public function chart_data() {
+		$this->xmlData();
+		$result = $this->getChartData();
+		$this->viewData['chart_data'] = $result['data'];
+		$this->viewData['chart_series'] = $result['series'];
 	}
 
 	protected function renderReportTotals() {

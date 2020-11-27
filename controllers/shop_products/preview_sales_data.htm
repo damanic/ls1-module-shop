@@ -36,8 +36,10 @@
 
 					$lastIndex = count($series)-1;
 					foreach ($chart_series as $index=>$record):
+					$date = Phpr_DateTime::parse($record->series_id, Phpr_DateTime::universalDateFormat);
 				?>
-					<value xid="<?= h($record->series_id) ?>"><?= Phpr_DateTime::parse($record->series_id, Phpr_DateTime::universalDateFormat)->format('%b %d, %Y') ?></value>
+
+					<value xid="<?= h($record->series_id) ?>"><?= $date ? $date->format('%b %d, %Y') : $record->series_value ?></value>
 				<? endforeach ?>
 				
 				<? if (!count($chart_data)): ?>

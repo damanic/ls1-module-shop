@@ -50,8 +50,10 @@ class Shop_Products_Report extends Shop_GenericReport {
 		return 'Products Report';
 	}
 
-	public function chart_data() {
-		$this->xmlData();
+	protected function getChartData(){
+		$data = array();
+		$series = array();
+
 		$chartType = $this->viewData['chart_type'] = $this->getChartType();
 
 		$filterStr = $this->filterAsString('product_report');
@@ -71,7 +73,7 @@ class Shop_Products_Report extends Shop_GenericReport {
 		if ( $chartType == Backend_ChartController::rt_column || $chartType == Backend_ChartController::rt_pie ) {
 			$intervalLimit = $this->intervalQueryStr( false );
 
-			$query = "
+			$data_query = "
 				select 
 					COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
 					'serie' as series_id, 
@@ -105,7 +107,7 @@ class Shop_Products_Report extends Shop_GenericReport {
 			// if ($paidFilter)
 			// 	$paidFilter = 'and '.$paidFilter;
 
-			$query = "
+			$data_query = "
 					select
 						COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
 						".$this->get_stock_name_sql()." AS graph_name, 
@@ -147,11 +149,25 @@ class Shop_Products_Report extends Shop_GenericReport {
 					order by report_date
 				";
 
-			$this->viewData['chart_series'] = Db_DbHelper::objectArray( $series_query );
+			$series = Db_DbHelper::objectArray( $series_query );
 		}
 
 		$bind                         = array();
-		$this->viewData['chart_data'] = Db_DbHelper::objectArray( $query, $bind );
+		$data = Db_DbHelper::objectArray( $data_query, $bind );
+
+		return array(
+			'data' => $data,
+			'series' => $series
+		);
+
+	}
+
+
+	public function chart_data() {
+		$this->xmlData();
+		$result = $this->getChartData();
+		$this->viewData['chart_data'] = $result['data'];
+		$this->viewData['chart_series'] = $result['series'];
 	}
 
 	protected function renderReportTotals() {

@@ -80,14 +80,14 @@
 			$query = "
 				select
 					'amount' as graph_code,
-					'amount' as graph_name,
-					report_date as series_id,
-					report_date as series_value,
+					'Revenue' as graph_name,
+					EXTRACT( YEAR_MONTH FROM report_date) as series_id,
+					DATE_FORMAT(report_date, '%b %Y') as series_value,
 					sum(shop_order_items.quantity*(shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)) as record_value,
 					sum(shop_order_items.quantity) as items_sold
 				from 
 					report_dates
-				left join shop_orders on report_date = date(shop_orders.order_datetime)
+				left join shop_orders on EXTRACT( YEAR_MONTH FROM report_date) = EXTRACT( YEAR_MONTH FROM shop_orders.order_datetime)
 				left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id 
 				left join shop_products on shop_order_items.shop_product_id=shop_products.id
 
@@ -102,18 +102,19 @@
 					and report_date >= :start_date
 					and report_date <= :end_date
 
-				group by report_date
-				order by report_date
+				group by EXTRACT( YEAR_MONTH FROM report_date)
+				order by series_id
 			";
 
 			$series_query = "
 				select
-					report_date as series_id,
-					report_date as series_value
+					EXTRACT( YEAR_MONTH FROM report_date) as series_id,
+					DATE_FORMAT(report_date, '%b %Y') as series_value
 				from report_dates
 				where 
 					report_date >= :start_date
 					and report_date <= :end_date
+				group by EXTRACT( YEAR_MONTH FROM report_date)
 				order by report_date
 			";
 

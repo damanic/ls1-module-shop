@@ -1891,10 +1891,17 @@
 		{
 			$this->layout = null;
 			header("Content-type: text/xml; charset=utf-8");
+			$data = $this->previewGetStatisticsChartData($product_id);
+			$this->viewData['chart_data'] = $data['data'];
+			$this->viewData['chart_series'] = $data['series'];
+		}
 
+		protected function previewGetStatisticsChartData($product_id){
 			$data = Shop_ProductStatisticsData::sales_chart_data($product_id);
-			$this->viewData['chart_data'] = $data->chart_data;
-			$this->viewData['chart_series'] = $data->chart_series;
+			return array(
+				'data' => $data->chart_data,
+				'series' => $data->chart_series
+			);
 		}
 		
 		public function preview_grouped_chart_data($product_id)

@@ -30,9 +30,10 @@
 			return 'Taxes Report';
 		}
 		
-		public function chart_data()
+		public function getChartData()
 		{
-			$this->xmlData();
+			$data = array();
+			$series = array();
 			$chartType = $this->viewData['chart_type'] = $this->getChartType();
 			
 			$filterStr = $this->filterAsString();
@@ -43,7 +44,6 @@
 			
 			$displayType = $this->getReportParameter('coupon_report_display_type', 'amount');
 			$amountField = $this->getOrderAmountField();
-			$chart_data = array();
 			
 			if ($chartType == Backend_ChartController::rt_column || $chartType == Backend_ChartController::rt_pie)
 			{
@@ -92,7 +92,7 @@
 						foreach ($taxes as $tax_name => $tax_value)
 						{
 							$new = array('graph_code' => $i++, 'series_id' => 'serie', 'series_value' => 'serie', 'graph_name' => $tax_name, 'record_value' => $tax_value['value']);
-							array_push($chart_data, (object) $new);
+							array_push($data, (object) $new);
 						}
 					}
 				}
@@ -170,13 +170,24 @@
 									);
 							}
 						}
-						$chart_data = $this->combine_series_taxes($new_taxes, $series);
+						$data = $this->combine_series_taxes($new_taxes, $series);
 					}
 				}
 				
-				$this->viewData['chart_series'] = Db_DbHelper::objectArray($series_query);
+				$series = Db_DbHelper::objectArray($series_query);
 			}
-			$this->viewData['chart_data'] = $chart_data;
+
+			return array(
+				'data' => $data,
+				'series' => $series
+			);
+		}
+
+		public function chart_data() {
+			$this->xmlData();
+			$result = $this->getChartData();
+			$this->viewData['chart_data'] = $result['data'];
+			$this->viewData['chart_series'] = $result['series'];
 		}
 		
 		private function combine_series_taxes($taxes, $series)

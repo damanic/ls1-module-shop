@@ -1015,3 +1015,4 @@
 #1.34.2 Fixes issue applying order shipping tax
 #1.34.3 Fixes issue with shipping estimate
 #1.34.4 Adds shipping zone filter to reports
+#1.35.0 Improvements to Reports and Dashboard Indicators. Adds Support for HTML graphs

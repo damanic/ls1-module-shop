@@ -38,28 +38,25 @@
 			return 'Orders Report';
 		}
 
-		public function chart_data()
-		{
-			$this->xmlData();
-			$chartType = $this->viewData['chart_type'] = $this->getChartType();
-			
-			$filterStr = $this->filterAsString();
+		protected function getChartData(){
 
+			$chartType = $this->viewData['chart_type'] = $this->getChartType();
+			$filterStr = $this->filterAsString();
 			$amountField = $this->getOrderAmountField();
 			$paidFilter = $this->getOrderPaidStatusFilter();
 
 			if ($paidFilter)
 				$paidFilter = 'and '.$paidFilter;
 
-//			if ($filterStr)
-//				$filterStr = 'and '.$filterStr;
+			if ($filterStr)
+				$filterStr = 'and '.$filterStr;
 
 			$intervalLimit = $this->intervalQueryStr();
 			$seriesIdField = $this->timeSeriesIdField();
 			$seriesValueField = $this->timeSeriesValueField();
 			$frameFields = $this->timeSeriesDateFrameFields();
 
-			$query = "
+			$data_query = "
 				select
 					'amount' as graph_code,
 					'amount' as graph_name,
@@ -87,7 +84,7 @@
 				group by {$seriesIdField}
 				order by report_date
 			";
-			
+
 			$series_query = "
 				select
 					{$seriesIdField} as series_id,
@@ -99,9 +96,20 @@
 			";
 
 			$bind = array();
-			$this->viewData['chart_data'] = Db_DbHelper::objectArray($query, $bind);
-			$this->viewData['chart_series'] = Db_DbHelper::objectArray($series_query, $bind);
+			$result = array(
+				'data' => Db_DbHelper::objectArray($data_query, $bind),
+				'series' => Db_DbHelper::objectArray($series_query, $bind)
+			);
+			return $result;
 		}
+
+		public function chart_data() {
+			$this->xmlData();
+			$result = $this->getChartData();
+			$this->viewData['chart_data'] = $result['data'];
+			$this->viewData['chart_series'] = $result['series'];
+		}
+
 
 		protected function renderReportTotals()
 		{

@@ -49,13 +49,13 @@
 			return 'Categories Report';
 		}
 
-		public function chart_data()
+		public function getChartData()
 		{
-			$this->xmlData();
-			$chartType = $this->viewData['chart_type'] = $this->getChartType();
-			
-			$filterStr = $this->filterAsString();
+			$data = array();
+			$series = array();
 
+			$chartType = $this->viewData['chart_type'] = $this->getChartType();
+			$filterStr = $this->filterAsString();
 			$paidFilter = $this->getOrderPaidStatusFilter();
 			if ($paidFilter)
 				$paidFilter = 'and '.$paidFilter;
@@ -70,7 +70,7 @@
 			{
 				$intervalLimit = $this->intervalQueryStr(false);
 
-				$query = "
+				$data_query = "
 				select 
 					shop_categories.id as graph_code, 
 					'serie' as series_id, 
@@ -101,8 +101,8 @@
 				$intervalLimit = $this->intervalQueryStr();
 				$seriesIdField = $this->timeSeriesIdField();
 				$seriesValueField = $this->timeSeriesValueField();
-			
-				$query = "
+
+				$data_query = "
 					select
 						shop_categories.id as graph_code,
 						shop_categories.name as graph_name,
@@ -144,11 +144,22 @@
 					order by report_date
 				";
 
-				$this->viewData['chart_series'] = Db_DbHelper::objectArray($series_query);
+				$series = Db_DbHelper::objectArray($series_query);
 			}
 
 			$bind = array();
-			$this->viewData['chart_data'] = Db_DbHelper::objectArray($query, $bind);
+			$data = Db_DbHelper::objectArray($data_query, $bind);
+			return array(
+				'data' =>$data,
+				'series' => $series
+			);
+		}
+
+		public function chart_data() {
+			$this->xmlData();
+			$result = $this->getChartData();
+			$this->viewData['chart_data'] = $result['data'];
+			$this->viewData['chart_series'] = $result['series'];
 		}
 		
 		protected function renderReportTotals()

@@ -43,6 +43,7 @@
 			return $obj;
 		}
 
+
 		public function export_orders($format = null)
 		{
 			$this->list_name = get_class($this).'_index_list';
@@ -85,7 +86,10 @@
 			$this->processed_customer_ids[] = $row->customer_id;
 			return true;
 		}
-		
+
+
+
+
 		/*
 		 * Event descriptions
 		 */

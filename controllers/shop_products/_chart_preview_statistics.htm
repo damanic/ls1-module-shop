@@ -1,0 +1,127 @@
+<?php
+$chartData = isset($chartData) ? $chartData : false;
+$series_labels = array();
+$series_data = array();
+$data          = array();
+$data_sets = array();
+$graph_data_weight = array();
+$max_lines = 25;
+$limited_display = false;
+$chart_colors = array(
+	'#0D8ECF', '#FCD202', '#B0DE09', '#FF6600', '#2A0CD0', '#CD0D74', '#CC0000', '#00CC00', '#0000CC',
+);
+
+//Explode items sold line
+$items_sold = array();
+foreach($chartData['data'] as $data_record){
+	$items_sold_record = clone $data_record;
+	$items_sold_record->graph_code = 'items_sold';
+	$items_sold_record->graph_name = 'Items Ordered';
+	$items_sold_record->record_value =  $data_record->items_sold;
+	$chartData['data'][] = $items_sold_record;
+}
+
+//Compile graph entries and establish weight for each graph_code
+foreach($chartData['data'] as $data_record) {
+	$graph_code = $data_record->graph_code;
+	if(is_null($graph_code)){
+		continue;
+	}
+	if ( !isset( $data_sets[$graph_code] ) ) {
+		$colour = isset($chart_colors[count($data_sets)]) ? $chart_colors[count($data_sets)] : array_rand($chart_colors);
+		$data_sets[$graph_code] = array(
+			'label'           => $data_record->graph_name,
+			'borderColor'     =>  $colour,
+			'fill'            => true,
+			'data'            => array(),
+			'lineTension' => 0.4,
+		);
+		$data[$graph_code] = array();
+		$graph_data_weight[$graph_code] = 0;
+	}
+	$series_data[$graph_code][$data_record->series_id] = $data_record->record_value ? round($data_record->record_value,2) : 0;
+	$graph_data_weight[$graph_code] += $series_data[$graph_code][$data_record->series_id];
+}
+
+//Make sure a graph entry has been added for each series in the timeline
+foreach($data_sets as $graph_code => $data_set){
+	foreach($chartData['series'] as $series_index){
+		if(!isset($series_data[$graph_code][$series_index->series_id])){
+			$data[$graph_code][] = 0;
+		} else {
+			$data[$graph_code][] = $series_data[$graph_code][$series_index->series_id];
+		}
+	}
+	$data_sets[$graph_code]['data'] = isset($data[$graph_code]) ? $data[$graph_code] : array();
+}
+
+//Make the series labels pretty
+foreach($chartData['series'] as $series_index){
+	$date = Phpr_DateTime::parse( $series_index->series_id, Phpr_DateTime::universalDateFormat );
+	$series_value = $date ? $date->format( '%m%Y' ) : $series_index->series_value; //if does not parse as datetime, use raw string
+	$series_labels[]     = $series_value;
+}
+
+
+//Limit the amount of lines shown (To avoid browser crash or eyeball overload)
+if(count($data_sets) > $max_lines){
+	$limited_display = true;
+	asort($graph_data_weight);
+	$top_keys = array_keys(array_slice(array_reverse($graph_data_weight, true),0,$max_lines, true));
+	foreach($data_sets as $graph_code => $data_set){
+		if(!in_array($graph_code,$top_keys)){
+			unset($data_sets[$graph_code]);
+		}
+	}
+}
+?>
+
+<? if($limited_display): ?>
+	<section style="text-align: center;">
+		This graph is showing the top <?=$max_lines?> results
+	</section>
+<? endif;?>
+<canvas id="shop-line-chart-canvas"></canvas>
+<script>
+	jQuery(document).ready(function(){
+		var ctx = document.getElementById("shop-line-chart-canvas");
+		var myChart = new Chart(ctx, {
+			"type" : 'line',
+			"data" : {
+				"labels": <?= json_encode($series_labels, JSON_PRETTY_PRINT) ?>,
+				"datasets": <?= json_encode(array_values($data_sets), JSON_PRETTY_PRINT) ?>
+			},
+			"options": {
+				"responsive": true,
+				"maintainAspectRatio": false,
+				'pointBorderWidth' : 1,
+				hoverMode: 'index',
+				stacked: false,
+				title:{
+					display: false,
+					text:'Product Statistics Chart'
+				},
+				tooltips : {
+					enabled : true,
+					mode : 'nearest',
+					intersect : false,
+				},
+				legend: {
+					display: false,
+				},
+				scales: {
+					xAxes: [{
+						display: true,
+
+						ticks: {
+							autoSkip : true,
+							autoSkipPadding : 38,
+							maxRotation : 0,
+							beginAtZero: true
+						}
+					}],
+				}
+			}
+		});
+	});
+</script>
