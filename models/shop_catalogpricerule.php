@@ -194,20 +194,29 @@
 				self::apply_rules_to_product_om_record($record);
 		}
 		
-		public static function apply_price_rules($product_id = null)
+		public static function apply_price_rules($product_id = null, $options = array())
 		{
+			$default_options = array(
+				'USE_HTTP_SUBREQUESTS' => !Phpr::$config->get('DISABLE_HTTP_SUBREQUESTS'),
+				'BATCH_SIZE' => Phpr::$config->get('CATALOG_RULES_PROCESS_BATCH_SIZE', 50),
+				'TIME_LIMIT' => 3600
+			);
+			$options = array_merge($default_options, $options);
+
 			$counter = 0;
 			
 			try
 			{
-				@set_time_limit(3600);
+				if(is_numeric($options['TIME_LIMIT'])) {
+					@set_time_limit( $options['TIME_LIMIT'] );
+				}
 				
 				if ($product_id == null)
 				{
 					$product_ids = Db_DbHelper::scalarArray('select id from shop_products where ((grouped is null or grouped=0) or (grouped=1 and product_id is not null))');
 					$total_product_count = count($product_ids);
 
-					$batch_size = Phpr::$config->get('CATALOG_RULES_PROCESS_BATCH_SIZE', 50);
+					$batch_size = $options['BATCH_SIZE'];
 
 					$offset = 0;
 					do
@@ -220,7 +229,7 @@
 
 							$ids_str = implode(',', $batch_ids);
 
-							if (!Phpr::$config->get('DISABLE_HTTP_SUBREQUESTS'))
+							if ( $options['USE_HTTP_SUBREQUESTS'])
 							{
 								$response = Core_Http::sub_request('/ls_shop_process_catalog_rules_batch', array('ids'=>$ids_str));
 								if (!$response)
