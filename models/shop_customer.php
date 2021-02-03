@@ -48,6 +48,7 @@
 		);
 
 		public $calculated_columns = array(
+			'short_name'=>"trim(concat(ifnull(shop_customers.first_name, ''), ' ', ifnull(concat(substring(shop_customers.last_name, 1, 1), '. '), '')))",
 			'order_count'=>array('sql'=>"(select count(*) from shop_orders where shop_orders.customer_id=shop_customers.id AND shop_orders.deleted_at IS NULL)", 'type'=>db_number)
 		);
 
@@ -270,11 +271,13 @@
 		}
 
 		/**
-		 * Used to find a customer using foreign/custom reference code
+		 * Used to find a customer using a reference ID that may
+		 * have been provided by a custom module extension
+		 * @param string a customer reference ID
 		 * @return Shop_Customer Returns the customer if found or FALSE otherwise.
 		 */
 		public static function find_by_customer_reference($customer_ref){
-			$lookup = Backend::$events->fireEvent('shop:onCustomerFindByOrderReference', $customer_ref);
+			$lookup = Backend::$events->fireEvent('shop:onCustomerFindByCustomerReference', $customer_ref);
 			foreach ($lookup as $customer) {
 				if ( $customer && is_a($customer,'Shop_Customer') ) {
 					return $customer;
@@ -852,6 +855,7 @@
 
 		public function after_save()
 		{
+			$this->log_email_trace();
 			Backend::$events->fireEvent('shop:onCustomerSaved', $this);
 		}
 
@@ -912,22 +916,71 @@
 			return $columns;
 		}
 
-		/*
-		 * Security functions
+		/**
+		 * PHPR/Core Security function
+		 * Used internally for login purposes.
+		 * Locates a customer by login_id AND matching password
+		 * @param $login_id string Email address or other
+		 * @param $password string The customers password
+		 * @return Shop_Customer The associated customer if found
 		 */
-		
-		public function findUser($email, $password)
+		public function findUser( $login_id, $password )
 		{
-			$event_result = Backend::$events->fireEvent('shop:onAuthenticateCustomer', $email, $password);
+			$event_result = Backend::$events->fireEvent('shop:onAuthenticateCustomer', $login_id, $password);
 			foreach ($event_result as $event_customer)
 			{
 				if ($event_customer || $event_customer === false)
 					return $event_customer;
 			}
-			
-			$email = mb_strtolower($email);
-			return $this->where('email=?', $email)->where('shop_customers.password=?', Phpr_SecurityFramework::create()->salted_hash($password))->where('(shop_customers.guest is null or shop_customers.guest=0)')->where('shop_customers.deleted_at is null')->find();
+
+			//By default the login ID is the customers active EMAIL address
+			$login_id = mb_strtolower($login_id);
+			return $this->where('email=?', $login_id)->where('shop_customers.password=?', Phpr_SecurityFramework::create()->salted_hash($password))->where('(shop_customers.guest is null or shop_customers.guest=0)')->where('shop_customers.deleted_at is null')->find();
 		}
+
+		/**
+		 * Finds customers that have used an email address
+		 * as their primary address (for account login)
+		 * @documentable
+		 * @param string $email Specifies the email address for lookup.
+         * @param boolean $ignore_deleted Set to false if customer accounts marked as DELETED should be included.
+		 * @return Db_Collection Returns a collection of Shop_Customer if found
+		 */
+		public static function find_customers_by_email_trace($email, $ignore_deleted=true){
+			$hash = md5($email);
+			$obj = Shop_Customer::create();
+			$obj->join( 'shop_customer_email_trace', 'shop_customer_email_trace.customer_id = shop_customers.id' );
+			$obj->where( 'shop_customer_email_trace.email_hash = ?', $hash );
+			if($ignore_deleted){
+				$obj->where('shop_customers.deleted_at is null');
+			}
+			return $obj->find_all();
+		}
+		/**
+		 * Adds an email trace to registered customer accounts
+		 * This trace enables a method to find a customer account
+		 * using an old email address that is no longer attached as a
+		 * primary email/login address
+		 * @return void
+		 */
+		protected function log_email_trace(){
+			if($this->guest || !$this->email || !$this->id){
+				return;
+			}
+			$now = Phpr_Datetime::now()->toSqlDateTime();
+			$hash = md5($this->email);
+			$bind = array(
+				'now' =>$now,
+				'hash' => $hash,
+				'cid' => $this->id
+			);
+			$sql = "INSERT INTO shop_customer_email_trace
+					( customer_id, email_hash, created_at )
+					VALUES ( :cid, :hash, :now )
+					ON DUPLICATE KEY UPDATE id = id";
+			Db_DbHelper::query($sql, $bind);
+		}
+
 		
 		/*
 		 * Event descriptions
@@ -1509,6 +1562,30 @@
 		 * @return mixed The handler should return a string or boolean.
 		 */
 		private function event_onCustomerDisplayField() {}
+
+
+		/**
+		 * Triggered when call for customer reference ID
+		 * The event handler should return the customer reference string
+		 * @event shop:onGetCustomerReference
+		 * @triggered /modules/shop/models/shop_customer.php
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param string The customer reference ID
+		 */
+		private function event_onGetCustomerReference($customer) {}
+
+
+		/**
+		 * Triggered on attempt to find customer using a customer reference string
+		 * The event handler should return the Shop_Customer if found
+		 * @event shop:onCustomerFindByCustomerReference
+		 * @triggered /modules/shop/models/shop_customer.php
+		 * @package shop.events
+		 * @author Matt Manning (github:damanic)
+		 * @param Shop_Customer , The matching customer obj
+		 */
+		private function event_onCustomerFindByCustomerReference() {}
 
 	}
 
