@@ -8,11 +8,11 @@ CREATE TABLE `shop_customer_email_trace`(
 );
 
 ALTER TABLE `shop_configuration`
-	ADD COLUMN `default_low_stock_threshold` INT(11) NULL;
-	ADD COLUMN `low_stock_alert_notification_template_id` INT(11) NULL;
+	ADD COLUMN `default_low_stock_threshold` INT(11) NULL,
+	ADD COLUMN `low_stock_alert_notification_template_id` INT(11) NULL,
 	ADD COLUMN `default_out_of_stock_threshold` INT(11) NULL,
 	ADD COLUMN `out_of_stock_alert_notification_template_id` INT(11) NULL;
 
 UPDATE `shop_configuration`
-SET low_stock_alert_notification_template_id = (SELECT id FROM system_email_templates WHERE code = 'shop:low_stock_internal' ),
-out_of_stock_alert_notification_template_id = (SELECT id FROM system_email_templates WHERE code = 'shop:out_of_stock_internal' )
+	SET low_stock_alert_notification_template_id = (SELECT id FROM system_email_templates WHERE code = 'shop:low_stock_internal' ),
+		out_of_stock_alert_notification_template_id = (SELECT id FROM system_email_templates WHERE code = 'shop:out_of_stock_internal' );
