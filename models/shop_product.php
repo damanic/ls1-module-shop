@@ -475,15 +475,19 @@ class Shop_Product extends Db_ActiveRecord
 			))->comment('Specify a shipping cost for different locations. The shipping cost for this product will be added to the shipping quote, which is determined by the shipping method that the customer chooses.', 'above');
 
 			$this->add_form_field('track_inventory', 'left')->tab('Inventory')->comment('Enable this checkbox if you have limited number of this product in stock.');
-			$this->add_form_field('hide_if_out_of_stock', 'right')->tab('Inventory')->comment('Remove the product from the website if is out of stock.', 'below');
-			$this->add_form_field('allow_negative_stock_values')->tab('Inventory');
+			$this->add_form_field('in_stock', 'right')->tab('Inventory')->comment('Specify how many units of the product there are left in stock at the moment.', 'above');
+			$this->add_form_field('allow_negative_stock_values','left')->tab('Inventory');
+			$this->add_form_field('hide_if_out_of_stock', 'left')->tab('Inventory')->comment('Remove the product from the website if is out of stock.', 'below');
 
-			$this->add_form_field('in_stock', 'left')->tab('Inventory')->comment('Specify how many units of the product there are left in stock at the moment.', 'above');
-			$this->add_form_field('stock_alert_threshold', 'right')->tab('Inventory')->comment('The low number of units to set the product status to Out of Stock.', 'above');
-			$this->add_form_field('low_stock_threshold', 'left')->tab('Inventory')->comment('Number of units when a low stock notification should be sent to the administrators.', 'above');
-			$this->add_form_field('expected_availability_date', 'left')->tab('Inventory');
+			$shop_config = Shop_ConfigurationRecord::get();
+			$this->add_form_field('low_stock_threshold', 'right')->placeholder($shop_config->default_low_stock_threshold)->tab('Inventory')->comment('The low number of units to set the product status to Low Stock.', 'above');
 
-			$this->add_form_field('allow_pre_order', 'left')->tab('Inventory')->comment('Allow customers to order the product even if it is out of stock.', 'below');
+			$this->add_form_field('allow_pre_order','left')->tab('Inventory')->comment('Allow customers to order the product even if it is out of stock.', 'below');
+			$this->add_form_field('expected_availability_date','left')->tab('Inventory');
+
+			$default_os_threshold = $shop_config->default_out_of_stock_threshold ? $shop_config->default_out_of_stock_threshold : 0;
+			$this->add_form_field('stock_alert_threshold', 'right')->placeholder($default_os_threshold)->tab('Inventory')->comment('The low number of units to set the product status to Out of Stock.', 'above');
+
 
 			if ($context != 'grouped' && !$front_end)
 			{
@@ -2183,31 +2187,29 @@ class Shop_Product extends Db_ActiveRecord
 
 		self::update_total_stock_value($this);
 
-		$send_email_template_code = false;
+		$notification_template = null;
 		$is_out_of_stock         = $use_om_record ? $om_record->is_out_of_stock($this) : $this->is_out_of_stock();
 
 		if ($is_out_of_stock) {
 			Backend::$events->fireEvent('shop:onProductOutOfStock', $this, $om_record);
-			$send_email_template_code = 'shop:out_of_stock_internal';
+			$notification_template = Shop_ConfigurationRecord::get()->out_of_stock_alert_notification_template;
+			//$send_email_template_code = 'shop:out_of_stock_internal';
 		}
 		else {
 			$is_low_stock = $use_om_record ? $om_record->is_low_stock($this) : $this->is_low_stock();
 			if($is_low_stock) {
-				$send_email_template_code = 'shop:low_stock_internal';
+				$notification_template = Shop_ConfigurationRecord::get()->low_stock_alert_notification_template;
+				//$send_email_template_code = 'shop:low_stock_internal';
 			}
 		}
 
-		if($send_email_template_code){
+		if($notification_template){
 			$users = Shop_Role::get_users_notified_on_out_of_stock();
 			if($users && $users->count) {
-				$template = System_EmailTemplate::create()->find_by_code( $send_email_template_code );
-				if ( !$template ) {
-					return;
-				}
 				$product_url       = Phpr::$request->getRootUrl() . url( 'shop/products/edit/' . $this->master_grouped_product_id . '?' . uniqid() );
-				$message           = $this->set_email_variables( $template->content, $product_url, $om_record );
-				$template->subject = $this->set_email_variables( $template->subject, $product_url, $om_record );
-				$template->send_to_team( $users, $message );
+				$message           = $this->set_email_variables( $notification_template->content, $product_url, $om_record );
+				$notification_template->subject = $this->set_email_variables( $notification_template->subject, $product_url, $om_record );
+				$notification_template->send_to_team( $users, $message );
 			}
 		}
 	}
@@ -2252,11 +2254,21 @@ class Shop_Product extends Db_ActiveRecord
 		if (!$this->track_inventory)
 			return false;
 
-		if ($this->stock_alert_threshold !== null)
-			return $this->total_in_stock <= $this->stock_alert_threshold;
+		if (!$this->allow_negative_stock_values && $this->total_in_stock <= 0) {
+			return true; //cant get lower than 0 so OS is true without need for further threshold checks.
+		}
 
-		if ($this->total_in_stock <= 0)
+		$os_threshold = null;
+		if ($this->stock_alert_threshold !== null) {
+			$os_threshold = is_numeric($this->stock_alert_threshold) ? $this->stock_alert_threshold : 0;
+		} else {
+			$config = Shop_ConfigurationRecord::get();
+			$os_threshold = is_numeric($config->default_out_of_stock_threshold) ? $config->default_out_of_stock_threshold : 0;
+		}
+
+		if($this->total_in_stock <= $os_threshold){
 			return true;
+		}
 
 		return false;
 	}
@@ -2271,11 +2283,19 @@ class Shop_Product extends Db_ActiveRecord
 	 */
 	public function is_low_stock()
 	{
-		if (!$this->track_inventory)
+		if (!$this->track_inventory) {
 			return false;
+		}
 
-		if ($this->low_stock_threshold !== null)
+		if ($this->low_stock_threshold !== null) {
 			return $this->total_in_stock <= $this->low_stock_threshold;
+		}
+
+		$config = Shop_ConfigurationRecord::get();
+		$low_stock_threshold = is_numeric($config->default_low_stock_threshold) ? $config->default_low_stock_threshold : 0;
+		if($low_stock_threshold){
+			return $this->total_in_stock <= $low_stock_threshold;
+		}
 
 		return false;
 	}

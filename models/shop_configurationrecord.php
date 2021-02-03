@@ -4,6 +4,12 @@
 	{
 		public $table_name = 'shop_configuration';
 		public static $loadedInstance = null;
+
+		public $belongs_to = array(
+			'low_stock_alert_notification_template'=>array('class_name'=>'System_EmailTemplate', 'foreign_key'=>'low_stock_alert_notification_template_id', 'conditions'=>'(is_system is not null and is_system = 1)'),
+			'out_of_stock_alert_notification_template'=>array('class_name'=>'System_EmailTemplate', 'foreign_key'=>'out_of_stock_alert_notification_template_id', 'conditions'=>'(is_system is not null and is_system = 1)')
+		);
+
 		
 		public static function create($values = null) 
 		{
@@ -40,6 +46,13 @@
 			
 			$this->define_column('nested_category_urls', 'Enable category URL nesting');
 			$this->define_column('category_urls_prepend_parent', 'Prepend parent category URL');
+
+			$this->define_column('default_low_stock_threshold', 'Default Low Stock Threshold');
+			$this->define_relation_column('low_stock_alert_notification_template', 'low_stock_alert_notification_template', 'Low Stock Alert Message Template', db_varchar, '@code');
+
+			$this->define_column('default_out_of_stock_threshold', 'Default Out of Stock Threshold');
+			$this->define_relation_column('out_of_stock_alert_notification_template', 'out_of_stock_alert_notification_template', 'Out of Stock Alert Message Template', db_varchar, '@code');
+
 		}
 
 		public function define_form_fields($context = null)
@@ -69,6 +82,13 @@
 			
 			if (!$this->nested_category_urls)
 				$field->cssClassName('hidden');
+
+			$this->add_form_field('default_low_stock_threshold','left')->tab('Inventory')->comment('Optional. This will be used as the default value when a product does not have a low stock threshold set.  ', 'above');
+			$this->add_form_field('default_out_of_stock_threshold','right')->placeholder('0')->tab('Inventory')->comment('Optional. This will be used as the default value when a product does not have a out of stock threshold set ', 'above');
+
+			$this->add_form_field('low_stock_alert_notification_template','left')->tab('Inventory')->comment('You can select an email message template to send to users when a low stock level is reached. To manage email templates open <a target="_blank" href="'.url('/system/email_templates').'">Email Templates</a> page. To mange which user roles receive this message go to <a target="_blank" href="'.url('/shop/roles/').'">Roles</a> page', 'above', true)->renderAs(frm_dropdown)->emptyOption('<optional select template>');
+			$this->add_form_field('out_of_stock_alert_notification_template','right')->tab('Inventory')->comment('You can select an email message template to send to users when a out of stock level is reached. To manage email templates open <a target="_blank" href="'.url('/system/email_templates').'">Email Templates</a> page. To mange which user roles receive this message go to <a target="_blank" href="'.url('/shop/roles/').'">Roles</a> page', 'above', true)->renderAs(frm_dropdown)->emptyOption('<optional select template>');
+
 		}
 		public function get_product_details_behavior_options($key = -1)
 		{

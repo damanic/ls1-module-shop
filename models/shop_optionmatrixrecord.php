@@ -666,16 +666,27 @@
 		public function is_out_of_stock($product)
 		{
 			$product = is_object($product) ? $product : Shop_Product::find_by_id($product);
-			if (!$product->track_inventory)
+			if (!$product->track_inventory) {
 				return false;
+			}
 
 			$in_stock = Shop_OptionMatrix::get_property($this, 'in_stock', $product);
 
-			if ($product->stock_alert_threshold !== null)
-				return $in_stock <= $product->stock_alert_threshold;
+			if (!$product->allow_negative_stock_values && $in_stock <= 0) {
+				return true; //cant get lower than 0 so OS is true without need for further threshold checks.
+			}
 
-			if ($in_stock <= 0)
-			 	return true;
+			$os_threshold = null;
+			if ($product->stock_alert_threshold !== null) {
+				$os_threshold = is_numeric($product->stock_alert_threshold) ? $product->stock_alert_threshold : 0;
+			} else {
+				$config = Shop_ConfigurationRecord::get();
+				$os_threshold = is_numeric($config->default_out_of_stock_threshold) ? $config->default_out_of_stock_threshold : 0;
+			}
+
+			if($in_stock <= $os_threshold){
+				return true;
+			}
 
 			return false;
 		}
@@ -696,6 +707,13 @@
 
 			if ($product->low_stock_threshold !== null)
 				return $in_stock <= $product->low_stock_threshold;
+
+			$config = Shop_ConfigurationRecord::get();
+			$low_stock_threshold = is_numeric($config->default_low_stock_threshold) ? $config->default_low_stock_threshold : 0;
+			if($low_stock_threshold){
+				return $in_stock <= $low_stock_threshold;
+			}
+
 
 			return false;
 		}
