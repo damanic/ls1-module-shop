@@ -62,7 +62,7 @@
 			$model = $this->get_model_obj();
 			$definitions = $model->get_column_definitions();
 			$is_attributes = array('on_sale', 'bulky_shipping_item');
-			$one_of_attributes = array('price');
+			$one_of_attributes = array('product');
 			$custom_option_attributes = array_merge($is_attributes, $one_of_attributes);
 
 			if (!isset($definitions[$attribute]) || in_array($attribute,$custom_option_attributes)) {
