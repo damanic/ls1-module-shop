@@ -813,7 +813,7 @@
 
 			if (!array_key_exists($shipping_method->internal_id, $discount_info->free_shipping_options) && strlen($shipping_method->id))
 			{
-				$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
+				$shipping_taxes = self::get_shipping_taxes($shipping_method,$cart_name);
 				$total += $shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
 				$total += $shipping_quote = $shipping_method->quote_no_tax;
 			}
@@ -1165,6 +1165,24 @@
 		{
 			$checkout_data = array();
 			self::save($checkout_data);
+		}
+
+		/**
+		 * Returns a set of shipping tax rates based on customers cart data
+		 * @param        $shipping_method
+		 * @param string $cart_name
+		 *
+		 * @return array|mixed
+		 */
+		public static function get_shipping_taxes($shipping_method, $cart_name='main'){
+			$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
+			$return = Backend::$events->fireEvent('shop:onCheckoutGetShippingTaxes', $shipping_taxes, $shipping_method, $cart_name);
+			foreach($return as $updated_shipping_taxes) {
+				if($updated_shipping_taxes)
+					return $updated_shipping_taxes;
+			}
+
+			return $shipping_taxes;
 		}
 
 		protected static function load()

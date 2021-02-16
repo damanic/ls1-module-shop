@@ -751,7 +751,7 @@ class Shop_Order extends Db_ActiveRecord
 			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
 			$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
 
-			$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, $shipping_info, $shipping_method->quote_no_tax);
+			$shipping_taxes = Shop_OrderHelper::get_shipping_taxes($order);
 			$order->apply_shipping_tax_array($shipping_taxes);
 
 			$order->shipping_tax = $shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
@@ -2025,7 +2025,7 @@ class Shop_Order extends Db_ActiveRecord
 		$shipping_info->act_as_billing_info = false;
 		$shipping_info->load_from_customer( $customer );
 
-		$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $shipping_method->id, $shipping_info, $order->shipping_quote );
+		$shipping_taxes = Shop_OrderHelper::get_shipping_taxes($order);
 		$order->apply_shipping_tax_array( $shipping_taxes );
 		$order->shipping_tax = Shop_TaxClass::eval_total_tax( $shipping_taxes );
 

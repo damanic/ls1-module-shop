@@ -70,6 +70,7 @@
 				$this->define_multi_relation_column('states', 'states', 'States', "@name")->invisible();
 				$this->define_relation_column('shipping_zone', 'shipping_zone', 'Shipping Zone ', db_varchar, '@name')->listTitle('Shipping Zone')->defaultInvisible();
 
+
 		}
 
 		public function define_form_fields($context = null)
