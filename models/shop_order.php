@@ -751,9 +751,8 @@ class Shop_Order extends Db_ActiveRecord
 			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
 			$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
 
-			$shipping_taxes = Shop_OrderHelper::get_shipping_taxes($order);
+			$shipping_taxes = Shop_CheckoutData::get_shipping_taxes($shipping_method,$cart_name);
 			$order->apply_shipping_tax_array($shipping_taxes);
-
 			$order->shipping_tax = $shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
 			$order->shipping_sub_option = $shipping_method->sub_option_name;
 
