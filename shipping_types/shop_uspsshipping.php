@@ -271,7 +271,7 @@
 				
 				$total_volume = 0;
 				foreach($cart_items as $cart_item) {
-					$total_volume += ($cart_item->product->depth * $cart_item->product->width * $cart_item->product->height) * $cart_item->quantity;
+					$total_volume += $cart_item->total_volume(false); //excluded free shipping items
 				}
 				$dimension = $total_volume / 3;
 
