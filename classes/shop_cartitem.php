@@ -901,7 +901,7 @@
 
 		public function get_offer_price() {
 			$price = $this->get_list_price() - $this->total_discount_no_tax();
-
+			return number_format($price,2, '.', '');
 		}
 
 		public function get_total_list_price( $quantity = null ) {
