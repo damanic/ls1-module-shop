@@ -36,7 +36,7 @@
 	 * @package shop.models
 	 * @author LemonStand eCommerce Inc.
 	 */
-	class Shop_OrderItem extends Db_ActiveRecord
+	class Shop_OrderItem extends Db_ActiveRecord implements Shop_RetailItem
 	{
 		public $table_name = 'shop_order_items';
 
@@ -1113,7 +1113,36 @@
 
 			return Shop_OptionMatrix::get_property($options, $property_name, $this->product, true);
 		}
-		
+
+		/*
+		 * Shop_Item Interface methods
+		 */
+		public function get_list_price() {
+			return $this->eval_single_price();
+		}
+
+		public function get_offer_price() {
+			return $this->get_list_price() - $this->discount;
+		}
+
+		public function get_total_list_price( $quantity = null ) {
+			$quantity = $quantity ? $quantity : $this->quantity;
+			$price = $this->get_list_price();
+			if($quantity){
+				$price = $price * $quantity;
+			}
+			return  number_format($price,2, '.', '');
+		}
+
+		public function get_total_offer_price( $quantity = null ) {
+			$quantity = $quantity ? $quantity : $this->quantity;
+			$price = $this->get_offer_price();
+			if($quantity){
+				$price = $price * $quantity;
+			}
+			return  number_format($price,2, '.', '');
+		}
+
 		/*
 		 * Event descriptions
 		 */

@@ -9,7 +9,7 @@
 	 * @author LemonStand eCommerce Inc.
 	 * @package shop.classes
 	 */
-	class Shop_CartItem
+	class Shop_CartItem implements Shop_RetailItem
 	{
 		/**
 		 * @var string Specifies the item key.
@@ -889,7 +889,39 @@
 		{
 			return Shop_OptionMatrix::get_property($this->options, $property_name, $this->product);
 		}
-		
+
+
+		//
+		// Shop_Item Interface methods
+		//
+
+		public function get_list_price() {
+			return $this->single_price_no_tax();
+		}
+
+		public function get_offer_price() {
+			$price = $this->get_list_price() - $this->total_discount_no_tax();
+
+		}
+
+		public function get_total_list_price( $quantity = null ) {
+			$quantity = $quantity ? $quantity : $this->quantity;
+			$price = $this->get_list_price();
+			if($quantity){
+				$price = $price * $quantity;
+			}
+			return  number_format($price,2, '.', '');
+		}
+
+		public function get_total_offer_price( $quantity = null ) {
+			$quantity = $quantity ? $quantity : $this->quantity;
+			$price = $this->get_offer_price();
+			if($quantity){
+				$price = $price * $quantity;
+			}
+			return  number_format($price,2, '.', '');
+		}
+
 		/**
 		 * Allows to override a price of an item in the shopping cart. 
 		 * The overridden price will be correctly processed by the discount and tax engines.
