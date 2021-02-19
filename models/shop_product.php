@@ -325,6 +325,7 @@ class Shop_Product extends Db_ActiveRecord
 		$this->define_column('visibility_catalog', 'Visible in the catalog')->invisible();
 
 		$this->define_column('shipping_hs_code', 'Harmonized System Code')->defaultInvisible();
+		$this->define_column('shipping_hs_code_extended', 'Extended Harmonized System Code')->defaultInvisible();
 
 		$this->define_column('net_unit_quantity', 'Net Quantity')->defaultInvisible();
 		$this->define_column('net_unit_code', 'Net Quantity Unit')->defaultInvisible();
@@ -458,7 +459,8 @@ class Shop_Product extends Db_ActiveRecord
 
 			$shipping_params = Shop_ShippingParams::get();
 			if($shipping_params->enable_hs_codes) {
-				$this->add_form_field( 'shipping_hs_code' )->renderAs( frm_dropdown )->emptyOption( '- please select -' )->cssClassName( 'search-contains--false' )->tab( 'Shipping' )->comment( 'This code may be required for customs clearance when shipping internationally' );
+				$this->add_form_field( 'shipping_hs_code' )->renderAs( frm_dropdown )->emptyOption( '- please select -' )->cssClassName( 'search-contains--false' )->tab( 'Shipping' )->comment( 'A six digit tariff code can be selected to facilitate customs clearance when shipping internationally','above' );
+				$this->add_form_field( 'shipping_hs_code_extended','left' )->renderAs( frm_text )->tab( 'Shipping' )->comment( 'Enter a full tariff code here if a code longer than 6 digits is required, or if the code cannot be found in the selection options above.', 'above' );
 			}
 			$this->add_form_field( 'bulky_shipping_item' )->tab( 'Shipping' )->comment( 'Bulky/oversize items can be excluded from discount offers' );
 
@@ -3943,6 +3945,13 @@ class Shop_Product extends Db_ActiveRecord
 			return null;
 
 		return $this->om_options_preset->options_as_string();
+	}
+
+	public function get_shipping_hs_code($extended = true){
+		if($extended){
+			return $this->shipping_hs_code_extended ? $this->shipping_hs_code_extended : $this->shipping_hs_code;
+		}
+		return $this->shipping_hs_code;
 	}
 
 	public function get_shipping_hs_code_options($keyValue = -1)
