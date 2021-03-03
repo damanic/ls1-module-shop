@@ -17,7 +17,7 @@ class Shop_PackedBox {
 				if ( !Db_ActiverecordProxy::is_a( $item, 'Shop_OrderItem' ) && !Db_ActiverecordProxy::is_a( $item, 'Shop_CartItem' ) ) {
 					throw new Phpr_ApplicationException( 'Invalid Item given, must be instance of Shop_CartItem or Shop_OrderItem' );
 				}
-				$this->items[] = $item;
+				$this->add_item($item, $item->quantity);
 			}
 		}
 		$this->load_native_units();
