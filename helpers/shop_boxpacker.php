@@ -164,6 +164,7 @@ class Shop_BoxPacker {
 		if(!is_a($item, 'Db_ActiverecordProxy')) {
 			$description .= is_a( $item, 'Shop_ExtraOption' ) ? 'Extra Option: ' . $item->description : $item->om('name');
 		}
+
 		$bp_item = new Shop_BoxPacker_Item(
 			$description,
 			$this->convert_to_mm( $width ),
@@ -173,6 +174,17 @@ class Shop_BoxPacker {
 			$keep_flat
 		);
 
+		//The following event can return an updated box packer item
+		//This can be used to return a box packer item that applies additional constraints
+		$result = Backend::$events->fireEvent('shop:onBoxPackerNewItem', $bp_item, $item);
+		if($result) {
+			foreach ( $result as $new_item ) {
+				if ( $new_item instanceof BoxPackerItem ) {
+					$bp_item = $new_item;
+					break;
+				}
+			}
+		}
 		$bp_item->item_id = property_exists($item,'key') ? $item->key : $item->id;
 		return $bp_item;
 	}
