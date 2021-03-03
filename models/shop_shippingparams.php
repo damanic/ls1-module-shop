@@ -90,6 +90,20 @@
 			return strlen($obj->zip_code);
 		}
 
+		public function get_origin_address_info(){
+			$address_info = new Shop_AddressInfo();
+			$address_info->first_name = $this->sender_first_name;
+			$address_info->last_name = $this->sender_last_name;
+			$address_info->company = $this->sender_company;
+			$address_info->phone = $this->sender_phone;
+			$address_info->street_address = $this->street_addr;
+			$address_info->country = $this->country_id;
+			$address_info->state = $this->state_id;
+			$address_info->zip = $this->zip_code;
+			$address_info->city = $this->city;
+			return $address_info;
+		}
+
 		public function define_columns($context = null)
 		{
 			$this->define_relation_column('country', 'country', 'Country ', db_varchar, '@name')->listTitle('Country')->defaultInvisible()->validation()->required();
@@ -249,6 +263,8 @@
 			Db_DbHelper::query( 'DELETE FROM shop_shipping_zones WHERE params_id IS NULL' );
 			Shop_Module::update_catalog_version();
 		}
+
+
 		
 		/*
 		 * Event descriptions
