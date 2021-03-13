@@ -2012,6 +2012,7 @@
 				}
 				$order->unlock_order();
 				$order->save();
+				Shop_OrderLockLog::add_log($order,'Unlocked by user');
 				Phpr::$response->redirect( Phpr::$request->getReferer( post( 'url' ) ) );
 			}
 			catch (Exception $ex) {
@@ -2027,6 +2028,7 @@
 				}
 				$order->lock_order();
 				$order->save();
+				Shop_OrderLockLog::add_log($order,'Locked by user');
 				Phpr::$response->redirect( Phpr::$request->getReferer( post( 'url' ) ) );
 			}
 			catch (Exception $ex) {

@@ -147,9 +147,13 @@
 				if($order->is_order_locked() && $status->unlocks_order()){
 					$order->unlock_order();
 					$order->save();
+					$order->status_id = $status->id;
+					Shop_OrderLockLog::add_log($order,'Unlocked by status change');
 				} else if(!$order->is_order_locked() && $status->locks_order()){
 					$order->lock_order();
 					$order->save();
+					$order->status_id = $status->id;
+					Shop_OrderLockLog::add_log($order,'Locked by status change');
 				}
 
 			}
