@@ -1020,3 +1020,5 @@
 #1.35.2 Fixes issue with customers report
 #1.35.3 New Inventory settings added to System eCommerce Configuration
 #1.35.4 Minor improvements for shipping and tax methods
+#1.35.5 Updates boxpacker library and adds new event
+#1.35.6 Adds option to log order edits
