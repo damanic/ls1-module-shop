@@ -212,6 +212,11 @@
 						endforeach;
 					endforeach;
 				?>
+
+				<?if(Phpr::$config->get('ENABLE_ORDER_AUDIT_LOGS', false)):?>
+					<li class="round"><a href="#logs" onclick="return false">Logs</a></li>
+				<?endif;?>
+
 			</ul>
 			<div class="clear tab_separator"></div>
 			<ul class="tabs_pages" id="order_tab_pages">
@@ -266,6 +271,12 @@
 						endforeach;
 					endforeach;
 				?>
+
+				<?if(Phpr::$config->get('ENABLE_ORDER_AUDIT_LOGS', false)):?>
+					<li class="form_page_preview" id="logs">
+						<? $this->renderPartial('order_logs') ?>
+					</li>
+				<?endif;?>
 			</ul>
 			<div class="clear"></div>
 		</div>

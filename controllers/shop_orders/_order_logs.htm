@@ -1,0 +1,100 @@
+<?php
+/**
+ * Load UNLOCK LOGS
+ */
+$unlock_logs = Shop_OrderLockLog::create()->where('order_id = ?', $form_model->id)->find_all();
+/**
+ * Load AUDIT LOGS, if exists
+ */
+$audit_logs = $form_model->modelLogFetchAll();
+?>
+
+	<h3>Audit Logs</h3>
+	<?php
+	if($audit_logs->count()):
+	//DISPLAY AUDIT LOGS
+	?>
+		<p>Records show changes made to this order by backend users (edit form)</p>
+
+		<table class="simpleList">
+		<thead>
+		<tr>
+			<th class="varchar">Date and Time</th>
+			<th>User</th>
+			<th class="varchar">Field</th>
+			<th class="varchar">Old Value</th>
+			<th class="varchar last">New Value</th>
+		</tr>
+		</thead>
+		<tbody>
+		<?php
+		$zebra_class = null;
+		$count = 0;
+		foreach($audit_logs as $audit_log):  ?>
+				<?php
+				$changed_fields = $audit_log->get_fields_array();
+				$count++;
+				$zebra_class = (empty($zebra_class) && $count !== 1) ? 'even' : null;
+				foreach($changed_fields as $field_name => $field_data):
+				?>
+					<tr class="<?=$zebra_class?>">
+						<td class="varchar"><?=$audit_log->record_datetime->format('%x %X')?></td>
+						<td class="varchar">User</td>
+						<td class="varchar"><b><?=$field_data['@attributes']['displayName']?></b> <small>(<?= $field_name ?>)</small></td>
+						<td class="varchar"><?=is_array($field_data['old']) ? implode(',', $field_data['old']) : $field_data['old']?></td>
+						<td class="varchar"><?=is_array($field_data['new']) ? implode(',', $field_data['new']) : $field_data['new']?></td>
+					</tr>
+				<?endforeach;?>
+		<?php endforeach; ?>
+		</tbody>
+		</table>
+	<?php else:?>
+		<p>No audit logs recorded</p>
+	<?php endif;?>
+
+<div style="margin: 20px;"></div>
+
+	<h3>Order Locks</h3>
+	<?
+	if($unlock_logs->count()):
+		?>
+		<table class="simpleList">
+			<thead>
+			<tr>
+				<th class="order_status"></th>
+				<th>Comment</th>
+				<th class="date">Date and Time</th>
+				<th>User</th>
+				<th>On Status</th>
+				<th class="order_status last"></th>
+			</tr>
+			</thead>
+			<tbody>
+			<?
+			foreach ($unlock_logs as $record):
+				?>
+				<tr class="<?= Backend_Html::zebra('order_log_items') ?>">
+					<td class="order_status">
+						<? if($record->locked_state):?>
+							<img src="/modules/shop/resources/images/lock.png" alt="Order Locked" title="Order Locked"/>
+						<? else: ?>
+							<img src="/modules/shop/resources/images/unlock.png" alt="Order Unlocked" title="Order Unlocked" style="filter: grayscale(100%);"/>
+						<? endif;?>
+					</td>
+					<td><?= h($record->comment) ?></td>
+					<td class="date"><?= $record->displayField('created_at') ?></td>
+					<td><?= h($record->created_user_name) ?></td>
+					<td><?= h($record->status_name) ?></td>
+					<td class="order_status last">
+						<span style="background-color: <?= $record->status_color ?>">&nbsp;</span>
+					</td>
+				</tr>
+			<?
+			endforeach;
+			?>
+			</tbody>
+		</table>
+	<?php else: ?>
+		<p>No unlock logs recorded</p>
+	<?php endif; ?>
+

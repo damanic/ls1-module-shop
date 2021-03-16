@@ -1447,20 +1447,15 @@
 				Phpr::$response->ajaxReportException($ex, true, true);
 			}
 		}
-		
-		public function edit_formBeforeRender($model)
-		{
-			$model->shipping_sub_option_id = $model->shipping_method_id.'_'.md5($model->shipping_sub_option);
-			if(!$model->has_shipping_quote_override()) {
-				$model->manual_shipping_quote = $model->shipping_quote;
-			}
-		}
 
 		public function create_formBeforeRender($model)
 		{
+
+			//PERMISSION PROTECTION
 			if (!$this->currentUser->role->can_create_orders)
 				throw new Phpr_ApplicationException('You have no rights to create orders.');
 
+			//DEFAULT COUNTRY SELECTION
 			$countries = Db_DbHelper::objectArray('select * from shop_countries where enabled_in_backend=1 order by name limit 0,1');
 			if (count($countries))
 			{
@@ -1475,7 +1470,7 @@
 				}
 			}
 
-			//currency
+			//SET ORDER CURRENCY
 			if ( $currency_id = filter_input( INPUT_GET, 'currency_id' ) ) {
 				$currencies = new Shop_CurrencySettings();
 				$currency = $currencies->find( $currency_id );
@@ -1483,7 +1478,8 @@
 					$model->set_currency($currency->code);
 				}
 			}
-			
+
+			//ASSIGN CUSTOMER TO ORDER BY URL ENTRY POINT
 			if (Phpr::$router->action == 'create' && Phpr::$router->param('param1') == 'for-customer')
 			{
 				$model->customer_id = Phpr::$router->param('param2');
@@ -1493,10 +1489,7 @@
 					$customer->copy_to_order($model);
 			}
 			
-			/*
-			 * Add invoice items
-			 */
-
+			//DETECT SUB ORDER
 			$invoice_mode = Phpr::$router->param('param1') == 'invoice';
 			$parent_order_id = Phpr::$router->param('param2');
 			if ($invoice_mode && $parent_order_id)
@@ -1528,6 +1521,15 @@
 		/*
 		 * Edit order
 		 */
+
+		public function edit_formBeforeRender($model)
+		{
+			//setup manual shipping override
+			$model->shipping_sub_option_id = $model->shipping_method_id.'_'.md5($model->shipping_sub_option);
+			if(!$model->has_shipping_quote_override()) {
+				$model->manual_shipping_quote = $model->shipping_quote;
+			}
+		}
 
 		protected function onCopyBillingAddress($order_id)
 		{
@@ -2049,8 +2051,17 @@
 		}
 
 
+		public function formBeforeCreateSave($model, $session_key){
+			//Audit Log
+			$audit_enabled = Phpr::$config->get('ENABLE_ORDER_AUDIT_LOGS', false);
+			if($audit_enabled) {
+				$model->modelLogDisable(); //do not add audit logs on create
+			}
+		}
+
 		public function formBeforeSave($order, $session_key)
 		{
+
 			$orderData = post('Shop_Order');
 			$deferred_session_key = $this->formGetEditSessionKey();
 
@@ -2124,8 +2135,15 @@
 		
 		public function formAfterSave($model, $session_key)
 		{
+			//Audit Log
+			$audit_enabled = Phpr::$config->get('ENABLE_ORDER_AUDIT_LOGS', false);
+			if($audit_enabled){
+				$model->modelLogOnModelUpdated();
+			}
+
 			try
 			{
+
 				$applied_rules = post('order_applied_discount_list');
 				if ($applied_rules)
 				{

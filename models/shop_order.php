@@ -64,6 +64,8 @@ class Shop_Order extends Db_ActiveRecord
 {
 	public $table_name = 'shop_orders';
 	public $native_controller = 'Shop_Orders';
+	public $implement = null;
+	public $model_log_auto = false;
 
 	public $belongs_to = array(
 		'shipping_country'=>array('class_name'=>'Shop_Country', 'foreign_key'=>'shipping_country_id'),
@@ -80,7 +82,6 @@ class Shop_Order extends Db_ActiveRecord
 		'customer'=>array('class_name'=>'Shop_Customer', 'foreign_key'=>'customer_id'),
 		'coupon'=>array('class_name'=>'Shop_Coupon', 'foreign_key'=>'coupon_id'),
 	);
-
 	public $has_many = array(
 		'log_records'=>array('class_name'=>'Shop_OrderStatusLog', 'foreign_key'=>'order_id', 'order'=>'shop_order_status_log_records.created_at DESC, id DESC', 'delete'=>true),
 		'items'=>array('class_name'=>'Shop_OrderItem', 'foreign_key'=>'shop_order_id', 'delete'=>true, 'order'=>'shop_order_items.id'),
@@ -94,7 +95,6 @@ class Shop_Order extends Db_ActiveRecord
 		'tax_total'=>array('sql'=>'shipping_tax+goods_tax', 'type'=>db_float),
 		'has_notes'=>array('sql'=>'select count(shop_order_notes.id) from shop_order_notes where shop_order_notes.order_id=shop_orders.id', 'type'=>db_number)
 	);
-
 	public $custom_columns = array(
 		'create_guest_customer'      => db_bool,
 		'register_customer'          => db_bool,
@@ -114,6 +114,13 @@ class Shop_Order extends Db_ActiveRecord
 	public $internal_shipping_suboption_id;
 
 	protected $api_added_columns = array();
+
+	public function __construct($values = null, $options = array()){
+		if(class_exists('Db_ModelLog')){ //backward compatibility with older core versions
+			$this->implement = 'Db_ModelLog';
+		}
+		parent::__construct($values,$options);
+	}
 
 	public static function create()
 	{
