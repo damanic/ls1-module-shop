@@ -32,6 +32,7 @@ $audit_logs = $form_model->modelLogFetchAll();
 		$count = 0;
 		foreach($audit_logs as $audit_log):  ?>
 				<?php
+				$user_name = $audit_log->user_name ? $audit_log->user_name : 'System';
 				$changed_fields = $audit_log->get_fields_array();
 				$count++;
 				$zebra_class = (empty($zebra_class) && $count !== 1) ? 'even' : null;
@@ -39,12 +40,13 @@ $audit_logs = $form_model->modelLogFetchAll();
 				?>
 					<tr class="<?=$zebra_class?>">
 						<td class="varchar"><?=$audit_log->record_datetime->format('%x %X')?></td>
-						<td class="varchar">User</td>
+						<td class="varchar"><?=$user_name?></td>
 						<td class="varchar"><b><?=$field_data['@attributes']['displayName']?></b> <small>(<?= $field_name ?>)</small></td>
 						<td class="varchar"><?=is_array($field_data['old']) ? implode(',', $field_data['old']) : $field_data['old']?></td>
 						<td class="varchar"><?=is_array($field_data['new']) ? implode(',', $field_data['new']) : $field_data['new']?></td>
 					</tr>
 				<?endforeach;?>
+
 		<?php endforeach; ?>
 		</tbody>
 		</table>
