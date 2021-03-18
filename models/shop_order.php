@@ -469,7 +469,9 @@ class Shop_Order extends Db_ActiveRecord
 		$this->discount = array_key_exists('discount', $data) ? $data['discount'] : 0;
 		$this->free_shipping = array_key_exists('free_shipping', $data) ? $data['free_shipping'] : 0;
 		$currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : null;
-		$this->set_currency($currency_code);
+		if(($this->currency_code === null) || ($this->currency_code != $currency_code)){
+			$this->set_currency($currency_code);
+		}
 	}
 
 	public function get_shipping_state_options($key_value = -1)
@@ -1142,7 +1144,7 @@ class Shop_Order extends Db_ActiveRecord
 			throw new Phpr_ApplicationException( 'Invalid currency code given' );
 		}
 		$this->currency_code = $currency->code;
-		$this->shop_currency_code = $this->get_shop_currency_code(); //unlikely the shops base currency will change, but recording base currency at time of order just in case.
+		$this->shop_currency_code = $this->get_shop_currency_code();
 
 	}
 
