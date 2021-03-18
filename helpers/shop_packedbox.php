@@ -62,6 +62,14 @@ class Shop_PackedBox {
 		return $this->items;
 	}
 
+	public function get_items_count(){
+		$count = 0;
+		foreach($this->get_items() as $item){
+			$count += $item->quantity;
+		}
+		return $count;
+	}
+
 	public function get_box(){
 		return $this->box;
 	}
