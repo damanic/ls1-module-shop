@@ -50,7 +50,8 @@
 					$this->renderPartial(PATH_APP.'/modules/backend/controllers/partials/_record_locked.htm',
 						array(
 							'record_name'=>'order',
-							'lock'=>$record_lock
+							'lock'=>$record_lock,
+							'allowed_steal_interval' => 5
 							)
 					);
 				} else {
