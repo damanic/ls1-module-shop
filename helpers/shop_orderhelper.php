@@ -177,7 +177,11 @@ class Shop_OrderHelper{
 
 		if (strlen($order->shipping_country_id))
 		{
-			$tax_info = Shop_TaxClass::calculate_taxes($items, (object)$shipping_info, true);
+			$tax_context = array(
+				'backend_call' => true,
+				'order' => $order
+			);
+			$tax_info = Shop_TaxClass::calculate_taxes($items, (object)$shipping_info, $tax_context);
 			$order->goods_tax = $goods_tax = $tax_info->tax_total;
 			$order->set_sales_taxes($tax_info->taxes);
 

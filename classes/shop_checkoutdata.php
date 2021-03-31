@@ -789,7 +789,8 @@
 
 			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id($payment_method->id) : null;
 			$shipping_method_obj = $shipping_method->id ? Shop_ShippingOption::find_by_id($shipping_method->id) : null;
-			
+
+
 			$cart_items = Shop_Cart::list_active_items($cart_name);
 
 			$discount_info = Shop_CartPriceRule::evaluate_discount(
@@ -801,7 +802,10 @@
 				Cms_Controller::get_customer(),
 				$subtotal);
 
-			$tax_info = Shop_TaxClass::calculate_taxes($cart_items, $shipping_info);
+			$tax_context = array(
+				'cart_name' => $cart_name
+			);
+			$tax_info = Shop_TaxClass::calculate_taxes($cart_items, $shipping_info, $tax_context);
 			$goods_tax = $tax_info->tax_total;
 
 			$subtotal = Shop_Cart::total_price_no_tax($cart_name, true, $cart_items);

@@ -737,7 +737,10 @@ class Shop_Order extends Db_ActiveRecord
 				$customer,
 				$subtotal);
 
-			$tax_info = Shop_TaxClass::calculate_taxes($cart_items, $shipping_info);
+			$tax_context = array(
+				'cart_name' => $cart_name
+			);
+			$tax_info = Shop_TaxClass::calculate_taxes($cart_items, $shipping_info, $tax_context);
 
 			/*
 			 * Create order
@@ -2074,7 +2077,11 @@ class Shop_Order extends Db_ActiveRecord
 			}
 		}
 
-		$tax_info = Shop_TaxClass::calculate_taxes( $cart_items, $shipping_info, true );
+		$tax_context = array(
+			'backend_call' => true,
+			'order' => $order
+		);
+		$tax_info = Shop_TaxClass::calculate_taxes( $cart_items, $shipping_info, $tax_context );
 
 
 		/*

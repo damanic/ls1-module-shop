@@ -557,7 +557,10 @@
 			$this->data['active_discount_rules'] = $discount_info->active_rules_info;
 			$this->data['cart_total_tax_incl'] = Shop_Cart::total_price($cart_name, true, null, true);
 			$this->data['cart_tax'] = Shop_Cart::total_tax($cart_name);
-			$cart_taxes_details = Shop_TaxClass::calculate_taxes(Shop_Cart::list_active_items($cart_name), Shop_CheckoutData::get_shipping_info());
+			$tax_context = array(
+				'cart_name' => $cart_name
+			);
+			$cart_taxes_details = Shop_TaxClass::calculate_taxes(Shop_Cart::list_active_items($cart_name), Shop_CheckoutData::get_shipping_info(), $tax_context);
 			$this->data['cart_taxes'] = $cart_taxes_details->taxes;
 			$this->data['estimated_total'] = max(0, $cart_total);
 			$this->data['coupon_code'] = Shop_CheckoutData::get_coupon_code();
@@ -1450,7 +1453,10 @@
 
 				$discount_info = Shop_CheckoutData::eval_discounts($cart_name);
 
-				$tax_info = Shop_TaxClass::calculate_taxes(Shop_Cart::list_active_items($cart_name), Shop_CheckoutData::get_shipping_info());
+				$tax_context = array(
+					'cart_name' => $cart_name
+				);
+				$tax_info = Shop_TaxClass::calculate_taxes(Shop_Cart::list_active_items($cart_name), Shop_CheckoutData::get_shipping_info(), $tax_context);
 
 				$total_product_tax = $tax_info->tax_total;
 				$this->data['total_product_tax'] = $total_product_tax;
@@ -2058,7 +2064,10 @@
 
 			$discount_info = Shop_CheckoutData::eval_discounts($cart_name);
 
-			$tax_info = Shop_TaxClass::calculate_taxes(Shop_Cart::list_active_items($cart_name), Shop_CheckoutData::get_shipping_info());
+			$tax_context = array(
+				'cart_name' => $cart_name
+			);
+			$tax_info = Shop_TaxClass::calculate_taxes(Shop_Cart::list_active_items($cart_name), Shop_CheckoutData::get_shipping_info(), $tax_context);
 			$total_product_tax = $tax_info->tax_total;
 			$this->data['total_product_tax'] = $total_product_tax;
 			$total = $this->data['goods_tax'] = $total_product_tax;

@@ -367,9 +367,30 @@
 
 		/**
 		 * Calculates individual and total taxes for a specific list of cart items
+		 *
+		 * @param mixed $cart_items collection of Shop_CartItem or ShopOrderItem
+		 * @param Shop_AddressInfo $shipping_info  Shipping address info
+		 * @param array $context_params Context parameters can be used to pass additional considerations to the shop:onCalculateTaxes event.
+		 *
+		 * @return object Standard object containing result properties: tax_total (float) , taxes (array) , item_taxes (array)
 		 */
-		public static function calculate_taxes($cart_items, $shipping_info, $backend_call = null)
+		public static function calculate_taxes($cart_items, $shipping_info, $context_params = array())
 		{
+
+			//Compatibility with legacy parameter
+			$backend_call = null;
+			if(!is_array($context_params)){
+				$backend_call = $context_params ? true : null;
+			}
+
+			$default_context_params = array(
+				'cart_name' => 'main',
+				'order' => null,
+				'backend_call' => $backend_call
+			);
+
+			$context_params = array_merge($default_context_params, $context_params);
+
 			$result = (object)array(
 				'tax_total' => 0,
 				'taxes' => array(),
@@ -381,7 +402,8 @@
 			
 			$calculations = Backend::$events->fire_event('shop:onCalculateTaxes', array(
 				'cart_items' => $cart_items,
-				'shipping_info' => $shipping_info
+				'shipping_info' => $shipping_info,
+				'context_params' => $context_params
 			));
 			
 			foreach($calculations as $calculation)
@@ -453,7 +475,7 @@
 			foreach ($compound_taxes as $name=>&$tax_data)
 				$tax_data->total = round($tax_data->total, 2);
 			
-			if ($backend_call)
+			if ($context_params['backend_call'])
 				$result->tax_total = round($tax_total, 2);
 			else
 			{
