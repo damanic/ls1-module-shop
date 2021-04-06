@@ -154,7 +154,7 @@ class Shop_OrderHelper{
 
 		//Shipping info may have changed, recalculate shipping taxes
 		if($order->shipping_method_id) {
-			$shipping_taxes = self::get_shipping_taxes($order);
+			$shipping_taxes = self::get_shipping_taxes($order, $deferred_session_key);
 			$order->apply_shipping_tax_array($shipping_taxes);
 			$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
 		}
@@ -350,7 +350,7 @@ class Shop_OrderHelper{
 	 *
 	 * @return array|mixed
 	 */
-	public static function get_shipping_taxes($order){
+	public static function get_shipping_taxes($order, $deferred_session_key=null){
 		$shipping_info = array();
 		$shipping_info['country'] = $order->shipping_country_id;
 		$shipping_info['state'] = $order->shipping_state_id;
@@ -358,7 +358,10 @@ class Shop_OrderHelper{
 		$shipping_info['city'] = $order->shipping_city;
 		$shipping_info['street_address'] = $order->shipping_street_addr;
 		$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $order->shipping_method_id, (object) $shipping_info, $order->get_shipping_quote() );
-		$return = Backend::$events->fireEvent('shop:onOrderGetShippingTaxes', $shipping_taxes, $order);
+
+		$eval_order = clone $order;
+		$eval_order->items = empty($deferred_session_key) ? $order->items : $order->list_related_records_deferred('items', $deferred_session_key);
+		$return = Backend::$events->fireEvent('shop:onOrderGetShippingTaxes', $shipping_taxes, $eval_order);
 		foreach($return as $updated_shipping_taxes) {
 			if($updated_shipping_taxes)
 				return $updated_shipping_taxes;
