@@ -30,6 +30,7 @@
 			$key = $from_currency.'_'.$to_currency;
 			if (array_key_exists($key, self::$rate_cache))
 				return self::$rate_cache[$key];
+
 				
 			/*
 			 * Look up in the database cache
@@ -43,11 +44,11 @@
 
 			if($converter->enable_cron_updates){
 				/*
-				* Get most recent rate, cron process keeps them up to date
+				* Use most recent rate, cron process keeps them up to date
 				*/
-				$record = $this->get_most_recent_record($from_currency, $to_currency);
-				if($record){
-					return self::$rate_cache[$key] = $record->rate;
+				$recent_record = $this->get_most_recent_record($from_currency, $to_currency);
+				if($recent_record){
+					return self::$rate_cache[$key] = $recent_record->rate;
 				}
 			} else {
 				/*
@@ -67,25 +68,25 @@
 			/*
 			 * Evaluate rate using a currency rate converter
 			 */
-
-			$class_name = $converter->class_name;
-			if (!class_exists($class_name))
-				throw new Phpr_ApplicationException("Currency converter class $class_name not found.");
-				
-			$converter->define_form_fields();
-
-			$converter_obj = new $class_name();
+			$converter_obj = $converter->get_converter_object();
 
 			try {
+				if (!$converter_obj)
+					throw new Phpr_ApplicationException('Currency rate converter is not configured.');
+
 				$rate = $converter_obj->get_exchange_rate($converter, $from_currency, $to_currency);
-				$rate = $this->update_rate($from_currency,$to_currency,$rate);
-				return self::$rate_cache[$key] = $rate;
+				if(!$rate) {
+					throw new Phpr_ApplicationException("Currency converter could not determine an exchange rate for $from_currency => $to_currency");
+				}
+				$rate = $this->update_rate( $from_currency, $to_currency, $rate );
+				self::$rate_cache[$key] = $rate;
 			} catch (Exception $ex) {
-				$record = $this->get_most_recent_record($from_currency, $to_currency);
-				if (!$record)
+				$fallback_record = $this->get_most_recent_record($from_currency, $to_currency);
+				if (!$fallback_record)
 					throw $ex;
 
-				return self::$rate_cache[$key] = $record->rate;
+				traceLog("Currency converter did not return an exchange rate for $from_currency => $to_currency . Used last record as fallback");
+				return self::$rate_cache[$key] = $fallback_record->rate;
 			}
 		}
 
@@ -190,7 +191,9 @@
 				if(!$result) {
 					try {
 						$rate = $converter_obj->get_exchange_rate( $converter, $from_currency, $to_currency );
-						$this->update_rate( $from_currency, $to_currency, $rate );
+						if($rate) {
+							$this->update_rate( $from_currency, $to_currency, $rate );
+						}
 					} catch ( Exception $ex ) {
 						traceLog( 'Failed to get exchange rate ' . $ex->getMessage() );
 					}

@@ -6,7 +6,8 @@
 	 */
 	class Shop_ERAIO_Converter extends Shop_CurrencyConverterBase
 	{
-		const feed_address = 'https://api.exchangeratesapi.io/latest?base=%s&symbols=%s';
+		const feed_address = 'api.exchangeratesapi.io/latest?access_key=%s';
+		protected static $api_result = array();
 		
 		/**
 		 * Returns information about the currency converter.
@@ -20,6 +21,12 @@
 				'description'=>'A free API for current and historical foreign exchange rates published by the European Central Bank.'
 			);
 		}
+
+		public function build_config_ui($host_obj)
+		{
+			$host_obj->add_field('api_key', 'API KEY')->tab('Configuration')->renderAs(frm_text)->comment('This service requires an API key from exchangeratesapi.io ', 'above', true);
+			$host_obj->add_field('use_ssl', 'Use SSL')->tab('Configuration')->renderAs(frm_onoffswitcher)->comment('Only switch this on if your API plan allows for HTTPS access ', 'above', true);
+		}
 		
 		/**
 		 * Returns exchange rate for two currencies
@@ -27,41 +34,53 @@
 		 * @param $parameters_base Active Record object to read parameters from
 		 * @param string $from_currency Specifies 3 character ISO currency code (e.g. USD) to convert from.
 		 * @param string $to_currency Specifies a currency code to convert to
-		 * @return number 
+		 * @return number
 		 */
 		public function get_exchange_rate($host_obj, $from_currency, $to_currency)
 		{
 			$from_currency = trim(strtoupper($from_currency));
 			$to_currency = trim(strtoupper($to_currency));
-			
-			$response = null;
-			try
-			{
-				$ch = curl_init();
-				curl_setopt($ch, CURLOPT_URL, sprintf(self::feed_address, $from_currency, $to_currency));
-				curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-				curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-				curl_setopt($ch, CURLOPT_POST, false);
-				$feed_content = curl_exec($ch);
-				curl_close($ch);
-			} catch (Exception $ex) {}
+			$rate = null;
 
-			if (!strlen($feed_content))
-				throw new Phpr_SystemException('Error loading exchangeratesapi.io currency exchange feed.');
 
-			$data = json_decode($feed_content,true);
+			if(empty(self::$api_result)) {
+				$access_point = $host_obj->use_ssl ? 'https://'.self::feed_address : 'http://'.self::feed_address ;
+				$access_point = sprintf( $access_point, $host_obj->api_key);
+				try {
+					$ch = curl_init();
+					curl_setopt( $ch, CURLOPT_URL, $access_point );
+					curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+					curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+					curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+					curl_setopt( $ch, CURLOPT_POST, false );
+					$feed_content = curl_exec( $ch );
+					curl_close( $ch );
+				} catch ( Exception $ex ) {
+				}
 
-			if(!$data || !isset($data['base'])){
-				throw new Phpr_SystemException('exchangeratesapi.io currency exchange rate service has returned invalid data');
+				if ( !strlen( $feed_content ) ) {
+					throw new Phpr_SystemException( 'Error loading exchangeratesapi.io currency exchange feed.' );
+				}
+
+				$data = json_decode( $feed_content, true );
+				if(!$data || !isset($data['base'])){
+					throw new Phpr_SystemException('exchangeratesapi.io currency exchange rate service has returned invalid data');
+				}
+				self::$api_result = $data;
 			}
+
+			$data = self::$api_result;
 
 			$result_from_currency = trim(strtoupper($data['base']));
-			if($result_from_currency !== $from_currency){
-				throw new Phpr_SystemException('exchangeratesapi.io currency exchange rate service has returned invalid data');
+			if($result_from_currency == $from_currency){
+				$rate = isset($data['rates'][$to_currency]) ? $data['rates'][$to_currency] : false;
+			} else {
+				$from_rate = isset($data['rates'][$from_currency]) ? $data['rates'][$from_currency] : false;
+				$to_rate = isset($data['rates'][$to_currency]) ? $data['rates'][$to_currency] : false;
+				if($from_rate && $to_rate){
+					$rate = round((1 / $from_rate) * $to_rate, 6);
+				}
 			}
-
-			$rate = isset($data['rates'][$to_currency]) ? $data['rates'][$to_currency] : false;
 
 			if(!is_numeric($rate) || ($rate <= 0)){
 				throw new Phpr_SystemException('exchangeratesapi.io currency exchange rate service has returned invalid data');
