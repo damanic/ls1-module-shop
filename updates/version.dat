@@ -1022,3 +1022,4 @@
 #1.35.4 Minor improvements for shipping and tax methods
 #1.35.5 Updates boxpacker library and adds new event
 #1.35.6 Adds option to log order edits
+#1.35.7 Updates exchangeratesapi.io driver
