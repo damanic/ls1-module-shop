@@ -36,13 +36,13 @@
 			 * Look up in the database cache
 			 */
 
-			$converter = Shop_CurrencyConversionParams::create()->get();
-			if (!$converter)
+			$converter_params = Shop_CurrencyConversionParams::create()->get();
+			if (!$converter_params)
 				throw new Phpr_ApplicationException('Currency rate converter is not configured.');
 
-			$interval = $converter->refresh_interval;
+			$interval = $converter_params->refresh_interval;
 
-			if($converter->enable_cron_updates){
+			if($converter_params->enable_cron_updates){
 				/*
 				* Use most recent rate, cron process keeps them up to date
 				*/
@@ -68,13 +68,14 @@
 			/*
 			 * Evaluate rate using a currency rate converter
 			 */
-			$converter_obj = $converter->get_converter_object();
+			$converter_driver = $converter_params->get_converter_object();
 
 			try {
-				if (!$converter_obj)
+				if (!$converter_driver)
 					throw new Phpr_ApplicationException('Currency rate converter is not configured.');
 
-				$rate = $converter_obj->get_exchange_rate($converter, $from_currency, $to_currency);
+				$converter_params->define_form_fields(); //loads all field params including those added by extension
+				$rate = $converter_driver->get_exchange_rate($converter_params, $from_currency, $to_currency);
 				if(!$rate) {
 					throw new Phpr_ApplicationException("Currency converter could not determine an exchange rate for $from_currency => $to_currency");
 				}
