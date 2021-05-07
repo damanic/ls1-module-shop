@@ -15,4 +15,5 @@ CREATE TABLE `shop_property_sets_applied_categories` (
 );
 
 ALTER TABLE `shop_product_properties`
+    ADD COLUMN `property_set_property_id` INT(11),
 	ADD COLUMN `api_code` VARCHAR(50);
