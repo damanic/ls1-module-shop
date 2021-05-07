@@ -1,10 +1,10 @@
 <div id="property_form">
-	<h2>Product Attribute</h2>
+	<h2>Product Property</h2>
 	<div class="content">
 		<div class="form300">
 			<?= Phpr_Form::openTag() ?>
 				<? if (!isset($fatalError)): ?>
-					<? $this->formRender($option) ?>
+					<? $this->formRender($property) ?>
 
 					<?= backend_ajax_button('Save', 'onAddProperty', array('class'=>'default'), "
 						loadIndicator: {injectInElement: true},
@@ -15,7 +15,7 @@
 					<script type="text/javascript">
 						$('property_form').addEvent('popupLoaded', function(){
 							$('<?= $this->formGetUniquePrefix()?>Shop_ProductProperty_name').focus();
-							init_attribute_form();
+							init_properties_form();
 						});
 					</script>
 			

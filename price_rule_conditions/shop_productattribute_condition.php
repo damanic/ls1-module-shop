@@ -1,5 +1,9 @@
 <?
 
+/**
+ * Class Shop_ProductProperty_Condition
+ * Matches against product fields
+ */
 	class Shop_ProductAttribute_Condition extends Shop_ModelAttributesConditionBase
 	{
 		protected $model_class = 'shop_product';

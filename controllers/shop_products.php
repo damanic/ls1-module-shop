@@ -111,10 +111,10 @@
 			'onDeleteProperty',
 			'onLoadSavePropertiesForm',
 			'onSavePropSet',
-			'onLoadLoadPropertiesForm',
+			'onLoadPropertySetForm',
 			'onLoadPropSet',
 			'onDeletePropertySet',
-			'onSetAttibuteOrders',
+			'onSetPropertyOrders',
 			'onLoadPriceTierForm',
 			'onUpdatePropertyValues',
 			'onUpdatePropertyValue',
@@ -129,8 +129,8 @@
 			'onSetOptionOrders',
 			'onSetGroupedOrders',
 			'onUngroupProduct',
-			'onShopCopyPropsForm',
-			'onCopyPropertiesProducts',
+			'onShopCopyProductFieldsForm',
+			'onCopyProductFields',
 			'onLoadAddManufacturerForm',
 			'onUpdateManufacturerStatesList',
 			'onAddManufacturer',
@@ -608,7 +608,7 @@
 						$extension->formFindModelObject($parent_id) : 
 						$extension->formCreateModelObject();
 
-					$parent_product->copy_properties($obj, $sessionKey, post('edit_session_key'));
+					$parent_product->copy_product_relations($obj, $sessionKey, post('edit_session_key'));
 				}
 			}
 				
@@ -710,12 +710,12 @@
 					$_POST['in_stock_values'] = $in_stock_values;
 				}
 				
-				$copy_properties_data = post('copy_properties_data');
+				$copy_product_data = post('copy_product_data');
 				$copy_properties_values = array();
-				if ($copy_properties_data)
+				if ($copy_product_data)
 				{
-					$copy_properties_data = explode('&', $copy_properties_data);
-					foreach ($copy_properties_data as $property_value)
+					$copy_product_data = explode('&', $copy_product_data);
+					foreach ($copy_product_data as $property_value)
 					{
 						$pair = explode('=', $property_value);
 						if (count($pair) == 2)
@@ -814,7 +814,7 @@
 			return strlen($id) ? $this->formFindModelObject($id) : $this->formCreateModelObject();
 		}
 		
-		protected function onShopCopyPropsForm($id = null)
+		protected function onShopCopyProductFieldsForm($id = null)
 		{
 			try
 			{
@@ -824,17 +824,17 @@
 				$this->viewData['edit_session_key'] = post('edit_session_key');
 				$this->viewData['trackTab'] = false;
 				
-				$this->viewData['properties'] = $product->list_copy_properties();
+				$this->viewData['fields'] = $product->get_copy_fields();
 			}
 			catch (Exception $ex)
 			{
 				$this->handlePageError($ex);
 			}
 			
-			$this->renderPartial('copy_properties_form');
+			$this->renderPartial('copy_product_fields_form');
 		}
 		
-		protected function onCopyPropertiesProducts($id = null)
+		protected function onCopyProductFields($id = null)
 		{
 			try
 			{
@@ -842,18 +842,18 @@
 				if (!$product)
 					throw new Phpr_ApplicationException('Product not found.');
 				
-				$properties = post('properties', array());
+				$fields = post('fields', array());
 				$product_ids = post('list_ids', array());
 
 				$product->set_data(post('Shop_Product', array()));
 
 				if (!$product_ids)
-					throw new Phpr_ApplicationException('Please select products to copy properties to.');
+					throw new Phpr_ApplicationException('Please select products to copy fields to.');
 
-				if (!$properties)
-					throw new Phpr_ApplicationException('Please select properties to copy.');
+				if (!$fields)
+					throw new Phpr_ApplicationException('Please select fields to copy.');
 					
-				$product->copy_properties_to_grouped(post('edit_session_key'), $product_ids, $properties, $_POST);
+				$product->copy_properties_to_grouped(post('edit_session_key'), $product_ids, $fields, $_POST);
 			}
 			catch (Exception $ex)
 			{
@@ -1498,13 +1498,14 @@
 			try
 			{
 				$id = post('property_id');
-				$option = $id ? Shop_ProductProperty::create()->find($id) : Shop_ProductProperty::create();
-				if (!$option)
-					throw new Phpr_ApplicationException('Attribute not found');
+				$property = $id ? Shop_ProductProperty::create()->find($id) : Shop_ProductProperty::create();
+				if (!$property)
+					throw new Phpr_ApplicationException('Property not found');
 				
-				$option->define_form_fields();
+				$property->define_columns('form');
+				$property->define_form_fields();
 
-				$this->viewData['option'] = $option;
+				$this->viewData['property'] = $property;
 				$this->viewData['session_key'] = post('edit_session_key');
 				$this->viewData['property_id'] = post('property_id');
 				$this->viewData['trackTab'] = false;
@@ -1522,18 +1523,30 @@
 			try
 			{
 				$id = post('property_id');
+				$post_data = post('Shop_ProductProperty');
+				if(!isset($post_data['value']) && isset($post_data['value_pickup'])){
+					$post_data['value'] = $post_data['value_pickup'];
+				}
 
-				$option = $id ? Shop_ProductProperty::create()->find($id) : Shop_ProductProperty::create();
-				if (!$option)
+				$property = $id ? Shop_ProductProperty::create()->find($id) : Shop_ProductProperty::create();
+				if (!$property)
 					throw new Phpr_ApplicationException('Option not found');
 
 				$product = $this->getProductObj($parentId);
-				$option->init_columns_info();
-				$option->define_form_fields();
-				$option->save(post('Shop_ProductProperty'), $this->formGetEditSessionKey());
+				$property->init_columns_info();
+				$property->define_form_fields();
+
+				if($property->api_code){
+					$set_property = Shop_PropertySetProperty::create()->find_by_api_code($property->api_code);
+					if($set_property){
+						$set_property->validate_property_value($post_data['value']);
+					}
+				}
+
+				$property->save($post_data, $this->formGetEditSessionKey());
 
 				if (!$id)
-					$product->properties->add($option, post('product_session_key'));
+					$product->properties->add($property, post('product_session_key'));
 			}
 			catch (Exception $ex)
 			{
@@ -1561,9 +1574,9 @@
 				$product = $this->getProductObj($parentId);
 
 				$id = post('property_id');
-				$option = $id ? Shop_ProductProperty::create()->find($id) : Shop_ProductProperty::create();
-				if ($option)
-					$product->properties->delete($option, $this->formGetEditSessionKey());
+				$property = $id ? Shop_ProductProperty::create()->find($id) : Shop_ProductProperty::create();
+				if ($property)
+					$product->properties->delete($property, $this->formGetEditSessionKey());
 
 				$this->viewData['form_model'] = $product;
 				$this->renderPartial('properties_list');
@@ -1574,7 +1587,7 @@
 			}
 		}
 		
-		protected function onSetAttibuteOrders($parentId = null)
+		protected function onSetPropertyOrders($parentId = null)
 		{
 			Shop_ProductProperty::create()->set_item_orders(post('item_ids'), post('sort_orders'));
 		}
@@ -1596,7 +1609,7 @@
 
 			$this->renderPartial('save_propset_form');
 		}
-		
+
 		protected function onSavePropSet($parentId = null)
 		{
 			try
@@ -1631,7 +1644,7 @@
 			}
 		}
 		
-		protected function onLoadLoadPropertiesForm()
+		protected function onLoadPropertySetForm()
 		{
 			try
 			{
@@ -1660,24 +1673,59 @@
 				$product = $this->getProductObj($parentId);
 				$properties = $product->list_related_records_deferred('properties', post('product_session_key'));
 
-				$obj = Shop_PropertySet::create()->find($data['existing_id']);
-				if (!$obj)
-					$obj->validation->setError('Selected property set is not found.', 'existing_id', true);
+				$property_set = Shop_PropertySet::create()->find($data['existing_id']);
+				if (!$property_set)
+					$property_set->validation->setError('Selected property set is not found.', 'existing_id', true);
 
-				foreach ($obj->properties as $property)
+				foreach ($property_set->properties as $property_set_property)
 				{
 					foreach ($properties as $existing_property)
 					{
-						if ($existing_property->name == $property->name)
+						$prop_from_set = false;
+						if($existing_property->property_set_property_id ) {
+							if ( $property_set_property->id == $existing_property->property_set_property_id ) {
+								$prop_from_set = true;
+							}
+						} else 	if($existing_property->api_code ) {
+							if ( $property_set_property->api_code == $existing_property->api_code ) {
+								$prop_from_set = true;
+							}
+						}
+						if($prop_from_set){
+							$prop_updated = false;
+							if($existing_property->name !== $property_set_property->name){
+								$prop_updated = true;
+								$existing_property->name = $property_set_property->name;
+							}
+							if(empty($existing_property->value) && !empty($property_set_property->value)){
+								$prop_updated = true;
+								$existing_property->value = $property_set_property->value;
+							}
+							if($existing_property->api_code !== $property_set_property->api_code){
+								$prop_updated = true;
+								$existing_property->api_code = $property_set_property->api_code;
+							}
+							if(!$existing_property->property_set_property_id){
+								$prop_updated = true;
+								$existing_property->property_set_property_id = $property_set_property->id;
+							}
+							if($prop_updated) {
+								$existing_property->save();
+							}
 							continue 2;
+						} else if ($existing_property->name == $property_set_property->name) {
+								continue 2;
+						}
 					}
 					
-					$option = Shop_ProductProperty::create();
-					$option->name = $property->name;
+					$new_property = Shop_ProductProperty::create();
+					$new_property->name = $property_set_property->name;
+					$new_property->value = $property_set_property->value;
+					$new_property->property_set_property_id = $property_set_property->id;
+					$new_property->api_code = $property_set_property->api_code;
+					$new_property->save();
 
-					$option->save();
-
-					$product->properties->add($option, post('product_session_key'));
+					$product->properties->add($new_property, post('product_session_key'));
 				}
 			}
 			catch (Exception $ex)
@@ -1705,6 +1753,7 @@
 		protected function onUpdatePropertyValues()
 		{
 			$property = Shop_ProductProperty::create();
+			$property->define_columns('form');
 			$property->define_form_fields();
 			$data = post('Shop_ProductProperty', array());
 			$property->name = $data['name'];
@@ -1715,10 +1764,10 @@
 		protected function onUpdatePropertyValue()
 		{
 			$property = Shop_ProductProperty::create();
+			$property->define_columns('form');
 			$property->define_form_fields();
 			$data = post('Shop_ProductProperty', array());
-			$property->load_value($data['value_pickup']);
-
+			$property->value = $data['value_pickup'];
 			$this->formRenderFieldContainer($property, 'value');
 		}
 		

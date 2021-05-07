@@ -336,6 +336,9 @@ ul.status_transition li div p.link a:hover {
 td.iconCell .ungroup_product {
   background-position: left top;
 }
+.property_set {
+  background: transparent url('../images/property_sets.png') no-repeat 5px 4px;
+}
 /*
  * Row controls
  */

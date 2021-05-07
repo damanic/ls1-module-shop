@@ -2745,12 +2745,12 @@
 		 * @input array $option_values A list of product option values.
 		 * Use this parameter in combination with the <em>option_names</em> parameter to specify values you want to search in product options.
 		 * This parameter should be an array, so you need to use the <em>option_values[]</em> name for your form controls.
-		 * @input array $attribute_names A list of product attribute names.
-		 * Use this and the <em>attribute_values</em> parameters to search in product attributes.
+		 * @input array $attribute_names A list of product property names.
+		 * Use this and the <em>attribute_values</em> parameters to search in product properties.
 		 * This parameter should be an array, so you need to use the <em>attribute_names[]</em> name for your form controls.
-		 * @input array $attribute_values A list of product attribute values.
+		 * @input array $attribute_values A list of product property values.
 		 * Use this parameter in combination with the <em>attribute_names</em> parameter to specify values you
-		 * want to search in product attributes. This parameter should be an array, so you need to use the <em>attribute_values[]</em> name for your form controls.
+		 * want to search in product properties. This parameter should be an array, so you need to use the <em>attribute_values[]</em> name for your form controls.
 		 *
 		 * @author LemonStand eCommerce Inc.
 		 * @package shop.actions
@@ -2951,7 +2951,7 @@
 				$options['category_ids'] = $categories;
 				$options['manufacturer_ids'] = $manufacturers;
 				$options['options'] = $selected_options;
-				$options['attributes'] = $selected_attributes;
+				$options['properties'] = $selected_attributes;
 				$options['min_price'] = $min_price;
 				$options['max_price'] = $max_price;
 				$options['sorting'] = $sorting;
@@ -3102,10 +3102,10 @@
 		 * @action shop:compare
 		 * @output Db_DataCollection $products A list of products added to the comparison list.
 		 * Each element in the collection is an object of the {@link Shop_Product} class.
-		 * @output array $attributes - A list of product attributes of all products in the comparison list.
-		 * You can manage product attributes on the Attributes tab of the Create/Edit Product page.
-		 * To output an attribute value by its name, you can use the following code:
-		 * <pre><?= h($product->get_attribute($attribute)) ?></pre>
+		 * @output array $attributes - A list of product properties of all products in the comparison list.
+		 * You can manage product properties on the Properties tab of the Create/Edit Product page.
+		 * To output an property value by its name, you can use the following code:
+		 * <pre><?= h($product->get_property($property_name)) ?></pre>
 		 * @author LemonStand eCommerce Inc.
 		 * @package shop.actions
 		 * @see http://lemonstand.com/docs/category_page Creating the Category Page
@@ -3118,18 +3118,18 @@
 		{
 			$products = $this->data['products'] = Shop_ComparisonList::list_products();
 
-			$all_attribute_names = array();
+			$all_property_names = array();
 			foreach ($products as $product)
 			{
-				foreach ($product->properties as $attribute)
+				foreach ($product->properties as $property)
 				{
-					$key = mb_strtolower($attribute->name);
-					if (!array_key_exists($key, $all_attribute_names))
-						$all_attribute_names[$key] = $attribute->name;
+					$key = mb_strtolower($property->name);
+					if (!array_key_exists($key, $all_property_names))
+						$all_property_names[$key] = $property->name;
 				}
 			}
 
-			$this->data['attributes'] = $all_attribute_names;
+			$this->data['attributes'] = $all_property_names;
 		}
 
 		/*

@@ -55,10 +55,10 @@ function make_options_sortable(session_key)
 		$('options_list_body'+session_key).makeListSortable('onSetOptionOrders', 'option_order', 'option_id', 'sort_handle');
 }
 
-function make_attributes_sortable(session_key)
+function make_properties_sortable(session_key)
 {
-	if ($('attributes_list_body'+session_key))
-		$('attributes_list_body'+session_key).makeListSortable('onSetAttibuteOrders', 'option_order', 'option_id', 'sort_handle');
+	if ($('properties_list_body'+session_key))
+		$('properties_list_body'+session_key).makeListSortable('onSetPropertyOrders', 'option_order', 'option_id', 'sort_handle');
 }
 
 function copy_grouped_ghost_params()
@@ -197,7 +197,7 @@ function init_grouped_on_sale_controls()
 	}
 }
 
-function update_attribute_known_values()
+function update_property_known_values()
 {
 	var property_name_element = $('Shop_ProductProperty_name') || $('groupedShop_ProductProperty_name');
 	var indicator_element = $('form_field_value_pickupShop_ProductProperty') || $('groupedform_field_value_pickupShop_ProductProperty');
@@ -211,26 +211,27 @@ function update_attribute_known_values()
 			hideOnSuccess: true
 		}, 
 		update: update_element,
-		onAfterUpdate: init_attribute_value_selector
+		onAfterUpdate: init_property_value_selector
 	});
 }
 
-function init_attribute_value_selector()
+function init_property_value_selector()
 {
+
 	var pickup_element = $('Shop_ProductProperty_value_pickup') || $('groupedShop_ProductProperty_value_pickup');
-	pickup_element.addEvent('change', update_attribute_value);
+	pickup_element.addEvent('change', update_property_value);
 }
 
-function update_attribute_value()
+function update_property_value()
 {
 	var pickup_element = $('Shop_ProductProperty_value_pickup') || $('groupedShop_ProductProperty_value_pickup');
 	var property_name_element = $('Shop_ProductProperty_name') || $('groupedShop_ProductProperty_name');
 	var indicator_element = $('form_field_valueShop_ProductProperty') || $('groupedform_field_valueShop_ProductProperty');
 	var update_element = $('form_field_container_valueShop_ProductProperty') || $('groupedform_field_container_valueShop_ProductProperty');
 
-	if (pickup_element.get('value').length == 0)
+	if (!pickup_element || !update_element)
 		return;
-	
+
 	property_name_element.getForm().sendPhpr('onUpdatePropertyValue', {
 		loadIndicator: {
 			injectInElement: true, 
@@ -290,12 +291,12 @@ function init_grouped_shipping_controls()
 	}
 }
 
-function init_attribute_form()
+function init_properties_form()
 {
 	var property_name_element = $('Shop_ProductProperty_name') || $('groupedShop_ProductProperty_name');
 	
-	new InputChangeTracker(property_name_element,  {regexp_mask: '^.*$'}).addEvent('change', update_attribute_known_values);
-	init_attribute_value_selector();
+	new InputChangeTracker(property_name_element,  {regexp_mask: '^.*$'}).addEvent('change', update_property_known_values);
+	init_property_value_selector();
 }
 
 window.addEvent('domready', function(){
@@ -362,7 +363,7 @@ window.addEvent('domready', function(){
 	{
 		make_extras_sortable($('form_session_keyShop_Product').value);
 		make_options_sortable($('form_session_keyShop_Product').value);
-		make_attributes_sortable($('form_session_keyShop_Product').value);
+		make_properties_sortable($('form_session_keyShop_Product').value);
 	}
 	
 	if ($('Shop_Product_grouped_option_desc'))

@@ -477,23 +477,27 @@
 			
 			return self::$product_types[$product_type_id] = Db_DbHelper::scalar('select name from shop_product_types where id=:id', array('id'=>$product_type_id));
 		}
-		
-		protected static function get_attribute_value($product, $db_name)
-		{
-			$attr_name = mb_substr($db_name, 6);
-			$values = Db_DbHelper::queryArray('select value from shop_product_properties where product_id=:product_id and name=:name', array('product_id'=>$product->id, 'name'=>$attr_name));
+
+		protected static function get_property_value($product, $db_name){
+			$properties = array();
+			$prop_name = mb_substr($db_name, 6);
+			$values = Db_DbHelper::queryArray('select value from shop_product_properties where product_id=:product_id and name=:name', array('product_id'=>$product->id, 'name'=>$prop_name));
 			if(count($values))
 			{
 				foreach($values as $value)
 				{
-					$attributes[] = $value['value'];
+					$properties[] = $value['value'];
 				}
-				return implode('|', $attributes);
+				return implode('|', $properties);
 			}
 			else return null;
-			return $values;
-			
-			return Db_DbHelper::scalar('select value from shop_product_properties where product_id=:product_id and name=:name', array('product_id'=>$product->id, 'name'=>$attr_name));
+		}
+
+		/**
+		 * @deprecated
+		 */
+		protected static function get_attribute_value($product, $db_name) {
+			return self::get_property_value($product, $db_name);
 		}
 		
 		protected static function get_tax_class($product)
@@ -605,6 +609,8 @@
 					$row[$column->dbName] = self::get_global_extra_sets($product);
 				elseif (preg_match('/^ATTR:/', $column->dbName))
 					$row[$column->dbName] = self::get_attribute_value($product, $column->dbName);
+				elseif (preg_match('/^PROP:/', $column->dbName))
+					$row[$column->dbName] = self::get_property_value($product, $column->dbName);
 				elseif ($column->dbName == 'product_groups')
 					$row[$column->dbName] = self::list_product_groups($product);
 				else if ($column->dbName == 'price_tiers')

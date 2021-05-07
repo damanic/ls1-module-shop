@@ -42,8 +42,13 @@
 		public $backend_enabled = 1;
 		public $taxable = 1;
 		public $order;
+
+		/*
+		 * Additional config data extracted fron config_data field (XML)
+		 */
+		public $fetched_data = array();
 		
-		/**
+		/*
 		 * These fields contains calculated quotes
 		 */
 		public $quote = 0;
@@ -64,18 +69,18 @@
 		public $is_free = false;
 		
 		/*
-		 * The following field contains an error hint message - for examlpe "The postal code XXXXX is invalid for AL United States".
+		 * The following field contains an error hint message - for example "The postal code XXXXX is invalid for AL United States".
 		 */
 		public $error_hint = null;
 		
 		protected $shipping_type_obj = null;
 		protected $added_fields = array();
-
-		public $fetched_data = array();
 		protected $api_added_columns = array();
+
 		protected static $cache = array();
 		protected static $customer_group_filter_cache = null;
 		protected static $is_taxable_cache = array();
+		protected static $quote_cache = array();
 
 		public $custom_columns = array('shipping_type_name'=>db_text);
 		
@@ -83,8 +88,7 @@
 			'countries'=>array('class_name'=>'Shop_Country', 'join_table'=>'shop_shippingoptions_countries', 'order'=>'name'),
 			'customer_groups'=>array('class_name'=>'Shop_CustomerGroup', 'join_table'=>'shop_shippingoptions_customer_groups', 'order'=>'name', 'foreign_key'=>'customer_group_id', 'primary_key'=>'shop_sh_option_id')
 		);
-		
-		protected static $quote_cache = array();
+
 
 		public static function create()
 		{
@@ -376,10 +380,14 @@
 			return self::$is_taxable_cache[$id] = Db_DbHelper::scalar('select taxable from shop_shipping_options where id=:id', array('id'=>$id));
 		}
 
-		protected function load_xml_data()
+		public function load_xml_data($force = false)
 		{
 			if (!strlen($this->config_data))
 				return;
+
+			if(!$force && !empty($this->fetched_data)) { //already loaded data
+				return;
+			}
 
 			$object = new SimpleXMLElement($this->config_data);
 			foreach ($object->children() as $child)

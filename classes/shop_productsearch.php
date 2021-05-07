@@ -19,11 +19,11 @@
 		 *   with specific manufacturers.</li>
 		 * <li><em>options</em> - an array of product options as a name-value list. Example: <em>array('color'=>'black')</em>.
 		 *   You can use the <em>wildcard</em> character as an option value if you want to find all products with a specific option having any value.</li>
-		 * <li><em>attributes</em> - an array of product attributes as a name-value list. Example: <em>array('paper format'=>'A4')</em>.
-		 *   If your products can have multiple attributes with a same name and you want to search by multiple attribute values, you
-		 *   can specify the attribute value as array: <em>array('paper format'=>array('A4', 'A5'))</em> - the method will find products
-		 *   with the <em>paper format</em> attribute having values of <em>A4</em> or <em>A5</em>. You can use the <em>wildcard</em>
-		 *  character for the attribute value if you want to find all products with a specific attribute having any value.</li>
+		 * <li><em>properties</em> - an array of product properties as a name-value list. Example: <em>array('paper format'=>'A4')</em>.
+		 *   If your products can have multiple properties with a same name and you want to search by multiple property values, you
+		 *   can specify the property value as array: <em>array('paper format'=>array('A4', 'A5'))</em> - the method will find products
+		 *   with the <em>paper format</em> property having values of <em>A4</em> or <em>A5</em>. You can use the <em>wildcard</em>
+		 *  character for the property value if you want to find all products with a specific property having any value.</li>
 		 * <li><em>custom_groups</em> - an array of custom product groups to limit the result with specific groups. </li>
 		 * <li><em>min_price</em> - minimum product price.</li>
 		 * <li><em>max_price</em> - maximum product price.</li>
@@ -44,20 +44,20 @@
 		 *
 		 * $query = 'laptop';
 		 * $options = array();
-		 * $options['attributes'] = array('CPU'=>'2.33');
+		 * $options['properties'] = array('CPU'=>'2.33');
 		 * $options['options'] = array('color'=>'black');
 		 * $options['custom_groups'] = array('featured_products');
 		 *
 		 * $products = Shop_Product::find_products($query, $pagination, $current_page, $options);
 		 * </pre>
-		 * By default the find_products() method uses soft comparison in the options and attributes search. This means that if you specify
-		 * an option or attribute value <em>large</em> and if there are products which have the option value <em>large frame</em>, those
-		 * product will be returned. You can enable strict search by adding the <em>exclamation</em> sign before the option or attribute value:
+		 * By default the find_products() method uses soft comparison in the options and properties search. This means that if you specify
+		 * an option or property value <em>large</em> and if there are products which have the option value <em>large frame</em>, those
+		 * product will be returned. You can enable strict search by adding the <em>exclamation</em> sign before the option or property value:
 		 * <pre>
-		 * $options['attributes'] = array('CPU'=>'!2.33');
+		 * $options['properties'] = array('CPU'=>'!2.33');
 		 * $options['options'] = array('color'=>'!black');
 		 * </pre>
-		 * Please note that the strict attribute search is more efficient and reliable than the strict option search.
+		 * Please note that the strict property search is more efficient and reliable than the strict option search.
 		 * The strict option search could work incorrectly if a product option value contains commas.
 		 * @documentable
 		 * @see shop:onRegisterProductSearchEvent
@@ -283,19 +283,20 @@
 			}
 
 			/*
-			 * Apply attributes
+			 * Apply product properties
 			 */
 
-			$product_attributes = isset($options['attributes']) ? $options['attributes'] : array();
-			if ($product_attributes)
+			$product_properties  = isset($options['attributes']) ? $options['attributes'] : array(); //@deprecated
+			$product_properties  = isset($options['properties']) ? $options['properties'] : $product_properties;
+			if ($product_properties)
 			{
-				$attribute_queries = array();
-				foreach ($product_attributes as $name=>$values)
+				$property_queries = array();
+				foreach ($product_properties as $name=>$values)
 				{
 					if (!is_array($values))
 						$values = array($values);
 
-					$product_attribute_queries = array();
+					$product_property_queries = array();
 
 					foreach ($values as $value)
 					{
@@ -309,21 +310,21 @@
 						$name = Db_DbHelper::escape($name);
 						$value = Db_DbHelper::escape($value);
 						if (substr($value, 0, 1) != '!')
-							$product_attribute_queries[] = "(exists(select id from shop_product_properties where name='".$name."' and value like '%".$value."%' and product_id=shop_products.id))";
+							$product_property_queries[] = "(exists(select id from shop_product_properties where name='".$name."' and value like '%".$value."%' and product_id=shop_products.id))";
 						else {
 							$value = substr($value, 1);
-							$product_attribute_queries[] = "(exists(select id from shop_product_properties where name='".$name."' and value= '".$value."' and product_id=shop_products.id))";
+							$product_property_queries[] = "(exists(select id from shop_product_properties where name='".$name."' and value= '".$value."' and product_id=shop_products.id))";
 						}
 					}
 
-					if($product_attribute_queries)
-						$attribute_queries[] = '('.implode(' or ', $product_attribute_queries).')';
+					if($product_property_queries)
+						$property_queries[] = '('.implode(' or ', $product_property_queries).')';
 				}
 
-				if ($attribute_queries)
+				if ($property_queries)
 				{
-					$attribute_queries = implode(' and ', $attribute_queries);
-					$query_template = Shop_Product::set_search_query_params($query_template, '%TABLES%', $attribute_queries.' and %FILTER%');
+					$property_queries = implode(' and ', $property_queries);
+					$query_template = Shop_Product::set_search_query_params($query_template, '%TABLES%', $property_queries.' and %FILTER%');
 				}
  			}
 

@@ -1,0 +1,33 @@
+<div id="property_form">
+	<h2>Property</h2>
+	<div class="content">
+		<div class="form600">
+			<?= Phpr_Form::openTag(array('id'=>'property_form_element')) ?>
+				<? if (!isset($fatalError)): ?>
+					<input type="hidden" name="set_session_key" value="<?= h($session_key) ?>"/>
+					<input type="hidden" name="property_id" value="<?= $property_id ?>"/>
+					<input type="hidden" name="phpr_uploader_model_class" value="<?= get_class($property) ?>"/>
+					<input type="hidden" name="phpr_uploader_model_id" value="<?= $property->id ?>"/>
+					<input type="hidden" name="form_prefix" value="<?= $this->formGetUniquePrefix() ?>">
+
+					<? $this->formRender($property) ?>
+
+					<div class="clear"></div>
+
+					<?= backend_ajax_button('Save', 'onSaveProperty', array(), "
+						loadIndicator: {injectInElement: true},
+						onSuccess: updatePropertyList.pass('$session_key')
+					") ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+
+					<div class="clear"></div>
+
+				<? else: ?>
+					<?= flash() ?>
+					<?= backend_button('Cancel', array('onclick'=>'return cancelPopup()')) ?>
+					<div class="clear"></div>
+				<? endif ?>
+			</form>
+		</div>
+	</div>
+</div>

@@ -272,6 +272,8 @@
 					$row[$column->dbName] = self::get_global_extra_sets($product);
 				elseif (preg_match('/^ATTR:/', $column->dbName))
 					$row[$column->dbName] = self::get_attribute_value($product, $column->dbName);
+				elseif (preg_match('/^PROP:/', $column->dbName))
+					$row[$column->dbName] = self::get_property_value($product, $column->dbName);
 				elseif ($column->dbName == 'product_groups')
 					$row[$column->dbName] = self::list_product_groups($product);
 				else if ($column->dbName == 'price_tiers')

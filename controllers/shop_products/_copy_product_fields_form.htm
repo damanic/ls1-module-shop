@@ -1,9 +1,9 @@
-<div id="copy_properties_form">
-	<h2>Copy Properties</h2>
+<div id="copy_product_fields_container">
+	<h2>Copy Product Fields</h2>
 	<div class="content">
 		<div class="form500">
 			<? if (!isset($fatalError)): ?>
-				<?= Phpr_Form::openTag(array('id'=>'copy_properties_form')) ?>
+				<?= Phpr_Form::openTag(array('id'=>'copy_product_fields_form')) ?>
 					<div class="formFlash"></div>
 					
 					<?
@@ -13,7 +13,7 @@
 						
 						if ($products->count):
 					?>
-						<p>Please select products you want to copy properties to.</p>
+						<p>Please select products you want to copy fields to.</p>
 						
 						<? if ($products->count > 6): ?>
 							<div class="scrollableList">
@@ -49,7 +49,7 @@
 							</div>
 						<? endif ?>
 
-						<p class="<? if ($products->count <= 6): ?>offsetTop<? endif ?>">Please select properties you want to copy to the selected products.</p>
+						<p class="<? if ($products->count <= 6): ?>offsetTop<? endif ?>">Please select fields you want to copy to the selected products.</p>
 
 						<div class="scrollableList">
 							<table class="simpleList">
@@ -58,16 +58,16 @@
 										<th class="checkbox">
 											<input type="checkbox" class="list_head_cb" value="1" onclick="$(this).findParent('table').getElements('tbody input.list_cb').each(function(cb){cb.cb_update_state(this.checked)}, this)"/>
 										</th>
-										<th class="last">Property</th>
+										<th class="last">Field</th>
 									</tr>
 								</thead>
 								<tbody>
 									<? 
 										$index = 0;
-										foreach ($properties as $id=>$name): ?>
-										<tr class="<?= Backend_Html::zebra('copy_property') ?> <?= $index == count($properties)-1 ? 'last' : null ?>">
+										foreach ($fields as $id=>$name): ?>
+										<tr class="<?= Backend_Html::zebra('copy_field') ?> <?= $index == count($fields)-1 ? 'last' : null ?>">
 											<td class="checkbox">
-												<input value="<?= $id ?>" id="<?= 'grouped_property_'.$id ?>" class="list_cb" type="checkbox" name="properties[]" onclick="if (!this.checked) $(this).findParent('table').getElement('thead input.list_head_cb').cb_uncheck()"/>
+												<input value="<?= $id ?>" id="<?= 'grouped_field_'.$id ?>" class="list_cb" type="checkbox" name="fields[]" onclick="if (!this.checked) $(this).findParent('table').getElement('thead input.list_head_cb').cb_uncheck()"/>
 											</td>
 											<td class="last"><?= h($name) ?></td>
 										</tr>
@@ -78,30 +78,30 @@
 							</table>
 						</div>
 						
-						<?= backend_ajax_button('Copy', 'onCopyPropertiesProducts', array('id'=>'copy_btn'), "
+						<?= backend_ajax_button('Copy', 'onCopyProductFields', array('id'=>'copy_btn'), "
 							loadIndicator: {injectInElement: true},
 							extraFields: $('grouped_sort_order').getForm(),
 							prepareFunction: function(){phprTriggerSave();},
 							onSuccess: function(){
-								updateGroupedProductList('".$edit_session_key."', {'copy_properties_data': \$('copy_properties_form').toQueryString()});
-								alert('The selected properties have been successfully copied to the grouped products.');
+								updateGroupedProductList('".$edit_session_key."', {'copy_product_data': \$('copy_product_fields_form').toQueryString()});
+								alert('The selected fields have been successfully copied to the grouped products.');
 								cancelPopup();
 							}
 						") ?>
 						
 						<script type="text/javascript">
-							$('copy_properties_form').addEvent('popupLoaded', function(){
-								$('copy_properties_form').bindKeys({'enter': function(){
-									$('copy_btn').getForm().sendPhpr('onCopyPropertiesProducts', {
+							$('copy_product_fields_form').addEvent('popupLoaded', function(){
+								$('copy_product_fields_form').bindKeys({'enter': function(){
+									$('copy_btn').getForm().sendPhpr('onCopyProductFields', {
 										loadIndicator: {injectInElement: true}, 
 										extraFields: $('grouped_sort_order').getForm(),
 										prepareFunction: function(){phprTriggerSave();}, 
 										onSuccess: function(){
 											updateGroupedProductList(
 											    '<?= $edit_session_key ?>',
-											    {'copy_properties_data': $('copy_properties_form').toQueryString()}
+											    {'copy_product_data': $('copy_product_fields_form').toQueryString()}
 											);
-											alert('The selected properties have been successfully copied to the grouped products.');
+											alert('The selected fields have been successfully copied to the grouped products.');
 											cancelPopup();
 										}
 									});

@@ -5,11 +5,11 @@ $item = $form_model;
 <? if($item->product->properties->count):?>
 		<table class="name_value_list">
 			<?
-			foreach ($item->product->properties as $attribute):
+			foreach ( $item->product->properties as $property):
 				?>
 				<tr>
-					<th><?= h($attribute->name) ?></th>
-					<td><?= h($attribute->value) ?></td>
+					<th><?= h($property->name) ?></th>
+					<td><?= h($property->value) ?></td>
 				</tr>
 			<? endforeach ?>
 		</table>

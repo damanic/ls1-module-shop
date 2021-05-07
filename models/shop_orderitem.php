@@ -122,7 +122,7 @@
 				$this->add_form_custom_area('item_pricing')->tab('Quantity and Pricing');
 
 				if($this->product->properties->count){
-					$this->add_form_custom_area('item_properties')->tab('Attributes');
+					$this->add_form_custom_area('item_properties')->tab('Properties');
 				}
 
 				$this->add_form_custom_area('item_extras')->tab('Extras');

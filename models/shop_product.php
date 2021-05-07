@@ -520,8 +520,8 @@ class Shop_Product extends Db_ActiveRecord
 				$this->add_form_field('product_extra_options')->tab('Extras');
 				$this->add_form_field('extra_option_sets')->tab('Extras')->noOptions('Global extra option sets are not defined. You can create option sets on the Shop/Products/Manage extra option sets page.')->comment('Select global extra option sets you want to include to this product.', 'above');
 
-				$this->add_form_partial('attributes_description')->tab('Attributes');
-				$this->add_form_field('properties')->tab('Attributes');
+				$this->add_form_partial('properties_description')->tab('Properties');
+				$this->add_form_field('properties')->tab('Properties');
 			}
 
 			$this->add_form_field('xml_data')->tab('XML Data')->renderAs(frm_code_editor)->language('xml')->size('giant');
@@ -833,7 +833,8 @@ class Shop_Product extends Db_ActiveRecord
 		return $options;
 	}
 
-	public function copy_properties($obj, $session_key, $this_session_key)
+
+	public function copy_product_relations($obj, $session_key, $this_session_key)
 	{
 		$images = $this->list_related_records_deferred('images', $this_session_key);
 		foreach ($images as $image)
@@ -859,12 +860,12 @@ class Shop_Product extends Db_ActiveRecord
 			 * Copy options
 			 */
 
-		$options = $this->list_related_records_deferred('options', $this_session_key);
-		foreach ($options as $attribute)
+		$option_custom_attribute = $this->list_related_records_deferred('options', $this_session_key);
+		foreach ($option_custom_attribute as $custom_attribute)
 		{
-			$attribute_copy = $attribute->copy();
-			$attribute_copy->save();
-			$obj->options->add($attribute_copy, $session_key);
+			$custom_attribute_copy = $custom_attribute->copy();
+			$custom_attribute_copy->save();
+			$obj->options->add($custom_attribute_copy, $session_key);
 		}
 
 		/*
@@ -919,8 +920,7 @@ class Shop_Product extends Db_ActiveRecord
 		return $obj;
 	}
 
-	public function list_copy_properties()
-	{
+	public function get_copy_fields(){
 		return array(
 			'name'=>'Name',
 			'title'=>'Title',
@@ -945,8 +945,8 @@ class Shop_Product extends Db_ActiveRecord
 		);
 	}
 
-	public function copy_properties_to_grouped($edit_session_key, $product_ids, $properties, $post_data = null)
-	{
+
+	public function copy_fields_to_grouped($edit_session_key, $product_ids, $properties, $post_data = null){
 		foreach ($product_ids as $product_id)
 		{
 			if (!strlen($product_id))
@@ -1079,11 +1079,12 @@ class Shop_Product extends Db_ActiveRecord
 						$product->copy_extra_option_sets($extras_sets);
 						break;
 					case 'attributes' :
-						$attributes = $this->list_related_records_deferred('properties', $edit_session_key);
+					case 'properties' :
+						$properties = $this->list_related_records_deferred('properties', $edit_session_key);
 						foreach ($product->properties as $property)
 							$property->delete();
 
-						foreach ($attributes as $property)
+						foreach ($properties as $property)
 						{
 							$property_copy = $property->copy();
 							$property_copy->save();
@@ -1168,7 +1169,7 @@ class Shop_Product extends Db_ActiveRecord
 		$copy->define_columns($context);
 		$copy->define_form_fields($context);
 
-		$this->copy_properties($copy, null, null);
+		$this->copy_product_relations($copy, null, null);
 
 		/*
 			 * Copy categories
@@ -2404,13 +2405,13 @@ class Shop_Product extends Db_ActiveRecord
 			 */
 
 		if ($import)
-			$attributes = Shop_PropertySetProperty::create()->order('name')->find_all();
+			$properties = Shop_PropertySetProperty::create()->order('name')->find_all();
 		else
-			$attributes = Shop_ProductProperty::create()->order('name')->find_all();
+			$properties = Shop_ProductProperty::create()->order('name')->find_all();
 
-		foreach ($attributes as $attribute)
+		foreach ($properties as $property)
 		{
-			$column_display_name = 'ATTR: '.$attribute->name;
+			$column_display_name = 'PROP: '.$property->name;
 			$column_info = array(
 				'dbName'=>$column_display_name,
 				'displayName'=>$column_display_name,
@@ -3404,19 +3405,19 @@ class Shop_Product extends Db_ActiveRecord
 	}
 
 	/**
-	 * Returns a product attribute value by the attribute name.
+	 * Returns a product property value by the property name.
 	 * @documentable
-	 * @param string $name Specifies the attribute name.
-	 * @return string Returns the attribute value. Returns NULL if the attribute is not found.
+	 * @param string $name Specifies the product name.
+	 * @return string Returns the property value. Returns NULL if the property is not found.
 	 */
-	public function get_attribute($name)
+	public function get_property($name)
 	{
 		$name = mb_strtolower($name);
-		$attribtues = $this->properties;
-		foreach ($attribtues as $attribute)
+		$properties = $this->properties;
+		foreach ($properties as $property)
 		{
-			if (mb_strtolower($attribute->name) == $name)
-				return $attribute->value;
+			if (mb_strtolower($property->name) == $name)
+				return $property->value;
 		}
 
 		return null;
@@ -3986,9 +3987,50 @@ class Shop_Product extends Db_ActiveRecord
 		}
 		return $options;
 	}
+
+
 	/*
-		 * Event descriptions
-		 */
+	 * Deprecated methods
+	 */
+
+	/**
+	 * @deprecated Use {@link Shop_Product::copy_product_relations()} method instead.
+	 */
+	public function copy_properties($obj, $session_key, $this_session_key)
+	{
+		return $this->copy_product_relations($obj, $session_key, $this_session_key);
+	}
+
+	/**
+	 * @deprecated Use {@link Shop_Product::get_copy_fields()} method instead.
+	 */
+	public function list_copy_properties()
+	{
+		return $this->get_copy_fields();
+	}
+
+	/**
+	 * @deprecated Use {@link Shop_Product::copy_fields_to_grouped()} method instead.
+	 */
+	public function copy_properties_to_grouped($edit_session_key, $product_ids, $properties, $post_data = null)
+	{
+		$this->copy_fields_to_grouped($edit_session_key, $product_ids, $properties, $post_data);
+	}
+
+	/**
+	 * @deprecated Use {@link Shop_Product::get_property()} method instead.
+	 */
+	public function get_attribute($name)
+	{
+		return $this->get_property($name);
+	}
+
+
+
+
+	/*
+	 * Event descriptions
+	 */
 
 	/**
 	 * Allows to define new columns in the product model.

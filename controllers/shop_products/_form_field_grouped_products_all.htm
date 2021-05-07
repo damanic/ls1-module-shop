@@ -8,7 +8,7 @@
 	
 	<div class="toolbar listToolbar">
 		<a href="#" class="imageLink new_document img_noBottomPading" onclick="$('grouped_product_id<?= $this->formGetEditSessionKey() ?>').value = ''; phprTriggerSave(); if (!checkGroupedCreation()) return false; new PopupForm('onLoadGroupedProductForm', {closeByEsc: false, ajaxFields: $('grouped_product_list<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Add grouped product</a>
-		<a class="imageLink duplicate img_noBottomPading" href="#" onclick="new PopupForm('onShopCopyPropsForm', {ajaxFields: $('extra_options_list<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Copy properties to grouped products</a>
+		<a class="imageLink duplicate img_noBottomPading" href="#" onclick="new PopupForm('onShopCopyProductFieldsForm', {ajaxFields: $('extra_options_list<?= $this->formGetEditSessionKey() ?>').getForm()}); return false;">Copy properties to grouped products</a>
 		<div class="clear"></div>
 	</div>
 	

@@ -345,7 +345,7 @@
 						$product_categories = array();
 						$product_images = array();
 						$product_files = array();
-						$product_attributes = array();
+						$product_properties = array();
 						$product_otpions = null;
 						$product_extra_otpions = null;
 						$product_global_extra_sets = null;
@@ -521,9 +521,9 @@
 											continue;
 									}
 
-									if (preg_match('/^ATTR:/', $db_name))
+									if (preg_match('/^ATTR:/', $db_name) || preg_match('/^PROP:/', $db_name))
 									{
-										$product_attributes[$db_name] = $column_value;
+										$product_properties[$db_name] = $column_value;
 										continue;
 									}
 									
@@ -640,7 +640,7 @@
 						if(count($product_categories))
 							$this->set_product_categories($product_id, $product_categories);
 
-						$this->set_product_attributes($product_id, $product_attributes);
+						$this->set_product_attributes($product_id, $product_properties);
 						
 						if ($config_object->import_product_images && $update_product_images)
 							$this->set_product_images($product_id, $product_images);
