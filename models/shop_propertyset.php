@@ -6,8 +6,9 @@
 
 		public $custom_columns = array('existing_id');
 
+		//@todo implement applied_categories
 		public $has_and_belongs_to_many = array(
-			'applied_categories'=>array('class_name'=>'Shop_Category', 'join_table'=>'shop_property_sets_applied_categories', 'order'=>'name'),
+			//'applied_categories'=>array('class_name'=>'Shop_Category', 'join_table'=>'shop_property_sets_applied_categories', 'order'=>'name'),
 		);
 		public $has_many = array(
 			'properties'=>array('class_name'=>'Shop_PropertySetProperty', 'foreign_key'=>'property_set_id', 'order'=>'id', 'delete'=>true),
@@ -21,7 +22,7 @@
 		public function define_columns($context = null)
 		{
 			$this->define_multi_relation_column('properties', 'properties', 'Properties', "@name")->invisible();
-			$this->define_multi_relation_column('applied_categories', 'applied_categories', 'Products in Categories', "@name")->invisible();
+			//$this->define_multi_relation_column('applied_categories', 'applied_categories', 'Products in Categories', "@name")->invisible();
 			$this->define_column('name', 'Name')->order('asc')->validation()->fn('trim')->unique('Property set with name "%s" already exists.');
 			$this->define_column('api_code', 'API Code')->order('asc')->validation()->fn('trim')->unique('API CODE "%s" already exists.');
 		}
@@ -33,7 +34,7 @@
 				$this->add_form_field('name')->tab('General')->comment('Specify a name to create a new set, or select existing set to override it.', 'above')->size('small');
 				$this->add_form_field('api_code')->tab('General')->comment('Specify a unique API code which can be used t oquery this property set', 'above')->size('small');
 				$this->add_form_field('properties')->tab('Properties');
-				$this->add_form_field('applied_categories')->tab('Applies To')->comment('If selected. this property set will be applied to all products in the selected categories','above');
+				//$this->add_form_field('applied_categories')->tab('Applies To')->comment('If selected. this property set will be applied to all products in the selected categories','above');
 			} else
 			{
 				$this->define_column('existing_id', 'Property Set')->validation();
