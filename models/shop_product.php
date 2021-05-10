@@ -3405,21 +3405,42 @@ class Shop_Product extends Db_ActiveRecord
 	}
 
 	/**
-	 * Returns a product property value by the property name.
+	 * Returns a product property by the property name or api code.
 	 * @documentable
-	 * @param string $name Specifies the product name.
+	 * @param string $identifier Specifies the property name or api code
+	 * @return object Shop_ProductProperty Returns the property object. Returns NULL if the property is not found.
+	 */
+	public function get_property($identifier)
+	{
+		$identifier = mb_strtolower(trim($identifier));
+		if($identifier) {
+			$properties = $this->properties;
+			foreach ( $properties as $property ) {
+				$ids = array(
+					mb_strlen( trim( $property->api_code ) ),
+					mb_strtolower( trim( $property->name ) )
+				);
+				foreach ( $ids as $id ) {
+					if ( $id && ( $identifier == $id ) ) {
+						return $property;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns a product property value by the property name or api code.
+	 * @documentable
+	 * @param string $identifier Specifies the property name or api code
 	 * @return string Returns the property value. Returns NULL if the property is not found.
 	 */
-	public function get_property($name)
-	{
-		$name = mb_strtolower($name);
-		$properties = $this->properties;
-		foreach ($properties as $property)
-		{
-			if (mb_strtolower($property->name) == $name)
-				return $property->value;
+	public function get_property_value($identifier){
+		$property = $this->get_property($identifier);
+		if($property){
+			return $property->value;
 		}
-
 		return null;
 	}
 
@@ -4018,11 +4039,11 @@ class Shop_Product extends Db_ActiveRecord
 	}
 
 	/**
-	 * @deprecated Use {@link Shop_Product::get_property()} method instead.
+	 * @deprecated Use {@link Shop_Product::get_property_value()} method instead.
 	 */
 	public function get_attribute($name)
 	{
-		return $this->get_property($name);
+		return $this->get_property_value($name);
 	}
 
 

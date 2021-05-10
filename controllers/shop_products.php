@@ -251,6 +251,7 @@
 				if (!preg_match('/^\-?[0-9]*$/', $value))
 					$product->validation->setError('Invalid units in stock value: '.$value, null, true);
 			}
+
 		}
 
 		public function formAfterSave($model, $session_key)
@@ -266,6 +267,19 @@
 				$value = trim($value);
 				if (preg_match('/^[0-9]+$/', $value))
 					Shop_Product::set_product_units_in_stock($product_id, $value);
+			}
+
+			$properties = $model->list_related_records_deferred('properties', $session_key);
+			if($properties){
+				foreach($properties as $property){
+					if($property->get_property_set_property()){
+						try {
+							$property->get_property_set_property()->validate_property_value( $property->value );
+						} catch(Exception $e){
+							throw new Phpr_ApplicationException('WARNING: The property value given for "'.$property->name.'" is not valid! '.$e->getMessage());
+						}
+					}
+				}
 			}
 		}
 		
@@ -1533,7 +1547,7 @@
 					throw new Phpr_ApplicationException('Option not found');
 
 				$product = $this->getProductObj($parentId);
-				$property->init_columns_info();
+				$property->define_columns('form');
 				$property->define_form_fields();
 
 				if($property->api_code){

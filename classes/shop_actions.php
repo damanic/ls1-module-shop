@@ -3105,7 +3105,7 @@
 		 * @output array $attributes - A list of product properties of all products in the comparison list.
 		 * You can manage product properties on the Properties tab of the Create/Edit Product page.
 		 * To output an property value by its name, you can use the following code:
-		 * <pre><?= h($product->get_property($property_name)) ?></pre>
+		 * <pre><?= h($product->get_property_value($property_name)) ?></pre>
 		 * @author LemonStand eCommerce Inc.
 		 * @package shop.actions
 		 * @see http://lemonstand.com/docs/category_page Creating the Category Page

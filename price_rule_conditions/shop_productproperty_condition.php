@@ -141,7 +141,7 @@
 				{
 					$operator = $host_obj->operator;
 					$condition_value = $host_obj->value;
-					$val = $item->product->get_property($property_name);
+					$val = $item->product->get_property_value($property_name);
 
 					if ($operator == 'is')
 					{
@@ -186,7 +186,7 @@
 
 				$operator = $host_obj->operator;
 				$condition_value = $host_obj->value;
-				$val = $product->get_property($property_name);
+				$val = $product->get_property_value($property_name);
 
 				if ($operator == 'is')
 				{

@@ -1,7 +1,12 @@
 <li>
 	<? if ($this->isHintVisible('product_properties_description')): ?>
 		<div class="hint bottom-margin-form">
-			<p class="last">Add additional properties to output on the product page, e.g. "book format".</p>
+			<p class="last">
+				Add additional properties to output on the product page, e.g. "book format".
+				You can also load property sets that have been created
+				<a href="<?=url('/shop/property_sets/')?>">here</a>
+			</p>
+
 			<a title="Hide this hint" href="#" class="close" onclick="return hide_tip('product_properties_description', this)">Close</a>
 	    </div>
 	<? endif ?>	

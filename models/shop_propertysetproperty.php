@@ -35,6 +35,7 @@
 		{
 			$options = array(
 				'db_number' => 'Number',
+				'db_float' => 'Decimal Number',
 				'db_date' => 'Date',
 			);
 			return $options;
@@ -58,6 +59,9 @@
 					switch ( $this->validate ) {
 						case 'db_number':
 							$validate_default_value->numeric('All values must be numeric');
+							break;
+						case 'db_float':
+							$validate_default_value->float('%x', 'Value must be a valid number (decimal)');
 							break;
 						case 'db_date':
 							$validate_default_value->date('%x', 'All values must be a valid date format (eg. '.Phpr_DateTime::now()->format('%x').')');
@@ -117,14 +121,19 @@
 
 			if($this->required) {
 				$validate_value->required();
+			} else if(empty($value)){
+				return;
 			}
 
 			switch ( $this->validate ) {
 				case 'db_number':
-					$validate_value->numeric('All values must be numeric');
+					$validate_value->numeric('Value must be a whole number');
+					break;
+				case 'db_float':
+					$validate_value->float('%x', 'Value must be a valid number (decimal)');
 					break;
 				case 'db_date':
-					$validate_value->date('%x', 'All values must be a valid date format (eg. '.Phpr_DateTime::now()->format('%x').')');
+					$validate_value->date('%x', 'Value must be a valid date format (eg. '.Phpr_DateTime::now()->format('%x').')');
 					break;
 				default:
 					break;
