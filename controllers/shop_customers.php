@@ -326,11 +326,18 @@
 
 		protected function onUpdateStatesList()
 		{
+			$states = array( null => '<no states available>' );
 			$data = post('Shop_Customer');
-			$type = post('type');
-			
-			$this->viewData['states'] = Shop_Customer::create()->list_states($data[$type]);
-			$this->viewData['type'] = $type;
+			$country_field_name = post('type');
+			$country_id = isset($data[$country_field_name]) ? $data[$country_field_name] : null;
+			if($country_id){
+				$country = Shop_Country::create()->find_proxy($country_id);
+				if($country) {
+					$states = $country->get_state_options();
+				}
+			}
+			$this->viewData['states'] = $states;
+			$this->viewData['type'] = $country_field_name;
 			$this->renderPartial('state_list');
 		}
 		

@@ -1,4 +1,5 @@
 <? Phpr_View::beginBlock("head") ?>
+	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
 	<script type="text/javascript" src="modules/shop/resources/javascript/country.js?<?= module_build('shop') ?>"></script>
 <? Phpr_View::endBlock() ?>
 
@@ -12,7 +13,7 @@
 	<?= flash() ?>
 	
 	<? if (!isset($fatalError)): ?>
-		<div class="form400">
+		<div class="form800">
 			<?= Phpr_Form::openTag() ?>
 				<? $this->formRender($form_model) ?>
 

@@ -28,7 +28,19 @@
 		protected static $id_cache = array();
 
 		public $has_many = array(
-			'states'=>array('class_name'=>'Shop_CountryState', 'foreign_key'=>'country_id', 'order'=>'shop_states.name', 'delete'=>true)
+			'states'=>array(
+				'class_name'=>'Shop_CountryState',
+				'foreign_key'=>'country_id',
+				'conditions'=>'(shop_states.disabled IS NULL)',
+				'order'=>'shop_states.name',
+				'delete'=>true
+			),
+			'all_states'=>array(
+				'class_name'=>'Shop_CountryState',
+				'foreign_key'=>'country_id',
+				'order'=>'shop_states.disabled, shop_states.name',
+				'delete'=>true
+			)
 		);
 
 		public $belongs_to = array(
@@ -68,6 +80,7 @@
 			$front_end = Db_ActiveRecord::$execution_context == 'front-end';
 			if (!$front_end)
 				$this->define_multi_relation_column('states', 'states', 'States', "@name")->invisible();
+				$this->define_multi_relation_column('all_states', 'all_states', 'All States', "@name")->invisible();
 				$this->define_relation_column('shipping_zone', 'shipping_zone', 'Shipping Zone ', db_varchar, '@name')->listTitle('Shipping Zone')->defaultInvisible();
 
 
@@ -100,7 +113,7 @@
 			if ($this->enabled)
 				$enabled_backend->disabled();
 			
-			$this->add_form_field('states')->tab('States');
+			$this->add_form_field('all_states')->tab('States');
 			$this->add_form_field('shipping_zone')->tab('Shipping Zone')->comment("You can manage shipping zones from the 'Settings -> Shipping Settings' page.", 'above');
 
 		}
@@ -147,9 +160,54 @@
 				
 			return $obj->find_all();
 		}
-		
-		public function update_states($enabled, $enabled_in_backend)
-		{
+
+		/**
+		 * Lists states assigned to this country as a data array. Disabled states are excluded.
+		 * This fetches a data array without using model relations which is useful to reduce relation/model loads and required memory usage.
+		 *
+		 * @param mixed $include_state_id A Shop_CountryState ID can be provided to force a state selection to be included even when the record is disabled
+		 *
+		 * @return mixed Array of data objects if found, otherwise NULL
+		 */
+		public function list_states($include_state_id = null) {
+			$result          = null;
+			$state_conditional = $include_state_id ? "OR id = :state_id" : null;
+			if($this->id) {
+				$sql = 'SELECT * FROM shop_states WHERE country_id=:country_id AND (disabled IS NULL '.$state_conditional.') ORDER BY `name`';
+				$states = Db_DbHelper::objectArray( $sql, array(
+						'country_id' => $this->id,
+						'state_id'   => $include_state_id
+					)
+				);
+				if ( count( $states ) ) {
+					$result = $states;
+				}
+			}
+
+			return $result;
+		}
+
+		/**
+		 * Returns a list of state relations as an array mapping state ID to state NAME
+		 *
+		 * @param mixed $include_state_id A Shop_CountryState ID can be provided to guarantee an assigned State record is included even if that record has since been disabled
+		 *
+		 * @return array|string[]
+		 */
+		public function get_state_options($include_state_id = null) {
+			$result          = array( null => '<no states available>' );
+			$states = $this->list_states($include_state_id);
+
+			if ( is_array($states) && count( $states ) ) {
+				$result = array();
+				foreach ( $states as $state ) {
+					$result[$state->id] = $state->name;
+				}
+			}
+			return $result;
+		}
+
+		public function update_enabled_status($enabled, $enabled_in_backend){
 			if ($this->enabled != $enabled || $this->enabled_in_backend != $enabled_in_backend)
 			{
 				$this->enabled = $enabled;
@@ -208,6 +266,16 @@
 		{
 			if ($this->enabled)
 				$this->enabled_in_backend = 1;
+		}
+
+		/**
+		 * @deprecated
+		 * @param $enabled
+		 * @param $enabled_in_backend
+		 */
+		public function update_states($enabled, $enabled_in_backend)
+		{
+			$this->update_enabled_status($enabled,$enabled_in_backend);
 		}
 	}
 ?>

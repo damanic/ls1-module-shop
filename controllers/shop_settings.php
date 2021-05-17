@@ -134,7 +134,7 @@
 			{
 				$country = Shop_Country::create()->find($country_id);
 				if ($country)
-					$country->update_states($enabled, $enabled_in_backend);
+					$country->update_enabled_status($enabled, $enabled_in_backend);
 			}
 			
 			$this->onListReload();

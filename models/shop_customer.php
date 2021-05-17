@@ -348,7 +348,7 @@
 				return $obj ? $obj->name : null;
 			}
 			
-			return $this->list_states($this->shipping_country_id);
+			return $this->get_country_state_options($this->shipping_country_id, $this->shipping_state_id);
 		}
 		
 		public function get_billing_state_options($key_value = -1)
@@ -362,28 +362,29 @@
 				return $obj ? $obj->name : null;
 			}
 
-			return $this->list_states($this->billing_country_id);
+			return $this->get_country_state_options($this->billing_country_id, $this->billing_state_id);
 		}
-		
-		public function list_states($country_id)
-		{
-			if (!$country_id || !Shop_Country::create()->find($country_id))
-			{
-				$obj = Shop_Country::create()->order('name')->find();
-				if ($obj)
-					$country_id = $obj->id;
+
+
+		/**
+		 * Returns a list of states, mapping state ID to state NAME for a given Country ID
+		 *
+		 * @param int  $country_id The ID for the Shop_Country record
+		 * @param mixed $include_state_id A Shop_CountryState ID can be provided to guarantee an assigned State record is included even if that record has since been disabled
+		 *
+		 * @return array|string[]
+		 */
+		protected function get_country_state_options($country_id, $include_state_id = null) {
+			$result          = array( null => '<no states available>' );
+			$country         = null;
+
+			if ( $country_id ) {
+				$country = Shop_Country::create()->find_proxy( $country_id );
 			}
 
-			$states = Db_DbHelper::objectArray(
-				'select * from shop_states where country_id=:country_id order by name',
-				array('country_id'=>$country_id)
-			);
-			
-			if (!count($states))
-				$result = array(null=>'<no states available>');
-
-			foreach ($states as $state)
-				$result[$state->id] = $state->name;
+			if ( $country ) {
+				$result = $country->get_state_options($include_state_id);
+			}
 				
 			return $result;
 		}
@@ -979,6 +980,17 @@
 					VALUES ( :cid, :hash, :now )
 					ON DUPLICATE KEY UPDATE id = id";
 			Db_DbHelper::query($sql, $bind);
+		}
+
+
+		/**
+		 * @deprecated
+		 * @param $country_id
+		 *
+		 * @return array|string[]
+		 */
+		public function list_states($country_id){
+			return $this->get_country_state_options($country_id);
 		}
 
 		

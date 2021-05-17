@@ -1025,3 +1025,4 @@
 #1.35.7 Updates exchangeratesapi.io driver
 #1.35.8 Fixes issue with exchange rate driver interface
 #1.35.9 Improved product property sets
+#1.35.10 Allow country states to be disabled

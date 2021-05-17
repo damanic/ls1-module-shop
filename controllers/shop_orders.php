@@ -1462,7 +1462,7 @@
 				$firstCountry = $countries[0];
 				$model->billing_country_id = $firstCountry->id;
 				$model->shipping_country_id = $firstCountry->id;
-				$states = Shop_CountryState::create()->order('name')->where('country_id=?', $firstCountry->id)->find_all();
+				$states = Shop_CountryState::find_by_country_id($firstCountry->id);
 				if ($states->count)
 				{
 					$model->billing_state_id = $states[0]->id;

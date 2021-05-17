@@ -517,7 +517,7 @@
 			$countries = $this->data['countries'] = Shop_Country::get_list($shipping_info->country);
 			$shipping_country = $shipping_info->country ? $shipping_info->country : $countries[0]->id;
 
-			$this->data['states'] = Shop_CountryState::create(true)->where('country_id=?', $shipping_country)->order('name')->find_all();
+			$this->data['states'] = Shop_CountryState::find_by_country_id($shipping_country);
 			$this->data['shipping_info'] = $shipping_info;
 
 			$cart_exception = null;
@@ -682,7 +682,7 @@
 			$countries = $this->data['countries'] = Shop_Country::get_list($shipping_info->country);
 			$shipping_country = $shipping_info->country ? $shipping_info->country : $countries[0]->id;
 
-			$this->data['states'] = Shop_CountryState::create(true)->where('country_id=?', $shipping_country)->order('name')->find_all();
+			$this->data['states'] = Shop_CountryState::find_by_country_id($shipping_country);
 			$this->data['shipping_info'] = $shipping_info;
 
 			$this->eval_cart_variables($cart_name);
@@ -1418,10 +1418,10 @@
 				$this->data['countries'] = $billing_countries;
 
 				$billing_country = $billing_info->country ? $billing_info->country : $billing_countries[0]->id;
-				$this->data['states'] = Shop_CountryState::create(true)->where('country_id=?', $billing_country)->order('name')->find_all();
+				$this->data['states'] = Shop_CountryState::find_by_country_id($billing_country);
 
 				$shipping_country = $shipping_info->country ? $shipping_info->country : $billing_countries[0]->id;
-				$this->data['shipping_states'] = Shop_CountryState::create(true)->where('country_id=?', $shipping_country)->order('name')->find_all();
+				$this->data['shipping_states'] = Shop_CountryState::find_by_country_id($shipping_country);
 			}
 			elseif ($checkout_step == 'billing_info')
 			{
@@ -1432,7 +1432,7 @@
 				$this->data['countries'] = $shipping_countries;
 
 				$shipping_country = $shipping_info->country ? $shipping_info->country : $shipping_countries[0]->id;
-				$this->data['states'] = Shop_CountryState::create(true)->where('country_id=?', $shipping_country)->order('name')->find_all();
+				$this->data['states'] = Shop_CountryState::find_by_country_id($shipping_country);
 
 				$this->data['checkout_step'] = 'shipping_info';
 			}
@@ -1628,7 +1628,7 @@
 		 */
 		public function on_updateStateList()
 		{
-			$this->data['states'] = Shop_CountryState::create()->where('country_id=?', post('country'))->order('name')->find_all();
+			$this->data['states'] =Shop_CountryState::find_by_country_id(post('country'));
 			$this->data['control_name'] = post('control_name');
 			$this->data['control_id'] = post('control_id');
 			$this->data['current_state'] = post('current_state');
@@ -2271,8 +2271,7 @@
 				$billing_country = $posted_country ? $posted_country : $billing_countries[0]->id;
 			}
 
-			$this->data['states'] = Shop_CountryState::create()->where('country_id=?', $billing_country)->order('name')->find_all();
-
+			$this->data['states'] = Shop_CountryState::find_by_country_id($billing_country);
 			$this->data['billing_info'] = $billing_info;
 			$this->load_checkout_estimated_data(post('cart_name', 'main'));
 		}
@@ -2293,7 +2292,7 @@
 				$shipping_country = $posted_country ? $posted_country : $shipping_countries[0]->id;
 			}
 
-			$this->data['states'] = Shop_CountryState::create()->where('country_id=?', $shipping_country)->order('name')->find_all();
+			$this->data['states'] = Shop_CountryState::find_by_country_id($shipping_country);
 
 			$this->data['shipping_info'] = $shipping_info;
 			$this->load_checkout_estimated_data(post('cart_name', 'main'));
@@ -3235,8 +3234,8 @@
 			$billing_countries = Shop_Country::get_list();
 			$this->data['countries'] = $billing_countries;
 
-			$this->data['states'] = Shop_CountryState::create(true)->where('country_id=?', post('billing_country_id', $this->customer->billing_country_id))->order('name')->find_all();
-			$this->data['shipping_states'] = Shop_CountryState::create(true)->where('country_id=?', post('shipping_country_id', $this->customer->shipping_country_id))->order('name')->find_all();
+			$this->data['states'] = Shop_CountryState::find_by_country_id(post('billing_country_id', $this->customer->billing_country_id));
+			$this->data['shipping_states'] = Shop_CountryState::find_by_country_id(post('shipping_country_id', $this->customer->shipping_country_id));
 
 			if (post('submit_profile'))
 				$this->on_updateCustomerProfile();

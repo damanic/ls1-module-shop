@@ -336,8 +336,13 @@ ul.status_transition li div p.link a:hover {
 td.iconCell .ungroup_product {
   background-position: left top;
 }
-.property_set {
-  background: transparent url('../images/property_sets.png') no-repeat 5px 4px;
+td a.warningDocument {
+  text-indent: -10000em;
+  width: 16px;
+  height: 16px;
+  float: right;
+  background: transparent url('../images/page_white_error.png') no-repeat left top;
+  outline: none;
 }
 /*
  * Row controls
