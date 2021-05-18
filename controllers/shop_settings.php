@@ -280,7 +280,7 @@
 				$state->save(post('Shop_CountryState'), $this->formGetEditSessionKey());
 
 				if (!$id)
-					$country->states->add($state, post('country_session_key'));
+					$country->all_states->add($state, post('country_session_key'));
 					
 				if ($id)
 					Backend::$events->fireEvent('core:onAfterFormRecordUpdate', $this, $state);
@@ -320,7 +320,7 @@
 					$state->check_in_use();
 					Backend::$events->fireEvent('core:onBeforeFormRecordDelete', $this, $state);
 
-					$country->states->delete($state, $this->formGetEditSessionKey());
+					$country->all_states->delete($state, $this->formGetEditSessionKey());
 					$state->delete();
 				}
 
