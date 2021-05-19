@@ -34,12 +34,6 @@
 				'conditions'=>'(shop_states.disabled IS NULL)',
 				'order'=>'shop_states.name',
 				'delete'=>true
-			),
-			'all_states'=>array(
-				'class_name'=>'Shop_CountryState',
-				'foreign_key'=>'country_id',
-				'order'=>'shop_states.disabled, shop_states.name',
-				'delete'=>true
 			)
 		);
 
@@ -80,7 +74,6 @@
 			$front_end = Db_ActiveRecord::$execution_context == 'front-end';
 			if (!$front_end)
 				$this->define_multi_relation_column('states', 'states', 'States', "@name")->invisible();
-				$this->define_multi_relation_column('all_states', 'all_states', 'All States', "@name")->invisible();
 				$this->define_relation_column('shipping_zone', 'shipping_zone', 'Shipping Zone ', db_varchar, '@name')->listTitle('Shipping Zone')->defaultInvisible();
 
 
@@ -113,7 +106,7 @@
 			if ($this->enabled)
 				$enabled_backend->disabled();
 			
-			$this->add_form_field('all_states')->tab('States');
+			$this->add_form_field('states')->tab('States');
 			$this->add_form_field('shipping_zone')->tab('Shipping Zone')->comment("You can manage shipping zones from the 'Settings -> Shipping Settings' page.", 'above');
 
 		}

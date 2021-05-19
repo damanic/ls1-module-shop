@@ -280,7 +280,7 @@
 				$state->save(post('Shop_CountryState'), $this->formGetEditSessionKey());
 
 				if (!$id)
-					$country->all_states->add($state, post('country_session_key'));
+					$country->states->add($state, post('country_session_key'));
 					
 				if ($id)
 					Backend::$events->fireEvent('core:onAfterFormRecordUpdate', $this, $state);
@@ -320,7 +320,7 @@
 					$state->check_in_use();
 					Backend::$events->fireEvent('core:onBeforeFormRecordDelete', $this, $state);
 
-					$country->all_states->delete($state, $this->formGetEditSessionKey());
+					$country->states->delete($state, $this->formGetEditSessionKey());
 					$state->delete();
 				}
 
@@ -338,6 +338,13 @@
 			$obj = $id == null ? Shop_Country::create() : Shop_Country::create()->find($id);
 			if ($obj)
 			{
+				//Include disabled states
+				$obj->has_many['states'] = array(
+					'class_name'=>'Shop_CountryState',
+					'foreign_key'=>'country_id',
+					'order'=>'shop_states.disabled, shop_states.name',
+					'delete'=>true
+				);
 				$obj->init_columns_info();
 				$obj->define_form_fields();
 			} else if($id != null)
