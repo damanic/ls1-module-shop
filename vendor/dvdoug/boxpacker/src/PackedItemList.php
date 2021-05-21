@@ -4,79 +4,109 @@
  *
  * @author Doug Wright
  */
+declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
+
+use function array_map;
+use ArrayIterator;
+use function count;
+use Countable;
+use IteratorAggregate;
+use Traversable;
+use function usort;
 
 /**
  * List of packed items, ordered by volume.
  *
  * @author Doug Wright
  */
-class PackedItemList extends \SplMaxHeap
+class PackedItemList implements Countable, IteratorAggregate
 {
     /**
-     * Compare elements in order to place them correctly in the heap while sifting up.
+     * List containing items.
      *
-     * @see \SplMaxHeap::compare()
-     *
-     * @param PackedItem $itemA
-     * @param PackedItem $itemB
-     *
-     * @return int
+     * @var PackedItem[]
      */
-    public function compare($itemA, $itemB)
+    private $list = [];
+
+    private $weight = 0;
+
+    /**
+     * Has this list already been sorted?
+     *
+     * @var bool
+     */
+    private $isSorted = false;
+
+    public function insert(PackedItem $item): void
     {
-        if ($itemA->getItem()->getVolume() > $itemB->getItem()->getVolume()) {
-            return 1;
-        } elseif ($itemA->getItem()->getVolume() < $itemB->getItem()->getVolume()) {
-            return -1;
-        } else {
-            return $itemA->getItem()->getWeight() - $itemB->getItem()->getWeight();
+        $this->list[] = $item;
+        $this->weight += $item->getItem()->getWeight();
+    }
+
+    /**
+     * @return Traversable|PackedItem[]
+     */
+    public function getIterator(): Traversable
+    {
+        if (!$this->isSorted) {
+            usort($this->list, [$this, 'compare']);
+            $this->isSorted = true;
         }
+
+        return new ArrayIterator($this->list);
+    }
+
+    /**
+     * Number of items in list.
+     */
+    public function count(): int
+    {
+        return count($this->list);
     }
 
     /**
      * Get copy of this list as a standard PHP array.
      *
-     * @return PackedItem[]
-     */
-    public function asArray()
-    {
-        $return = [];
-        foreach (clone $this as $item) {
-            $return[] = $item;
-        }
-
-        return $return;
-    }
-
-    /**
-     * Get copy of this list as a standard PHP array.
+     * @internal
      *
      * @return Item[]
      */
-    public function asItemArray()
+    public function asItemArray(): array
     {
-        $return = [];
-        foreach (clone $this as $item) {
-            $return[] = $item->getItem();
-        }
-
-        return $return;
+        return array_map(function (PackedItem $packedItem) {
+            return $packedItem->getItem();
+        }, $this->list);
     }
 
     /**
-     * Get copy of this list as a standard PHP array.
-     *
-     * @return ItemList
+     * Get total volume of these items.
      */
-    public function asItemList()
+    public function getVolume(): int
     {
-        $return = new ItemList();
-        foreach (clone $this as $packedItem) {
-            $return->insert($packedItem->getItem());
+        $volume = 0;
+
+        foreach ($this->list as $item) {
+            $volume += $item->getVolume();
         }
 
-        return $return;
+        return $volume;
+    }
+
+    /**
+     * Get total weight of these items.
+     */
+    public function getWeight(): int
+    {
+        return $this->weight;
+    }
+
+    private function compare(PackedItem $itemA, PackedItem $itemB): int
+    {
+        $itemAVolume = $itemA->getItem()->getWidth() * $itemA->getItem()->getLength() * $itemA->getItem()->getDepth();
+        $itemBVolume = $itemB->getItem()->getWidth() * $itemB->getItem()->getLength() * $itemB->getItem()->getDepth();
+
+        return ($itemBVolume <=> $itemAVolume) ?: ($itemB->getItem()->getWeight() <=> $itemA->getItem()->getWeight());
     }
 }

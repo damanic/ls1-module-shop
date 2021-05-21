@@ -41,8 +41,8 @@ Packing a set of items into a given set of box types
 
     <?php
         use DVDoug\BoxPacker\Packer;
-        use DVDoug\BoxPacker\Test\TestBox;  // use your own object
-        use DVDoug\BoxPacker\Test\TestItem; // use your own object
+        use DVDoug\BoxPacker\Test\TestBox;  // use your own `Box` implementation
+        use DVDoug\BoxPacker\Test\TestItem; // use your own `Item` implementation
 
         $packer = new Packer();
 
@@ -70,9 +70,9 @@ Packing a set of items into a given set of box types
             echo "The combined weight of this box and the items inside it is {$packedBox->getWeight()}g" . PHP_EOL;
 
             echo "The items in this box are:" . PHP_EOL;
-            $itemsInTheBox = $packedBox->getItems();
-            foreach ($itemsInTheBox as $item) { // your own item object, in this case TestItem
-                echo $item->getDescription() . PHP_EOL;
+            $packedItems = $packedBox->getItems();
+            foreach ($packedItems as $packedItem) { // $packedItem->getItem() is your own item object, in this case TestItem
+                echo $packedItem->getItem()->getDescription() . PHP_EOL;
             }
         }
 
@@ -92,4 +92,22 @@ Does a set of items fit into a particular box
         $items->insert(new TestItem('Item 3', 296, 296, 4, 290, false));
 
         $volumePacker = new VolumePacker($box, $items);
+        $packedBox = $volumePacker->pack(); //$packedBox->getItems() contains the items that fit
+
+
+.. code-block:: php
+
+    <?php
+        $box = new TestBox('Le box', 300, 300, 10, 10, 296, 296, 8, 1000);
+
+        /*
+         *  You can also supply an (optionally pre-sorted) array of items. By default the library will sort the items
+         *  passed to it via a heuristic to achieve optimal packing density. If you need to control the order of items,
+         *  or have application-specific knowledge that sorting will not help (e.g. all items have the same dimensions)
+         *  you can tell the library to skip this step.
+         */
+
+        $itemList = ItemList::fromArray($anArrayOfItems, true); // set the optional 2nd param to true if presorted
+
+        $volumePacker = new VolumePacker($box, $itemList);
         $packedBox = $volumePacker->pack(); //$packedBox->getItems() contains the items that fit

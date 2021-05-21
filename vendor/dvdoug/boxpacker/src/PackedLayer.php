@@ -4,7 +4,13 @@
  *
  * @author Doug Wright
  */
+declare(strict_types=1);
+
 namespace DVDoug\BoxPacker;
+
+use function max;
+use function min;
+use const PHP_INT_MAX;
 
 /**
  * A packed layer.
@@ -17,17 +23,38 @@ class PackedLayer
     /**
      * @var int
      */
-    private $startDepth = PHP_INT_MAX;
+    private $startX = PHP_INT_MAX;
 
     /**
      * @var int
      */
-    private $endDepth = 0;
+    private $endX = 0;
+
+    /**
+     * @var int
+     */
+    private $startY = PHP_INT_MAX;
+
+    /**
+     * @var int
+     */
+    private $endY = 0;
+
+    /**
+     * @var int
+     */
+    private $startZ = PHP_INT_MAX;
+
+    /**
+     * @var int
+     */
+    private $endZ = 0;
 
     /**
      * @var int
      */
     private $weight = 0;
+
     /**
      * Items packed into this layer.
      *
@@ -37,15 +64,17 @@ class PackedLayer
 
     /**
      * Add a packed item to this layer.
-     *
-     * @param PackedItem $packedItem
      */
-    public function insert(PackedItem $packedItem)
+    public function insert(PackedItem $packedItem): void
     {
         $this->items[] = $packedItem;
         $this->weight += $packedItem->getItem()->getWeight();
-        $this->startDepth = min($this->startDepth, $packedItem->getZ());
-        $this->endDepth = max($this->endDepth, $packedItem->getZ() + $packedItem->getDepth());
+        $this->startX = min($this->startX, $packedItem->getX());
+        $this->endX = max($this->endX, $packedItem->getX() + $packedItem->getWidth());
+        $this->startY = min($this->startY, $packedItem->getY());
+        $this->endY = max($this->endY, $packedItem->getY() + $packedItem->getLength());
+        $this->startZ = min($this->startZ, $packedItem->getZ());
+        $this->endZ = max($this->endZ, $packedItem->getZ() + $packedItem->getDepth());
     }
 
     /**
@@ -53,7 +82,7 @@ class PackedLayer
      *
      * @return PackedItem[]
      */
-    public function getItems()
+    public function getItems(): array
     {
         return $this->items;
     }
@@ -63,46 +92,65 @@ class PackedLayer
      *
      * @return int mm^2
      */
-    public function getFootprint()
+    public function getFootprint(): int
     {
-        $layerWidth = 0;
-        $layerLength = 0;
-
-        foreach ($this->items as $item) {
-            $layerWidth = max($layerWidth, $item->getX() + $item->getWidth());
-            $layerLength = max($layerLength, $item->getY() + $item->getLength());
-        }
-
-        return $layerWidth * $layerLength;
+        return $this->getWidth() * $this->getLength();
     }
 
-    /**
-     * Calculate start depth of this layer.
-     *
-     * @return int mm
-     */
-    public function getStartDepth()
+    public function getStartX(): int
     {
-        return $this->startDepth;
+        return $this->startX;
     }
 
-    /**
-     * Calculate depth of this layer.
-     *
-     * @return int mm
-     */
-    public function getDepth()
+    public function getEndX(): int
     {
-        return $this->endDepth - $this->getStartDepth();
+        return $this->endX;
     }
 
-    /**
-     * Calculate weight of this layer.
-     *
-     * @return int weight in grams
-     */
-    public function getWeight()
+    public function getWidth(): int
+    {
+        return $this->endX ? $this->endX - $this->startX : 0;
+    }
+
+    public function getStartY(): int
+    {
+        return $this->startY;
+    }
+
+    public function getEndY(): int
+    {
+        return $this->endY;
+    }
+
+    public function getLength(): int
+    {
+        return $this->endY ? $this->endY - $this->startY : 0;
+    }
+
+    public function getStartZ(): int
+    {
+        return $this->startZ;
+    }
+
+    public function getEndZ(): int
+    {
+        return $this->endZ;
+    }
+
+    public function getDepth(): int
+    {
+        return $this->endZ ? $this->endZ - $this->startZ : 0;
+    }
+
+    public function getWeight(): int
     {
         return $this->weight;
+    }
+
+    public function merge(self $otherLayer): void
+    {
+        foreach ($otherLayer->items as $packedItem) {
+            $this->insert($packedItem);
+        }
     }
 }

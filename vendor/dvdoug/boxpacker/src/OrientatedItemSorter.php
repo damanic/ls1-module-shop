@@ -4,8 +4,13 @@
  *
  * @author Doug Wright
  */
+declare(strict_types=1);
+
 namespace DVDoug\BoxPacker;
 
+use function max;
+use function min;
+use const PHP_INT_MAX;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 
@@ -79,7 +84,7 @@ class OrientatedItemSorter implements LoggerAwareInterface
      */
     private $prevPackedItemList;
 
-    public function __construct(OrientatedItemFactory $factory, $singlePassMode, $widthLeft, $lengthLeft, $depthLeft, ItemList $nextItems, $rowLength, $x, $y, $z, PackedItemList $prevPackedItemList)
+    public function __construct(OrientatedItemFactory $factory, bool $singlePassMode, int $widthLeft, int $lengthLeft, int $depthLeft, ItemList $nextItems, int $rowLength, int $x, int $y, int $z, PackedItemList $prevPackedItemList)
     {
         $this->orientatedItemFactory = $factory;
         $this->singlePassMode = $singlePassMode;
@@ -119,7 +124,7 @@ class OrientatedItemSorter implements LoggerAwareInterface
         }
 
         // prefer leaving room for next item(s)
-        $followingItemDecider = $this->lookAheadDecider($this->nextItems, $a, $b, $orientationAWidthLeft, $orientationBWidthLeft, $this->widthLeft, $this->lengthLeft, $this->depthLeft, $this->rowLength, $this->x, $this->y, $this->z, $this->prevPackedItemList);
+        $followingItemDecider = $this->lookAheadDecider($a, $b, $orientationAWidthLeft, $orientationBWidthLeft);
         if ($followingItemDecider !== 0) {
             return $followingItemDecider;
         }
@@ -128,17 +133,17 @@ class OrientatedItemSorter implements LoggerAwareInterface
         $orientationAMinGap = min($orientationAWidthLeft, $orientationALengthLeft);
         $orientationBMinGap = min($orientationBWidthLeft, $orientationBLengthLeft);
 
-        return ($orientationAMinGap - $orientationBMinGap) ?: ($a->getSurfaceFootprint() - $b->getSurfaceFootprint());
+        return $orientationAMinGap <=> $orientationBMinGap ?: $a->getSurfaceFootprint() <=> $b->getSurfaceFootprint();
     }
 
-    private function lookAheadDecider(ItemList $nextItems, OrientatedItem $a, OrientatedItem $b, $orientationAWidthLeft, $orientationBWidthLeft, $widthLeft, $lengthLeft, $depthLeft, $rowLength, $x, $y, $z, PackedItemList $prevPackedItemList)
+    private function lookAheadDecider(OrientatedItem $a, OrientatedItem $b, int $orientationAWidthLeft, int $orientationBWidthLeft): int
     {
-        if ($nextItems->count() === 0) {
+        if ($this->nextItems->count() === 0) {
             return 0;
         }
 
-        $nextItemFitA = $this->orientatedItemFactory->getPossibleOrientations($nextItems->top(), $a, $orientationAWidthLeft, $lengthLeft, $depthLeft, $x, $y, $z, $prevPackedItemList);
-        $nextItemFitB = $this->orientatedItemFactory->getPossibleOrientations($nextItems->top(), $b, $orientationBWidthLeft, $lengthLeft, $depthLeft, $x, $y, $z, $prevPackedItemList);
+        $nextItemFitA = $this->orientatedItemFactory->getPossibleOrientations($this->nextItems->top(), $a, $orientationAWidthLeft, $this->lengthLeft, $this->depthLeft, $this->x, $this->y, $this->z, $this->prevPackedItemList);
+        $nextItemFitB = $this->orientatedItemFactory->getPossibleOrientations($this->nextItems->top(), $b, $orientationBWidthLeft, $this->lengthLeft, $this->depthLeft, $this->x, $this->y, $this->z, $this->prevPackedItemList);
         if ($nextItemFitA && !$nextItemFitB) {
             return -1;
         }
@@ -147,10 +152,10 @@ class OrientatedItemSorter implements LoggerAwareInterface
         }
 
         // if not an easy either/or, do a partial lookahead
-        $additionalPackedA = $this->calculateAdditionalItemsPackedWithThisOrientation($a, $nextItems, $widthLeft, $lengthLeft, $depthLeft, $rowLength);
-        $additionalPackedB = $this->calculateAdditionalItemsPackedWithThisOrientation($b, $nextItems, $widthLeft, $lengthLeft, $depthLeft, $rowLength);
+        $additionalPackedA = $this->calculateAdditionalItemsPackedWithThisOrientation($a);
+        $additionalPackedB = $this->calculateAdditionalItemsPackedWithThisOrientation($b);
 
-        return ($additionalPackedB - $additionalPackedA) ?: 0;
+        return $additionalPackedB <=> $additionalPackedA ?: 0;
     }
 
     /**
@@ -160,24 +165,19 @@ class OrientatedItemSorter implements LoggerAwareInterface
      * purely on fit.
      */
     protected function calculateAdditionalItemsPackedWithThisOrientation(
-        OrientatedItem $prevItem,
-        ItemList $nextItems,
-        $originalWidthLeft,
-        $originalLengthLeft,
-        $depthLeft,
-        $currentRowLengthBeforePacking
-    ) {
+        OrientatedItem $prevItem
+    ): int {
         if ($this->singlePassMode) {
             return 0;
         }
 
-        $currentRowLength = max($prevItem->getLength(), $currentRowLengthBeforePacking);
+        $currentRowLength = max($prevItem->getLength(), $this->rowLength);
 
-        $itemsToPack = $nextItems->topN(8); // cap lookahead as this gets recursive and slow
+        $itemsToPack = $this->nextItems->topN(8); // cap lookahead as this gets recursive and slow
 
-        $cacheKey = $originalWidthLeft .
+        $cacheKey = $this->widthLeft .
             '|' .
-            $originalLengthLeft .
+            $this->lengthLeft .
             '|' .
             $prevItem->getWidth() .
             '|' .
@@ -185,9 +185,9 @@ class OrientatedItemSorter implements LoggerAwareInterface
             '|' .
             $currentRowLength .
             '|'
-            . $depthLeft;
+            . $this->depthLeft;
 
-        foreach (clone $itemsToPack as $itemToPack) {
+        foreach ($itemsToPack as $itemToPack) {
             $cacheKey .= '|' .
                 $itemToPack->getWidth() .
                 '|' .
@@ -201,21 +201,21 @@ class OrientatedItemSorter implements LoggerAwareInterface
         }
 
         if (!isset(static::$lookaheadCache[$cacheKey])) {
-            $tempBox = new WorkingVolume($originalWidthLeft - $prevItem->getWidth(), $currentRowLength, $depthLeft, PHP_INT_MAX);
-            $tempPacker = new VolumePacker($tempBox, clone $itemsToPack);
+            $tempBox = new WorkingVolume($this->widthLeft - $prevItem->getWidth(), $currentRowLength, $this->depthLeft, PHP_INT_MAX);
+            $tempPacker = new VolumePacker($tempBox, $itemsToPack);
             $tempPacker->setSinglePassMode(true);
             $remainingRowPacked = $tempPacker->pack();
 
-            $itemsToPack->removePackedItems($remainingRowPacked->getPackedItems());
+            $itemsToPack->removePackedItems($remainingRowPacked->getItems());
 
-            $tempBox = new WorkingVolume($originalWidthLeft, $originalLengthLeft - $currentRowLength, $depthLeft, PHP_INT_MAX);
-            $tempPacker = new VolumePacker($tempBox, clone $itemsToPack);
+            $tempBox = new WorkingVolume($this->widthLeft, $this->lengthLeft - $currentRowLength, $this->depthLeft, PHP_INT_MAX);
+            $tempPacker = new VolumePacker($tempBox, $itemsToPack);
             $tempPacker->setSinglePassMode(true);
             $nextRowsPacked = $tempPacker->pack();
 
-            $itemsToPack->removePackedItems($nextRowsPacked->getPackedItems());
+            $itemsToPack->removePackedItems($nextRowsPacked->getItems());
 
-            $packedCount = $nextItems->count() - $itemsToPack->count();
+            $packedCount = $this->nextItems->count() - $itemsToPack->count();
             $this->logger->debug('Lookahead with orientation', ['packedCount' => $packedCount, 'orientatedItem' => $prevItem]);
 
             static::$lookaheadCache[$cacheKey] = $packedCount;
@@ -224,7 +224,7 @@ class OrientatedItemSorter implements LoggerAwareInterface
         return static::$lookaheadCache[$cacheKey];
     }
 
-    private function exactFitDecider($dimensionALeft, $dimensionBLeft)
+    private function exactFitDecider(int $dimensionALeft, int $dimensionBLeft): int
     {
         if ($dimensionALeft === 0 && $dimensionBLeft > 0) {
             return -1;

@@ -4,55 +4,91 @@
  *
  * @author Doug Wright
  */
+declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
+
+use ArrayIterator;
+use IteratorAggregate;
+use Traversable;
+use function usort;
 
 /**
  * List of boxes available to put items into, ordered by volume.
  *
  * @author Doug Wright
  */
-class BoxList extends \SplMinHeap
+class BoxList implements IteratorAggregate
 {
     /**
-     * Compare elements in order to place them correctly in the heap while sifting up.
+     * List containing boxes.
      *
-     * @see \SplMinHeap::compare()
+     * @var Box[]
+     */
+    private $list = [];
+
+    /**
+     * Has this list already been sorted?
      *
+     * @var bool
+     */
+    private $isSorted = false;
+
+    /**
+     * Do a bulk create.
+     *
+     * @param Box[] $boxes
+     *
+     * @return BoxList
+     */
+    public static function fromArray(array $boxes, bool $preSorted = false): self
+    {
+        $list = new static();
+        $list->list = $boxes;
+        $list->isSorted = $preSorted;
+
+        return $list;
+    }
+
+    /**
+     * @return Traversable|Box[]
+     */
+    public function getIterator(): Traversable
+    {
+        if (!$this->isSorted) {
+            usort($this->list, [$this, 'compare']);
+            $this->isSorted = true;
+        }
+
+        return new ArrayIterator($this->list);
+    }
+
+    public function insert(Box $item): void
+    {
+        $this->list[] = $item;
+    }
+
+    /**
      * @param Box $boxA
      * @param Box $boxB
-     *
-     * @return int
      */
-    public function compare($boxA, $boxB)
+    public static function compare($boxA, $boxB): int
     {
         $boxAVolume = $boxA->getInnerWidth() * $boxA->getInnerLength() * $boxA->getInnerDepth();
         $boxBVolume = $boxB->getInnerWidth() * $boxB->getInnerLength() * $boxB->getInnerDepth();
 
-        // try smallest box first
-        if ($boxBVolume > $boxAVolume) {
-            return 1;
-        }
-        if ($boxAVolume > $boxBVolume) {
-            return -1;
+        $volumeDecider = $boxAVolume <=> $boxBVolume; // try smallest box first
+
+        if ($volumeDecider !== 0) {
+            return $volumeDecider;
         }
 
-        // smallest empty weight
-        if ($boxB->getEmptyWeight() > $boxA->getEmptyWeight()) {
-            return 1;
-        }
-        if ($boxA->getEmptyWeight() > $boxB->getEmptyWeight()) {
-            return -1;
+        $emptyWeightDecider = $boxA->getEmptyWeight() <=> $boxB->getEmptyWeight(); // with smallest empty weight
+        if ($emptyWeightDecider !== 0) {
+            return $emptyWeightDecider;
         }
 
         // maximum weight capacity as fallback decider
-        if (($boxA->getMaxWeight() - $boxA->getEmptyWeight()) > ($boxB->getMaxWeight() - $boxB->getEmptyWeight())) {
-            return -1;
-        }
-        if (($boxB->getMaxWeight() - $boxB->getEmptyWeight()) > ($boxA->getMaxWeight() - $boxA->getEmptyWeight())) {
-            return 1;
-        }
-
-        return 0;
+        return ($boxA->getMaxWeight() - $boxA->getEmptyWeight()) <=> ($boxB->getMaxWeight() - $boxB->getEmptyWeight());
     }
 }

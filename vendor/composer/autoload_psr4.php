@@ -7,5 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
+    'DVDoug\\BoxPacker\\Test\\' => array($vendorDir . '/dvdoug/boxpacker/tests/Test'),
     'DVDoug\\BoxPacker\\' => array($vendorDir . '/dvdoug/boxpacker/src'),
 );

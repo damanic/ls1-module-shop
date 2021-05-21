@@ -4,14 +4,18 @@
  *
  * @author Doug Wright
  */
+declare(strict_types=1);
+
 namespace DVDoug\BoxPacker;
+
+use JsonSerializable;
 
 /**
  * A packed item.
  *
  * @author Doug Wright
  */
-class PackedItem
+class PackedItem implements JsonSerializable
 {
     /**
      * @var int
@@ -50,16 +54,8 @@ class PackedItem
 
     /**
      * PackedItem constructor.
-     *
-     * @param Item $item
-     * @param int  $x
-     * @param int  $y
-     * @param int  $z
-     * @param int  $width
-     * @param int  $length
-     * @param int  $depth
      */
-    public function __construct(Item $item, $x, $y, $z, $width, $length, $depth)
+    public function __construct(Item $item, int $x, int $y, int $z, int $width, int $length, int $depth)
     {
         $this->item = $item;
         $this->x = $x;
@@ -70,79 +66,50 @@ class PackedItem
         $this->depth = $depth;
     }
 
-    /**
-     * @return int
-     */
-    public function getX()
+    public function getX(): int
     {
         return $this->x;
     }
 
-    /**
-     * @return int
-     */
-    public function getY()
+    public function getY(): int
     {
         return $this->y;
     }
 
-    /**
-     * @return int
-     */
-    public function getZ()
+    public function getZ(): int
     {
         return $this->z;
     }
 
-    /**
-     * @return Item
-     */
-    public function getItem()
+    public function getItem(): Item
     {
         return $this->item;
     }
 
-    /**
-     * @return int
-     */
-    public function getWidth()
+    public function getWidth(): int
     {
         return $this->width;
     }
 
-    /**
-     * @return int
-     */
-    public function getLength()
+    public function getLength(): int
     {
         return $this->length;
     }
 
-    /**
-     * @return int
-     */
-    public function getDepth()
+    public function getDepth(): int
     {
         return $this->depth;
     }
 
-    /**
-     * @return int
-     */
-    public function getVolume()
+    public function getVolume(): int
     {
         return $this->width * $this->length * $this->depth;
     }
 
     /**
-     * @param OrientatedItem $orientatedItem
-     * @param int            $x
-     * @param int            $y
-     * @param int            $z
-     *
      * @return PackedItem
      */
-    public static function fromOrientatedItem(OrientatedItem $orientatedItem, $x, $y, $z)
+    public static function fromOrientatedItem(OrientatedItem $orientatedItem, int $x, int $y, int $z): self
     {
         return new static(
             $orientatedItem->getItem(),
@@ -155,11 +122,27 @@ class PackedItem
         );
     }
 
-    /**
-     * @return OrientatedItem
-     */
-    public function toOrientatedItem()
+    public function toOrientatedItem(): OrientatedItem
     {
         return new OrientatedItem($this->item, $this->width, $this->length, $this->depth);
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'x' => $this->x,
+            'y' => $this->y,
+            'z' => $this->z,
+            'width' => $this->width,
+            'length' => $this->length,
+            'depth' => $this->depth,
+            'item' => [
+                'description' => $this->item->getDescription(),
+                'width' => $this->item->getWidth(),
+                'length' => $this->item->getLength(),
+                'depth' => $this->item->getDepth(),
+                'keepFlat' => $this->item->getKeepFlat(),
+            ],
+        ];
     }
 }

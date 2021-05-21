@@ -4,14 +4,21 @@
  *
  * @author Doug Wright
  */
+declare(strict_types=1);
+
 namespace DVDoug\BoxPacker;
+
+use function iterator_to_array;
+use JsonSerializable;
+use function max;
+use function round;
 
 /**
  * A "box" with items.
  *
  * @author Doug Wright
  */
-class PackedBox
+class PackedBox implements JsonSerializable
 {
     /**
      * Box used.
@@ -23,16 +30,9 @@ class PackedBox
     /**
      * Items in the box.
      *
-     * @var ItemList
+     * @var PackedItemList
      */
     protected $items;
-
-    /**
-     * Total weight of box.
-     *
-     * @var int
-     */
-    protected $weight;
 
     /**
      * Total weight of items in the box.
@@ -42,75 +42,24 @@ class PackedBox
     protected $itemWeight;
 
     /**
-     * Remaining width inside box for another item.
+     * Volume used for items as % of box.
      *
-     * @var int
+     * @var float
      */
-    protected $remainingWidth;
-
-    /**
-     * Remaining length inside box for another item.
-     *
-     * @var int
-     */
-    protected $remainingLength;
-
-    /**
-     * Remaining depth inside box for another item.
-     *
-     * @var int
-     */
-    protected $remainingDepth;
-
-    /**
-     * Remaining weight inside box for another item.
-     *
-     * @var int
-     */
-    protected $remainingWeight;
-
-    /**
-     * Used width inside box for packing items.
-     *
-     * @var int
-     */
-    protected $usedWidth;
-
-    /**
-     * Used length inside box for packing items.
-     *
-     * @var int
-     */
-    protected $usedLength;
-
-    /**
-     * Used depth inside box for packing items.
-     *
-     * @var int
-     */
-    protected $usedDepth;
-
-    /**
-     * @var PackedItemList
-     */
-    protected $packedItemList;
+    protected $volumeUtilisation;
 
     /**
      * Get box used.
-     *
-     * @return Box
      */
-    public function getBox()
+    public function getBox(): Box
     {
         return $this->box;
     }
 
     /**
      * Get items packed.
-     *
-     * @return ItemList
      */
-    public function getItems()
+    public function getItems(): PackedItemList
     {
         return $this->items;
     }
@@ -120,7 +69,7 @@ class PackedBox
      *
      * @return int weight in grams
      */
-    public function getWeight()
+    public function getWeight(): int
     {
         return $this->box->getEmptyWeight() + $this->getItemWeight();
     }
@@ -130,15 +79,16 @@ class PackedBox
      *
      * @return int weight in grams
      */
-    public function getItemWeight()
+    public function getItemWeight(): int
     {
-        if (!is_null($this->itemWeight)) {
+        if ($this->itemWeight !== null) {
             return $this->itemWeight;
         }
+
         $this->itemWeight = 0;
-        /** @var Item $item */
-        foreach (clone $this->items as $item) {
-            $this->itemWeight += $item->getWeight();
+        /** @var PackedItem $item */
+        foreach ($this->items as $item) {
+            $this->itemWeight += $item->getItem()->getWeight();
         }
 
         return $this->itemWeight;
@@ -146,213 +96,131 @@ class PackedBox
 
     /**
      * Get remaining width inside box for another item.
-     *
-     * @return int
      */
-    public function getRemainingWidth()
+    public function getRemainingWidth(): int
     {
-        return $this->remainingWidth;
+        return $this->box->getInnerWidth() - $this->getUsedWidth();
     }
 
     /**
      * Get remaining length inside box for another item.
-     *
-     * @return int
      */
-    public function getRemainingLength()
+    public function getRemainingLength(): int
     {
-        return $this->remainingLength;
+        return $this->box->getInnerLength() - $this->getUsedLength();
     }
 
     /**
      * Get remaining depth inside box for another item.
-     *
-     * @return int
      */
-    public function getRemainingDepth()
+    public function getRemainingDepth(): int
     {
-        return $this->remainingDepth;
+        return $this->box->getInnerDepth() - $this->getUsedDepth();
     }
 
     /**
      * Used width inside box for packing items.
-     *
-     * @return int
      */
-    public function getUsedWidth()
+    public function getUsedWidth(): int
     {
-        return $this->usedWidth;
+        $maxWidth = 0;
+
+        /** @var PackedItem $item */
+        foreach ($this->items as $item) {
+            $maxWidth = max($maxWidth, $item->getX() + $item->getWidth());
+        }
+
+        return $maxWidth;
     }
 
     /**
      * Used length inside box for packing items.
-     *
-     * @return int
      */
-    public function getUsedLength()
+    public function getUsedLength(): int
     {
-        return $this->usedLength;
+        $maxLength = 0;
+
+        /** @var PackedItem $item */
+        foreach ($this->items as $item) {
+            $maxLength = max($maxLength, $item->getY() + $item->getLength());
+        }
+
+        return $maxLength;
     }
 
     /**
      * Used depth inside box for packing items.
-     *
-     * @return int
      */
-    public function getUsedDepth()
+    public function getUsedDepth(): int
     {
-        return $this->usedDepth;
+        $maxDepth = 0;
+
+        /** @var PackedItem $item */
+        foreach ($this->items as $item) {
+            $maxDepth = max($maxDepth, $item->getZ() + $item->getDepth());
+        }
+
+        return $maxDepth;
     }
 
     /**
      * Get remaining weight inside box for another item.
-     *
-     * @return int
      */
-    public function getRemainingWeight()
+    public function getRemainingWeight(): int
     {
-        return $this->remainingWeight;
+        return $this->box->getMaxWeight() - $this->getWeight();
     }
 
-    /**
-     * @return int
-     */
-    public function getInnerVolume()
+    public function getInnerVolume(): int
     {
         return $this->box->getInnerWidth() * $this->box->getInnerLength() * $this->box->getInnerDepth();
     }
 
     /**
      * Get used volume of the packed box.
-     *
-     * @return int
      */
-    public function getUsedVolume()
+    public function getUsedVolume(): int
     {
-        $volume = 0;
-        /** @var PackedItem $item */
-        foreach (clone $this->items as $item) {
-            $volume += $item->getVolume();
-        }
-
-        return $volume;
+        return $this->items->getVolume();
     }
 
     /**
      * Get unused volume of the packed box.
-     *
-     * @return int
      */
-    public function getUnusedVolume()
+    public function getUnusedVolume(): int
     {
         return $this->getInnerVolume() - $this->getUsedVolume();
     }
 
     /**
      * Get volume utilisation of the packed box.
-     *
-     * @return float
      */
-    public function getVolumeUtilisation()
+    public function getVolumeUtilisation(): float
     {
-        $itemVolume = 0;
-
-        /** @var Item $item */
-        foreach (clone $this->items as $item) {
-            $itemVolume += $item->getVolume();
-        }
-
-        return round($itemVolume / $this->box->getInnerVolume() * 100, 1);
+        return $this->volumeUtilisation;
     }
 
     /**
-     * @return PackedItemList
+     * Constructor.
      */
-    public function getPackedItems()
+    public function __construct(Box $box, PackedItemList $packedItemList)
     {
-        if (!$this->packedItemList instanceof PackedItemList) {
-            throw new RuntimeException('No PackedItemList was set. Are you using the old constructor?');
-        }
-        return $this->packedItemList;
-    }
-
-    /**
-     * @param PackedItemList $packedItemList
-     */
-    public function setPackedItems(PackedItemList $packedItemList)
-    {
-        $this->packedItemList = $packedItemList;
-    }
-
-    /**
-     * Legacy constructor.
-     *
-     * @deprecated
-     *
-     * @param Box      $box
-     * @param ItemList $itemList
-     * @param int      $remainingWidth
-     * @param int      $remainingLength
-     * @param int      $remainingDepth
-     * @param int      $remainingWeight
-     * @param int      $usedWidth
-     * @param int      $usedLength
-     * @param int      $usedDepth
-     */
-    public function __construct(
-        Box $box,
-        ItemList $itemList,
-        $remainingWidth,
-        $remainingLength,
-        $remainingDepth,
-        $remainingWeight,
-        $usedWidth,
-        $usedLength,
-        $usedDepth
-    ) {
         $this->box = $box;
-        $this->items = $itemList;
-        $this->remainingWidth = $remainingWidth;
-        $this->remainingLength = $remainingLength;
-        $this->remainingDepth = $remainingDepth;
-        $this->remainingWeight = $remainingWeight;
-        $this->usedWidth = $usedWidth;
-        $this->usedLength = $usedLength;
-        $this->usedDepth = $usedDepth;
+        $this->items = $packedItemList;
+
+        $this->volumeUtilisation = round($this->getUsedVolume() / ($this->getInnerVolume() ?: 1) * 100, 1);
     }
 
-    /**
-     * The constructor from v3.
-     *
-     * @param Box            $box
-     * @param PackedItemList $packedItems
-     *
-     * @return self
-     */
-    public static function fromPackedItemList(Box $box, PackedItemList $packedItems)
+    public function jsonSerialize(): array
     {
-        $maxWidth = $maxLength = $maxDepth = $weight = 0;
-        /** @var PackedItem $item */
-        foreach (clone $packedItems as $item) {
-            $maxWidth = max($maxWidth, $item->getX() + $item->getWidth());
-            $maxLength = max($maxLength, $item->getY() + $item->getLength());
-            $maxDepth = max($maxDepth, $item->getZ() + $item->getDepth());
-            $weight += $item->getItem()->getWeight();
-        }
-
-        $packedBox = new self(
-            $box,
-            $packedItems->asItemList(),
-            $box->getInnerWidth() - $maxWidth,
-            $box->getInnerLength() - $maxLength,
-            $box->getInnerDepth() - $maxDepth,
-            $box->getMaxWeight() - $box->getEmptyWeight() - $weight,
-            $maxWidth,
-            $maxLength,
-            $maxDepth
-        );
-        $packedBox->setPackedItems($packedItems);
-
-        return $packedBox;
+        return [
+            'box' => [
+                'reference' => $this->box->getReference(),
+                'innerWidth' => $this->box->getInnerWidth(),
+                'innerLength' => $this->box->getInnerLength(),
+                'innerDepth' => $this->box->getInnerDepth(),
+            ],
+            'items' => iterator_to_array($this->items),
+        ];
     }
 }

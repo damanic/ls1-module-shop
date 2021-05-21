@@ -81,7 +81,7 @@ Example - only allow 2 batteries per box
     <?php
         use DVDoug\BoxPacker\Box;
         use DVDoug\BoxPacker\Item;
-        use DVDoug\BoxPacker\ItemList;
+        use DVDoug\BoxPacker\PackedItemList;
 
         class LithiumBattery implements ConstrainedPlacementItem
         {
@@ -108,10 +108,10 @@ Example - only allow 2 batteries per box
                 int $width,
                 int $length,
                 int $depth
-            ) {
+            ): bool {
                 $batteriesPacked = 0;
                 foreach ($alreadyPackedItems as $packedItem) {
-                  if ($packedItem instanceof LithiumBattery) {
+                  if ($packedItem->getItem() instanceof LithiumBattery) {
                       $batteriesPacked++;
                   }
                 }
@@ -132,7 +132,7 @@ Example - don't allow batteries to be stacked
     <?php
         use DVDoug\BoxPacker\Box;
         use DVDoug\BoxPacker\Item;
-        use DVDoug\BoxPacker\ItemList;
+        use DVDoug\BoxPacker\PackedItemList;
 
         class LithiumBattery implements ConstrainedPlacementItem
         {
@@ -159,11 +159,11 @@ Example - don't allow batteries to be stacked
                 int $width,
                 int $length,
                 int $depth
-            ) {
+            ): bool {
                 $alreadyPackedType = array_filter(
                     iterator_to_array($alreadyPackedItems, false),
-                    function (Item $item) {
-                        return $item->getDescription() === 'Battery';
+                    function (PackedItem $item) {
+                        return $item->getItem()->getDescription() === 'Battery';
                     }
                 );
 
@@ -180,3 +180,17 @@ Example - don't allow batteries to be stacked
                 return true;
             }
         }
+
+Limited supply boxes
+--------------------
+
+In standard/basic use, BoxPacker will assume you have an adequate enough supply of each box type on hand to cover all
+eventualities i.e. your warehouse will be very well stocked and the concept of "running low" is not applicable.
+
+However, if you only have limited quantities of boxes available and you have accurate stock control information, you can
+feed this information into BoxPacker which will then take it into account so that it won't suggest a packing which would
+take you into negative stock.
+
+To do this, have your box objects implement the ``BoxPacker\LimitedSupplyBox`` interface which has a single additional method
+over the standard ``BoxPacker\Box`` namely ``getQuantityAvailable()``. The library will automatically detect this and
+use the information accordingly.

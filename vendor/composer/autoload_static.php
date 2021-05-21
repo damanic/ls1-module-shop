@@ -13,6 +13,7 @@ class ComposerStaticInitfe3f091f921efcf7c30c3fea8f879e3b
         ),
         'D' => 
         array (
+            'DVDoug\\BoxPacker\\Test\\' => 22,
             'DVDoug\\BoxPacker\\' => 17,
         ),
     );
@@ -21,6 +22,10 @@ class ComposerStaticInitfe3f091f921efcf7c30c3fea8f879e3b
         'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
+        ),
+        'DVDoug\\BoxPacker\\Test\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dvdoug/boxpacker/tests/Test',
         ),
         'DVDoug\\BoxPacker\\' => 
         array (

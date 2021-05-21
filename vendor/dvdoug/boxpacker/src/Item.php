@@ -4,6 +4,7 @@
  *
  * @author Doug Wright
  */
+declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
 
@@ -16,50 +17,31 @@ interface Item
 {
     /**
      * Item SKU etc.
-     *
-     * @return string
      */
-    public function getDescription();
+    public function getDescription(): string;
 
     /**
      * Item width in mm.
-     *
-     * @return int
      */
-    public function getWidth();
+    public function getWidth(): int;
 
     /**
      * Item length in mm.
-     *
-     * @return int
      */
-    public function getLength();
+    public function getLength(): int;
 
     /**
      * Item depth in mm.
-     *
-     * @return int
      */
-    public function getDepth();
+    public function getDepth(): int;
 
     /**
      * Item weight in g.
-     *
-     * @return int
      */
-    public function getWeight();
-
-    /**
-     * Item volume in mm^3.
-     *
-     * @return int
-     */
-    public function getVolume();
+    public function getWeight(): int;
 
     /**
      * Does this item need to be kept flat / packed "this way up"?
-     *
-     * @return bool
      */
-    public function getKeepFlat();
+    public function getKeepFlat(): bool;
 }

@@ -3,8 +3,73 @@ What's new / Upgrading
 
 .. note::
 
-     Below is summary of important changes between versions. A full changelog, including changes in versions not yet
-     released is available from https://github.com/dvdoug/BoxPacker/blob/master/CHANGELOG.md
+     Below is summary of key changes between versions that you should be aware of. A full changelog, including changes in minor
+     versions is available from https://github.com/dvdoug/BoxPacker/blob/master/CHANGELOG.md
+
+Version 3
+---------
+
+Positional information on packed items
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Version 3 allows you to see the positional and dimensional information of each item as packed. Exposing this additional data
+unfortunately means an API change - specifically ``PackedBox->getItems`` now returns a set of ``PackedItem`` s rather than
+``Item`` s. A ``PackedItem`` is a wrapper around around an `Item` with positional and dimensional information
+(x/y/z co-ordinates of corner closest to origin, width/length/depth as packed). Adapting existing v2 code to v3 is simple:
+
+Before
+
+.. code-block:: php
+
+    <?php
+        $itemsInTheBox = $packedBox->getItems();
+        foreach ($itemsInTheBox as $item) { // your own item object
+            echo $item->getDescription() . PHP_EOL;
+        }
+
+After
+
+.. code-block:: php
+
+    <?php
+        $packedItems = $packedBox->getItems();
+        foreach ($packedItems as $packedItem) { // $packedItem->getItem() is your own item object
+            echo $packedItem->getItem()->getDescription() . PHP_EOL;
+        }
+
+If you use ``BoxPacker\ConstrainedItem``, you'll need to make the same change there too.
+
+PHP 7 type declarations
+^^^^^^^^^^^^^^^^^^^^^^^
+Version 3 also takes advantage of the API break opportunity introduced by the additional positional information and is the first
+version of BoxPacker to take advantage of PHP7's type declaration system. The core ``BoxPacker\Item`` and ``BoxPacker\Box``
+interfaces definitions have been supplemented with code-level type information to enforce expectations. This is a technical break
+only, no implementation requires changing - only the correct type information added, e.g.
+
+Before
+
+.. code-block:: php
+
+    <?php
+        /**
+         * @return string
+         */
+        public function getDescription()
+        {
+            return $this->description;
+        }
+
+After
+
+.. code-block:: php
+
+    <?php
+        /**
+         * @return string
+         */
+        public function getDescription(): string
+        {
+            return $this->description;
+        }
 
 Version 2
 ---------
