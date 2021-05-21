@@ -225,9 +225,10 @@ class Shop_PackedBox {
 				$packed_box = new self($shipping_box,array());
 
 				$shop_items = array();
-				$packer_items = $package->getItems();
+				$packer_packeditems = $package->getItems();
 				$packed_item_counts = array();
-				foreach($packer_items as $packer_item){
+				foreach( $packer_packeditems as $packer_packeditem){
+					$packer_item = $packer_packeditem->getItem();
 					if($packer_item->item_id && isset($items_indexed[$packer_item->item_id])){
 						if(isset($packed_item_counts[$packer_item->item_id])){
 							$packed_item_counts[$packer_item->item_id]++;

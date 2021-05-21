@@ -1,14 +1,15 @@
 <?php
 /*
- * This helper requires PHP v5.4+
+ * This helper requires PHP v7.1+
  */
 
-if (version_compare(phpversion(), '5.4.0', '<')) {
+if (version_compare(phpversion(), '7.1.0', '<')) {
 	return;
 }
 
+use DVDoug\BoxPacker\PackedBoxList as PackedBoxList;
 use DVDoug\BoxPacker\Packer as BoxPacker;
-use DVDoug\BoxPacker\Box as BoxPackerBox;
+use DVDoug\BoxPacker\LimitedSupplyBox as BoxPackerBox;
 use DVDoug\BoxPacker\Item as BoxPackerItem;
 
 class Shop_BoxPacker {
@@ -21,8 +22,8 @@ class Shop_BoxPacker {
 	protected $unpackable_items = array();
 
 	public function __construct() {
-		if (version_compare(phpversion(), '5.4.0', '<')) {
-			throw new Phpr_ApplicationException('Error: Shop_Boxpacker requires PHP >= 5.4');
+		if (version_compare(phpversion(), '7.1.0', '<')) {
+			throw new Phpr_ApplicationException('Error: Shop_Boxpacker requires PHP >= 7.1');
 		}
 		$this->shipping_params  = Shop_ShippingParams::get();
 		$this->weights_in_kg    = ( $this->shipping_params->weight_unit == 'KGS' );
@@ -31,15 +32,11 @@ class Shop_BoxPacker {
 
 	public function pack( $items, $boxes = null ) {
 		$item_count = 0;
-		$this->unpackable_items = array();
-		$packer = new BoxPacker();
 		$boxes = $boxes ? $boxes : $this->shipping_params->shipping_boxes;
-		if ( !$boxes ) {
-			return false;
-		}
-		foreach ( $boxes as $box ) {
-			$packer->addBox( $this->make_box_compat($box) );
-		}
+		$packer = new BoxPacker();
+		$packer_items = array();
+		$packer_boxes = array();
+
 		$packable_list = $this->get_packable_items_list($items);
 
 		if($packable_list['failed_compat']){
@@ -50,6 +47,10 @@ class Shop_BoxPacker {
 			return false;
 		}
 
+		foreach ( $boxes as $box ) {
+			$packer_boxes[] = $this->make_box_compat($box);
+		}
+
 		$packable_items = $packable_list['items'];
 		foreach ( $items as $item ) {
 			$item_key = property_exists($item,'key') ? $item->key : $item->id;
@@ -57,20 +58,44 @@ class Shop_BoxPacker {
 				$quantity = $item->quantity;
 				while ( $quantity > 0 ) {
 					$quantity--;
-					$packer->addItem( $packable_items[$item_key]['item'] );
+					$packer_items[] =  $packable_items[$item_key]['item'];
 					$item_count++;
 				}
 				if ( isset( $packable_items[$item_key]['extras'] ) ) {
 					foreach ( $packable_items[$item_key]['extras'] as $extra ) {
-						$packer->addItem( $extra );
+						$packer_items[] = $extra;
 						$item_count++;
 					}
 				}
 			}
 		}
+
 		if($item_count > $this->max_items_to_distribute){
 			$packer->setMaxBoxesToBalanceWeight(0); //disable weight distribution to avoid potential slow down
 		}
+
+		/**
+		 * Event: Opportunity to update packer items/boxes or force a result by returning a PackedBoxList
+		 */
+		$results = Backend::$events->fireEvent('shop:onBoxPackerPack', $packer, $packer_items, $packer_boxes);
+		foreach ($results as $packed_boxes) {
+			if ($packed_boxes && is_a($packed_boxes,'DVDoug\BoxPacker\PackedBoxList')){
+				return $packed_boxes;
+			}
+		}
+
+		if ( !$boxes || !$packer_items) {
+			return false;
+		}
+
+		foreach ( $packer_boxes as $packer_box ) {
+			$packer->addBox( $packer_box );
+		}
+
+		foreach ( $packer_items as $packer_item){
+			$packer->addItem( $packer_item );
+		}
+
 		$packed_boxes = $packer->pack();
 		return $packed_boxes;
 	}
@@ -388,6 +413,17 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	private $innerVolume;
 
 	/**
+	 * @var int
+	 */
+	private $quantity;
+
+	/**
+	 * @var int
+	 */
+	private $default_quantity = 100000;
+
+
+	/**
 	 * TestBox constructor.
 	 *
 	 * @param string $reference
@@ -426,7 +462,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return string
 	 */
-	public function getReference()
+	public function getReference(): string
 	{
 		return $this->reference;
 	}
@@ -434,7 +470,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getOuterWidth($native_units=false)
+	public function getOuterWidth($native_units=false): int
 	{
 		if($native_units){
 			return $this->native_dimension($this->outerWidth);
@@ -445,7 +481,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getOuterLength($native_units=false)
+	public function getOuterLength($native_units=false) : int
 	{
 		if($native_units){
 			return $this->native_dimension($this->outerLength);
@@ -456,7 +492,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getOuterDepth($native_units=false)
+	public function getOuterDepth($native_units=false) : int
 	{
 		if($native_units){
 			return $this->native_dimension($this->outerDepth);
@@ -467,7 +503,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getEmptyWeight($native_units=false)
+	public function getEmptyWeight($native_units=false) : int
 	{
 		if($native_units){
 			return $this->get_native_dimension_unit($this->emptyWeight);
@@ -478,7 +514,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getInnerWidth($native_units=false)
+	public function getInnerWidth($native_units=false) : int
 	{
 		if($native_units){
 			return $this->native_dimension($this->innerWidth);
@@ -489,7 +525,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getInnerLength($native_units=false)
+	public function getInnerLength($native_units=false) : int
 	{
 		if($native_units){
 			return $this->native_dimension($this->innerLength);
@@ -500,7 +536,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getInnerDepth($native_units=false)
+	public function getInnerDepth($native_units=false) : int
 	{
 		if($native_units){
 			return $this->native_dimension($this->innerDepth);
@@ -511,7 +547,7 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getInnerVolume()
+	public function getInnerVolume() : int
 	{
 		return $this->innerVolume;
 	}
@@ -519,12 +555,30 @@ class Shop_BoxPacker_Box implements BoxPackerBox
 	/**
 	 * @return int
 	 */
-	public function getMaxWeight($native_units=false)
+	public function getMaxWeight($native_units=false) : int
 	{
 		if($native_units){
 			return $this->native_weight($this->maxWeight);
 		}
 		return $this->maxWeight;
+	}
+
+	public function setMaxWeight($weight, $native_units=false) : void
+	{
+		$this->maxWeight = $native_units ? $this->native_weight($weight) : $weight;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getQuantityAvailable(): int
+	{
+		return is_numeric($this->quantity) ? $this->quantity : $this->default_quantity;
+	}
+
+	public function setQuantityAvailable(int $quantity): void
+	{
+		$this->quantity = $quantity;
 	}
 
 }
@@ -598,7 +652,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return string
 	 */
-	public function getDescription()
+	public function getDescription() : string
 	{
 		return $this->description;
 	}
@@ -606,7 +660,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return int
 	 */
-	public function getWidth($native_units=false)
+	public function getWidth($native_units=false): int
 	{
 		if($native_units){
 			return $this->native_dimension($this->width);
@@ -617,7 +671,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return int
 	 */
-	public function getLength($native_units=false)
+	public function getLength($native_units=false): int
 	{
 		if($native_units){
 			return $this->native_dimension($this->length);
@@ -628,7 +682,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return int
 	 */
-	public function getDepth($native_units=false)
+	public function getDepth($native_units=false): int
 	{
 		if($native_units){
 			return $this->native_dimension($this->depth);
@@ -639,7 +693,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return int
 	 */
-	public function getWeight($native_units=false)
+	public function getWeight($native_units=false): int
 	{
 		if($native_units){
 			return $this->native_weight($this->weight);
@@ -650,7 +704,7 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return int
 	 */
-	public function getVolume()
+	public function getVolume() : int
 	{
 		return $this->volume;
 	}
@@ -658,8 +712,10 @@ class Shop_BoxPacker_Item implements BoxPackerItem
 	/**
 	 * @return int
 	 */
-	public function getKeepFlat()
+	public function getKeepFlat() : bool
 	{
 		return $this->keepFlat;
 	}
+
+
 }
