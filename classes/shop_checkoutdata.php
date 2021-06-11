@@ -351,7 +351,8 @@
 					'sub_option_name'=>null,
 					'is_free'=>false,
 					'internal_id'=>null,
-					'ls_api_code'=>null
+					'ls_api_code'=>null,
+					'quote_data' => array()
 				);
 				return (object)$method;
 			}
@@ -454,7 +455,7 @@
 				$method->sub_option_name = null;
 				$method->internal_id = $option->id;
 				$method->is_free = $option->is_free;
-
+				$method->quote_data = $option->quote_data;
 			} else {
 				$sub_option_found = false;
 				foreach ($option->sub_options as $key => $rate_obj) {
@@ -469,6 +470,7 @@
 						$method->internal_id = $option->id.'_'.$rate_obj->id;
 						$method->discount  = $rate_obj->discount;
 						$method->is_free = $rate_obj->is_free;
+						$method->quote_data = $rate_obj->quote_data;
 						break;
 					}
 				}

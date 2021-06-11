@@ -44,10 +44,15 @@
 		public $order;
 
 		/*
-		 * Additional config data extracted fron config_data field (XML)
+		 * Additional config data extracted from config_data field (XML)
 		 */
 		public $fetched_data = array();
-		
+
+		/*
+		 * Supplementary data added by shipping quote provider
+		 */
+		public $quote_data = null;
+
 		/*
 		 * These fields contains calculated quotes
 		 */
@@ -716,6 +721,7 @@
 
 		protected function apply_quote($quote, $params){
 
+
 			$discount_info      = Shop_CartPriceRule::evaluate_discount(
 				$params['payment_method_obj'],
 				$this,
@@ -741,7 +747,10 @@
 			}
 
 
-			//calculate quote
+			/*
+			 * Apply quote data
+			 */
+
 			if ( !is_array( $quote ) ) {
 				$quote += $total_per_product_cost;
 				if(is_numeric($this->handling_fee)){
@@ -760,9 +769,9 @@
 					$this->quote += Shop_TaxClass::eval_total_tax( $shipping_taxes );
 				}
 
-			} else {
-				//quotes might be returned in foreign currency
+				$this->quote_data = $quote;
 
+			} else {
 				$this->multi_option = true;
 				$this->sub_options  = array();
 
@@ -790,6 +799,7 @@
 						$sub_option->quote += Shop_TaxClass::eval_total_tax( $shipping_taxes );
 					}
 
+					$sub_option->quote_data = $rate;
 					$this->sub_options[] = $sub_option;
 				}
 			}
@@ -816,6 +826,7 @@
 			if($this->get_quote_currency() !== $active_currency_code){
 				$this->convert_to_currency($active_currency_code);
 			}
+
 		}
 
 		/**
