@@ -2401,6 +2401,7 @@ class Shop_Order extends Db_ActiveRecord
 		$customer = $this->customer_id ? Shop_Customer::create()->find($this->customer_id) : null;
 
 		$params = array(
+			'order' => $this,
 			'shipping_info' => $shipping_info,
 			'total_price' =>  $this->eval_subtotal_before_discounts(),
 			'total_volume' => $this->get_total_volume(),
@@ -2409,8 +2410,8 @@ class Shop_Order extends Db_ActiveRecord
 			'include_tax' => $include_tax,
 			'display_prices_including_tax' => $include_tax ? $include_tax : Shop_CheckoutData::display_prices_incl_tax(), //out of scope
 			'return_disabled' => false,
-			'order_items' => $items,
-			'cart_items' =>  Shop_OrderHelper::items_to_cart_items_array($items),
+			'order_items' => $this->items,
+			'cart_items' =>  Shop_OrderHelper::items_to_cart_items_array($this->items),
 			'customer_group_id' => null,
 			'customer' => $customer,
 			'shipping_option_id' => null,
