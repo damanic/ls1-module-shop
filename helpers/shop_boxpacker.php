@@ -30,12 +30,24 @@ class Shop_BoxPacker {
 		$this->dimensions_in_cm = ( $this->shipping_params->dimension_unit == 'CM' );
 	}
 
-	public function pack( $items, $boxes = null ) {
+	/**
+	 * @param array $items  Array of Shop_CartItem or Shop_OrderItem
+	 * @param null  $boxes Optional array of Shop_BoxPacker_Box objects that can be used for packing
+	 * @param array $info Supporting information that could influence packing constraints. Passed to shop:onBoxPackerPack event
+	 *
+	 * @return PackedBoxList|false
+	 */
+	public function pack( $items, $boxes = null, $info=array() ) {
 		$item_count = 0;
 		$boxes = $boxes ? $boxes : $this->shipping_params->shipping_boxes;
 		$packer = new BoxPacker();
 		$packer_items = array();
 		$packer_boxes = array();
+		$default_info = array(
+			'context' => null,
+			'order' => null
+		);
+		$data = array_merge($default_info,$info);
 
 		$packable_list = $this->get_packable_items_list($items);
 
@@ -77,7 +89,7 @@ class Shop_BoxPacker {
 		/**
 		 * Event: Opportunity to update packer items/boxes or force a result by returning a PackedBoxList
 		 */
-		$results = Backend::$events->fireEvent('shop:onBoxPackerPack', $packer, $packer_items, $packer_boxes);
+		$results = Backend::$events->fireEvent('shop:onBoxPackerPack', $packer_items, $packer_boxes, $info);
 		foreach ($results as $packed_boxes) {
 			if ($packed_boxes && is_a($packed_boxes,'DVDoug\BoxPacker\PackedBoxList')){
 				return $packed_boxes;
@@ -255,8 +267,12 @@ class Shop_BoxPacker {
 		$packer   = new self();
 		$calculated_packages = false;
 		$items_shipping = $order->get_items_shipping();
+		$info = array(
+			'context' => 'order',
+			'order' => $order
+		);
 		try {
-			$calculated_packages = $packer->pack( $items_shipping );
+			$calculated_packages = $packer->pack( $items_shipping, null, $info);
 		} catch ( Exception $e ) {
 			throw new Phpr_ApplicationException('No package calculations could be determined ('.$e->getMessage().')');
 		}

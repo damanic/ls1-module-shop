@@ -176,14 +176,24 @@ class Shop_PackedBox {
 	 * This uses the Shop_BoxPacker class to place order items into packed boxes
 	 * Requires PHP v5.4+
 	 * @documentable
-	 * @param array of Shop_CartItem or Shop_OrderItem
+	 * @param array $items  Array of Shop_CartItem or Shop_OrderItem
+	 * @param array $info Supporting information that could influence packing constraints. Passed to shop:onBoxPackerPack event
 	 * @return array of Shop_PackedBox objects
 	 */
-	public static function calculate_item_packed_boxes($items){
+	public static function calculate_item_packed_boxes($items, $info = array()){
+		$context = null;
 		$item_packed_boxes = array();
+		foreach($items as $item){
+			$context = is_a($item,'Shop_CartItem') ? 'cart' : 'order';
+			break;
+		}
+		$default_info = array(
+			'context' => $context
+		);
+		$info = array_merge($default_info,$info);
 		try {
 			$packer   = new Shop_BoxPacker();
-			$packages = $packer->pack( $items );
+			$packages = $packer->pack( $items, null , $info );
 			$item_packed_boxes = self::_convert_boxpacker_packages($items, $packages);
 		} catch ( Exception $e ) {
 			traceLog( $e->getMessage() );
