@@ -56,6 +56,8 @@
 		{
 			$this->define_column('name', 'Company Name')->validation()->fn('trim')->required("Please enter a company name");
 			$this->define_column('address_contacts', 'Company Address and Contacts');
+			$this->define_column('tax_identification_number', 'Tax Identification Number');
+
 			$this->define_multi_relation_column('logo', 'logo', 'Logo', '@name')->invisible();
 
 			$this->define_column('invoice_header_text', 'Document Header Text')->invisible(); //deprecated
@@ -90,6 +92,7 @@
 		{
 			$this->add_form_field('name')->tab('Company Information');
 			$this->add_form_field('address_contacts')->tab('Company Information')->comment('Company contacts will be displayed on the invoices, packing slips and other printable documents', 'above');
+			$this->add_form_field('tax_identification_number')->tab('Company Information')->comment('This can be used in document templates and shipping declarations');
 
 			$this->add_form_field('logo', 'left')->tab('Logo')->renderAs(frm_file_attachments)->renderFilesAs('single_image')->addDocumentLabel('Upload a logo')->noAttachmentsLabel('Logo is not uploaded')->imageThumbSize(250)->noLabel()->fileDownloadBaseUrl(url('ls_backend/files/get/'));
 			$this->add_form_field('logo_width', 'right')->tab('Logo')->comment('Width of the logo image, in pixels, on invoices and other printable documents. Select "Auto" for automatic proportional scaling.', 'above')->renderAs(frm_dropdown);

@@ -90,20 +90,20 @@ class Shop_ShippingZone extends Db_ActiveRecord {
 	/**
 	 * @event   shop:onExtendShippingZoneModel
 	 * @package shop.events
-	 * @author  github:damanic | LemonStand eCommerce Inc.
+	 * @author  github:damanic
 	 * @see     shop:onExtendShippingZoneForm
 	 * @see     http://lemonstand.com/docs/extending_existing_models Extending existing models
 	 * @see     http://lemonstand.com/docs/creating_and_updating_database_tables Creating and updating database tables.
 	 *
 	 * @param Shop_ShippingZone $shipping_zone Specifies the shipping zone object.
 	 */
-	private function event_onExtendShippinZoneModel( $shipping_zone ) {
+	private function event_onExtendShippingZoneModel( $shipping_zone ) {
 	}
 
 	/**
 	 * @event   shop:onExtendShippingZoneForm
 	 * @package shop.events
-	 * @author  github:damanic | LemonStand eCommerce Inc.
+	 * @author  github:damanic
 	 * @see     shop:onExtendShippingZoneModel
 	 * @see     http://lemonstand.com/docs/extending_existing_models Extending existing models
 	 * @see     http://lemonstand.com/docs/creating_and_updating_database_tables Creating and updating database tables
