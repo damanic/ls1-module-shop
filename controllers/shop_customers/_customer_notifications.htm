@@ -19,7 +19,7 @@
 		<?
 		$notifications = $form_model->get_recent_notifications(50);
 		if($notifications):
-			foreach ($form_model->get_recent_notifications(50) as $record):
+			foreach ($notifications as $record):
 				$preview_url = url('shop/customer_notifications/view/'.$record->id.'/'.$form_model->id);
 		?>
 		<tr class="<?= Backend_Html::zebra('order_customer_notifications') ?> <?= $record->is_system ? null : 'important' ?>" title="<?= $record->is_system ? 'Internal system notification' : 'Customer notification' ?>">
