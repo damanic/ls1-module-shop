@@ -1,3 +1,10 @@
+<?
+$bundle_item_product = isset( $bundle_item_product ) ? $bundle_item_product : null;
+if($bundle_item_product && !$bundle_item_product->allow_manual_quantity){
+	$disable_quantity_input = true;
+}
+
+?>
 <li>
 	<div class="formFlash"></div>
 
@@ -9,7 +16,7 @@
 				</label>
 
 				<div class="fieldContainer">
-					<input type="text" name="quantity" id="Shop_OrderItem_quantity" class="float" value="<?= post('quantity', $item->get_bundle_item_quantity()) ?>"/>
+					<input type="text" name="quantity" id="Shop_OrderItem_quantity" class="float" value="<?= post('quantity', $item->get_bundle_item_quantity()) ?>" <?= $disable_quantity_input ? 'disabled="disabled"' : null ?>/>
 				</div>
 
 				<div class="clear"></div>

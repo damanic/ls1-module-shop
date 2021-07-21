@@ -3414,7 +3414,7 @@ class Shop_Product extends Db_ActiveRecord
 	{
 		$identifier = mb_strtolower(trim($identifier));
 		if($identifier) {
-			$properties = $this->properties;
+			$properties = $this->__get('properties');
 			foreach ( $properties as $property ) {
 				$ids = array(
 					mb_strlen( trim( $property->api_code ) ),

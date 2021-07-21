@@ -36,7 +36,7 @@
 			<?
 				$session_key = $this->formGetEditSessionKey();
 				foreach ($items as $item):
-					$onClick = "new PopupForm('onLoadItemForm', {ajaxFields: {'applied_discounts_data': $('applied_discounts_data_field').value, 'item_id': '{$item->id}', 'edit_session_key': '{$session_key}'}}); return false;";
+					$onClick = "new PopupForm('onLoadItemForm', {ajaxFields: {'applied_discounts_data': $('applied_discounts_data_field').value, 'item_id': '{$item->id}', 'bundle_master_bundle_item_id': '{$item->bundle_master_bundle_item_id}', 'edit_session_key': '{$session_key}'}}); return false;";
 			?>
 			<tr class="<?= Backend_Html::zebra('order_items') ?>">
 				<td onclick="<?= $onClick ?>" class="link">

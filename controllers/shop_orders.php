@@ -1588,6 +1588,8 @@
 				Shop_OrderHelper::apply_single_item_discount($item,  post('applied_discounts_data'));
 				$item->define_form_fields();
 				$this->viewData['item'] = $item;
+				$this->addBundleViewData($item);
+
 			}
 			catch (Exception $ex)
 			{
@@ -1675,15 +1677,7 @@
 			try
 			{
 				$order = $this->viewData['form_model'] = $this->getOrderObj($order_id);
-				
-				if (post('bundle_item_product_id'))
-				{
-					$item_product = Shop_BundleItemProduct::create()->find(post('bundle_item_product_id'));
-					if (!$item_product)
-						throw new Phpr_ApplicationException('Bundle item product not found');
-						
-					$_POST['product_id'] = $item_product->product->id;
-				}
+				$this->addBundleViewData();
 
 				$product = Shop_Product::create()->find(post('product_id'));
 				if (!$product)
@@ -1704,16 +1698,6 @@
 				$this->viewData['edit_session_key'] = post('edit_session_key');
 				
 				$this->viewData['edit_mode'] = false;
-				$this->viewData['bundle_item_product_id'] = post('bundle_item_product_id');
-				$this->viewData['bundle_master_order_item_id'] = post('bundle_master_order_item_id');
-				$bundle_master_bundle_item_id = $this->viewData['bundle_master_bundle_item_id'] = post('bundle_master_bundle_item_id');
-				
-				if ($bundle_master_bundle_item_id)
-				{
-					$bundle_item = Shop_ProductBundleItem::create()->find($bundle_master_bundle_item_id);
-					if ($bundle_item)
-						$this->viewData['bundle_master_bundle_item_name'] = $bundle_item->name;
-				}
 				
 				$this->renderPartial('edit_order_item');
 			}
@@ -2758,6 +2742,39 @@
 			{
 				Phpr::$response->ajaxReportException($ex, true, true);
 			}
+		}
+
+
+		protected function addBundleViewData($item=null){
+
+			$bundle_item = null;
+			$bundle_item_product = null;
+			$bundle_master_order_item_id = null;
+			$bundle_master_bundle_item_id = $this->viewData['bundle_master_bundle_item_id'] = post('bundle_master_bundle_item_id');
+
+			if ($bundle_master_bundle_item_id) {
+				$bundle_item = Shop_ProductBundleItem::create()->find($bundle_master_bundle_item_id);
+				if ($bundle_item)
+					$this->viewData['bundle_master_bundle_item_name'] = $bundle_item->name;
+			}
+
+			if (post('bundle_item_product_id')) {
+				$bundle_item_product = Shop_BundleItemProduct::create()->find(post('bundle_item_product_id'));
+				if (!$bundle_item_product)
+					throw new Phpr_ApplicationException('Bundle item product not found');
+			} else if($bundle_item && $item) {
+				$bundle_item_product = $bundle_item->get_item_product($item->product);
+				$bundle_master_order_item_id = $item->bundle_master_order_item_id;
+			}
+
+			if($bundle_item_product) {
+				$_POST['product_id'] = $bundle_item_product->product->id;
+			}
+
+			$this->viewData['bundle_item_product_id'] = $bundle_item_product ? $bundle_item_product->id : null;
+			$this->viewData['bundle_master_order_item_id'] = post('bundle_master_order_item_id', $bundle_master_order_item_id);
+			$this->viewData['bundle_item_product'] = $bundle_item_product;
+
 		}
 
 		/* 

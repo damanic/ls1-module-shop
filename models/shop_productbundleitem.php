@@ -156,6 +156,20 @@
 					$this->item_products_all->delete($bundle_product, $session_key);
 			}
 		}
+
+		/**
+		 * Returns a bundle item product (rule) for a given shop product
+		 * @param Shop_Product $shop_product  Shop product object
+		 * @return mixed Returns a Shop_BundleItemProduct rule for the given Shop_Product or NULL if not found
+		 */
+		public function get_item_product(Shop_Product $shop_product){
+			foreach($this->item_products as $item_product){
+				if($item_product->product_id == $shop_product->id){
+					return $item_product;
+				}
+			}
+			return null;
+		}
 		
 		/** 
 		 * Finds a product bundle item by its identifier.

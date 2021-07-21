@@ -271,7 +271,7 @@ function add_bundle_product(session_key)
 {
 	if (!$('bundle_item_product_id').get('value'))
 	{
-		alert('Plase select bundle product first.');
+		alert('Please select bundle product first.');
 		return false;
 	}
 	

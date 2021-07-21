@@ -1,5 +1,8 @@
+<?php
+$is_bundle_item = isset($bundle_item_product_id) && $bundle_item_product_id;
+?>
 <div id="edit_item_popup">
-	<h2>Order Item</h2>
+	<h2>Order <?=$is_bundle_item? 'Bundle' : null?> Item</h2>
 	<div class="content">
 		<div class="form600 product_item_preview">
 			<?= Phpr_Form::openTag() ?>

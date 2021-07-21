@@ -821,8 +821,9 @@
 			$master_item = $this->get_master_bundle_order_item();
 			if (!$master_item)
 				return $this->quantity;
-				
-			return round($this->quantity/$master_item->quantity);
+
+			$per_unit = round($this->quantity/$master_item->quantity);
+			return max(1,min($master_item->quantity, $per_unit));
 		}
 		
 		/**
