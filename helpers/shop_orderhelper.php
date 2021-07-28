@@ -152,13 +152,6 @@ class Shop_OrderHelper{
 		}
 
 
-		//Shipping info may have changed, recalculate shipping taxes
-		if($order->shipping_method_id) {
-			$shipping_taxes = self::get_shipping_taxes($order, $deferred_session_key);
-			$order->apply_shipping_tax_array($shipping_taxes);
-			$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
-		}
-
 		if (!$items)
 		{
 			$items = empty($deferred_session_key) ? $order->items : $order->list_related_records_deferred('items', $deferred_session_key);
@@ -175,6 +168,8 @@ class Shop_OrderHelper{
 			$total_cost += $item->quantity*$item->cost;
 		}
 
+
+		//Sales Taxes
 		if (strlen($order->shipping_country_id))
 		{
 			$tax_context = array(
@@ -192,17 +187,28 @@ class Shop_OrderHelper{
 			}
 		}
 
-		if ($order->free_shipping)
-		{
+
+		//Item totals
+		$order->discount = $discount;
+		$order->subtotal = $subtotal;
+		$order->subtotal_before_discounts = $subtotal_before_discounts;
+		$order->total_cost = $total_cost;
+
+		//Free shipping override
+		if ($order->free_shipping) {
 			$order->shipping_quote = 0;
 			$order->shipping_discount = 0;
 			$order->shipping_tax = 0;
 		}
 
-		$order->discount = $discount;
-		$order->subtotal = $subtotal;
-		$order->subtotal_before_discounts = $subtotal_before_discounts;
-		$order->total_cost = $total_cost;
+		//Recalculate shipping taxes
+		if($order->shipping_method_id) {
+			$shipping_taxes = self::get_shipping_taxes($order, $deferred_session_key);
+			$order->apply_shipping_tax_array($shipping_taxes);
+			$order->shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
+		}
+
+		//New total
 		$order->total = $order->get_order_total();
 
 		return $items;
