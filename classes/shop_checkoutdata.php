@@ -559,6 +559,7 @@
 			global $activerecord_no_columns_info;
 
 			$default_options = array(
+				'cart_name' => $cart_name,
 				'include_tax'=>1,
 				'customer_group_id' => Cms_Controller::get_customer_group_id(),
 			);

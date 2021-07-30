@@ -827,6 +827,15 @@
 				$this->convert_to_currency($active_currency_code);
 			}
 
+
+			$event_params = array(
+				'context' => (isset($params['order']) && $params['order']) ? 'order' : 'cart',
+				'cart_name' => isset($params['cart_name']) ? $params['cart_name'] : null,
+				'order' => isset($params['order']) ? $params['order'] : null,
+				'customer' =>  isset($params['customer']) ? $params['customer'] : null,
+				'shipping_info' => isset($params['shipping_info']) ? $params['shipping_info'] : null,
+			);
+			Backend::$events->fireEvent( 'shop:onAfterShippingQuoteApplied', $this, $event_params );
 		}
 
 		/**
@@ -854,6 +863,7 @@
 
 
 			$request_params = array(
+				'cart_name' => $cart_name,
 				'display_prices_including_tax' =>  Shop_CheckoutData::display_prices_incl_tax(),
 				'payment_method_obj' => $payment_method_obj,
 				'shipping_info' => $shipping_info,
@@ -900,6 +910,7 @@
 			$customer = $order->customer_id ? Shop_Customer::create()->find($order->customer_id) : null;
 
 			$request_params = array(
+				'order' => $order,
 				'shipping_info' => $shipping_info,
 				'country_id'=>$shipping_info->country,
 				'state_id'=>$shipping_info->state,
@@ -1786,6 +1797,20 @@
 		 * @return string Returns string to append to the cache key
 		 */
 		private function event_onAppendShippingQuoteCacheKey($params) {}
+
+
+
+		/**
+		 * Executed everytime a shipping option is updated with quotes
+		 * The event handler should accept 2 parameters - the Shop_ShippingOption object and an array of parameters that provide execution context.
+		 * @event shop:onAfterShippingQuoteApplied
+		 * @package shop.events
+		 *
+		 * @param Shop_ShippingOption $shipping_option The Shop_ShippingOption that has been updated with quotes
+		 * @param array $event_params Parameters that help identify the execution context
+		 * @return void
+		 */
+		private function event_onAfterShippingQuoteApplied($shipping_option, $event_params ) {}
 	}
 	
 	function phpr_sort_order_shipping_options($a, $b)

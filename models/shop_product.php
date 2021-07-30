@@ -205,6 +205,7 @@ class Shop_Product extends Db_ActiveRecord
 		'price',
 		'get_image',
 		'is_out_of_stock',
+		'is_low_stock',
 		'list_group_price_tiers',
 		'list_related_products',
 		'set_customer_group_context',

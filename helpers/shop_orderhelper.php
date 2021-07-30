@@ -195,7 +195,7 @@ class Shop_OrderHelper{
 		$order->total_cost = $total_cost;
 
 		//Free shipping override
-		if ($order->free_shipping) {
+		if ($order->free_shipping || !$order->shipping_method_id) {
 			$order->shipping_quote = 0;
 			$order->shipping_discount = 0;
 			$order->shipping_tax = 0;
