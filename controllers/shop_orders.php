@@ -2106,15 +2106,14 @@
 			if (!$payment_method_found)
 				throw new Phpr_ApplicationException('Please select payment method');
 
-			$form_data = post('Shop_Order', array());
-			$items = $this->evalOrderTotals($order,null);
 
 			/*
-			 * Update items tax value
+			 * Update items tax and discount value
 			 */
-
-			$save = true;
-			Shop_OrderHelper::apply_item_discounts($items, post('applied_discounts_data'), $save);
+			$items = $this->evalOrderTotals($order,null ); //recalculates item tax and applied discount data
+			foreach($items as $item){
+				$item->save();
+			}
 		}
 		
 		public function formAfterSave($model, $session_key)

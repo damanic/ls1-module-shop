@@ -182,8 +182,8 @@ class Shop_OrderHelper{
 
 			foreach ($items as $item_index=>$item)
 			{
-				if (array_key_exists($item_index, $tax_info->item_taxes))
-					$item->apply_tax_array($tax_info->item_taxes[$item_index]);
+				$item_tax_array = array_key_exists($item_index, $tax_info->item_taxes) ? $tax_info->item_taxes[$item_index] : array();
+				$item->apply_tax_array($item_tax_array);
 			}
 		}
 
