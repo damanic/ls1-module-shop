@@ -143,14 +143,14 @@
 			if (!array_key_exists('billing_info', $checkout_data))
 			{
 				$obj = new Shop_CheckoutAddressInfo();
-				$obj->set_from_default_shipping_location();
+				$obj->set_from_default_shipping_location(array('country'));
 				return $obj;
 			} else
 			{
 				$obj = $checkout_data['billing_info'];
 				if ($obj && !$obj->country)
 				{
-					$obj->set_from_default_shipping_location();
+					$obj->set_from_default_shipping_location(array('country'));
 					return $obj;
 				}
 			}
@@ -304,7 +304,7 @@
 			{
 				$obj = new Shop_CheckoutAddressInfo();
 				$obj->act_as_billing_info = false;
-				$obj->set_from_default_shipping_location();
+				$obj->set_from_default_shipping_location(array('country'));
 				return $obj;
 			}
 

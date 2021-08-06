@@ -451,15 +451,22 @@
 		 * @documentable
 		 * @see http://lemonstand.com/docs/configuring_the_shipping_parameters/ Configuring the shipping parameters
 		 */
-		public function set_from_default_shipping_location()
+		public function set_from_default_shipping_location($fields=array())
 		{
+			$default_fields = array(
+				'city',
+				'zip',
+				'country',
+				'state'
+			);
+			$fields = count($fields) ? $fields : $default_fields;
 			$shipping_params = Shop_ShippingParams::get();
-
-			$this->city = $shipping_params->default_shipping_city;
-			$this->zip = $shipping_params->default_shipping_zip;
-			$this->country = $shipping_params->default_shipping_country_id;
-			$this->state = $shipping_params->default_shipping_state_id;
+			$this->city = in_array('city', $fields) ? $shipping_params->default_shipping_city : $this->city ;
+			$this->zip =  in_array('zip', $fields) ? $shipping_params->default_shipping_zip : $this->zip ;
+			$this->country =  in_array('country', $fields) ? $shipping_params->default_shipping_country_id : $this->country ;
+			$this->state = in_array('state', $fields) ?$shipping_params->default_shipping_state_id : $this->state;
 		}
+		
 
 
 		protected function transliterate($value){
