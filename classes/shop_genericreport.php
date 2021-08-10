@@ -43,13 +43,18 @@
 			return $obj;
 		}
 
-
-		public function export_orders($format = null)
+		public function export_list($format = null, $file_name = 'report_list')
 		{
 			$this->list_name = get_class($this).'_index_list';
 			$options = array();
 			$options['iwork'] = $format == 'iwork';
-			$this->listExportCsv('orders.csv', $options);
+			$file_name = $file_name ? $file_name.'.csv' : 'report_list.csv';
+			$this->listExportCsv($file_name, $options);
+		}
+
+		public function export_orders($format = null)
+		{
+			$this->export_list($format, 'orders');
 		}
 		
 		public function export_orders_and_products($format = null)
