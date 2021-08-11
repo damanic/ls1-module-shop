@@ -464,6 +464,7 @@ class Shop_Order extends Db_ActiveRecord
 		$this->override_shipping_quote = array_key_exists('override_shipping_quote', $data) ? $data['override_shipping_quote'] : null;
 		$this->manual_shipping_quote = array_key_exists('manual_shipping_quote', $data) ? $data['manual_shipping_quote'] : null;
 		$this->shipping_method_id = array_key_exists('shipping_method_id', $data) ? $data['shipping_method_id'] : null;
+		$this->shipping_sub_option = array_key_exists('shipping_sub_option', $data) ? $data['shipping_sub_option'] : $this->shipping_sub_option;
 		$this->payment_method_id = array_key_exists('payment_method_id', $data) ? $data['payment_method_id'] : null;
 		$this->coupon_id = array_key_exists('coupon_id', $data) ? $data['coupon_id'] : null;
 		$this->discount = array_key_exists('discount', $data) ? $data['discount'] : 0;
