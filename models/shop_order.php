@@ -1776,11 +1776,6 @@ class Shop_Order extends Db_ActiveRecord
 			$taxes = array();
 
 		$taxes_to_save = $taxes;
-		foreach ($taxes_to_save as $tax_name=>&$tax_info)
-		{
-			$tax_info->total = round($tax_info->total, 2);
-		}
-
 		$this->sales_taxes = serialize($taxes_to_save);
 	}
 

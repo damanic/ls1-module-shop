@@ -289,7 +289,7 @@
 				$tax_info = array();
 				$tax_info['name'] = $added_tax->name;
 				$tax_info['tax_rate'] = $added_tax->rate/100;
-				$added_result += $tax_info['rate'] = round($amount*$added_tax->rate/100, 2);
+				$added_result += $tax_info['rate'] = $amount*($added_tax->rate/100);
 				$tax_info['total'] = $tax_info['rate'];
 				$tax_info['added_tax'] = true;
 				$tax_info['compound_tax'] = false;
@@ -302,7 +302,7 @@
 				$tax_info = array();
 				$tax_info['name'] = $compound_tax->name;
 				$tax_info['tax_rate'] = $compound_tax->rate/100;
-				$tax_info['rate'] = round($added_result*$compound_tax->rate/100, 2);
+				$tax_info['rate'] = $added_result*($compound_tax->rate/100);
 				$tax_info['total'] = $tax_info['rate'];
 				$tax_info['compound_tax'] = true;
 				$tax_info['added_tax'] = false;
@@ -472,19 +472,8 @@
 				$tax_total += $tax_value;
 			}
 
-			foreach ($compound_taxes as $name=>&$tax_data)
-				$tax_data->total = round($tax_data->total, 2);
-			
-			if ($context_params['backend_call'])
-				$result->tax_total = round($tax_total, 2);
-			else
-			{
-				if (Shop_CheckoutData::display_prices_incl_tax())
-					$result->tax_total = $tax_total;
-				else
-					$result->tax_total = round($tax_total, 2);
-			}
 
+			$result->tax_total = $tax_total;
 			$result->taxes = $compound_taxes;
 			$result->item_taxes = $item_taxes;
 

@@ -185,7 +185,7 @@
 			$this->discount_tax_included = $this->discount + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $this->discount);
 			
 			$single_price = $this->price + $this->extras_price;
-			$this->price_tax_included = $single_price + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $single_price);
+			$this->price_tax_included = round($single_price + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $single_price),2);
 			
 			Backend::$events->fireEvent('shop:onBeforeOrderItemSaved', $this);
 		}
