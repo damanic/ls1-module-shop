@@ -61,7 +61,7 @@
 				
 				$item_current_price = $item->get_de_cache_item('current_price');
 				if ($item_current_price === false)
-					$item_current_price = $item->set_de_cache_item('current_price', $item->single_price_no_tax(false) - $item->discount(false));
+					$item_current_price = $item->set_de_cache_item('current_price', $item->single_price_no_tax(false) - $item->get_sale_reduction());
 				
 				$rule_params['current_price'] = $item_current_price;
 				$rule_params['quantity_in_cart'] = $item->quantity;

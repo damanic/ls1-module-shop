@@ -184,7 +184,7 @@
 		
 		public function total_single_price()
 		{
-			$discount = $this->price_preset === false ? $this->discount(false) : 0;
+			$discount = $this->price_preset === false ? $this->get_sale_reduction() : 0;
 			return $this->single_price_no_tax(true) - $discount;
 		}
 		
@@ -198,7 +198,7 @@
 		 */
 		public function single_price($include_extras = true)
 		{
-			$price = $this->single_price_no_tax($include_extras) - $this->discount(false);
+			$price = $this->single_price_no_tax($include_extras) - $this->get_sale_reduction() ;
 
 			$include_tax = Shop_CheckoutData::display_prices_incl_tax();
 			if (!$include_tax)
@@ -280,13 +280,10 @@
 		}
 
 		/**
-		 * Evaluates the item discount, based on the catalog price rules
+		 * Sale reductions can be applied through catalog price rules
+		 * This method returns the amount discounted from the list price by a catalog price rule
 		 */
-		public function discount($total_discount = true)
-		{
-			if ($total_discount)
-				return $this->total_discount_no_tax();
-
+		public function get_sale_reduction(){
 			$effective_quantity = $this->get_effective_quantity();
 
 			if (!$this->price_is_overridden($effective_quantity))
@@ -499,7 +496,7 @@
 		public function total_price_no_tax($apply_cart_level_discount = true, $quantity = null)
 		{
 			$cart_level_discount = $apply_cart_level_discount ? $this->applied_discount : 0;
-			$catalog_level_discount = ($this->price_preset === false) ? $this->discount(false) : 0;
+			$catalog_level_discount = ($this->price_preset === false) ? $this->get_sale_reduction()  : 0;
 
 			$quantity = $quantity === null ? $this->quantity : $quantity;
 
@@ -900,7 +897,7 @@
 		}
 
 		public function get_offer_price() {
-			$price = $this->get_list_price() - $this->total_discount_no_tax();
+			$price = ($this->get_list_price() - $this->get_sale_reduction()) - $this->total_discount_no_tax();
 			return number_format($price,2, '.', '');
 		}
 
@@ -973,6 +970,21 @@
 		 * @return float Returns the updated cart item price.
 		 */
 		private function event_onUpdateCartItemPrice($item, $price) {}
+
+
+		/**
+		 * @deprecated
+		 * Use: get_sale_reduction() or total_discount_no_tax()
+		 */
+		public function discount($total_discount = true)
+		{
+			if ($total_discount)
+				return $this->total_discount_no_tax();
+
+			return $this->get_sale_reduction();
+		}
+
+
 	}
 
 ?>

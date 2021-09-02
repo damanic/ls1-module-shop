@@ -421,7 +421,7 @@
 				{
 					$this_item_price = 0;
 					if ($item instanceof Shop_CartItem)
-						$this_item_price = $item->single_price_no_tax() - $item->discount(false) - $item->applied_discount;
+						$this_item_price = $item->get_offer_price();
 					else
 					{
 						$this_item_price = $item->eval_single_price() - $item->discount;

@@ -60,7 +60,7 @@
 
 				$rule_params['product'] = $item->product;
 				$rule_params['item'] = $item;
-				$rule_params['current_price'] = $item->single_price_no_tax(false) - $item->discount(false);
+				$rule_params['current_price'] = $item->single_price_no_tax(false) - $item->get_sale_reduction();
 				$rule_params['quantity_in_cart'] = $item->quantity;
 				$rule_params['row_total'] = $item->total_price_no_tax();
 
