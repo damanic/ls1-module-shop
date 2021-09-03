@@ -24,22 +24,26 @@
 			<p><?= $form_model->format_currency($payment_type->get_refunds_total($form_model, $include_pending=false)) ?></p>
 			<p class="description">Refunds confirmed as settled</p>
 		</li>
+		<?
+		$due = $form_model->get_payment_due();
+		if($due <> 0):
+		?>
 		<li>
 			<?
-			$due = $form_model->get_payment_due();
-			if($due >= 0){
-				$title = 'Amount Due';
-				$description = 'Customer still needs to pay';
-			} else {
-				$title = 'Refund Due';
-				$description = 'Customer is due a refund';
-			}
+				if($due >= 0){
+					$title = 'Underpaid';
+					$description = 'Payment due';
+				} else {
+					$title = 'Overpaid';
+					$description = 'Refund available';
+				}
 			?>
 			<h3><?= $title ?></h3>
-			<p><?= $form_model->format_currency($form_model->get_payment_due()) ?></p>
+			<p><?= $form_model->format_currency(abs($due)) ?></p>
 			<p class="description"><?= $description ?></p>
 			</p>
 		</li>
+		<? endif;?>
 	</ul>
 	<div class="clear"></div>
 </div>
