@@ -1712,20 +1712,50 @@ class Shop_Order extends Db_ActiveRecord
 	}
 
 	public function get_payment_due(){
+		$payable = $this->get_total_value_payable();
+		$due = $payable ? $payable : 0;
+		if ($this->is_paid()){
+			$due = 0;
+		}
 		if($this->id){
 			if($this->payment_method){
 				$payment_type = $this->payment_method->get_paymenttype_object();
 				if($payment_type && $payment_type->supports_multiple_payments()){
-					$payment_due = $this->total - $payment_type->get_total_paid($this);
-					return  round($payment_due,2);
+					$payment_due = $payable - $payment_type->get_total_paid($this);
+					$due =  round($payment_due,2);
 				}
 			}
-			if ($this->is_paid()){
-				return 0;
 			}
+
+
+		return $due;
 		}
 
-		return $this->total ? $this->total : 0;
+	/**
+	 * This method is used to help determine the amount of payment still due for an order.
+	 * It allows external modules to discount part of the total order value from being considered as due for payment.
+	 *
+	 * Example usage:
+	 * A credit note module that records and enables refunds.
+	 * Normally when a payment transaction is refunded on an order it raises an amount due.
+	 * With this method the module can reduce the total value of the order expected for payment after credit note refunds.
+	 *
+ 	 * @return int Total amount payable
+	 */
+	public function get_total_value_payable(){
+		$order_value = $this->total ? $this->total : 0;
+		$value_not_payable = 0;
+		if($order_value) {
+			$results = Backend::$events->fire_event( array( 'name' => 'shop:onOrderGetTotalValueNotPayable' ), $this );
+			if ( $results && count( $results ) ) {
+				foreach ( $results as $key => $value ) {
+					if ( is_numeric( $value ) ) {
+						$value_not_payable += $value;
+					}
+				}
+			}
+		}
+		return $order_value - $value_not_payable;
 	}
 
 	/**
@@ -3301,6 +3331,23 @@ class Shop_Order extends Db_ActiveRecord
 	 * @param $session_key
 	 */
 	private function event_onOrderAfterModify($order, $operation, $session_key){}
+
+
+	/**
+	 * Triggered when fetching the payment amount due for an order.
+	 * The event handler can return an amount of the order total value
+	 * that should not be considered payable, and therefore discounted from the
+	 * payment amount due.
+	 *
+	 * @event shop:onOrderGetTotalValueNotPayable
+	 * @triggered /modules/shop/models/shop_order.php
+	 *
+	 * @param Shop_Order $order
+	 * @author Matt Manning (github:damanic)
+	 * @package shop.events
+	 *
+	 */
+	private function event_onOrderGetTotalValueNotPayable($order){}
 
 }
 
