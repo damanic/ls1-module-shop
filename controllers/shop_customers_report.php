@@ -26,9 +26,8 @@ class Shop_Customers_Report extends Shop_GenericReport {
 	);
 
 	public $filter_filters = array(
-		'billing_country'  => array( 'name' => 'Billing country', 'class_name' => 'Shop_OrderBillingCountryFilter', 'prompt' => 'Please choose countries you want to include to the list. Orders with other billing countries will be hidden.', 'added_list_title' => 'Added Countries' ),
-		'shipping_country' => array( 'name' => 'Shipping country', 'class_name' => 'Shop_OrderShippingCountryFilter', 'prompt' => 'Please choose countries you want to include to the list. Orders with other shipping countries will be hidden.', 'added_list_title' => 'Added Countries' ),
-		'shipping_zone'=>array('name'=>'Shipping Zone', 'class_name'=>'Shop_OrderShippingZoneFilter', 'prompt'=>'Please choose shipping zones you want to include in the list. Orders to countries not in the shipping zones will be hidden.', 'added_list_title'=>'Added Shipping Zones')
+		'customers_billing_country'  => array( 'name' => 'Customers billing country', 'class_name' => 'Shop_CustomerBillingCountryFilter', 'prompt' => 'Please choose countries you want to include to the list. Customers who do not have these countries saved as their current billing address will be hidden.', 'added_list_title' => 'Added Countries' ),
+		'customers_shipping_country'  => array( 'name' => 'Customers shipping country', 'class_name' => 'Shop_CustomerShippingCountryFilter', 'prompt' => 'Please choose countries you want to include to the list. Customers who do not have these countries saved as their current shipping address will be hidden.', 'added_list_title' => 'Added Countries' ),
 	);
 
 	protected $timeline_charts = array(
@@ -201,8 +200,9 @@ class Shop_Customers_Report extends Shop_GenericReport {
 			if($this->get_interval_context() == 'orders_paid'){
 				$paidFilter = 'AND '.$this->getOrderPaidStatusFilter();
 			}
-			$filterStr = $this->filterAsString();
 		}
+
+		$filterStr = $this->filterAsString();
 
 
 
@@ -320,7 +320,7 @@ class Shop_Customers_Report extends Shop_GenericReport {
 				$intervalLimit = $customer_ids ? $customer_id_filter : $intervalLimit;
 				$query = "SELECT COUNT(DISTINCT(shop_customers.id)) AS customers_count 
 					FROM shop_customers
-					WHERE $intervalLimit";
+					WHERE $intervalLimit $filterStr";
 
 				$result = Db_DbHelper::object( $query, array($customer_ids) );
 				$totals_data->customers_count = $result ? $result->customers_count : 0;
