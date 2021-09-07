@@ -18,7 +18,7 @@
 		
 		public function asString($keys, $context = null)
 		{
-			return 'and status_id in '.$this->keysToStr($keys);
+			return 'and shop_orders.status_id in '.$this->keysToStr($keys);
 		}
 	}
 
