@@ -147,7 +147,7 @@
 		{
 			if ($model instanceof Shop_Product)
 			{
-				if (!$model->track_inventory)
+				if (!$model->inventory_tracking_enabled())
 					return;
 					
 				if ($model->items_ordered > $model->stock_in_stock)

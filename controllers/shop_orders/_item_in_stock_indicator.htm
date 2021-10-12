@@ -1,4 +1,4 @@
-<? if ($item->product->track_inventory): 
+<? if ($item->product->inventory_tracking_enabled()):
 	$posted_options = post('product_options', array());
 ?>
 	<div class="hint control_hint"><p class="last">

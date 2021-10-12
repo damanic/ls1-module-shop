@@ -130,7 +130,7 @@ class Shop_Order extends Db_ActiveRecord
 	public function define_columns($context = null)
 	{
 		$this->define_column('id', '#');
-		$this->define_column('order_datetime', 'Date and Time')->dateAsIs()->dateFormat('%x %H:%M')->order('desc');
+		$this->define_column('order_datetime', 'Order Created At')->dateAsIs()->dateFormat('%x %H:%M')->order('desc');
 		$this->define_relation_column('status', 'status', 'Status', db_varchar, '@name');
 		$this->define_column('status_update_datetime', 'Status Updated')->defaultInvisible()->dateAsIs()->dateFormat('%x %H:%M')->order('desc');
 

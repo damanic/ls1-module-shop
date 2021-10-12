@@ -241,7 +241,7 @@
 		{
 			$allow_pre_order = Shop_OptionMatrix::get_property($options, 'allow_pre_order', $product, $option_keys);
 
-			if (!$allow_pre_order && $product->track_inventory)
+			if (!$allow_pre_order && $product->inventory_tracking_enabled())
 			{
 				$in_stock = Shop_OptionMatrix::get_property($options, 'in_stock', $product, $option_keys);
 
@@ -257,7 +257,7 @@
 		
 		protected static function check_product_availability($product, $quantity, $cart_name, $options)
 		{
-			if (!$product->allow_pre_order && $product->track_inventory)
+			if (!$product->allow_pre_order && $product->inventory_tracking_enabled())
 			{
 				$product_found = false;
 				$total_quantity = 0;

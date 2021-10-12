@@ -27,7 +27,7 @@
 			<th>Base Price</th>
 			<td><?= format_currency($form_model->price) ?></td>
 		</tr>
-		<? if ($form_model->track_inventory): ?>
+		<? if ($form_model->inventory_tracking_enabled()): ?>
 		<tr>
 			<th>In Stock</th>
 			<td><?= $form_model->in_stock ?></td>

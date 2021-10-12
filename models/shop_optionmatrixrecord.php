@@ -666,7 +666,7 @@
 		public function is_out_of_stock($product)
 		{
 			$product = is_object($product) ? $product : Shop_Product::find_by_id($product);
-			if (!$product->track_inventory) {
+			if (!$product->inventory_tracking_enabled()) {
 				return false;
 			}
 
@@ -700,7 +700,7 @@
 		public function is_low_stock($product)
 		{
 			$product = is_object($product) ? $product : Shop_Product::find_by_id($product);
-			if (!$product->track_inventory)
+			if (!$product->inventory_tracking_enabled())
 				return false;
 
 			$in_stock = Shop_OptionMatrix::get_property($this, 'in_stock', $product);

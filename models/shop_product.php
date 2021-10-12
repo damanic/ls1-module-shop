@@ -358,7 +358,7 @@ class Shop_Product extends Db_ActiveRecord
 				$this->add_form_field('page', 'right')->tab('Product Summary')->previewNoRelation()->previewLink($this->page_url('/'));
 			}
 
-			if ($this->track_inventory)
+			if ($this->inventory_tracking_enabled())
 				$this->add_form_field('in_stock')->tab('Product Summary');
 
 			$this->add_form_field('price', 'left')->tab('Product Summary');
@@ -704,7 +704,7 @@ class Shop_Product extends Db_ActiveRecord
 
 	public function validate_in_stock($name, $value)
 	{
-		if ($this->track_inventory && !strlen(trim($value)))
+		if ($this->inventory_tracking_enabled() && !strlen(trim($value)))
 			$this->validation->setError('Please specify a number of products in stock.', $name, true);
 
 		return true;
@@ -779,7 +779,18 @@ class Shop_Product extends Db_ActiveRecord
 				Shop_CatalogPriceRule::apply_price_rules($this->id);
 		}
 
-		self::update_total_stock_value($this);
+        //Load newly assigned product type relation
+        if($this->product_type_id && (!$this->product_type || ($this->product_type_id !== $this->product_type->id))){
+            $this->product_type = Shop_ProductType::create()->find($this->product_type_id);
+        }
+        if($this->track_inventory && !$this->inventory_tracking_enabled()) {
+            //Newly assigned product type overrides inventory tracking flag for this product
+            Db_DbHelper::query('UPDATE shop_products SET track_inventory = NULL WHERE id = ?', $this->id);
+        }
+
+        if($this->inventory_tracking_enabled()) {
+            self::update_total_stock_value($this);
+        }
 	}
 
 	public function after_delete()
@@ -1029,7 +1040,7 @@ class Shop_Product extends Db_ActiveRecord
 						}
 						break;
 					case 'inventory_settings' :
-						$product->track_inventory = $this->track_inventory;
+						$product->track_inventory = $this->inventory_tracking_enabled();
 						$product->hide_if_out_of_stock = $this->hide_if_out_of_stock;
 						$product->stock_alert_threshold = $this->stock_alert_threshold;
 						$product->low_stock_threshold = $this->low_stock_threshold;
@@ -1971,12 +1982,14 @@ class Shop_Product extends Db_ActiveRecord
 		$this->pt_description = html_entity_decode(strip_tags($this->description), ENT_QUOTES, 'UTF-8');
 
 		$this->perproduct_shipping_cost = serialize($this->perproduct_shipping_cost);
+
 	}
 
 	protected function after_fetch()
 	{
 		if(is_string($this->perproduct_shipping_cost) && strlen($this->perproduct_shipping_cost))
 			$this->perproduct_shipping_cost = unserialize($this->perproduct_shipping_cost);
+
 		Backend::$events->fireEvent('shop:onAfterProductRecordFetch', $this);
 	}
 
@@ -2159,7 +2172,7 @@ class Shop_Product extends Db_ActiveRecord
 
 	public function decrease_stock($quantity, $om_record = null)
 	{
-		if (!$this->track_inventory)
+		if (!$this->inventory_tracking_enabled())
 			return;
 
 		$use_om_record = $om_record && strlen($om_record->in_stock);
@@ -2255,7 +2268,7 @@ class Shop_Product extends Db_ActiveRecord
 	 */
 	public function is_out_of_stock()
 	{
-		if (!$this->track_inventory)
+		if (!$this->inventory_tracking_enabled())
 			return false;
 
 		if (!$this->allow_negative_stock_values && $this->total_in_stock <= 0) {
@@ -2287,7 +2300,7 @@ class Shop_Product extends Db_ActiveRecord
 	 */
 	public function is_low_stock()
 	{
-		if (!$this->track_inventory) {
+		if (!$this->inventory_tracking_enabled()) {
 			return false;
 		}
 
@@ -2317,6 +2330,18 @@ class Shop_Product extends Db_ActiveRecord
 			'select sum(ifnull(total_in_stock, 0)) from shop_products where id=:id or (product_id is not null and product_id=:id)',
 			array('id'=>$master_product_id));
 	}
+
+    /**
+     * Checks if stock level tracking is enabled on both the product type and product record level.
+     * @documentable
+     * @return bool Returns TRUE if stock tracking is enabled for this product. Returns FALSE otherwise
+     */
+    public function inventory_tracking_enabled(){
+        if($this->product_type && !$this->product_type->inventory){
+            return false;
+        }
+        return $this->track_inventory ? true : false;
+    }
 
 	public static function update_total_stock_value($product)
 	{
