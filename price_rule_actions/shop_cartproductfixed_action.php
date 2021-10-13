@@ -70,14 +70,14 @@
 						/*
 						 * If taxes are included to discounts, we need to extract the real discount value from the discount total
 						 */
-						$discount_value = Shop_TaxClass::get_subtotal($item->product->tax_class_id, $discount_value);
+						$discount_value = Shop_TaxClass::get_subtotal($item->get_tax_class_id(), $discount_value);
 					}
 					
 					if ($discount_value > $current_product_price)
 						$total_discount_incl_tax = $discount_value = $current_product_price;
 						
 					if ($include_tax)
-						$total_discount_incl_tax = Shop_TaxClass::get_total_tax($item->product->tax_class_id, $discount_value) + $discount_value;
+						$total_discount_incl_tax = Shop_TaxClass::get_total_tax($item->get_tax_class_id(), $discount_value) + $discount_value;
 					
 					$total_discount += $discount_value*$item->quantity;
 					$item_discount_map[$item->key] += $discount_value;

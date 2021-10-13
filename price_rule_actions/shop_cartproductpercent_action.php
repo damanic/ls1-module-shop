@@ -71,7 +71,7 @@
 					
 					$total_discount_incl_tax = $discount_value;
 					if ($include_tax)
-						$total_discount_incl_tax = Shop_TaxClass::get_total_tax($item->product->tax_class_id, $discount_value) + $discount_value;
+						$total_discount_incl_tax = Shop_TaxClass::get_total_tax($item->get_tax_class_id(), $discount_value) + $discount_value;
 
 					$item_discount_tax_incl_map[$item->key] += $total_discount_incl_tax;
 				}

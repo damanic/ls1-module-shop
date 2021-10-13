@@ -74,7 +74,7 @@
 					//cart item price should be $host_obj->cart_item_price;
 					$discount_amount = $host_obj->discount_amount;
 					if ($include_tax)
-						$discount_amount = Shop_TaxClass::get_subtotal($item->product->tax_class_id, $discount_amount);
+						$discount_amount = Shop_TaxClass::get_subtotal($item->get_tax_class_id(), $discount_amount);
 					
 					if($current_product_price <= $discount_amount)
 					{
@@ -85,8 +85,8 @@
 						$discount_value = $current_product_price - $host_obj->discount_amount;
 						if($include_tax)
 						{
-							$discount_value = Shop_TaxClass::get_subtotal($item->product->tax_class_id, $discount_value);
-							$total_discount_incl_tax = Shop_TaxClass::get_total_tax($item->product->tax_class_id, $discount_value) + $discount_value;
+							$discount_value = Shop_TaxClass::get_subtotal($item->get_tax_class_id(), $discount_value);
+							$total_discount_incl_tax = Shop_TaxClass::get_total_tax($item->get_tax_class_id(), $discount_value) + $discount_value;
 						}
 							
 						$total_discount += $discount_value*$item->quantity;

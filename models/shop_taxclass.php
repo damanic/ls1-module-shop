@@ -416,7 +416,7 @@
 
 			foreach ($cart_items as $item_index=>$item)
 			{
-				$tax_class = self::find_by_id($item->product->tax_class_id);
+				$tax_class = self::find_by_id($item->get_tax_class_id());
 				if ($tax_class)
 				{
 					$this_item_price = 0;

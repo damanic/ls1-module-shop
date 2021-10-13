@@ -33,6 +33,12 @@ interface Shop_RetailItem {
 	 */
 	public function get_total_offer_price($quantity=null);
 
+    /**
+     * Tax class ID associated with the Item
+     * @return integer The ID if a tax class is assigned, or NULL
+     */
+    public function get_tax_class_id();
+
 
 
 }

@@ -204,7 +204,7 @@
 			if (!$include_tax)
 				return $price;
 			
-			return Shop_TaxClass::get_total_tax($this->product->tax_class_id, $price) + $price;
+			return Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $price) + $price;
 		}
 		
 		/**
@@ -528,7 +528,7 @@
 					return $price;
 			}
 			
-			return Shop_TaxClass::get_total_tax($this->product->tax_class_id, $price) + $price;
+			return Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $price) + $price;
 		}
 		
 		/**
@@ -573,7 +573,7 @@
 		public function total_tax()
 		{
 			$price = $this->total_price_no_tax(true);
-			return Shop_TaxClass::get_total_tax($this->product->tax_class_id, $price);
+			return Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $price);
 		}
 		
 		/**
@@ -590,7 +590,7 @@
 		 */
 		public function get_tax_rates()
 		{
-			return Shop_TaxClass::get_tax_rates_static($this->product->tax_class_id, Shop_CheckoutData::get_shipping_info());
+			return Shop_TaxClass::get_tax_rates_static($this->get_tax_class_id(), Shop_CheckoutData::get_shipping_info());
 		}
 		
 		/**
@@ -628,7 +628,7 @@
 			$applied_discount = $this->applied_discount;
 			$include_tax = Shop_CheckoutData::display_prices_incl_tax();
 			if ($include_tax)
-				$applied_discount = Shop_TaxClass::get_total_tax($this->product->tax_class_id, $applied_discount) + $applied_discount;
+				$applied_discount = Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $applied_discount) + $applied_discount;
 			
 			return $product_discount + $applied_discount;
 		}
@@ -918,6 +918,13 @@
 			}
 			return  number_format($price,2, '.', '');
 		}
+
+        public function get_tax_class_id(){
+            if($this->product){
+                return $this->get_tax_class_id();
+            }
+            return null;
+        }
 
 		/**
 		 * Allows to override a price of an item in the shopping cart. 

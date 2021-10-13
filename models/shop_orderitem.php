@@ -42,7 +42,8 @@
 
 		public $belongs_to = array(
 			'product'=>array('class_name'=>'Shop_Product', 'foreign_key'=>'shop_product_id'),
-			'parent_order'=>array('class_name'=>'Shop_Order', 'foreign_key'=>'shop_order_id')
+			'parent_order'=>array('class_name'=>'Shop_Order', 'foreign_key'=>'shop_order_id'),
+            'tax_class'=>array('class_name'=>'Shop_TaxClass', 'foreign_key'=>'tax_class_id'),
 		);
 		
 		public $calculated_columns = array(
@@ -182,11 +183,9 @@
 			if (!strlen($this->discount))
 				$this->discount = 0;
 
-			$this->discount_tax_included = $this->discount + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $this->discount);
-			
+			$this->discount_tax_included = $this->discount + Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $this->discount);
 			$single_price = $this->price + $this->extras_price;
-			$this->price_tax_included = round($single_price + Shop_TaxClass::get_total_tax($this->product->tax_class_id, $single_price),2);
-			
+			$this->price_tax_included = round($single_price + Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $single_price),2);
 			Backend::$events->fireEvent('shop:onBeforeOrderItemSaved', $this);
 		}
 		
@@ -212,6 +211,16 @@
 				$this->tax_name_2 = null;
 			}
 		}
+
+        /**
+         * Returns the tax class ID assigned to the order item
+         * A tax class ID can be assigned directly to the order item record to override the related products
+         * tax class at the order level.
+         * @return mixed
+         */
+        public function get_tax_class_id(){
+            return $this->tax_class_id ? $this->tax_class_id : $this->get_tax_class_id();
+        }
 
 		/*
 		 * Discounted single unit price
@@ -384,7 +393,7 @@
 				if (!preg_match('/^([0-9]+\.[0-9]+|[0-9]+)$/', $price))
 					throw new Phpr_ApplicationException('Invalid price value for "'.$name.'" extra option.');
 
-				$price_with_tax = Shop_TaxClass::get_total_tax($this->product->tax_class_id, $price) + $price;
+				$price_with_tax = Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $price) + $price;
 				$extras[] = array($price, $name, $price_with_tax);
 			}
 			
