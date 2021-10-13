@@ -219,7 +219,7 @@
          * @return mixed
          */
         public function get_tax_class_id(){
-            return $this->tax_class_id ? $this->tax_class_id : $this->get_tax_class_id();
+            return $this->tax_class_id ? $this->tax_class_id : $this->product->tax_class_id;
         }
 
 		/*

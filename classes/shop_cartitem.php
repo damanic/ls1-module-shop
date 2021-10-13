@@ -921,7 +921,7 @@
 
         public function get_tax_class_id(){
             if($this->product){
-                return $this->get_tax_class_id();
+                return $this->product->tax_class_id;
             }
             return null;
         }
