@@ -1035,3 +1035,4 @@
 #1.35.17 Minor improvements to reports
 #1.36.18 Minor improvement to report filters
 #1.36.19 Fixes issue with product inventory tracking persisting when assigned product type does not allow
+#1.36.20 Adds new methods for determining tax class assignment at cart/order level
