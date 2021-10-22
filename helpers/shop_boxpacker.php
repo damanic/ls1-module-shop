@@ -222,7 +222,8 @@ class Shop_BoxPacker {
 				}
 			}
 		}
-		$bp_item->item_id = property_exists($item,'key') ? $item->key : $item->id;
+        $item_id = (isset($item->key) && $item->key) ? $item->key : $item->id;;
+		$bp_item->item_id = $item_id;
 		return $bp_item;
 	}
 
