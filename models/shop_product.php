@@ -211,7 +211,8 @@ class Shop_Product extends Db_ActiveRecord
 		'set_customer_group_context',
 		'get_customer_group_context',
 		'get_net_unit',
-		'calc_net_unit_price'
+		'calc_net_unit_price',
+        'om'
 	);
 
 	protected $customer_group_context = null;
