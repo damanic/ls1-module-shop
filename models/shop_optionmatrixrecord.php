@@ -51,7 +51,8 @@
 			'get_sale_price',
 			'is_on_sale',
 			'is_out_of_stock',
-			'list_group_price_tiers'
+			'list_group_price_tiers',
+            'is_low_stock'
 		);
 		
 		public static function create()
