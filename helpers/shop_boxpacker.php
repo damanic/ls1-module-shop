@@ -65,7 +65,7 @@ class Shop_BoxPacker {
 
 		$packable_items = $packable_list['items'];
 		foreach ( $items as $item ) {
-			$item_key = property_exists($item,'key') ? $item->key : $item->id;
+            $item_key = (isset($item->key) && $item->key) ? $item->key : $item->id;;
 			if ( isset( $packable_items[$item_key] ) ) {
 				$quantity = $item->quantity;
 				while ( $quantity > 0 ) {
