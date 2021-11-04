@@ -1459,7 +1459,7 @@ class Shop_Order extends Db_ActiveRecord
 		$message_text = str_replace('{order_date}', $this->order_datetime->format('%x'), $message_text);
 		$message_text = str_replace('{order_subtotal}', $include_tax ? $this->format_currency($this->subtotal_tax_incl) : $this->format_currency($this->subtotal), $message_text);
 
-		$message_text = str_replace('{order_shipping_quote}', $include_tax ? $this->format_currency($this->shipping_quote_tax_incl) : $this->format_currency($this->shipping_quote), $message_text);
+		$message_text = str_replace('{order_shipping_quote}', $include_tax ? $this->format_currency($this->shipping_quote_tax_incl) : $this->format_currency($this->get_shipping_quote()), $message_text);
 		$message_text = str_replace('{order_shipping_tax}', $this->format_currency($this->shipping_tax), $message_text);
 		$message_text = str_replace('{order_tax}', $this->format_currency($this->goods_tax), $message_text);
 		$message_text = str_replace('{order_total_tax}', $this->format_currency($this->goods_tax + $this->shipping_tax), $message_text);
