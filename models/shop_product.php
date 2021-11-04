@@ -212,7 +212,8 @@ class Shop_Product extends Db_ActiveRecord
 		'get_customer_group_context',
 		'get_net_unit',
 		'calc_net_unit_price',
-        'om'
+        'om',
+        'inventory_tracking_enabled',
 	);
 
 	protected $customer_group_context = null;
@@ -3079,7 +3080,7 @@ class Shop_Product extends Db_ActiveRecord
 	 * @return string Returns first image object if found or FALSE
 	 */
 	public function get_image(){
-		$images = property_exists($this, 'images') ? $this->images : $this->load_relation('images');
+		$images = isset($this->images) ? $this->images : $this->load_relation('images');
 		if($images){
 			$this->images = $images;
 			return $images->first;
