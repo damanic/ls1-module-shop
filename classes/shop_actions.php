@@ -1078,6 +1078,61 @@
 			}
 		}
 
+
+        /**
+         * Handles the change customer email request.
+         * The following code example creates a Change Password link, which triggers the AJAX request:
+         * <pre><a href="#" onclick="return $(this).getForm().sendRequest('shop:on_changeEmail')">Submit</a></pre>
+         *
+         * @input string $email Specifies the customer's new email address. Required.
+         * @input string $password The customers current password to authorise change. Required.
+         * @input string $redirect An optional field containing an URL for redirecting a visitor's browser after
+         * successful update.
+         * @input string $flash An optional message to display after the redirection.
+         * Use the {@link flash_message()} function the target page to display the message.
+         *
+         * @ajax shop:on_changeEmail
+         * @author MJMAN
+         * @package shop.ajax handlers
+         */
+        public function on_changeEmail(){
+
+            if(!$this->customer){
+                throw new Cms_Exception('You must be logged in with your customer account to use this feature');
+            }
+
+            $validation = new Phpr_Validation();
+            $validation->add('password', 'Password')->fn('trim')->required("Please enter your account password to authorise this action");
+            $validation->add('email', 'Email')->fn('trim')->required("Please specify your new email address")->email(false);
+
+            if (!$validation->validate($_POST))
+                $validation->throwException();
+
+            // Confirm password is correct
+            if (Phpr_SecurityFramework::create()->salted_hash($validation->fieldValues['password']) !== $this->customer->password)
+                $validation->setError('Invalid password.', 'password', true);
+
+            try {
+                $customer = Shop_Customer::create()->where('id=?', $this->customer->id)->find(null, array(), 'front_end');
+                $customer->disable_column_cache('front_end', true);
+                $customer->email = $validation->fieldValues['email'];
+                $customer->password = null;
+                $customer->save();
+
+                if (post('flash')) {
+                    Phpr::$session->flash['success'] = post('flash', 'Your account email address has been updated to '.$customer->email);
+                }
+
+                $redirect = post('redirect');
+                if ($redirect) {
+                    Phpr::$response->redirect($redirect);
+                }
+            } catch (Exception $ex) {
+                throw new Cms_Exception($ex->getMessage());
+            }
+
+        }
+
 		/*
 		 * Checkout functions
 		 */

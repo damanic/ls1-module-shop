@@ -57,6 +57,10 @@
 				<? if (!$form_model->deleted_at): ?>
 					<a class="imageLink edit_record" href="<?= url('/shop/customers/edit/'.$form_model->id.'?'.uniqid()) ?>" >Edit</a>
 					<a class="imageLink delete_document" href="#" onclick="return $(this).getForm().sendPhpr('edit_onDelete', {confirm: 'Do you really want to delete this customer?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Delete</a>
+					<? if (!$form_model->guest): ?>
+						<div class="separator"></div>
+						<a class="imageLink convert_customer" href="#" onclick="return $(this).getForm().sendPhpr('preview_onResetPassword', {confirm: 'This will email a new random password to the customer. Do you really want to reset this customers password?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})">Reset Password</a>
+					<? endif; ?>
 				<? else: ?>
 					<a class="imageLink enable" onclick="return $(this).getForm().sendPhpr('preview_onRestoreCustomer', {confirm: 'Do you really want to restore this customer?', loadIndicator: {show: false}, onBeforePost: function(){LightLoadingIndicator.show('Loading...')}, onComplete: LightLoadingIndicator.hide, onFailure: popupAjaxError})" href="#">Restore</a>
 				<? endif ?>

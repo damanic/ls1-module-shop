@@ -46,7 +46,7 @@
 		public function build_config_ui($host_obj, $context = null)
 		{
 			$host_obj->add_field('test_mode', 'Sandbox Mode')->tab('Configuration')->renderAs(frm_onoffswitcher)->comment('Use the PayPal Sandbox Test Environment to try out Website Payments. You should be logged into the PayPal Sandbox to work in test mode.', 'above');
-			$host_obj->add_field('business_email', 'Business Email')->tab('Configuration')->renderAs(frm_text)->comment('PayPal business account email address.', 'above')->validation()->fn('trim')->required('Please provide PayPal business account email address.')->email('Please provide valid email address in Business Email field.');
+			$host_obj->add_field('business_email', 'Business Email')->tab('Configuration')->renderAs(frm_text)->comment('PayPal business account email address.', 'above')->validation()->fn('trim')->required('Please provide PayPal business account email address.')->email(false, 'Please provide valid email address in Business Email field.');
 
 			$host_obj->add_field('shipping_address', 'Shipping Address')->tab('Configuration')->renderAs(frm_dropdown)->comment('Please specify whether you want PayPal to allow customers entering their shipping address in the payment form.', 'above')->validation()->fn('trim');
 			$host_obj->add_field('address_override', 'Override Address')->tab('Configuration')->renderAs(frm_checkbox)->comment('The address specified on the Checkout page overrides the PayPal member\'s stored address.', 'above')->validation()->fn('trim');

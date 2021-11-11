@@ -83,11 +83,10 @@
 		{
 			$this->define_column('first_name', 'First Name')->order('asc')->validation()->fn('trim')->required("Please specify a first name");
 			$this->define_column('last_name', 'Last Name')->validation()->fn('trim')->required("Please specify a last name");
-			$this->define_column('email', 'Email')->validation()->fn('trim')->fn('mb_strtolower')->required()->Email('Please provide valid email address.')->method('validate_email');
+			$this->define_column('email', 'Email')->validation()->fn('trim')->fn('mb_strtolower')->required()->email(true)->method('validate_email');
 			$this->define_column('company', 'Company')->validation()->fn('trim');
 			$this->define_column('phone', 'Phone')->validation()->fn('trim');
 			$this->define_column('password', 'Password')->invisible()->validation()->fn('trim');
-			$this->define_column('password_confirm', 'Password Confirmation')->invisible()->validation()->matches('password', 'Password and confirmation password do not match.');
 			$this->define_column('guest', 'Guest');
 			
 			$front_end = Db_ActiveRecord::$execution_context == 'front-end';
@@ -135,8 +134,6 @@
 			$this->add_form_field('email')->tab('Customer');
 			$this->add_form_field('company', 'left')->tab('Customer');
 			$this->add_form_field('phone', 'right')->tab('Customer');
-			$this->add_form_field('password', 'left')->tab('Customer')->renderAs(frm_password)->noPreview();
-			$this->add_form_field('password_confirm', 'right')->tab('Customer')->renderAs(frm_password)->noPreview();
 
 			if (!$this->guest && !$front_end)
 				$this->add_form_field('group')->tab('Customer');
@@ -234,7 +231,20 @@
 
 			if ($customer)
 				$this->validation->setError("Email ".$value." is already in use. Please specify another email address.", $name, true);
-			
+
+            $customers_assigned = Shop_Customer::find_customers_by_email_trace($value);
+            if($customers_assigned){
+                if(!$this->id){
+                    $this->validation->setError("Email ".$value." has already been used. Please specify another email address.", $name, true);
+                } else {
+                    foreach ($customers_assigned as $owner) {
+                        if ($owner->id !== $this->id) {
+                            $this->validation->setError("Email ".$value." has already been used. Please specify another email address.", $name, true);
+                            break;
+                        }
+                    }
+                }
+            }
 			return true;
 		}
 
@@ -414,14 +424,18 @@
 
 			if (!$this->guest)
 			{
-				if (!strlen($this->password))
-				{
-					if ($this->is_new_record())
-						$this->validation->setError('Please provide a password.', 'password', true);
-					else
-						$this->password = $this->fetched['password'];
-				} else
-					$this->password = Phpr_SecurityFramework::create()->salted_hash($this->password);
+                if(strlen($this->password)){
+                    if($this->fetched['password'] !== $this->password){
+                        $hashed_pw = $this->password_to_hash($this->password);
+                        if($hashed_pw !== $this->fetched['password']){
+                            //update password
+                            $this->password = $hashed_pw;
+                        }
+                    }
+                } else if( $this->is_new_record()) {
+                    $this->validation->setError('Please provide a password.', 'password', true);
+                }
+
 			}
 			if (!$this->customer_group_id)
 			{
@@ -588,10 +602,10 @@
 			
 			if (!strlen($password))
 			{
-				$letters = 'abcdefghijklmnopqrstuvwxyz';
+				$letters = 'abcdefghijklmnopqrstuvwxyz23456789';
 				$password = null;
 				for ($i = 1; $i <= 6; $i++)
-					$password .= $letters[rand(0,25)];
+					$password .= $letters[rand(0,33)];
 			}
 			
 			$this->password_confirm = $password;
@@ -600,14 +614,18 @@
 
 		public function generate_password_restore()
 		{
-			$hash = Phpr_SecurityFramework::create()->salted_hash(rand(1,400));
+			$hash = $this->password_to_hash(rand(1,40000));
 			while ($count = Db_DbHelper::scalar('select count(*) from shop_customers where password_restore_hash = :hash', array('hash' => $hash)))
-				$hash = Phpr_SecurityFramework::create()->salted_hash(rand(1,400));
-			$this->password_restore_hash = $hash;
+                $hash = $this->password_to_hash(rand(1,40000));
 
+			$this->password_restore_hash = $hash;
 			$this->password_restore_time = Phpr_DateTime::now();
 			return $hash;;
 		}
+
+        protected function password_to_hash($plaintext_password){
+            return Phpr_SecurityFramework::create()->salted_hash($plaintext_password);
+        }
 
 		/**
 		* Finds a customer with the specified password reset hash
@@ -640,7 +658,7 @@
 				throw new Phpr_ApplicationException('Customer with specified email is not found.');
 
 			if ($customer->deleted_at)
-				throw new Phpr_ApplicationException('Your customer account was deleted.');
+				throw new Phpr_ApplicationException('Customer account was deleted.');
 
 			$customer->generate_password();
 			$customer->save();
@@ -936,7 +954,8 @@
 
 			//By default the login ID is the customers active EMAIL address
 			$login_id = mb_strtolower($login_id);
-			return $this->where('email=?', $login_id)->where('shop_customers.password=?', Phpr_SecurityFramework::create()->salted_hash($password))->where('(shop_customers.guest is null or shop_customers.guest=0)')->where('shop_customers.deleted_at is null')->find();
+            $password_hash = $this->password_to_hash($password);
+			return $this->where('email=?', $login_id)->where('shop_customers.password=?', $password_hash)->where('(shop_customers.guest is null or shop_customers.guest=0)')->where('shop_customers.deleted_at is null')->find();
 		}
 
 		/**

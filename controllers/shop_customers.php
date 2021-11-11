@@ -145,7 +145,12 @@
 		{
 			return $model->deleted_at ? 'deleted' : 'customer_active';
 		}
-		
+
+        public function preview_formBeforeRender($order)
+        {
+            $this->form_no_flash = true;
+        }
+
 		protected function preview_onRestoreCustomer($customer_id)
 		{
 			try
@@ -182,27 +187,43 @@
 			
 			$this->renderPartial('convert_customer_form');
 		}
-		
-		public function preview_formBeforeRender($order)
-		{
-			$this->form_no_flash = true;
-		}
-		
-		protected function preview_onConvert($customer_id)
-		{
-			try
-			{
-				$obj = $this->formFindModelObject($customer_id);
-				$obj->convert_to_registered(post('send_registration_notification'), post('customer_group'));
 
-				Phpr::$session->flash['success'] = 'The customer has been converted to registered.';
-				Phpr::$response->redirect(url('/shop/customers/preview/'.$obj->id.'?'.uniqid()));
-			}
-			catch (Exception $ex)
-			{
-				Phpr::$response->ajaxReportException($ex, true, true);
-			}
-		}
+        protected function preview_onConvert($customer_id)
+        {
+            try
+            {
+                $obj = $this->formFindModelObject($customer_id);
+                $obj->convert_to_registered(post('send_registration_notification'), post('customer_group'));
+
+                Phpr::$session->flash['success'] = 'The customer has been converted to registered.';
+                Phpr::$response->redirect(url('/shop/customers/preview/'.$obj->id.'?'.uniqid()));
+            }
+            catch (Exception $ex)
+            {
+                Phpr::$response->ajaxReportException($ex, true, true);
+            }
+        }
+
+        protected function preview_onResetPassword($customer_id){
+            try
+            {
+                $customer = $this->formFindModelObject($customer_id);
+                if(!$customer || $customer->guest){
+                    throw new Phpr_ApplicationException('Cannot reset customers password, the account is not registered.');
+                }
+
+                Shop_Customer::reset_password($customer->email);
+
+                Phpr::$session->flash['success'] = 'A new password has been emailed to the customer';
+                Phpr::$response->redirect(url('/shop/customers/preview/'.$customer->id.'?'.uniqid()));
+            }
+            catch (Exception $ex)
+            {
+                Phpr::$response->ajaxReportException($ex, true, true);
+            }
+        }
+
+
 
 		protected function evalCustomerNum()
 		{
