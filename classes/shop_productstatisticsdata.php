@@ -42,9 +42,10 @@
 		/**
 		 * Returns chart data for the product sales report.
 		 * @var integer $product_id Specifies the product identifier.
+         * @var integer $month_limit The amount of past months to report from current date
 		 * @return mixed Returns an object with two fields- chart_data and chart_series
 		 */
-		public static function sales_chart_data($product_id)
+		public static function sales_chart_data($product_id, $months = 12)
 		{
 			$result = array(
 				'chart_data'=>array(),
@@ -55,7 +56,7 @@
 			
 			$grouped_ids = self::get_grouped_ids($product_id);
 			
-			$first_date = Db_DbHelper::scalar('
+			$last_sold_date = Db_DbHelper::scalar('
 				select 
 					order_datetime 
 				from 
@@ -64,16 +65,21 @@
 				where 
 					shop_orders.id=shop_order_items.shop_order_id
 					and shop_product_id in (:product_id)
-				order by order_datetime asc
+				order by order_datetime desc
 				limit 0,1',
-				array('product_id'=>$grouped_ids)
+				array(
+                    'product_id'=>$grouped_ids,
+                    'months' => $months
+                )
 			);
 			
-			if (!$first_date)
+			if (!$last_sold_date)
 				return $result;
-			
-			$start_date = Phpr_Date::firstMonthDate(Phpr_DateTime::parse($first_date))->getDate();
-			$end_date = Phpr_Date::lastMonthDate(Phpr_Date::userDate(Phpr_DateTime::gmtNow()))->getDate();
+
+            $end_datetime = Phpr_DateTime::parse($last_sold_date);
+            $end_date = Phpr_Date::lastMonthDate($end_datetime)->getDate();
+			$start_datetime = $end_datetime->addMonths(-$months);
+			$start_date = Phpr_Date::firstMonthDate($start_datetime)->getDate();
 
 			$intervalLimit = " report_date >= '$start_date' and report_date <= '$end_date'";
 
