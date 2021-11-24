@@ -19,7 +19,7 @@
 	<hr style="border:0; border-top:solid 1px #CCC; margin:2px; display: block;"/>
 	<p class="minor-comment">The graph shows the 12 month period prior to last order placed, regardless of order status. You can view more detailed data in the <a href="<?= url('shop/products_report') ?>">Products Report</a>.</p>
 
-	<? if (!Phpr::$config->get('ENABLE_HTML5_CHARTS', false)):?>
+	<? if (!Phpr::$config->get('ENABLE_HTML5_CHARTS', true)):?>
 			<? $this->renderPartial('chart_preview_statistics--swf') ?>
 		<? else :?>
 			<section style="height:275px">

@@ -2,7 +2,7 @@
 	<link rel="stylesheet" href="modules/shop/resources/css/shop.css?<?= module_build('shop') ?>" type="text/css"/>
 	<script type="text/javascript" src="modules/shop/resources/javascript/product_preview.js?<?= module_build('shop') ?>"></script>
 
-	<? if (!Phpr::$config->get('ENABLE_HTML5_CHARTS', false)):?>
+	<? if (!Phpr::$config->get('ENABLE_HTML5_CHARTS', true)):?>
     	<script type="text/javascript" src="modules/backend/resources/javascript/swfobject.js?<?=module_build('backend')?>"></script>
 	<? else: ?>
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.bundle.min.js"></script>
