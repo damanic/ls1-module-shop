@@ -824,9 +824,10 @@
 
 			$redirect = post('redirect');
 			$validation = new Phpr_Validation();
+            $email = trim(mb_strtolower(post('email')));
 
 			$customer = Shop_Customer::create()
-				->where('email=?', post('email'))
+				->where('email=?', $email)
 				->where('shop_customers.password=?', Phpr_SecurityFramework::create()->salted_hash(post('password')))
 				->where('(shop_customers.guest is null or shop_customers.guest=0)')->find();
 

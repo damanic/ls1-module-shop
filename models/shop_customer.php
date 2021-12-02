@@ -222,7 +222,7 @@
 			if ($this->guest)
 				return true;
 
-			$value = trim(strtolower($value));
+			$value = trim(mb_strtolower($value));
 			$customer = self::create()->where('(shop_customers.guest <> 1 or shop_customers.guest is null)')->where('email=?', $value);
 			if ($this->id)
 				$customer->where('shop_customers.id <> ?', $this->id);
@@ -274,7 +274,7 @@
 		 */
 		public static function find_registered_by_email($email)
 		{
-			$value = trim(strtolower($email));
+			$value = trim(mb_strtolower($email));
 			$customer = self::create()->where('(shop_customers.guest <> 1 or shop_customers.guest is null)')->where('email=?', $value);
 
 			return $customer->find();
@@ -653,6 +653,7 @@
 		 */
 		public static function reset_password($email)
 		{
+            $email = trim(mb_strtolower($email));
 			$customer = self::create()->where('(shop_customers.guest <> 1 or shop_customers.guest is null)')->where('shop_customers.email=?', $email)->find(null, array(), 'front_end');
 			if (!$customer)
 				throw new Phpr_ApplicationException('Customer with specified email is not found.');
@@ -681,6 +682,7 @@
 		 */
 		public static function send_password_restore($email)
 		{
+            $email = trim(mb_strtolower($email));
 			$customer = self::create()->where('(shop_customers.guest <> 1 or shop_customers.guest is null)')->where('shop_customers.email=?', $email)->find(null, array(), 'front_end');
 			if (!$customer)
 				throw new Phpr_ApplicationException('No customer found for the specified email.');
@@ -953,7 +955,7 @@
 			}
 
 			//By default the login ID is the customers active EMAIL address
-			$login_id = mb_strtolower($login_id);
+			$login_id = trim(mb_strtolower($login_id));
             $password_hash = $this->password_to_hash($password);
 			return $this->where('email=?', $login_id)->where('shop_customers.password=?', $password_hash)->where('(shop_customers.guest is null or shop_customers.guest=0)')->where('shop_customers.deleted_at is null')->find();
 		}
