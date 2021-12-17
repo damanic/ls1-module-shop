@@ -8,7 +8,7 @@
 		$has_bundle_items = false;
 		foreach ($form_model->items as $item)
 		{
-			if ($item->bundle_master_bundle_item_name)
+			if ($item->bundle_offer_name)
 			{
 				$has_bundle_items = true;
 				break;
@@ -31,7 +31,7 @@
 				<th>Item</th>
 				<th>SKU</th>
 				<? if ($has_bundle_items): ?>
-					<th>Bundle item</th>
+					<th>Bundle Offer</th>
 				<? endif ?>
 				<th class="number">Price</th>
 				<th class="number">Discount</th>
@@ -50,14 +50,14 @@
 				<td onclick="<?= $onClick ?>" class="link">
 					<div class="<?= $item->bundle_master_order_item_id ? 'bundle-item-container' : null ?>">
 						<? if ($item->bundle_master_order_item_id): ?>
-							<a  href="#" onclick="<?= $onClick ?>" class="tooltip bundle-item" title="Bundle item - <strong><?= h($item->bundle_master_bundle_item_name) ?></strong>">Bundle item - <?= h($item->bundle_master_bundle_item_name) ?></a>
+							<a  href="#" onclick="<?= $onClick ?>" class="tooltip bundle-item" title="Bundle item - <strong><?= h($item->bundle_offer_name) ?></strong>">Bundle item - <?= h($item->bundle_offer_name) ?></a>
 						<? endif ?>
 						<a href="#" onclick="<?= $onClick ?>"><?= $item->output_product_name(true, false, true, true) ?></a>
 					</div>
 				</td>
 				<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= $item->product_sku ? h($item->product_sku) : h('<product not found>') ?></a></td>
 				<? if ($has_bundle_items): ?>
-					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($item->bundle_master_bundle_item_name) ?></a></td>
+					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($item->bundle_offer_name) ?></a></td>
 				<? endif ?>
 				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->single_price) ?></a></td>
 				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->discount) ?></a></td>
@@ -81,7 +81,7 @@
 					<td class="number"><?= $form_model->format_currency($master_item->get_bundle_single_price()) ?></td>
 					<td class="number"><?= $form_model->format_currency($master_item->get_bundle_discount()) ?></td>
 					<td class="number"><?= $master_item->quantity ?></td>
-					<td class="number last"><?= $form_model->format_currency($master_item->get_bundle_total_price()) ?></td>
+					<td class="number last"><?= $form_model->format_currency($master_item->get_bundle_total_offer_price()) ?></td>
 				</tr>
 			<? 
 					endif;

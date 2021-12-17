@@ -74,7 +74,7 @@
 			return md5($result);
 		}
 		
-		public static function gen_item_content_key($product_id, $options, $extras, $custom_data, $uploaded_files, $bundle_master_cart_key, $bundle_master_item_id, $bundle_master_item_product_id, $master_bundle_data, $quantity)
+		public static function gen_item_content_key($product_id, $options, $extras, $custom_data, $uploaded_files, $bundle_master_cart_key, $bundle_offer_id, $bundle_offer_item_id, $master_bundle_data, $quantity)
 		{
 			$result = $product_id;
 
@@ -93,8 +93,8 @@
 			$result .= serialize($uploaded_files);
 
 			$result .= $bundle_master_cart_key;
-			$result .= $bundle_master_item_id;
-			$result .= $bundle_master_item_product_id;
+			$result .= $bundle_offer_id;
+			$result .= $bundle_offer_item_id;
 
 			$result .= serialize($master_bundle_data);
 			
@@ -113,16 +113,16 @@
 				if ($existing_item->bundle_master_cart_key != $this->item_key || $existing_item->item_key == $this->item_key || !$existing_item->bundle_master_cart_key)
 					continue;
 
-				if (!array_key_exists($existing_item->bundle_master_item_id, $master_bundle_data))
-					$master_bundle_data[$existing_item->bundle_master_item_id] = array();
+				if (!array_key_exists($existing_item->bundle_offer_id, $master_bundle_data))
+					$master_bundle_data[$existing_item->bundle_offer_id] = array();
 
-				$master_bundle_data[$existing_item->bundle_master_item_id][] = array(
+				$master_bundle_data[$existing_item->bundle_offer_id][] = array(
 					'extra_options'=>$existing_item->extras,
 					'options'=>$existing_item->options,
 					'custom_data'=>$existing_item->get_data_fields(true),
 					'quantity'=>(int)round($existing_item->quantity/$this->quantity),
 					'product_id'=>$existing_item->product_id,
-					'bundle_item_product_id'=>$existing_item->bundle_master_item_product_id
+					'bundle_offer_item_id'=>$existing_item->bundle_offer_item_id
 				);
 			}
 			
@@ -135,8 +135,8 @@
 				$this->get_data_fields(true), 
 				$uploaded_files, 
 				$this->bundle_master_cart_key, 
-				$this->bundle_master_item_id,
-				$this->bundle_master_item_product_id, 
+				$this->bundle_offer_id,
+				$this->bundle_offer_item_id, 
 				$master_bundle_data,
 				$this->quantity
 			);
@@ -221,21 +221,38 @@
 			return $this->bundle_master_cart_key != null;
 		}
 		
-		public function get_bundle_item()
+		public function get_bundle_offer()
 		{
 			if (!$this->is_bundle_item())
 				return;
 
-			return Shop_ProductBundleItem::find_by_id($this->bundle_master_item_id);
+			return Shop_ProductBundleOffer::find_by_id($this->bundle_offer_id);
 		}
-		
+
+        public function get_bundle_offer_item(){
+            if (!$this->is_bundle_item())
+                return;
+
+            return Shop_ProductBundleOfferItem::find_by_id($this->bundle_offer_item_id);
+        }
+
+
+        /**
+         * @deprecated
+         * @see get_bundle_offer_item()
+         */
 		public function get_bundle_item_product()
 		{
-			if (!$this->is_bundle_item())
-				return;
-
-			return Shop_BundleItemProduct::find_by_id($this->bundle_master_item_product_id);
+			return $this->get_bundle_offer_item();
 		}
+
+        /**
+         * @deprecated
+         */
+        public function get_bundle_item()
+        {
+            return $this->get_bundle_offer();
+        }
 	}
 
 ?>

@@ -34,8 +34,8 @@
 			if (array_key_exists('bundle_master_cart_key', $bundle_data))
 			{
 				$item->bundle_master_cart_key = $bundle_data['bundle_master_cart_key'];
-				$item->bundle_master_item_id = $bundle_data['bundle_master_item_id'];
-				$item->bundle_master_item_product_id = $bundle_data['bundle_master_item_product_id'];
+				$item->bundle_offer_id = $bundle_data['bundle_offer_id'];
+				$item->bundle_offer_item_id = $bundle_data['bundle_offer_item_id'];
 			}
 			
 			if ($custom_data && is_array($custom_data))

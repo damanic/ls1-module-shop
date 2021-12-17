@@ -829,8 +829,14 @@ class Shop_Order extends Db_ActiveRecord
 
 
                 if ($item->is_bundle_item()) {
-					$bundle_item_product = $item->get_bundle_item_product();
-					$product_price = $bundle_item_product->get_price_no_tax($bundle_item_product->bundle_item->product, $effective_quantity, $customer->customer_group_id, $item->options);
+					$offer_item = $item->get_bundle_offer_item();
+					$price = $offer_item->get_price_no_tax($offer_item->bundle_offer->product, $effective_quantity, $customer->customer_group_id, $item->options);
+                    /*
+                     * NOTE
+                     * Price overrides on bundle items are not factored into cart totals as a discount,
+                     * therefore in this context the price override is applied.
+                     */
+                    $result = $offer_item->apply_price_override($price);
                 } else {
 					$item_om_record = $item->get_om_record();
 					if ($item_om_record) {
@@ -879,9 +885,9 @@ class Shop_Order extends Db_ActiveRecord
 					{
 						$item_map[$item->key]->bundle_master_order_item_id = $item_map[$master_item->key]->id;
 
-						$bundle_item = $item->get_bundle_item();
-						$item_map[$item->key]->bundle_master_bundle_item_id = $bundle_item->id;
-						$item_map[$item->key]->bundle_master_bundle_item_name = $bundle_item->name;
+						$bundle_offer = $item->get_bundle_offer();
+						$item_map[$item->key]->bundle_offer_id = $bundle_offer->id;
+						$item_map[$item->key]->bundle_offer_name = $bundle_offer->name;
 
 						$item_map[$item->key]->save();
 					}

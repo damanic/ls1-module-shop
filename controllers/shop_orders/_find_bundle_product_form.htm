@@ -15,10 +15,10 @@
 									</label>
 
 									<div class="fieldContainer">
-										<select id="bundle_item_id" name="bundle_item_id"autocomplete="off" onchange="update_bundle_item_products()" onkeyup="update_bundle_item_products()">
+										<select id="bundle_offer_id" name="bundle_offer_id"autocomplete="off" onchange="update_bundle_offer_items()" onkeyup="update_bundle_offer_items()">
 											<option value="">&lt;please select&gt;</option>
-											<? foreach ($bundle_items as $bundle_item): ?>
-												<option value="<?= $bundle_item->id ?>"><?= h($bundle_item->name) ?></option>
+											<? foreach ($bundle_offers as $bundle_offer): ?>
+												<option value="<?= $bundle_offer->id ?>"><?= h($bundle_offer->name) ?></option>
 											<? endforeach ?>
 										</select>
 									</div>

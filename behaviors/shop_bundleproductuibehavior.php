@@ -18,16 +18,16 @@
 				$this->_controller->addJavaScript('/modules/shop/behaviors/shop_bundleproductuibehavior/resources/javascript/bundle.js?'.module_build('shop'));
 			}
 
-			$this->addEventHandler('on_load_bundle_item_form');
-			$this->addEventHandler('preview_on_save_bundle_item');
+			$this->addEventHandler('on_load_bundle_offer_form');
+			$this->addEventHandler('preview_on_save_bundle_offer');
 			$this->addEventHandler('preview_on_refresh_bundle_ui');
-			$this->addEventHandler('preview_on_delete_bundle_item');
-			$this->addEventHandler('preview_on_set_bundle_item_order');
+			$this->addEventHandler('preview_on_delete_bundle_offer');
+			$this->addEventHandler('preview_on_set_bundle_offer_order');
 			$this->addEventHandler('preview_on_load_add_products_form');
 			$this->addEventHandler('preview_on_add_bundle_products');
-			$this->addEventHandler('preview_on_set_bundle_item_product_order');
-			$this->addEventHandler('preview_on_remove_bundle_item_products');
-			$this->addEventHandler('preview_on_save_bundle_item_changes');
+			$this->addEventHandler('preview_on_set_bundle_offer_item_order');
+			$this->addEventHandler('preview_on_remove_bundle_offer_items');
+			$this->addEventHandler('preview_on_save_bundle_offer_changes');
 			
 			Backend::$events->addEvent('shop:onConfigureProductsController', $this, 'configure_products_controller');
 		}
@@ -81,12 +81,12 @@
 			return trim($products_data[$product_id][$name]);
 		}
 		
-		public function on_load_bundle_item_form($product_id)
+		public function on_load_bundle_offer_form($product_id)
 		{
 			try
 			{
 				$id = post('item_id');
-				$item = $id ? $this->find_bundle_item($id) : Shop_ProductBundleItem::create();
+				$item = $id ? $this->find_bundle_offer($id) : Shop_ProductBundleOffer::create();
 				if (!$item)
 					throw new Phpr_ApplicationException('Bundle item not found');
 				
@@ -104,12 +104,12 @@
 			$this->renderPartial('item_form');
 		}
 		
-		public function preview_on_save_bundle_item($product_id)
+		public function preview_on_save_bundle_offer($product_id)
 		{
 			try
 			{
 				$id = post('item_id');
-				$item = $id ? $this->find_bundle_item($id) : Shop_ProductBundleItem::create();
+				$item = $id ? $this->find_bundle_offer($id) : Shop_ProductBundleOffer::create();
 				if (!$item)
 					throw new Phpr_ApplicationException('Bundle item not found');
 					
@@ -117,12 +117,12 @@
 
 				$item->init_columns_info();
 				$item->define_form_fields();
-				$item->save(post('Shop_ProductBundleItem'), post('edit_session_key'));
+				$item->save(post('Shop_ProductBundleOffer'), post('edit_session_key'));
 				
 				$_POST['edit_session_key'] = post('product_session_key');
 
 				if (!$id)
-					$product->bundle_items_link->add($item, post('product_session_key'));
+					$product->bundle_offers_link->add($item, post('product_session_key'));
 			}
 			catch (Exception $ex)
 			{
@@ -142,7 +142,7 @@
 				
 			if (post('bundle_navigate_to_latest'))
 			{
-				$items = $product->list_related_records_deferred('bundle_items_link', $this->_controller->formGetEditSessionKey());
+				$items = $product->list_related_records_deferred('bundle_offers_link', $this->_controller->formGetEditSessionKey());
 				if ($items->count)
 					$params['current_item_id'] = $items[$items->count-1]->id;
 			}
@@ -150,13 +150,13 @@
 			$this->renderPartial('bundle_ui', $params);
 		}
 		
-		public function preview_on_delete_bundle_item($product_id)
+		public function preview_on_delete_bundle_offer($product_id)
 		{
 			try
 			{
-				$item = $this->find_bundle_item(post('bundle_current_item_id'));
+				$item = $this->find_bundle_offer(post('bundle_current_item_id'));
 				$product = $this->find_product($product_id);
-				$product->bundle_items_link->delete($item, $this->_controller->formGetEditSessionKey());
+				$product->bundle_offers_link->delete($item, $this->_controller->formGetEditSessionKey());
 
 				$this->preview_on_refresh_bundle_ui($product_id);
 			}
@@ -166,11 +166,11 @@
 			}
 		}
 		
-		public function preview_on_set_bundle_item_order()
+		public function preview_on_set_bundle_offer_order()
 		{
 			try
 			{
-				Shop_ProductBundleItem::create()->set_item_orders(post('item_ids'), post('sort_orders'));
+				Shop_ProductBundleOffer::create()->set_item_orders(post('item_ids'), post('sort_orders'));
 			}
 			catch (Exception $ex)
 			{
@@ -191,13 +191,13 @@
 			return $product;
 		}
 		
-		protected function find_bundle_item($id)
+		protected function find_bundle_offer($id)
 		{
 			$id = trim($id);
 			if (!$id)
 				throw new Phpr_ApplicationException('Bundle item not found.');
 				
-			$item = Shop_ProductBundleItem::create()->where('id=?', $id)->find();
+			$item = Shop_ProductBundleOffer::create()->where('id=?', $id)->find();
 			if (!$item)
 				throw new Phpr_ApplicationException('Bundle item not found.');
 				
@@ -246,15 +246,15 @@
 		
 		public function bundle_prepare_product_list_data()
 		{
-			$item = $this->find_bundle_item(post('bundle_current_item_id'));
+			$item = $this->find_bundle_offer(post('bundle_current_item_id'));
 			
 			$obj = Shop_Product::create();
 			$obj->where('grouped is null');
 
-			$item_products = $item->list_related_records_deferred('item_products_all', $this->bundle_get_item_session_key($item->id));
+			$items_all = $item->list_related_records_deferred('items_all', $this->bundle_get_item_session_key($item->id));
 			$product_ids = array();
-			foreach ($item_products as $item_product)
-				$product_ids[] = $item_product->product_id;
+			foreach ($items_all as $item)
+				$product_ids[] = $item->product_id;
 
 			if ($product_ids)
 				$obj->where('id not in (?)', array($product_ids));
@@ -270,7 +270,7 @@
 				if (!count($ids))
 					throw new Phpr_ApplicationException('Please select product(s) to add.');
 
-				$item = $this->find_bundle_item(post('bundle_current_item_id'));
+				$item = $this->find_bundle_offer(post('bundle_current_item_id'));
 				$item->add_products($ids, $this->bundle_get_item_session_key($item->id));
 				
 				$this->_controller->preparePartialRender('bundle_item_form');
@@ -285,11 +285,11 @@
 			}
 		}
 		
-		public function preview_on_set_bundle_item_product_order()
+		public function preview_on_set_bundle_offer_item_order()
 		{
 			try
 			{
-				Shop_BundleItemProduct::create()->set_item_orders(post('item_ids'), post('sort_orders'));
+				Shop_ProductBundleOfferItem::create()->set_item_orders(post('item_ids'), post('sort_orders'));
 			}
 			catch (Exception $ex)
 			{
@@ -297,7 +297,7 @@
 			}
 		}
 		
-		public function preview_on_remove_bundle_item_products($product_id)
+		public function preview_on_remove_bundle_offer_items($product_id)
 		{
 			try
 			{
@@ -305,7 +305,7 @@
 				if (!count($ids))
 					throw new Phpr_ApplicationException('Please select product(s) to add.');
 
-				$item = $this->find_bundle_item(post('bundle_current_item_id'));
+				$item = $this->find_bundle_offer(post('bundle_current_item_id'));
 				$item->remove_products($ids, $this->bundle_get_item_session_key($item->id));
 				
 				$this->preview_on_refresh_bundle_ui($product_id);
@@ -316,16 +316,16 @@
 			}
 		}
 		
-		public function preview_on_save_bundle_item_changes($product_id)
+		public function preview_on_save_bundle_offer_changes($product_id)
 		{
 			try
 			{
 				$master_product = $this->find_product($product_id);
 				
-				$items = $master_product->list_related_records_deferred('bundle_items_link', $this->_controller->formGetEditSessionKey());
+				$items = $master_product->list_related_records_deferred('bundle_offers_link', $this->_controller->formGetEditSessionKey());
 				foreach ($items as $item)
 				{
-					$products = $item->list_related_records_deferred('item_products_all', $this->bundle_get_item_session_key($item->id));
+					$products = $item->list_related_records_deferred('items_all', $this->bundle_get_item_session_key($item->id));
 
 					$last_product_id = null;
 					try

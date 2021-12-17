@@ -9,7 +9,7 @@
 	 * @author LemonStand eCommerce Inc.
 	 * @package shop.classes
 	 */
-	class Shop_CartItem implements Shop_RetailItem
+	class Shop_CartItem implements Shop_RetailItem, Shop_BundleItem
 	{
 		/**
 		 * @var string Specifies the item key.
@@ -136,9 +136,10 @@
 
 				if (!$external_price_found)
 				{
-					$bundle_item_product = $this->get_bundle_item_product();
-					if ($bundle_item_product)
+					$bundle_offer_item = $this->get_bundle_offer_item();
+					if ($bundle_offer_item)
 					{
+
 						$options = array();
 						foreach ($this->options as $key=>$value)
 						{
@@ -148,7 +149,13 @@
 								$options[$key] = $value;
 						}
 
-						$result = $bundle_item_product->get_price_no_tax($this->product, $effective_quantity, null, $options); 
+						$price = $bundle_offer_item->get_price_no_tax($this->product, $effective_quantity, null, $options);
+                        /*
+                         * NOTE
+                         * Price overrides on bundle items are not factored into cart totals as a discount,
+                         * therefore in this context the price override is applied to find the list price.
+                         */
+                        $result = $bundle_offer_item->apply_price_override($price);
 					} else 
 					{
 						$effective_quantity = $effective_quantity ? $effective_quantity : $this->get_effective_quantity();
@@ -206,52 +213,9 @@
 			
 			return Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $price) + $price;
 		}
-		
-		/**
-		 * Returns total price (sum if all bundle items) of a single unit of the bundle product cart item. 
-		 * If the cart item does not represent a bundle product, the method returns the {@link Shop_CartItem::single_price() single_price()} method result.
-		 * @documentable
-		 * @return float Returns the bundle item unit price.
-		 */
-		public function bundle_single_price()
-		{
-			if (!$this->native_cart_item)
-				return $this->single_price();
-				
-			$bundle_items = $this->get_bundle_items();
-			
-			$result = $this->single_price();
-			foreach ($bundle_items as $item)
-				$result += $item->single_price()*$item->get_quantity();
-				
-			return $result;
-		}
-		
-		/**
-		 * Returns cart items which represent bundle items for this cart item. 
-		 * @documentable
-		 * @return Returns an array of {@link Shop_CartItem} objects.
-		 */
-		public function get_bundle_items()
-		{
-			$items = Shop_Cart::list_items($this->cart_name);
-			$bundle_items = array();
-			foreach ($items as $item)
-			{
-				if ($item->key == $this->key)
-					continue;
-					
-				if (!$item->native_cart_item)
-					continue;
-					
-				if ($item->native_cart_item->bundle_master_cart_key == $this->key)
-					$bundle_items[] = $item;
-			}
-			
-			return $bundle_items;
-		}
-		
-		public function get_extras_cost()
+
+
+        public function get_extras_cost()
 		{
 			$result = 0;
 			
@@ -530,41 +494,7 @@
 			
 			return Shop_TaxClass::get_total_tax($this->get_tax_class_id(), $price) + $price;
 		}
-		
-		/**
-		 * Returns total bundle price. 
-		 * The price includes the price of the base bundle products and all its bundle items. 
-		 * If the cart item does not represent a bundle product, the method returns the {@link Shop_CartItem::total_price() total_price()} method result.
-		 * @documentable
-		 * @return float Returns the bundle total price.
-		 */
-		public function bundle_total_price()
-		{
-			if (!$this->native_cart_item)
-				return $this->total_price();
-				
-			$bundle_items = $this->get_bundle_items();
-			
-			$result = $this->total_price();
-			foreach ($bundle_items as $item)
-				$result += $item->total_price();
-				
-			return $result;
-		}
-		
-		/**
-		 * Returns total price of a bundle item cart item (total price of the bundle item in a single base product).
-		 * If the cart item does not represent a bundle item product, the method returns the {@link Shop_CartItem::total_price() total_price()} method result.
-		 * @documentable
-		 * @return Returns the bundle item total price.
-		 */
-		public function bundle_item_total_price()
-		{
-			if (!$this->is_bundle_item())
-				return $this->total_price();
 
-			return $this->total_price(true, false, $this->get_quantity());
-		}
 		
 		/**
 		 * Returns the total value of a tax applied to the item.
@@ -592,24 +522,7 @@
 		{
 			return Shop_TaxClass::get_tax_rates_static($this->get_tax_class_id(), Shop_CheckoutData::get_shipping_info());
 		}
-		
-		/**
-		 * Returns the total value of a tax applied to a bundle cart item. If the cart item does not represent a bundle product returns
-		 * the total_tax() method call result;
-		 * @return float
-		 */
-		public function bundle_total_tax()
-		{
-			if (!$this->native_cart_item)
-				return $this->total_tax();
 
-			$bundle_items = $this->get_bundle_items();
-			$result = $this->total_tax();
-			foreach ($bundle_items as $item)
-				$result += $item->total_tax();
-				
-			return $result;
-		}
 		
 		public function total_discount_no_tax()
 		{
@@ -633,26 +546,7 @@
 			return $product_discount + $applied_discount;
 		}
 		
-		/**
-		 * Returns total discount of a single item of the bundle product cart item. 
-		 * If the cart item does not represent a bundle product, the method returns the {@link Shop_CartItem::total_discount() total_discount()} method result.
-		 * @documentable
-		 * @return float Returns total discount of a single item of the bundle product cart item.
-		 */
-		public function bundle_total_discount()
-		{
-			if (!$this->native_cart_item)
-				return $this->total_discount();
-				
-			$bundle_items = $this->get_bundle_items();
-			
-			$result = $this->total_discount();
-			foreach ($bundle_items as $item)
-				$result += $item->total_discount()*$item->get_quantity();
-				
-			return $result;
-		}
-		
+
 		/**
 		 * Extracts a custom data field value by the field name. 
 		 * Use this field for displaying custom data fields previously assigned to the cart items. 
@@ -762,65 +656,6 @@
 			return $result;
 		}
 		
-		/**
-		 * Returns TRUE if the cart item represents a bundle item.
-		 * @documentable
-		 * @return boolean Returns TRUE if the cart item represents a cart item. Returns FALSE otherwise.
-		 */
-		public function is_bundle_item()
-		{
-			if ($this->order_item && $this->order_item->bundle_master_order_item_id)
-				return true;
-			
-			$item = $this->get_bundle_item();
-			return $item ? true : false;
-		}
-		
-		/**
-		 * Returns a {@link Shop_ProductBundleItem bundle item object} this cart item refers to. 
-		 * If this cart item does not represent a bundle item product, returns NULL.
-		 * @documentable
-		 * @return Shop_ProductBundleItem Returns the bundle item object or NULL.
-		 */
-		public function get_bundle_item()
-		{
-			if (!$this->native_cart_item)
-				return null;
-
-			return $this->native_cart_item->get_bundle_item();
-		}
-		
-		/**
-		 * Returns a {@link Shop_BundleItemProduct bundle item product object} this cart item refers to. 
-		 * If this item does not represent a bundle item product, returns NULL.
-		 * @documentable
-		 * @return Shop_BundleItemProduct Returns bundle item product object or NULL.
-		 */
-		public function get_bundle_item_product()
-		{
-			if (!$this->native_cart_item)
-				return null;
-
-			return $this->native_cart_item->get_bundle_item_product();
-		}
-		
-		/**
-		 * Returns a {@link Shop_CartItem cart item object} representing a master bundle product for this item. 
-		 * The result value could be NULL in case if the item is not a bundle item or if the master cart item cannot be found.
-		 * @documentable
-		 * @return Shop_CartItem Returns the cart item object or NULL. 
-		 */
-		public function get_master_bundle_item()
-		{
-			if (!$this->native_cart_item)
-				return null;
-
-			$key = $this->native_cart_item->bundle_master_cart_key;
-			if (!$key)
-				return null;
-
-			return Shop_Cart::find_item($key, $this->cart_name);
-		}
 
 		/*
 		 * Discount Engine caching
@@ -889,19 +724,18 @@
 
 
 		//
-		// Shop_Item Interface methods
+		// Shop_RetailItem Interface methods
 		//
 
 		public function get_list_price() {
-			return $this->single_price_no_tax();
+            return $this->single_price_no_tax();
 		}
 
 		public function get_offer_price() {
-			$price = ($this->get_list_price() - $this->get_sale_reduction()) - $this->total_discount_no_tax();
-			return number_format($price,2, '.', '');
+			return ($this->get_list_price() - $this->get_sale_reduction()) - $this->total_discount_no_tax();
 		}
 
-		public function get_total_list_price( $quantity = null ) {
+		public function get_total_list_price( $quantity = null) {
 			$quantity = $quantity ? $quantity : $this->quantity;
 			$price = $this->get_list_price();
 			if($quantity){
@@ -910,7 +744,7 @@
 			return  number_format($price,2, '.', '');
 		}
 
-		public function get_total_offer_price( $quantity = null ) {
+		public function get_total_offer_price( $quantity = null) {
 			$quantity = $quantity ? $quantity : $this->quantity;
 			$price = $this->get_offer_price();
 			if($quantity){
@@ -919,12 +753,146 @@
 			return  number_format($price,2, '.', '');
 		}
 
+
         public function get_tax_class_id(){
             if($this->product){
                 return $this->product->tax_class_id;
             }
             return null;
         }
+
+
+
+        /**
+         * Returns a {@link Shop_CartItem cart item object} representing a master bundle product for this item.
+         * The result value could be NULL in case if the item is not a bundle item or if the master cart item cannot be found.
+         * @documentable
+         * @return Shop_CartItem Returns the cart item object or NULL.
+         */
+        public function get_master_bundle_item()
+        {
+            if (!$this->native_cart_item)
+                return null;
+
+            $key = $this->native_cart_item->bundle_master_cart_key;
+            if (!$key)
+                return null;
+
+            return Shop_Cart::find_item($key, $this->cart_name);
+        }
+
+
+        /**
+         * Shop_BundleItem Interface Methods
+         * See Interface for doc comments
+         */
+        public function is_bundle_item()
+        {
+            if ($this->order_item && $this->order_item->bundle_master_order_item_id)
+                return true;
+
+            $item = $this->get_bundle_offer();
+            return $item ? true : false;
+        }
+
+        public function has_bundle_items()
+        {
+            return $this->get_bundle_items() ? true : false;
+        }
+
+        public function get_bundle_items()
+        {
+            $items = Shop_Cart::list_items($this->cart_name);
+            $bundle_items = array();
+            foreach ($items as $item)
+            {
+                if ($item->key == $this->key)
+                    continue;
+
+                if (!$item->native_cart_item)
+                    continue;
+
+                if ($item->native_cart_item->bundle_master_cart_key == $this->key)
+                    $bundle_items[] = $item;
+            }
+
+            return $bundle_items;
+        }
+
+        public function get_bundle_discount(){
+            if (!$this->native_cart_item)
+                return $this->total_discount();
+
+            $bundle_items = $this->get_bundle_items();
+
+            $result = $this->total_discount();
+            foreach ($bundle_items as $item)
+                $result += $item->total_discount()*$item->get_quantity();
+
+            return $result;
+        }
+
+        public function get_bundle_list_price(){
+            $price = $this->get_list_price();
+            if ($this->native_cart_item){
+                $bundle_cart_items = $this->get_bundle_items();
+                foreach ($bundle_cart_items as $cart_item) {
+                    $bundle_offer_item = $cart_item->get_bundle_offer_item();
+                    $offer_price = $bundle_offer_item->get_list_price();
+                    $price += ($offer_price * $cart_item->quantity);
+                }
+            }
+            return $price;
+        }
+
+        public function get_bundle_offer_price(){
+            $price = $this->get_offer_price();
+            if ($this->native_cart_item){
+                $bundle_cart_items = $this->get_bundle_items();
+                foreach ($bundle_cart_items as $cart_item) {
+                    $bundle_offer_item = $cart_item->get_bundle_offer_item();
+                    $offer_price = $bundle_offer_item->get_offer_price();
+                    $price += ($offer_price * $cart_item->quantity);
+                }
+            }
+            return $price;
+        }
+
+        public function get_bundle_total_list_price($quantity = null) {
+            $quantity = $quantity ? $quantity : $this->quantity;
+            $price = $this->get_bundle_list_price();
+            if($quantity){
+                $price = $price * $quantity;
+            }
+            return  number_format($price,2, '.', '');
+        }
+
+        public function get_bundle_total_offer_price($quantity = null) {
+            $quantity = $quantity ? $quantity : $this->quantity;
+            $price = $this->get_bundle_offer_price();
+            if($quantity){
+                $price = $price * $quantity;
+            }
+            return  number_format($price,2, '.', '');
+        }
+
+        public function get_bundle_offer(){
+            if (!$this->native_cart_item)
+                return null;
+
+            return $this->native_cart_item->get_bundle_offer();
+        }
+
+        public function get_bundle_offer_item(){
+            if (!$this->native_cart_item)
+                return null;
+
+            return $this->native_cart_item->get_bundle_offer_item();
+        }
+
+        /**
+         * Events
+         */
 
 		/**
 		 * Allows to override a price of an item in the shopping cart. 
@@ -979,6 +947,10 @@
 		private function event_onUpdateCartItemPrice($item, $price) {}
 
 
+        /**
+         * Deprecated methods
+         */
+
 		/**
 		 * @deprecated
 		 * Use: get_sale_reduction() or total_discount_no_tax()
@@ -991,7 +963,85 @@
 			return $this->get_sale_reduction();
 		}
 
+        /**
+         * @deprecated
+         * @see Shop_CartItem::get_bundle_offer_item()
+         */
+        public function get_bundle_item()
+        {
+            return $this->get_bundle_offer();
+        }
 
+        /**
+         * @deprecated
+         * @see get_bundle_discount()
+         */
+        public function bundle_total_discount()
+        {
+            $this->get_bundle_discount();
+        }
+
+        /**
+         * @deprecated
+         */
+        public function bundle_total_tax()
+        {
+            if (!$this->native_cart_item)
+                return $this->total_tax();
+
+            $bundle_items = $this->get_bundle_items();
+            $result = $this->total_tax();
+            foreach ($bundle_items as $item)
+                $result += $item->total_tax();
+
+            return $result;
+        }
+
+        /**
+         * @deprecated
+         * see get_bundle_list_price() , get_bundle_offer_price()
+         */
+        public function bundle_item_total_price()
+        {
+            if (!$this->is_bundle_item())
+                return $this->total_price();
+
+            return $this->total_price(true, false, $this->get_quantity());
+        }
+
+        /**
+         * @deprecated
+         * see get_bundle_total_list_price() , get_bundle_total_offer_price()
+         */
+        public function bundle_total_price()
+        {
+            if (!$this->native_cart_item)
+                return $this->total_price();
+
+            $bundle_items = $this->get_bundle_items();
+
+            $result = $this->total_price();
+            foreach ($bundle_items as $item)
+                $result += $item->total_price();
+
+            return $result;
+        }
+
+        /**
+         * @deprecated
+         * see get_bundle_list_price() , get_bundle_offer_price()
+         */
+        public function bundle_single_price()
+        {
+            if (!$this->native_cart_item)
+                return $this->single_price();
+
+            $bundle_items = $this->get_bundle_items();
+
+            $result = $this->single_price();
+            foreach ($bundle_items as $item)
+                $result += $item->single_price()*$item->get_quantity();
+
+            return $result;
+        }
 	}
-
-?>

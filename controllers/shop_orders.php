@@ -1633,8 +1633,8 @@
 
 					$item->auto_discount_price_eval = 1;
 					
-					$bundle_item_product_id = post('bundle_item_product_id');
-					if (!$bundle_item_product_id)
+					$bundle_offer_item_id = post('bundle_offer_item_id');
+					if (!$bundle_offer_item_id)
 					{
 						$om_record = Shop_OptionMatrixRecord::find_record($product_options, $product, true);
 						if (!$om_record)
@@ -1644,11 +1644,11 @@
 					}
 					else
 					{
-						$bundle_item_product = Shop_BundleItemProduct::create()->find($bundle_item_product_id);
-						if (!$bundle_item_product)
+						$bundle_offer_item = Shop_ProductBundleOfferItem::create()->find($bundle_offer_item_id);
+						if (!$bundle_offer_item)
 							throw new Phpr_ApplicationException('Bundle item product not found.');
 
-						$price = max($bundle_item_product->get_price_no_tax($product, $effective_quantity, $customer_group_id, $product_options) - $product->get_discount($effective_quantity, $customer_group_id), 0);
+						$price = max($bundle_offer_item->get_price_no_tax($product, $effective_quantity, $customer_group_id, $product_options) - $product->get_discount($effective_quantity, $customer_group_id), 0);
 					}
 					
 					$item->price = $price;
@@ -1690,7 +1690,7 @@
 				if ($grouped_products->count)
 					$product = $grouped_products->first;
 
-				$item_obj = Shop_OrderItem::create()->init_empty_item($product, $customer_group_id, $customer, post('bundle_item_product_id'));
+				$item_obj = Shop_OrderItem::create()->init_empty_item($product, $customer_group_id, $customer, post('bundle_offer_item_id'));
 				$item_obj->save();
 				
 				$this->viewData['item'] = $item_obj;
@@ -1887,8 +1887,8 @@
 				if ($item->product->tier_prices_per_customer && $customer)
 					$effective_quantity += $customer->get_purchased_item_quantity($item->product);
 					
-				$bundle_item_product_id = post('bundle_item_product_id');
-				if (!$bundle_item_product_id)
+				$bundle_offer_item_id = post('bundle_offer_item_id');
+				if (!$bundle_offer_item_id)
 				{
 					$om_record = Shop_OptionMatrixRecord::find_record($product_options, $item->product, true);
 					if (!$om_record)
@@ -1897,11 +1897,11 @@
 						$price = $om_record->get_sale_price($item->product, $effective_quantity, $customer_group_id, true);
 				}
 				else {
-					$bundle_item_product = Shop_BundleItemProduct::create()->find($bundle_item_product_id);
-					if (!$bundle_item_product)
+					$bundle_offer_item = Shop_ProductBundleOfferItem::create()->find($bundle_offer_item_id);
+					if (!$bundle_offer_item)
 						throw new Phpr_ApplicationException('Bundle item product not found.');
 
-					$price = max(round($bundle_item_product->get_price_no_tax($item->product, $effective_quantity, $customer_group_id, $product_options), 2) - $item->product->get_discount($effective_quantity, $customer_group_id), 0);
+					$price = max(round($bundle_offer_item->get_price_no_tax($item->product, $effective_quantity, $customer_group_id, $product_options), 2) - $item->product->get_discount($effective_quantity, $customer_group_id), 0);
 				}
 
 				$item->price = $price;
@@ -1954,11 +1954,11 @@
 		{
 			try
 			{
-				$item = Shop_ProductBundleItem::create()->find(post('bundle_item_id'));
-				if (!$item)
-					throw new Phpr_ApplicationException('Bundle item not found.');
+				$offer = Shop_ProductBundleOffer::create()->find(post('bundle_offer_id'));
+				if (!$offer)
+					throw new Phpr_ApplicationException('Bundle offer not found.');
 
-				$this->viewData['products'] = $item->item_products;
+				$this->viewData['items'] = $offer->items;
 				$this->renderPartial('bundle_item_products');
 			}
 			catch (Exception $ex)
@@ -1975,11 +1975,11 @@
 				if (!$parent_item)
 					throw new Phpr_ApplicationException('Parent order item not found.');
 					
-				if (!$parent_item->product->bundle_items->count)
-					throw new Phpr_ApplicationException('Selected product has no bundle items.');
+				if (!$parent_item->product->bundle_offers->count)
+					throw new Phpr_ApplicationException('Selected product has no bundle offers.');
 				
 				$this->viewData['edit_session_key'] = post('edit_session_key');
-				$this->viewData['bundle_items'] = $parent_item->product->bundle_items;
+				$this->viewData['bundle_offers'] = $parent_item->product->bundle_offers;
 				$this->viewData['bundle_master_order_item_id'] = post('bundle_parent');
 			}
 			catch (Exception $ex)
@@ -2746,33 +2746,33 @@
 
 		protected function addBundleViewData($item=null){
 
-			$bundle_item = null;
-			$bundle_item_product = null;
+			$bundle_offer = null;
+			$bundle_offer_item = null;
 			$bundle_master_order_item_id = null;
-			$bundle_master_bundle_item_id = $this->viewData['bundle_master_bundle_item_id'] = post('bundle_master_bundle_item_id');
+			$bundle_offer_id = $this->viewData['bundle_offer_id'] = post('bundle_offer_id');
 
-			if ($bundle_master_bundle_item_id) {
-				$bundle_item = Shop_ProductBundleItem::create()->find($bundle_master_bundle_item_id);
-				if ($bundle_item)
-					$this->viewData['bundle_master_bundle_item_name'] = $bundle_item->name;
+			if ($bundle_offer_id) {
+				$bundle_offer = Shop_ProductBundleOffer::create()->find($bundle_offer_id);
+				if ($bundle_offer)
+					$this->viewData['bundle_offer_name'] = $bundle_offer->name;
 			}
 
-			if (post('bundle_item_product_id')) {
-				$bundle_item_product = Shop_BundleItemProduct::create()->find(post('bundle_item_product_id'));
-				if (!$bundle_item_product)
-					throw new Phpr_ApplicationException('Bundle item product not found');
-			} else if($bundle_item && $item) {
-				$bundle_item_product = $bundle_item->get_item_product($item->product);
+			if (post('bundle_offer_item_id')) {
+				$bundle_offer_item = Shop_ProductBundleOfferItem::create()->find(post('bundle_offer_item_id'));
+				if (!$bundle_offer_item)
+					throw new Phpr_ApplicationException('Bundle offer item not found');
+			} else if($bundle_offer && $item) {
+				$bundle_offer_item = $bundle_offer->get_item_product($item->product);
 				$bundle_master_order_item_id = $item->bundle_master_order_item_id;
 			}
 
-			if($bundle_item_product) {
-				$_POST['product_id'] = $bundle_item_product->product->id;
+			if($bundle_offer_item) {
+				$_POST['product_id'] = $bundle_offer_item->product->id;
 			}
 
-			$this->viewData['bundle_item_product_id'] = $bundle_item_product ? $bundle_item_product->id : null;
+			$this->viewData['bundle_offer_item_id'] = $bundle_offer_item ? $bundle_offer_item->id : null;
 			$this->viewData['bundle_master_order_item_id'] = post('bundle_master_order_item_id', $bundle_master_order_item_id);
-			$this->viewData['bundle_item_product'] = $bundle_item_product;
+			$this->viewData['bundle_offer_item'] = $bundle_offer_item;
 
 		}
 

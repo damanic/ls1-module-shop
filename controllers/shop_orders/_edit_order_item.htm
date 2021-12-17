@@ -1,5 +1,5 @@
 <?php
-$is_bundle_item = isset($bundle_item_product_id) && $bundle_item_product_id;
+$is_bundle_item = isset($bundle_offer_item_id) && $bundle_offer_item_id;
 ?>
 <div id="edit_item_popup">
 	<h2>Order <?=$is_bundle_item? 'Bundle' : null?> Item</h2>
@@ -17,14 +17,14 @@ $is_bundle_item = isset($bundle_item_product_id) && $bundle_item_product_id;
 				<div class="clear"></div>
 					
 				<input type="hidden" name="item_id" value="<?= $item->id ?>"/>
-				<? if (isset($bundle_item_product_id)): ?>
-					<input type="hidden" name="bundle_item_product_id" value="<?= $bundle_item_product_id ?>"/>
+				<? if (isset($bundle_offer_item_id)): ?>
+					<input type="hidden" name="bundle_offer_item_id" value="<?= $bundle_offer_item_id ?>"/>
 
 					<input type="hidden" name="Shop_OrderItem[bundle_master_order_item_id]" value="<?= $bundle_master_order_item_id ?>"/>
-					<input type="hidden" name="Shop_OrderItem[bundle_master_bundle_item_id]" value="<?= $bundle_master_bundle_item_id ?>"/>
+					<input type="hidden" name="Shop_OrderItem[bundle_offer_id]" value="<?= $bundle_offer_id ?>"/>
 					
-					<? if (isset($bundle_master_bundle_item_name)): ?>
-						<input type="hidden" name="Shop_OrderItem[bundle_master_bundle_item_name]" value="<?= h($bundle_master_bundle_item_name) ?>"/>
+					<? if (isset($bundle_offer_name)): ?>
+						<input type="hidden" name="Shop_OrderItem[bundle_offer_name]" value="<?= h($bundle_offer_name) ?>"/>
 					<? endif ?>
 				<? endif ?>
 				

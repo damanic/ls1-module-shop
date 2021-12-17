@@ -1,5 +1,5 @@
 <div>
-	<h2>Add Bundle Item Products</h2>
+	<h2>Add Bundle Products</h2>
 	<div class="content">
 		<div class="form700">
 			<? if (!isset($fatalError)): ?>
@@ -16,9 +16,9 @@
 						onSuccess: function(){},
 						onAfterUpdate: function(){
 							realignPopups();
-							make_bundle_items_sortable();
-							make_bundle_item_products_sortable();
-							register_bundle_item_change();
+							make_bundle_offers_sortable();
+							make_bundle_offer_items_sortable();
+							register_bundle_offer_change();
 						}
 					") ?>
 

@@ -6,7 +6,7 @@
 				<? if (!isset($fatalError)): ?>
 					<? $this->formRender($item) ?>
 
-					<?= backend_ajax_button('Save', 'preview_on_save_bundle_item', array('id'=>'bundle_item_save_btn', 'class'=>'default'), "
+					<?= backend_ajax_button('Save', 'preview_on_save_bundle_offer', array('id'=>'bundle_item_save_btn', 'class'=>'default'), "
 						loadIndicator: {injectInElement: true},
 						onSuccess: function(){
 							refresh_bundle_ui({
@@ -20,8 +20,8 @@
 					
 					<script type="text/javascript">
 						$('bundle_item_form').addEvent('popupLoaded', function(){
-							if ($('Shop_ProductBundleItem_name'))
-								$('Shop_ProductBundleItem_name').focus();
+							if ($('Shop_ProductBundleOffer_name'))
+								$('Shop_ProductBundleOffer_name').focus();
 						});
 					</script>
 

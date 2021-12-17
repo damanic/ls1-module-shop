@@ -135,12 +135,12 @@
 			}
 
 			/*
-			 * Add bundle items
+			 * Add bundle
 			 */
 			
 			if (!$existing_item)
 			{
-				foreach ($bundle_data as $bundle_item_id=>$item_data)
+				foreach ($bundle_data as $bundle_offer_id=>$item_data)
 				{
 					foreach ($item_data as $product_data)
 					{
@@ -148,8 +148,8 @@
 						$product_parameters['cart_name'] = $cart_name;
 						$product_parameters['bundle_data'] = array(
 							'bundle_master_cart_key'=>$item->key,
-							'bundle_master_item_id'=>$bundle_item_id,
-							'bundle_master_item_product_id'=>$product_data['bundle_item_product_id']
+							'bundle_offer_id'=>$bundle_offer_id,
+							'bundle_offer_item_id'=>$product_data['bundle_offer_item_id']
 						);
 
 						$product_parameters['product'] = Shop_Product::find_by_id($product_data['product_id']);
@@ -291,7 +291,7 @@
 		
 		protected static function check_bundle_products_availability($bundle_data, $cart_name, $master_quantity)
 		{
-			foreach ($bundle_data as $bundle_item_id=>$item_data)
+			foreach ($bundle_data as $bundle_offer_id=>$item_data)
 			{
 				foreach ($item_data as $product_data)
 				{
@@ -330,9 +330,9 @@
 
 			$result = array();
 			
-			$product_id = $bundle_item_product_id = null;
+			$product_id = $bundle_offer_item_id = null;
 
-			foreach ($bundle_data as $bundle_item_id=>$item_data)
+			foreach ($bundle_data as $bundle_offer_id=>$item_data)
 			{
 				if (!count($item_data))
 					continue;
@@ -349,14 +349,14 @@
 						if (!isset($product_data['product_id']) || !strlen($product_data['product_id']))
 							continue;
 							
-						self::parse_bundle_product_id($product_data['product_id'], $product_id, $bundle_item_product_id);
+						self::parse_bundle_product_id($product_data['product_id'], $product_id, $bundle_offer_item_id);
 
 						$product_data = array_merge($defaults, $product_data);
-						if (!array_key_exists($bundle_item_id, $result))
-							$result[$bundle_item_id] = array();
+						if (!array_key_exists($bundle_offer_id, $result))
+							$result[$bundle_offer_id] = array();
 							
 						$product_data['product_id'] = $product_id;
-						$product_data['bundle_item_product_id'] = $bundle_item_product_id;
+						$product_data['bundle_offer_item_id'] = $bundle_offer_item_id;
 						
 						if ($apply_grouped_products && array_key_exists('grouped_product_id', $product_data))
 						{
@@ -364,7 +364,7 @@
 							unset($product_data['grouped_product_id']);
 						}
 
-						$result[$bundle_item_id][] = $product_data;
+						$result[$bundle_offer_id][] = $product_data;
 					}
 				} else {
 					/*
@@ -374,7 +374,7 @@
 					if (!isset($item_data['product_id']) || !strlen($item_data['product_id']))
 						continue;
 
-					self::parse_bundle_product_id($item_data['product_id'], $product_id, $bundle_item_product_id);
+					self::parse_bundle_product_id($item_data['product_id'], $product_id, $bundle_offer_item_id);
 					
 					$item_data_processed = array();
 
@@ -406,14 +406,14 @@
 					}
 					
 					$item_data['product_id'] = $product_id;
-					$item_data['bundle_item_product_id'] = $bundle_item_product_id;
-					$result[$bundle_item_id][] = $item_data;
+					$item_data['bundle_offer_item_id'] = $bundle_offer_item_id;
+					$result[$bundle_offer_id][] = $item_data;
 				}
 			}
 			
 			if ($validate_quantity)
 			{
-				foreach ($result as $bundle_item_id=>&$item_products_data)
+				foreach ($result as $bundle_offer_id=>&$item_products_data)
 				{
 					foreach ($item_products_data as &$product_data)
 					{
@@ -433,14 +433,14 @@
 							}
 						}
 						else {
-							$item_product = Shop_BundleItemProduct::create()->find($product_data['bundle_item_product_id']);
+							$item_product = Shop_ProductBundleOfferItem::create()->find($product_data['bundle_offer_item_id']);
 							$product_data['quantity'] = $item_product->default_quantity;
 						}
 					}
 				}
 			}
 
-			foreach ($result as $bundle_item_id=>&$item_products_data)
+			foreach ($result as $bundle_offer_id=>&$item_products_data)
 			{
 				foreach ($item_products_data as &$product_data)
 				{
@@ -450,7 +450,7 @@
 						'custom_data'=>$product_data['custom_data'],
 						'quantity'=>isset($product_data['quantity']) ? (int)$product_data['quantity'] : null,
 						'product_id'=>$product_data['product_id'],
-						'bundle_item_product_id'=>$product_data['bundle_item_product_id']
+						'bundle_offer_item_id'=>$product_data['bundle_offer_item_id']
 					);
 				}
 			}
@@ -460,20 +460,20 @@
 		
 		protected static function check_requred_bundle_items($product, $bundle_data)
 		{
-			foreach ($product->bundle_items as $bundle_item)
+			foreach ($product->bundle_offers as $bundle_offer)
 			{
-				if ($bundle_item->is_required && !array_key_exists($bundle_item->id, $bundle_data))
-					throw new Phpr_ApplicationException(sprintf('Please select %s.', $bundle_item->name));
+				if ($bundle_offer->is_required && !array_key_exists($bundle_offer->id, $bundle_data))
+					throw new Phpr_ApplicationException(sprintf('Please select %s.', $bundle_offer->name));
 			}
 		}
 		
-		protected static function parse_bundle_product_id($product_id_data, &$product_id, &$bundle_item_product_id)
+		protected static function parse_bundle_product_id($product_id_data, &$product_id, &$bundle_offer_item_id)
 		{
 			$parts = explode('|', $product_id_data);
 			if (count($parts) != 2)
 				throw new Phpr_ApplicationException('Invalid bundle item product specifier');
 
-			$bundle_item_product_id = trim($parts[0]);
+			$bundle_offer_item_id = trim($parts[0]);
 			$product_id = trim($parts[1]);
 		}
 		
@@ -569,10 +569,10 @@
 						
 					if ($value <= 0)
 					{
-						$bundle_item = $item->get_bundle_item();
-						if ($bundle_item && $bundle_item->is_required)
+						$bundle_offer = $item->get_bundle_offer();
+						if ($bundle_offer && $bundle_offer->is_required)
 							throw new Phpr_ApplicationException(
-								sprintf('"%s" item is required. You cannot delete it from "%s" product.', $bundle_item->name, $master_item->product->name)
+								sprintf('"%s" item is required. You cannot delete it from "%s" product.', $bundle_offer->name, $master_item->product->name)
 							);
 					}
 				}
@@ -585,19 +585,19 @@
 			{
 				$bundle_items = $item ? $item->get_bundle_items() : array();
 				$bundle_item_quantities = array();
-				foreach ($bundle_items as $bundle_item)
+				foreach ($bundle_items as $bundle_offer)
 				{
-					$bundle_item_quantities[$bundle_item->key] = $updated_quantity = $value*$bundle_item->get_quantity();
+					$bundle_item_quantities[$bundle_offer->key] = $updated_quantity = $value*$bundle_offer->get_quantity();
 					
-					if ($bundle_item->product)
-						self::check_availability($bundle_item->product, $updated_quantity, $item->options, false);
+					if ($bundle_offer->product)
+						self::check_availability($bundle_offer->product, $updated_quantity, $item->options, false);
 				}
 			}
 
 			self::set_item_quantity($key, $value, $cart_name, $item);
-			foreach ($bundle_items as $bundle_item)
+			foreach ($bundle_items as $bundle_offer)
 			{
-				self::set_item_quantity($bundle_item->key, $bundle_item_quantities[$bundle_item->key], $cart_name, $bundle_item);
+				self::set_item_quantity($bundle_offer->key, $bundle_item_quantities[$bundle_offer->key], $cart_name, $bundle_offer);
 			}
 		}
 		

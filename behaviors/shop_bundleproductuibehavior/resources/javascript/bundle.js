@@ -2,7 +2,7 @@ var bundle_item_changed = false;
 
 function add_bundle_item()
 {
-	new PopupForm('preview_on_load_bundle_item_form', {
+	new PopupForm('preview_on_load_bundle_offer_form', {
 		ajaxFields: $('bundle_item_form')
 	});
 	
@@ -11,7 +11,7 @@ function add_bundle_item()
 
 function edit_bundle_item()
 {
-	new PopupForm('preview_on_load_bundle_item_form', {
+	new PopupForm('preview_on_load_bundle_offer_form', {
 		ajaxFields: {
 			'item_id': $('bundle_current_item_id').value,
 			'edit_session_key': $('bundle_session_key').value
@@ -24,7 +24,7 @@ function edit_bundle_item()
 function delete_bundle_item()
 {
 	$('bundle_item_form').getForm().sendPhpr(
-		'preview_on_delete_bundle_item',
+		'preview_on_delete_bundle_offer',
 		{
 			confirm: 'Do you really want to delete this bundle item?',
 			loadIndicator: {show: false},
@@ -32,7 +32,7 @@ function delete_bundle_item()
 			onComplete: LightLoadingIndicator.hide,
 			update: 'bundle_item_form',
 			onFailure: popupAjaxError,
-			prepareFunction: register_bundle_item_change
+			prepareFunction: register_bundle_offer_change
 		}
 	);
 	
@@ -45,7 +45,7 @@ function refresh_bundle_ui(options)
 		cancelPopup();
 		
 	if (options.config_updated !== undefined && options.config_updated == 1)
-		register_bundle_item_change();
+		register_bundle_offer_change();
 		
 	var after_update_func = null;
 	if (options.afterUpdate !== undefined)
@@ -63,8 +63,8 @@ function refresh_bundle_ui(options)
 			onComplete: LightLoadingIndicator.hide,
 			update: 'bundle_item_form',
 			onAfterUpdate: function(){
-				make_bundle_items_sortable();
-				make_bundle_item_products_sortable();
+				make_bundle_offers_sortable();
+				make_bundle_offer_items_sortable();
 				if (after_update_func)
 					after_update_func.call();
 			}
@@ -83,7 +83,7 @@ function delete_bundle_products()
 	}
 	
 	$('bundle_item_form').getForm().sendPhpr(
-		'preview_on_remove_bundle_item_products',
+		'preview_on_remove_bundle_offer_items',
 		{
 			confirm: 'Do you really want to remove selected products from the bundle item?',
 			loadIndicator: {show: false},
@@ -91,10 +91,10 @@ function delete_bundle_products()
 			onComplete: LightLoadingIndicator.hide,
 			update: 'bundle_item_form',
 			onAfterUpdate: function(){
-				make_bundle_items_sortable();
-				make_bundle_item_products_sortable();
+				make_bundle_offers_sortable();
+				make_bundle_offer_items_sortable();
 			},
-			onSuccess: register_bundle_item_change
+			onSuccess: register_bundle_offer_change
 		}
 	);
 	
@@ -112,7 +112,7 @@ function show_add_products_to_bundle_form()
 
 function update_bundle_item_default_product(checkbox)
 {
-	register_bundle_item_change();
+	register_bundle_offer_change();
 	
 	var row = $(checkbox).findParent('tr');
 	if (checkbox.checked)
@@ -136,9 +136,9 @@ function update_bundle_item_default_product(checkbox)
 	});
 }
 
-function update_bundle_item_product_status(checkbox)
+function update_bundle_offer_item_status(checkbox)
 {
-	register_bundle_item_change();
+	register_bundle_offer_change();
 
 	var row = $(checkbox).findParent('tr');
 	if (checkbox.checked)
@@ -147,25 +147,25 @@ function update_bundle_item_product_status(checkbox)
 		row.addClass('disabled');
 }
 
-function make_bundle_items_sortable()
+function make_bundle_offers_sortable()
 {
 	var list = $('bundle-item-list');
 	
 	if (list)
-		list.makeListSortable('preview_on_set_bundle_item_order', 'bundle-item-order', 'bundle-item-id', 'bundle-item-handle');
+		list.makeListSortable('preview_on_set_bundle_offer_order', 'bundle-item-order', 'bundle-item-id', 'bundle-item-handle');
 }
 
-function make_bundle_item_products_sortable()
+function make_bundle_offer_items_sortable()
 {
 	var list = $('bundle-item-products');
 	
 	if (list)
-		list.makeListSortable('preview_on_set_bundle_item_product_order', 'bundle-product-order', 'bundle-product-id', 'bundle-product-sort-handle');
+		list.makeListSortable('preview_on_set_bundle_offer_item_order', 'bundle-product-order', 'bundle-product-id', 'bundle-product-sort-handle');
 }
 
 function update_bundle_price_override(select)
 {
-	register_bundle_item_change();
+	register_bundle_offer_change();
 
 	var $select = $(select);
 	
@@ -190,7 +190,7 @@ function update_bundle_price_override(select)
 	}
 }
 
-function register_bundle_item_change()
+function register_bundle_offer_change()
 {
 	if ($('save-bundle-item-btn'))
 		$('save-bundle-item-btn').removeClass('disabled');
@@ -236,7 +236,7 @@ function save_bundle()
 	clear_bundle_errors();
 
 	$('bundle_item_form').getForm().sendPhpr(
-		'preview_on_save_bundle_item_changes',
+		'preview_on_save_bundle_offer_changes',
 		{
 			loadIndicator: {show: false},
 			onBeforePost: LightLoadingIndicator.show.pass('Saving...'), 
@@ -273,8 +273,8 @@ function save_bundle()
 }
 
 window.addEvent('domready', function(){
-	make_bundle_items_sortable();
-	make_bundle_item_products_sortable();
+	make_bundle_offers_sortable();
+	make_bundle_offer_items_sortable();
 })
 
 if (window.unload_handlers == undefined)

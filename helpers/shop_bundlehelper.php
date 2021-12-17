@@ -5,87 +5,98 @@
 	 * @documentable
 	 * @see http://lemonstand.com/docs/managing_bundle_products/ Managing bundle products
 	 * @see http://lemonstand.com/docs/displaying_product_bundle_items/ Displaying product bundle items
-	 * @see Shop_BundleItemProduct
-	 * @see Shop_ProductBundleItem
+	 * @see Shop_ProductBundleOfferItem
+	 * @see Shop_ProductBundleOffer
 	 * @author LemonStand eCommerce Inc.
 	 * @package shop.helpers
 	 */
 	class Shop_BundleHelper
 	{
 		protected static $normalized_bundle_product_data = null;
-		
-		/**
-		 * Returns TRUE if a specified bundle item product is selected.
-		 * Use this method to determine whether a bundle item product drop-down option, a radio button or a checkbox is selected.
-		 * Pass a {@link Shop_ProductBundleItem bundle item object} to the first parameter and {@link Shop_BundleItemProduct bundle item product object} 
-		 * to the second parameter. Example: 
-		 * <pre>
-		 * <select ...>
-		 *   <? foreach ($item->item_products as $item_product): ?>
-		 *     <option 
-		 *       ...
-		 *       <?= option_state(Shop_BundleHelper::is_item_product_selected($item, $item_product), true) ?>>
-		 *         <?= h($item_product->product->name) ?>
-		 *     </option>
-		 *   <? endforeach ?>
-		 * </select>
-		 * </pre>
-		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object.
-		 * @return boolean Returns TRUE if a specified bundle item product is selected. Returns FALSE otherwise.
-		 */
-		public static function is_item_product_selected($bundle_item, $bundle_item_product)
+
+
+        /**
+         * @deprecated 
+         * see: is_bundle_item_selected()
+         */
+		public static function is_item_product_selected($bundle_offer, $bundle_offer_item)
 		{
-			$result = self::is_item_product_selected_internal($bundle_item, $bundle_item_product);
-
-			if ($result === null)
-				return false;
-
-			if ($result)
-				return true;
-
-			/*
-			 * Return TRUE if the item is default
-			 */
-			
-			foreach ($bundle_item->item_products_all as $item_product)
-			{
-				if ($item_product->is_default && $item_product->id == $bundle_item_product->id)
-					return true;
-			}
-
-			/*
-			 * Return FALSE if there is a default product for this bundle item but this product is not default
-			 */
-			
-			foreach ($bundle_item->item_products_all as $item_product)
-			{
-				if ($item_product->is_default)
-					return false;
-			}
-			
-			/*
-			 * Return TRUE if this item is the first in the list for drop-down and radio button controls
-			 */
-
-			if (($bundle_item->control_type == Shop_ProductBundleItem::control_dropdown ||  
-				$bundle_item->control_type == Shop_ProductBundleItem::control_radio) && $bundle_item->is_required)
-			{
-				foreach ($bundle_item->item_products as $index=>$item_product)
-				{
-					if ($item_product->id == $bundle_item_product->id && $index == 0)
-						return true;
-				}
-			}
-
-			return false;
+            return self::is_bundle_item_selected($bundle_offer, $bundle_offer_item);
 		}
+
+        /**
+         * Returns TRUE if a specified bundle item product is selected.
+         * Use this method to determine whether a bundle item product drop-down option, a radio button or a checkbox is selected.
+         * Pass a {@link Shop_ProductBundleOffer bundle item object} to the first parameter and {@link Shop_ProductBundleOfferItem bundle item product object}
+         * to the second parameter. Example:
+         * <pre>
+         * <select ...>
+         *   <? foreach ($offer->items as $item): ?>
+         *     <option
+         *       ...
+         *       <?= option_state(Shop_BundleHelper::is_bundle_item_selected($offer, $item), true) ?>>
+         *         <?= h($item->product->name) ?>
+         *     </option>
+         *   <? endforeach ?>
+         * </select>
+         * </pre>
+         * @documentable
+         *
+         * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+         * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object.
+         *
+         * @return boolean Returns TRUE if a specified bundle item product is selected. Returns FALSE otherwise.
+         */
+        public static function is_bundle_item_selected($bundle_offer, $bundle_offer_item){
+            $result = self::is_bundle_item_selected_internal($bundle_offer, $bundle_offer_item);
+
+            if ($result === null)
+                return false;
+
+            if ($result)
+                return true;
+
+            /*
+             * Return TRUE if the item is default
+             */
+
+            foreach ($bundle_offer->items_all as $item_product)
+            {
+                if ($item_product->is_default && $item_product->id == $bundle_offer_item->id)
+                    return true;
+            }
+
+            /*
+             * Return FALSE if there is a default product for this bundle item but this product is not default
+             */
+
+            foreach ($bundle_offer->items_all as $item_product)
+            {
+                if ($item_product->is_default)
+                    return false;
+            }
+
+            /*
+             * Return TRUE if this item is the first in the list for drop-down and radio button controls
+             */
+
+            if (($bundle_offer->control_type == Shop_ProductBundleOffer::control_dropdown ||
+                    $bundle_offer->control_type == Shop_ProductBundleOffer::control_radio) && $bundle_offer->is_required)
+            {
+                foreach ($bundle_offer->items as $index => $item)
+                {
+                    if ($item->id == $bundle_offer_item->id && $index == 0)
+                        return true;
+                }
+            }
+
+            return false;
+        }
 		
 		/**
 		 * Returns Quantity field value for a specified bundle item product.
-		 * Use this method to output value for the Quantity field <em>value</em> attribute. Pass a {@link Shop_ProductBundleItem bundle item object} 
-		 * to the first parameter and {@link Shop_BundleItemProduct bundle item product object} to the second parameter. Example: 
+		 * Use this method to output value for the Quantity field <em>value</em> attribute. Pass a {@link Shop_ProductBundleOffer bundle item object} 
+		 * to the first parameter and {@link Shop_ProductBundleOfferItem bundle item product object} to the second parameter. Example: 
 		 * <pre>
 		 * <input
 		 *   class="text"
@@ -94,25 +105,27 @@
 		 *   value="<?= Shop_BundleHelper::get_product_quantity($item, $item_product) ?>"/>
 		 * </pre>
 		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object, optional.
-		 * @param integer $product_id Specifies Product identifier, optional.
+		 *
+		 * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object, optional.
+		 * @param integer                     $product_id        Specifies Product identifier, optional.
+		 *
 		 * @return integer Returns Quantity field value.
 		 */
-		public static function get_product_quantity($bundle_item, $bundle_item_product = null, $product_id = null)
+		public static function get_product_quantity($bundle_offer, $bundle_offer_item = null, $product_id = null)
 		{
-			$result = self::find_bundle_data_element('quantity', $bundle_item, $bundle_item_product, $product_id);
+			$result = self::find_bundle_data_element('quantity', $bundle_offer, $bundle_offer_item, $product_id);
 
 			if (strlen($result))
 				return $result;
 
-			if ($bundle_item_product)
-				return $bundle_item_product->default_quantity;
-				
-			foreach ($bundle_item->item_products_all as $bundle_item_product)
+			if ($bundle_offer_item)
+				return $bundle_offer_item->default_quantity;
+
+            foreach ($bundle_offer->items_all as $bundle_offer_item)
 			{
-				if ($bundle_item_product->is_default)
-					return $bundle_item_product->default_quantity;
+				if ($bundle_offer_item->is_default)
+					return $bundle_offer_item->default_quantity;
 			}
 
 			return null;
@@ -134,15 +147,17 @@
 		 * </select>
 		 * </pre>
 		 * @documentable
-		 * @param Shop_CustomAttribute $option Specifies the option object being checked.
-		 * @param string $value Specifies the option value to check.
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object, optional.
+		 *
+		 * @param Shop_CustomAttribute        $option            Specifies the option object being checked.
+		 * @param string                      $value             Specifies the option value to check.
+		 * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object, optional.
+		 *
 		 * @return boolean Returns TRUE if a specified bundle item product option is selected. Returns FALSE otherwise.
 		 */
-		public static function is_product_option_selected($option, $value, $bundle_item, $bundle_item_product)
+		public static function is_product_option_selected($option, $value, $bundle_offer, $bundle_offer_item)
 		{
-			$result = self::find_bundle_data_element('options', $bundle_item, $bundle_item_product, null);
+			$result = self::find_bundle_data_element('options', $bundle_offer, $bundle_offer_item, null);
 
 			if ($result === false || !is_array($result))
 				return false;
@@ -155,7 +170,7 @@
 		
 		/**
 		 * Returns an array of selected bundle item product options.
-		 * The method result is suitable for passing to the {@link Shop_Product::om()} and {@link Shop_BundleItemProduct::get_price()} methods.
+		 * The method result is suitable for passing to the {@link Shop_Product::om()} and {@link Shop_ProductBundleOfferItem::get_price()} methods.
 		 * <pre>
 		 * // Load bundle item product images
 		 * $selected_options = Shop_BundleHelper::get_selected_options($item, $item_product);
@@ -166,21 +181,21 @@
 		 * Price: <?= format_currency($item_product->get_price($product, $selected_options)) ?>
 		 * </pre>
 		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object, optional.
+		 * @param Shop_ProductBundleOffer $bundle_offer Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object, optional.
 		 * @return array Returns a list of selected options in the following format: [option_key=>option value].
 		 */
-		public static function get_selected_options($bundle_item, $bundle_item_product)
+		public static function get_selected_options($bundle_offer, $bundle_offer_item)
 		{
-			$options = self::find_bundle_data_element('options', $bundle_item, $bundle_item_product, null);
+			$options = self::find_bundle_data_element('options', $bundle_offer, $bundle_offer_item, null);
 
 			if (!$options)
 				$options = array();
 
-			if (!$bundle_item_product || !$bundle_item_product->product)
+			if (!$bundle_offer_item || !$bundle_offer_item->product)
 				return $options;
 
-			return $bundle_item_product->product->normalize_posted_options($options);
+			return $bundle_offer_item->product->normalize_posted_options($options);
 		}
 		
 		/**
@@ -199,14 +214,16 @@
 		 * <? endforeach ?>
 		 * </pre>
 		 * @documentable
-		 * @param Shop_ExtraOption $option Specifies the exrta option object being checked.
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object, optional.
+		 *
+		 * @param Shop_ExtraOption            $option            Specifies the exrta option object being checked.
+		 * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object, optional.
+		 *
 		 * @return boolean Returns TRUE if a specified bundle item product extra option is selected. Returns FALSE otherwise.
 		 */
-		public static function is_product_extra_option_selected($option, $bundle_item, $bundle_item_product = null)
+		public static function is_product_extra_option_selected($option, $bundle_offer, $bundle_offer_item = null)
 		{
-			$result = self::find_bundle_data_element('extra_options', $bundle_item, $bundle_item_product, null);
+			$result = self::find_bundle_data_element('extra_options', $bundle_offer, $bundle_offer_item, null);
 			
 			if ($result === false || !is_array($result))
 				return false;
@@ -222,24 +239,26 @@
 		 * If the visitor has not selected any product yet, the method would return a default product for this
 		 * bundle item (if any), or a first product in the list for drop-down and radio button type bundle items. 
 		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object, optional.
+		 *
+		 * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object, optional.
+		 *
 		 * @return Shop_Product Returns the selected product object.
 		 */
-		public static function get_bundle_item_product($bundle_item, $bundle_item_product = null)
-		{
-			if ($bundle_item->control_type == Shop_ProductBundleItem::control_dropdown)
-				return self::get_dropdown_bundle_item_product($bundle_item, $bundle_item_product);
+		public static function get_bundle_item_product($bundle_offer, $bundle_offer_item = null)
+        {
+            if ($bundle_offer->control_type == Shop_ProductBundleOffer::control_dropdown)
+				return self::get_dropdown_bundle_item_product($bundle_offer, $bundle_offer_item);
 			
-			$product_id = self::find_bundle_data_element('grouped_product_id', $bundle_item, $bundle_item_product, null);
+			$product_id = self::find_bundle_data_element('grouped_product_id', $bundle_offer, $bundle_offer_item, null);
 			
-			if (!$bundle_item_product)
+			if (!$bundle_offer_item)
 			{
-				foreach ($bundle_item->item_products as $item_product)
+                foreach ($bundle_offer->items as $item)
 				{
-					if (self::is_item_product_selected($bundle_item, $item_product))
+					if (self::is_bundle_item_selected($bundle_offer, $item))
 					{
-						$bundle_item_product = $item_product;
+						$bundle_offer_item = $item;
 						break;
 					}
 				}
@@ -247,10 +266,10 @@
 
 			if ($product_id === false)
 			{
-				if (!$bundle_item_product)
+				if (!$bundle_offer_item)
 					return null;
 				
-				$product = $bundle_item_product->product;
+				$product = $bundle_offer_item->product;
 				if (!$product->grouped_products->count)
 					return $product;
 				
@@ -261,22 +280,31 @@
 		}
 		
 		/**
-		 * Returns a bundle item product object corresponding a product selected by visitor.
-		 * This method is required only for drop-down type bundle items.
-		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @return Shop_BundleItemProduct Returns the bundle item product object or NULL.
+		 * @deprecated
+         * @see get_bundle_offer_item()
 		 */
-		public static function get_bundle_item_product_item($bundle_item)
+		public static function get_bundle_item_product_item($bundle_offer)
 		{
-			foreach ($bundle_item->item_products as $item_product)
-			{
-				if (self::is_item_product_selected($bundle_item, $item_product))
-					return $item_product;
-			}
-
-			return null;
+            return self::get_bundle_offer_item();
 		}
+
+        /**
+         * Returns a bundle offer item corresponding to visitor selected.
+         * This method is required only for drop-down type bundle items.
+         * @documentable
+         *
+         * @param Shop_ProductBundleOffer $bundle_offer Specifies the bundle item object.
+         * @return Shop_ProductBundleOfferItem Returns the bundle item product object or NULL.
+         */
+        public static function get_bundle_offer_item($bundle_offer){
+            foreach ($bundle_offer->items as $item)
+            {
+                if (self::is_bundle_item_selected($bundle_offer, $item))
+                    return $item;
+            }
+
+            return null;
+        }
 
 		/**
 		 * Returns a name for a bundle item product selector input element (drop-down menu, checkbox or radio button).
@@ -288,37 +316,39 @@
 		 *     name="<?= Shop_BundleHelper::get_product_selector_name($item, $selected_item_product) ?>"
 		 *   ...
 		 * <? elseif ($item->control_type == 'checkbox'): ?>
-		 *   <? foreach ($item->item_products as $item_product): ?>
+		 *   <? foreach ($offer->items as $item): ?>
 		 *     <input 
 		 *       type="checkbox" 
-		 *       name="<?= Shop_BundleHelper::get_product_selector_name($item, $item_product) ?>" 
-		 *       value="<?= Shop_BundleHelper::get_product_selector_value($item_product) ?>"
+		 *       name="<?= Shop_BundleHelper::get_product_selector_name($offer, $item) ?>"
+		 *       value="<?= Shop_BundleHelper::get_product_selector_value($item) ?>"
 		 *       ...
 		 *     />
 		 *   ...
 		 * <? else: ?> 
-		 *   <? foreach ($item->item_products as $item_product): ?>
+		 *   <? foreach ($offer->items as $item): ?>
 		 *     <input 
 		 *       type="radio" 
-		 *       name="<?= Shop_BundleHelper::get_product_selector_name($item, $selected_product) ?>" 
-		 *       value="<?= Shop_BundleHelper::get_product_selector_value($item_product) ?>"
+		 *       name="<?= Shop_BundleHelper::get_product_selector_name($offer, $selected_product) ?>"
+		 *       value="<?= Shop_BundleHelper::get_product_selector_value($item) ?>"
 		 *       ...
 		 *     />
 		 *   ...
 		 * <? endif ?>
 		 * </pre>
 		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object, optional.
+		 *
+		 * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object, optional.
+		 *
 		 * @return string Returns the input element name.
 		 */
-		public static function get_product_selector_name($bundle_item, $bundle_item_product)
+		public static function get_product_selector_name($bundle_offer, $bundle_offer_item)
 		{
-			switch ($bundle_item->control_type)
+            switch ($bundle_offer->control_type)
 			{
-				case Shop_ProductBundleItem::control_dropdown : return 'bundle_data['.$bundle_item->id.'][product_id]';
-				case Shop_ProductBundleItem::control_checkbox : return 'bundle_data['.$bundle_item->id.']['.$bundle_item_product->product_id.'][product_id]';
-				default : return 'bundle_data['.$bundle_item->id.'][product_id]';
+				case Shop_ProductBundleOffer::control_dropdown : return 'bundle_data[' . $bundle_offer->id.'][product_id]';
+				case Shop_ProductBundleOffer::control_checkbox : return 'bundle_data[' . $bundle_offer->id.']['.$bundle_offer_item->product_id.'][product_id]';
+				default : return 'bundle_data[' . $bundle_offer->id.'][product_id]';
 			}
 		}
 		
@@ -326,23 +356,25 @@
 		 * Returns a value for a bundle item product selector input element (drop-down menu option, checkbox or radio button).
 		 * <pre>
 		 * <select ...>
-		 *   <? foreach ($item->item_products as $item_product): ?>
+		 *   <? foreach ($offer->items as $item): ?>
 		 *     <option 
-		 *       value="<?= Shop_BundleHelper::get_product_selector_value($item_product) ?>" 
+		 *       value="<?= Shop_BundleHelper::get_product_selector_value($item) ?>"
 		 *       ...
 		 *     >
-		 *       <?= h($item_product->product->name) ?>
+		 *       <?= h($item->product->name) ?>
 		 *     </option>
 		 *   <? endforeach ?>
 		 * </select>
 		 * </pre>
 		 * @documentable
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object.
+		 *
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object.
+		 *
 		 * @return string Returns the input element value.
 		 */
-		public static function get_product_selector_value($bundle_item_product)
+		public static function get_product_selector_value($bundle_offer_item)
 		{
-			return $bundle_item_product->id.'|'.$bundle_item_product->product_id;
+            return $bundle_offer_item->id . '|' . $bundle_offer_item->product_id;
 		}
 		
 		/**
@@ -358,27 +390,29 @@
 		 *   value="<?= Shop_BundleHelper::get_product_quantity($item, $item_product) ?>"/>
 		 * </pre>
 		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object.
-		 * @param string $control_name Specifies the control name
+		 *
+		 * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object.
+		 * @param string                      $control_name      Specifies the control name
+		 *
 		 * @return string Returns the the product configuration control name.
 		 */
-		public static function get_product_control_name($bundle_item, $bundle_item_product, $control_name)
+		public static function get_product_control_name($bundle_offer, $bundle_offer_item, $control_name)
 		{
 			if (!in_array($control_name, array('quantity', 'options', 'extra_options', 'grouped_product')) )
 				throw new Phpr_ApplicationException('Invalid control name passed to Shop_BundleHelper::get_product_control_name(). Valid values are options, extra_options, grouped_product.');
 				
 			if ($control_name == 'grouped_product')
 				$control_name = 'grouped_product_id';
-			
-			switch ($bundle_item->control_type)
+
+            switch ($bundle_offer->control_type)
 			{
-				case Shop_ProductBundleItem::control_dropdown : 
-					return 'bundle_data['.$bundle_item->id.']['.$control_name.']';
-				case Shop_ProductBundleItem::control_checkbox : 
-					return 'bundle_data['.$bundle_item->id.']['.$bundle_item_product->product_id.']['.$control_name.']';
+				case Shop_ProductBundleOffer::control_dropdown : 
+					return 'bundle_data[' . $bundle_offer->id.']['.$control_name.']';
+				case Shop_ProductBundleOffer::control_checkbox : 
+					return 'bundle_data[' . $bundle_offer->id.']['.$bundle_offer_item->product_id.']['.$control_name.']';
 				default : 
-					return 'bundle_data['.$bundle_item->id.']['.$control_name.']['.$bundle_item_product->product_id.']';
+					return 'bundle_data[' . $bundle_offer->id.']['.$control_name.']['.$bundle_offer_item->product_id.']';
 			}
 		}
 		
@@ -387,34 +421,36 @@
 		 * Hidden fields are required only for drop-down type bundle items.
 		 * <pre><?= Shop_BundleHelper::get_item_hidden_fields($item, $selected_item_product) ?></pre>
 		 * @documentable
-		 * @param Shop_ProductBundleItem $bundle_item Specifies the bundle item object.
-		 * @param Shop_BundleItemProduct $bundle_item_product Specifies the bundle item product object.
+		 *
+		 * @param Shop_ProductBundleOffer     $bundle_offer      Specifies the bundle item object.
+		 * @param Shop_ProductBundleOfferItem $bundle_offer_item Specifies the bundle item product object.
+		 *
 		 * @return string Returns HTML string containing the hidden field declarations.
 		 */
-		public static function get_item_hidden_fields($bundle_item, $bundle_item_product)
-		{
-			if ($bundle_item->control_type != Shop_ProductBundleItem::control_dropdown)
+		public static function get_item_hidden_fields($bundle_offer, $bundle_offer_item)
+        {
+            if ($bundle_offer->control_type != Shop_ProductBundleOffer::control_dropdown)
 				return null;
 				
-			$product_id = $bundle_item_product ? $bundle_item_product->id : null;
+			$product_id = $bundle_offer_item ? $bundle_offer_item->id : null;
 				
-			return '<input type="hidden" name="bundle_data['.$bundle_item->id.'][post_item_product_id]" value="'.$product_id.'"/>';
+			return '<input type="hidden" name="bundle_data[' . $bundle_offer->id.'][post_item_product_id]" value="'.$product_id.'"/>';
 		}
 		
-		protected static function find_bundle_data_element($element_name, $bundle_item, $bundle_item_product, $product_id)
+		protected static function find_bundle_data_element($element_name, $bundle_offer, $bundle_offer_item, $product_id)
 		{
 			$data = post('bundle_data', array());
 
-			if (!array_key_exists($bundle_item->id, $data))
+			if (!array_key_exists($bundle_offer->id, $data))
 				return false;
 
 			if (!$product_id)
 			{
-				if ($bundle_item_product)
-					$product_id = $bundle_item_product->product_id;
+				if ($bundle_offer_item)
+					$product_id = $bundle_offer_item->product_id;
 			}
 
-			$data = $data[$bundle_item->id];
+			$data = $data[$bundle_offer->id];
 			if (!count($data))
 				return false;
 
@@ -423,10 +459,10 @@
 				$element_data = $data[$element_name];
 				if (!is_array($element_data))
 				{
-					if (!array_key_exists('post_item_product_id', $data) || !$bundle_item_product)
+					if (!array_key_exists('post_item_product_id', $data) || !$bundle_offer_item)
 						return $element_data;
 
-					if ($data['post_item_product_id'] != $bundle_item_product->id)
+					if ($data['post_item_product_id'] != $bundle_offer_item->id)
 						return false;
 
 					return $element_data;
@@ -474,22 +510,22 @@
 			return self::$normalized_bundle_product_data = Shop_Cart::normalize_bundle_data(post('bundle_data', array()));
 		}
 		
-		protected static function is_item_product_selected_internal($bundle_item, $bundle_item_product)
+		protected static function is_bundle_item_selected_internal($bundle_offer, $bundle_offer_item)
 		{
 			$data = post('bundle_data', array());
-			if (!array_key_exists($bundle_item->id, $data))
+			if (!array_key_exists($bundle_offer->id, $data))
 				return false;
 				
-			$data = $data[$bundle_item->id];
+			$data = $data[$bundle_offer->id];
 			if (array_key_exists('product_id', $data))
 			{
 				if (!strlen($data['product_id']))
 					return null;
 
-				$product_id = $bundle_item_product_id = null;
-				self::parse_bundle_product_id($data['product_id'], $product_id, $bundle_item_product_id);
+				$product_id = $bundle_offer_item_id = null;
+				self::parse_bundle_product_id($data['product_id'], $product_id, $bundle_offer_item_id);
 				
-				if ($bundle_item_product_id == $bundle_item_product->id)
+				if ($bundle_offer_item_id == $bundle_offer_item->id)
 				{
 					return true;
 				}
@@ -508,46 +544,46 @@
 					if (!array_key_exists('product_id', $product_data))
 						continue;
 						
-					$product_id = $bundle_item_product_id = null;
-					self::parse_bundle_product_id($product_data['product_id'], $product_id, $bundle_item_product_id);
+					$product_id = $bundle_offer_item_id = null;
+					self::parse_bundle_product_id($product_data['product_id'], $product_id, $bundle_offer_item_id);
 
-					if ($bundle_item_product_id == $bundle_item_product->id)
+					if ($bundle_offer_item_id == $bundle_offer_item->id)
 						return true;
 				}
 			}
 			
-			if ($bundle_item->control_type == Shop_ProductBundleItem::control_checkbox && $data)
+			if ($bundle_offer->control_type == Shop_ProductBundleOffer::control_checkbox && $data)
 				return null;
 
 			return false;
 		}
 		
-		protected static function parse_bundle_product_id($product_id_data, &$product_id, &$bundle_item_product_id)
+		protected static function parse_bundle_product_id($product_id_data, &$product_id, &$bundle_offer_item_id)
 		{
 			$parts = explode('|', $product_id_data);
 			if (count($parts) < 2)
 			{
 				$product_id = trim($parts[0]);
-				$bundle_item_product_id = null;
+				$bundle_offer_item_id = null;
 			} else
 			{
-				$bundle_item_product_id = trim($parts[0]);
+				$bundle_offer_item_id = trim($parts[0]);
 				$product_id = trim($parts[1]);
 			}
 		}
 		
-		protected static function get_dropdown_bundle_item_product($bundle_item, $bundle_item_product)
+		protected static function get_dropdown_bundle_item_product($bundle_offer, $bundle_offer_item)
 		{
-			$master_product_id = self::find_bundle_data_element('product_id', $bundle_item, $bundle_item_product, null);
-			$grouped_product_id = self::find_bundle_data_element('grouped_product_id', $bundle_item, $bundle_item_product, null);
+			$master_product_id = self::find_bundle_data_element('product_id', $bundle_offer, $bundle_offer_item, null);
+			$grouped_product_id = self::find_bundle_data_element('grouped_product_id', $bundle_offer, $bundle_offer_item, null);
 
-			if (!$bundle_item_product)
+			if (!$bundle_offer_item)
 			{
-				foreach ($bundle_item->item_products as $item_product)
+				foreach ($bundle_offer->items as $item)
 				{
-					if (self::is_item_product_selected($bundle_item, $item_product))
+					if (self::is_bundle_item_selected($bundle_offer, $item))
 					{
-						$bundle_item_product = $item_product;
+						$bundle_offer_item = $item;
 						break;
 					}
 				}
@@ -555,10 +591,10 @@
 
 			if ($master_product_id === false)
 			{
-				if (!$bundle_item_product)
+				if (!$bundle_offer_item)
 					return null;
 
-				$product = $bundle_item_product->product;
+				$product = $bundle_offer_item->product;
 				if (!$product->grouped_products->count)
 					return $product;
 
@@ -585,5 +621,3 @@
 			return $master_product;
 		}
 	}
-
-?>

@@ -149,7 +149,7 @@ class Shop_Product extends Db_ActiveRecord
 		'product_extra_options'=>array('class_name'=>'Shop_ExtraOption', 'foreign_key'=>'product_id', 'order'=>'id', 'delete'=>true, 'order'=>'extra_option_sort_order', 'conditions'=>'(option_in_set is null or option_in_set=0)'),
 		'properties'=>array('class_name'=>'Shop_ProductProperty', 'foreign_key'=>'product_id', 'order'=>'sort_order', 'delete'=>true),
 		'price_tiers'=>array('class_name'=>'Shop_PriceTier', 'foreign_key'=>'product_id', 'order'=>'(select name from shop_customer_groups where id=customer_group_id), price desc', 'delete'=>true),
-		'bundle_items_link'=>array('class_name'=>'Shop_ProductBundleItem', 'foreign_key'=>'product_id', 'order'=>'sort_order', 'delete'=>true),
+		'bundle_offers_link'=>array('class_name'=>'Shop_ProductBundleOffer', 'foreign_key'=>'product_id', 'order'=>'sort_order', 'delete'=>true),
 		'option_matrix_records'=>array('class_name'=>'Shop_OptionMatrixRecord', 'foreign_key'=>'product_id', 'order'=>'shop_option_matrix_records.id', 'delete'=>true),
 
 		// Interface grouped products list
@@ -1244,12 +1244,12 @@ class Shop_Product extends Db_ActiveRecord
 
 		}
 
-		if ($name == 'bundle_items')
+		if ($name == 'bundle_offers' || $name == 'bundle_items') //bundle items deprecated
 		{
 			if ($this->grouped)
-				return $this->master_grouped_product->bundle_items_link;
+				return $this->master_grouped_product->bundle_offers_link;
 			else
-				return $this->bundle_items_link;
+				return $this->bundle_offers_link;
 		}
 
 		if ($name == 'category_list')

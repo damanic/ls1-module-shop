@@ -20,8 +20,9 @@ interface Shop_RetailItem {
 	public function get_offer_price();
 
 	/**
-	 * Total list price for all units (quantity) before tax
+	 * Total list price for all units (quantity) before tax including extras and bundled items
 	 * @param int If null, the quantity associated with the item is used, otherwise uses the quantity given
+     * @param bool $bundle Set true to return total list price including bundled items
 	 * @return float The total list price for this items quantity
 	 */
 	public function get_total_list_price($quantity=null);
@@ -38,7 +39,6 @@ interface Shop_RetailItem {
      * @return integer The ID if a tax class is assigned, or NULL
      */
     public function get_tax_class_id();
-
 
 
 }

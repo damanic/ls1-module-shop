@@ -1,7 +1,7 @@
 <?
 $disable_quantity_input = isset($disable_quantity_input) ? $disable_quantity_input : null;
-$bundle_item_product = isset( $bundle_item_product ) ? $bundle_item_product : null;
-if($bundle_item_product && !$bundle_item_product->allow_manual_quantity){
+$bundle_offer_item = isset( $bundle_offer_item ) ? $bundle_offer_item : null;
+if($bundle_offer_item && !$bundle_offer_item->allow_manual_quantity){
 	$disable_quantity_input = true;
 }
 

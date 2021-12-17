@@ -252,7 +252,7 @@ function assign_shipping_override_handler()
 	}
 }
 
-function update_bundle_item_products()
+function update_bundle_offer_items()
 {
 	$('find_bundle_product_form').sendPhpr(
 		'onUpdateBundleProductList',
@@ -269,7 +269,7 @@ function update_bundle_item_products()
 
 function add_bundle_product(session_key)
 {
-	if (!$('bundle_item_product_id').get('value'))
+	if (!$('bundle_offer_item_id').get('value'))
 	{
 		alert('Please select bundle product first.');
 		return false;
@@ -278,9 +278,9 @@ function add_bundle_product(session_key)
 	new PopupForm('onAddProduct', 
 	{
 		ajaxFields: {
-			'bundle_item_product_id': $('bundle_item_product_id').get('value'), 
+			'bundle_offer_item_id': $('bundle_offer_item_id').get('value'),
 			'bundle_master_order_item_id': $('bundle_master_order_item_id').get('value'),
-			'bundle_master_bundle_item_id': $('bundle_item_id').get('value'), 
+			'bundle_offer_id': $('bundle_offer_id').get('value'),
 			'edit_session_key': session_key, 
 			'customer_id': $('Shop_Order_customer_id') ? $('Shop_Order_customer_id').value : -1}
 	});

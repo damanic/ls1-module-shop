@@ -17,7 +17,7 @@
 <? endif ?>
 
 <?
-	$bundle_products = $item->list_related_records_deferred('item_products_all', $this->bundle_get_item_session_key($item->id));
+	$bundle_products = $item->list_related_records_deferred('items_all', $this->bundle_get_item_session_key($item->id));
 ?>
 
 <table class="simpleList">
@@ -62,23 +62,23 @@
 					<td><?= h($product->displayField('product_sku', 'list')) ?></td>
 					
 					<td class="noWrap price-override">
-						<span class="show-on-leave"><?= $product->get_price_ovirride_mode_name($price_override_mode) ?></span>
+						<span class="show-on-leave"><?= $product->get_price_override_mode_name($price_override_mode) ?></span>
 						<select class="show-on-hover no-styling" onchange="update_bundle_price_override(this)" name="bundle_product_data[<?= $product->id ?>][price_override_mode]">
-							<? foreach (Shop_BundleItemProduct::$price_override_options as $key=>$name): ?>
+							<? foreach (Shop_ProductBundleOfferItem::$price_override_options as $key=>$name): ?>
 								<option value="<?= h($key) ?>" <?= Phpr_Form::optionState($key, $price_override_mode) ?>><?= h($name) ?></option>
 							<? endforeach ?>
 						</select>
 					</td>
-					<td class="number <?= $price_override_mode == Shop_BundleItemProduct::price_override_default ? 'disabled' : null ?> price-or-discount price_or_discount">
-						<input type="text" onkeydown="register_bundle_item_change()" onkeypress="register_bundle_item_change()" onchange="register_bundle_item_change()" class="inline <?= $price_override_mode == Shop_BundleItemProduct::price_override_default ? 'hidden' : null ?>" name="bundle_product_data[<?= $product->id ?>][price_or_discount]" value="<?= $this->bundle_get_product_field($product->id, 'price_or_discount', $product->price_or_discount) ?>"/>
+					<td class="number <?= $price_override_mode == Shop_ProductBundleOfferItem::price_override_default ? 'disabled' : null ?> price-or-discount price_or_discount">
+						<input type="text" onkeydown="register_bundle_offer_change()" onkeypress="register_bundle_offer_change()" onchange="register_bundle_offer_change()" class="inline <?= $price_override_mode == Shop_ProductBundleOfferItem::price_override_default ? 'hidden' : null ?>" name="bundle_product_data[<?= $product->id ?>][price_or_discount]" value="<?= $this->bundle_get_product_field($product->id, 'price_or_discount', $product->price_or_discount) ?>"/>
 					</td>
 					
 					<td class="number inline_container default_quantity">
-						<input type="text" class="inline" onkeydown="register_bundle_item_change()" onkeypress="register_bundle_item_change()" onchange="register_bundle_item_change()" name="bundle_product_data[<?= $product->id ?>][default_quantity]" value="<?= $this->bundle_get_product_field($product->id, 'default_quantity', $product->default_quantity) ?>"/>
+						<input type="text" class="inline" onkeydown="register_bundle_offer_change()" onkeypress="register_bundle_offer_change()" onchange="register_bundle_offer_change()" name="bundle_product_data[<?= $product->id ?>][default_quantity]" value="<?= $this->bundle_get_product_field($product->id, 'default_quantity', $product->default_quantity) ?>"/>
 					</td>
 					<td class="center">
 						<input type="hidden" value="0" name="bundle_product_data[<?= $product->id ?>][allow_manual_quantity]"/>
-						<input type="checkbox" onclick="register_bundle_item_change()" value="1" <?= Phpr_Form::checkboxState($allow_manual_quantity) ?> name="bundle_product_data[<?= $product->id ?>][allow_manual_quantity]"/>
+						<input type="checkbox" onclick="register_bundle_offer_change()" value="1" <?= Phpr_Form::checkboxState($allow_manual_quantity) ?> name="bundle_product_data[<?= $product->id ?>][allow_manual_quantity]"/>
 					</td>
 					<td class="center">
 						<input type="hidden" value="0" name="bundle_product_data[<?= $product->id ?>][is_default]"/>
@@ -86,7 +86,7 @@
 					</td>
 					<td class="center last">
 						<input type="hidden" value="0" name="bundle_product_data[<?= $product->id ?>][is_active]"/>
-						<input type="checkbox" onclick="update_bundle_item_product_status(this)" value="1" <?= Phpr_Form::checkboxState($is_active) ?> name="bundle_product_data[<?= $product->id ?>][is_active]"/>
+						<input type="checkbox" onclick="update_bundle_offer_item_status(this)" value="1" <?= Phpr_Form::checkboxState($is_active) ?> name="bundle_product_data[<?= $product->id ?>][is_active]"/>
 					</td>
 				</tr>
 			<? endforeach ?>

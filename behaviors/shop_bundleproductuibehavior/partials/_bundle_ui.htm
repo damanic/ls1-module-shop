@@ -1,5 +1,5 @@
 <? 
-	$items = $product->list_related_records_deferred('bundle_items_link', $this->formGetEditSessionKey());
+	$items = $product->list_related_records_deferred('bundle_offers_link', $this->formGetEditSessionKey());
 	$current_item_id = isset($current_item_id) ? $current_item_id : null;
 	$current_item = null;
 	
@@ -29,15 +29,15 @@
 ?>
 
 <div class="toolbar">
-	<?= backend_ctr_button('Add bundle item', 'add-bundle-item', array('href'=>'#', 'onclick'=>"return add_bundle_item()")) ?>
+	<?= backend_ctr_button('Add bundle', 'add-bundle-item', array('href'=>'#', 'onclick'=>"return add_bundle_item()")) ?>
 	<? if ($items->count || post('bundle_updated')): ?>
 		<?= backend_ctr_button('Save changes', 'save-bundle-item', array('href'=>'#', 'id'=>'save-bundle-item-btn', 'onclick'=>"return save_bundle()", 'class'=>(post('bundle_updated') ? null : 'disabled'))) ?>
 	<? endif ?>
 
 	<? if ($items->count): ?>
 		<div class="separator"></div>
-		<?= backend_ctr_button('Edit item', 'edit-bundle-item', array('href'=>'#', 'onclick'=>"return edit_bundle_item()")) ?>
-		<?= backend_ctr_button('Delete item', 'delete-bundle-item', array('href'=>'#', 'onclick'=>"return delete_bundle_item()")) ?>
+		<?= backend_ctr_button('Edit selected bundle', 'edit-bundle-item', array('href'=>'#', 'onclick'=>"return edit_bundle_item()")) ?>
+		<?= backend_ctr_button('Delete selected bundle', 'delete-bundle-item', array('href'=>'#', 'onclick'=>"return delete_bundle_item()")) ?>
 		<div class="separator"></div>
 		<?= backend_ctr_button('Add product(s)', 'new_document', array('href'=>'#', 'onclick'=>"return show_add_products_to_bundle_form()")) ?>
 		<?= backend_ctr_button('Remove selected product(s)', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_bundle_products()")) ?>

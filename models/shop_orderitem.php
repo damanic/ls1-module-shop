@@ -36,7 +36,7 @@
 	 * @package shop.models
 	 * @author LemonStand eCommerce Inc.
 	 */
-	class Shop_OrderItem extends Db_ActiveRecord implements Shop_RetailItem
+	class Shop_OrderItem extends Db_ActiveRecord implements Shop_RetailItem, Shop_BundleItem
 	{
 		public $table_name = 'shop_order_items';
 
@@ -67,7 +67,15 @@
 		 * Single price is price of an item without extras
 		 */
 		
-		public $custom_columns = array('single_price'=>db_float, 'unit_total_price'=>db_float, 'subtotal'=>db_float, 'subtotal_tax_incl'=>db_float, 'total_price'=>db_float, 'bundle_item_total'=>db_float, 'bundle_item_total_tax_incl'=>db_float);
+		public $custom_columns = array(
+            'single_price'=>db_float,
+            'unit_total_price'=>db_float,
+            'subtotal'=>db_float,
+            'subtotal_tax_incl'=>db_float,
+            'total_price'=>db_float,
+            'bundle_item_total'=>db_float,
+            'bundle_item_total_tax_incl'=>db_float
+        );
 
 		public static function create()
 		{
@@ -252,26 +260,8 @@
 			$subtotal_tax_incl = ($this->price_tax_included - $this->discount_tax_included) * $this->quantity;
 			return number_format($subtotal_tax_incl,2, '.', '');
 		}
-
-		public function eval_bundle_item_total()
-		{
-			$master_item = $this->get_master_bundle_order_item();
-			if (!$master_item)
-				return $this->total_price;
-
-			return round($this->total_price/$master_item->quantity, 2);
-		}
-
-		public function eval_bundle_item_total_tax_incl()
-		{
-			$master_item = $this->get_master_bundle_order_item();
-			if (!$master_item)
-				return $this->subtotal_tax_incl;
-
-			return round($this->subtotal_tax_incl/$master_item->quantity, 2);
-		}
 		
-		public function init_empty_item($product, $customer_group_id, $customer, $bundle_item_product_id = null)
+		public function init_empty_item($product, $customer_group_id, $customer, $bundle_offer_item_id = null)
 		{
 			$this->quantity = 1;
 			$product_options = array();
@@ -298,7 +288,7 @@
 			if ($product->tier_prices_per_customer && $customer)
 				$item_quantity += $customer->get_purchased_item_quantity($product);
 				
-			if (!$bundle_item_product_id)
+			if (!$bundle_offer_item_id)
 			{
 				$om_record = Shop_OptionMatrixRecord::find_record($product_options, $product, true);
 				if (!$om_record)
@@ -308,11 +298,11 @@
 			}
 			else
 			{
-				$bundle_item_product = Shop_BundleItemProduct::create()->find($bundle_item_product_id);
-				if (!$bundle_item_product)
+				$bundle_offer_item = Shop_ProductBundleOfferItem::create()->find($bundle_offer_item_id);
+				if (!$bundle_offer_item)
 					throw new Phpr_ApplicationException('Bundle item product not found.');
 					
-				$price = max($bundle_item_product->get_price_no_tax($product, $item_quantity, $customer_group_id, $product_options) - $product->get_discount($item_quantity, $customer_group_id), 0);
+				$price = max($bundle_offer_item->get_price_no_tax($product, $item_quantity, $customer_group_id, $product_options) - $product->get_discount($item_quantity, $customer_group_id), 0);
 			}
 
 			$this->extras = serialize(array());
@@ -811,107 +801,6 @@
 			if ($this->shop_order_id)
 				Backend::$events->fireEvent('shop:onOrderItemDeleted', $this);
 		}
-		
-		/*
-		 * Bundle 
-		 */
-		
-		/**
-		 * Returns quantity of the bundle item product in each bundle. 
-		 * If the order item does not represent a bundle item, returns the $quantity property value.
-		 * @documentable
-		 * @return integer Returns quantity of the bundle item product in each bundle. 
-		 */
-		public function get_bundle_item_quantity()
-		{
-			if (!$this->bundle_master_order_item_id)
-				return $this->quantity;
-				
-			$master_item = $this->get_master_bundle_order_item();
-			if (!$master_item)
-				return $this->quantity;
-
-			$per_unit = round($this->quantity/$master_item->quantity);
-			return max(1,min($master_item->quantity, $per_unit));
-		}
-		
-		/**
-		 * Returns order item representing a master bundle product for this item.
-		 * @documentable
-		 * @return Shop_OrderItem Returns order item representing a master bundle product for this item. Returns NULL if the order item is not found.
-		 */
-		public function get_master_bundle_order_item()
-		{
-			return self::find_by_id($this->bundle_master_order_item_id);
-		}
-		
-		/**
-		 * Returns a list of order items representing bundle items which master product is represented by this item.
-		 * @documentable
-		 * @return array Returns an array of {@link Shop_OrderItem} objects.
-		 */
-		public function list_bundle_items()
-		{
-			$result = array();
-
-			$items = $this->parent_order->items;
-			foreach ($items as $item)
-			{
-				if ($item->bundle_master_order_item_id == $this->id)
-					$result[] = $item;
-			}
-			
-			return $result;
-		}
-		
-		/**
-		 * Returns unit price of a bundle. The price includes prices of all bundle items.
-		 * @documentable
-		 * @return float Returns unit price of a bundle.
-		 */
-		public function get_bundle_single_price()
-		{
-			$result = $this->eval_single_price();
-			
-			$items = $this->list_bundle_items();
-			foreach ($items as $item)
-				$result += $item->eval_single_price()*$item->get_bundle_item_quantity();
-			
-			return $result;
-		}
-		
-		/**
-		 * Returns total discount of a bundle. 
-		 * The discount includes discounts of all bundle items.
-		 * @documentable
-		 * @return float Returns total discount of a bundle.
-		 */
-		public function get_bundle_discount()
-		{
-			$result = $this->discount;
-			
-			$items = $this->list_bundle_items();
-			foreach ($items as $item)
-				$result += $item->discount*$item->get_bundle_item_quantity();
-			
-			return $result;
-		}
-		
-		/**
-		 * Returns total bundle price.
-		 * @documentable
-		 * @return float Returns total bundle price.
-		 */
-		public function get_bundle_total_price()
-		{
-			$result = $this->eval_total_price();
-			
-			$items = $this->list_bundle_items();
-			foreach ($items as $item)
-				$result += $item->eval_total_price();
-			
-			return $result;
-		}
 
 		/*
 		 * Dimensions
@@ -1125,7 +1014,7 @@
 		}
 
 		/*
-		 * Shop_Item Interface methods
+		 * Shop_RetailItem Interface methods
 		 */
 		public function get_list_price() {
 			return $this->eval_single_price();
@@ -1153,9 +1042,208 @@
 			return  number_format($price,2, '.', '');
 		}
 
-		/*
-		 * Event descriptions
-		 */
+
+
+
+        /*
+         * Bundle
+         */
+
+        /**
+         * Returns quantity of the bundle item product in each bundle.
+         * If the order item does not represent a bundle item, returns the $quantity property value.
+         * @documentable
+         * @return integer Returns quantity of the bundle item product in each bundle.
+         */
+        public function get_bundle_item_quantity()
+        {
+            if (!$this->is_bundle_item())
+                return $this->quantity;
+
+            $master_item = $this->get_master_bundle_order_item();
+            if (!$master_item)
+                return $this->quantity;
+
+            $per_unit = round($this->quantity/$master_item->quantity);
+            return max(1,min($master_item->quantity, $per_unit));
+        }
+
+        /**
+         * Returns order item representing a master bundle product for this item.
+         * @documentable
+         * @return Shop_OrderItem Returns order item representing a master bundle product for this item. Returns NULL if the order item is not found.
+         */
+        public function get_master_bundle_order_item()
+        {
+            if($this->is_bundle_item()) {
+                return self::find_by_id($this->bundle_master_order_item_id);
+            }
+            return null;
+        }
+
+
+        /**
+         * Returns unit price of a bundle. The price includes prices of all bundle items.
+         * @documentable
+         * @return float Returns unit price of a bundle.
+         */
+        public function get_bundle_single_price()
+        {
+            $result = $this->eval_single_price();
+
+            $items = $this->get_bundle_items();
+            foreach ($items as $item)
+                $result += $item->eval_single_price()*$item->get_bundle_item_quantity();
+
+            return $result;
+        }
+
+        /**
+         * Returns total bundle price.
+         * @documentable
+         * @return float Returns total bundle price.
+         */
+        public function get_bundle_total_price()
+        {
+            $result = $this->eval_total_price();
+
+            $items = $this->get_bundle_items();
+            foreach ($items as $item)
+                $result += $item->eval_total_price();
+
+            return $result;
+        }
+
+
+        public function eval_bundle_item_total()
+        {
+            $master_item = $this->get_master_bundle_order_item();
+            if (!$master_item)
+                return $this->total_price;
+
+            return round($this->total_price/$master_item->quantity, 2);
+        }
+
+        public function eval_bundle_item_total_tax_incl()
+        {
+            $master_item = $this->get_master_bundle_order_item();
+            if (!$master_item)
+                return $this->subtotal_tax_incl;
+
+            return round($this->subtotal_tax_incl/$master_item->quantity, 2);
+        }
+
+
+        /*
+         * Shop_BundleItem Interface Methods
+         * See Interface for doc comments
+         */
+        public function is_bundle_item(){
+            if($this->bundle_master_order_item_id) {
+                return true;
+            }
+            return false;
+        }
+
+        public function has_bundle_items()
+        {
+            $result = array();
+
+            $items = $this->parent_order->items;
+            foreach ($items as $item)
+            {
+                if ($item->bundle_master_order_item_id == $this->id)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public function get_bundle_items()
+        {
+            $result = array();
+
+            $items = $this->parent_order->items;
+            foreach ($items as $item)
+            {
+                if ($item->bundle_master_order_item_id == $this->id)
+                    $result[] = $item;
+            }
+
+            return $result;
+        }
+
+        public function get_bundle_discount()
+        {
+            $result = $this->discount;
+            $items = $this->get_bundle_items();
+            foreach ($items as $item)
+                $result += $item->discount*$item->quantity;
+
+            return $result;
+        }
+
+        public function get_bundle_list_price()
+        {
+            $price = $this->get_list_price();
+            if ($this->has_bundle_items()){
+                $bundle_order_items = $this->get_bundle_items();
+                foreach ($bundle_order_items as $order_item) {
+                    $list_price = $order_item->get_list_price();
+                    $price += ($list_price * $order_item->quantity);
+                }
+            }
+            return $price;
+        }
+
+        public function get_bundle_offer_price()
+        {
+            $price = $this->get_offer_price();
+            if ($this->has_bundle_items()){
+                $bundle_order_items = $this->get_bundle_items();
+                foreach ($bundle_order_items as $order_item) {
+                    $offer_price = $order_item->get_offer_price();
+                    $price += ($offer_price * $order_item->quantity);
+                }
+            }
+            return $price;
+        }
+
+
+        public function get_bundle_total_list_price($quantity = null)
+        {
+            $quantity = $quantity ? $quantity : $this->quantity;
+            $price = $this->get_bundle_list_price();
+            if($quantity){
+                $price = $price * $quantity;
+            }
+            return  number_format($price,2, '.', '');
+        }
+
+        public function get_bundle_total_offer_price($quantity = null)
+        {
+            $quantity = $quantity ? $quantity : $this->quantity;
+            $price = $this->get_bundle_offer_price();
+            if($quantity){
+                $price = $price * $quantity;
+            }
+            return  number_format($price,2, '.', '');
+        }
+
+        public function get_bundle_offer()
+        {
+            if($this->is_bundle_item()){
+                $bundle_offer = Shop_ProductBundleOffer::create()->find($this->bundle_offer_id);
+                return $bundle_offer ? $bundle_offer : null;
+            }
+            return null;
+        }
+
+
+
+        /*
+         * Event descriptions
+         */
 		
 		/**
 		 * Allows to update an order item in a new invoice, when the invoice is created manually in the Administration Area. 
@@ -1414,6 +1502,21 @@
 		 * @param Shop_OrderItem $item Specifies the order item object.
 		 */
 		private function event_onBeforeOrderItemSaved($item) {}
-	}
 
-?>
+
+
+        /**
+         * Deprecated methods
+         */
+
+        /**
+         * @deprecated
+         * @see get_bundle_items()
+         */
+        public function list_bundle_items()
+        {
+            $this->get_bundle_items();
+        }
+
+
+    }

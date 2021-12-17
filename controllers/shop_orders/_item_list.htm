@@ -5,7 +5,7 @@
 	$has_bundle_items = false;
 	foreach ($items as $item)
 	{
-		if ($item->bundle_master_bundle_item_name)
+		if ($item->bundle_offer_name)
 		{
 			$has_bundle_items = true;
 			break;
@@ -19,7 +19,7 @@
 			<th>Item</th>
 			<th>SKU</th>
 			<? if ($has_bundle_items): ?>
-				<th>Bundle item</th>
+				<th>Bundle Offer</th>
 			<? endif ?>
 			<th class="number">Price</th>
 			<th class="number">Discount</th>
@@ -36,13 +36,13 @@
 			<?
 				$session_key = $this->formGetEditSessionKey();
 				foreach ($items as $item):
-					$onClick = "new PopupForm('onLoadItemForm', {ajaxFields: {'applied_discounts_data': $('applied_discounts_data_field').value, 'item_id': '{$item->id}', 'bundle_master_bundle_item_id': '{$item->bundle_master_bundle_item_id}', 'edit_session_key': '{$session_key}'}}); return false;";
+					$onClick = "new PopupForm('onLoadItemForm', {ajaxFields: {'applied_discounts_data': $('applied_discounts_data_field').value, 'item_id': '{$item->id}', 'bundle_offer_id': '{$item->bundle_offer_id}', 'edit_session_key': '{$session_key}'}}); return false;";
 			?>
 			<tr class="<?= Backend_Html::zebra('order_items') ?>">
 				<td onclick="<?= $onClick ?>" class="link">
 					<div class="<?= $item->bundle_master_order_item_id ? 'bundle-item-container' : null ?>">
 						<? if ($item->bundle_master_order_item_id): ?>
-							<a  href="#" onclick="<?= $onClick ?>" class="tooltip bundle-item" title="Bundle item - <strong><?= h($item->bundle_master_bundle_item_name) ?></strong>">Bundle item - <?= h($item->bundle_master_bundle_item_name) ?></a>
+							<a  href="#" onclick="<?= $onClick ?>" class="tooltip bundle-item" title="Bundle item - <strong><?= h($item->bundle_offer_name) ?></strong>">Bundle item - <?= h($item->bundle_offer_name) ?></a>
 						<? endif ?>
 
 						<a href="#" onclick="<?= $onClick ?>"><?= $item->output_product_name(true, false, true, true) ?></a>
@@ -50,7 +50,7 @@
 				</td>
 				<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= $item->product_sku ? h($item->product_sku) : h('<product not found>') ?></a></td>
 				<? if ($has_bundle_items): ?>
-					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($item->bundle_master_bundle_item_name) ?></a></td>
+					<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($item->bundle_offer_name) ?></a></td>
 				<? endif ?>
 				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->single_price) ?></a></td>
 				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency($item->discount) ?></a></td>
@@ -65,10 +65,10 @@
 				</td>
 				<td onclick="<?= $onClick ?>" class="number link"><a href="#" onclick="<?= $onClick ?>"><?= $form_model->format_currency(($item->single_price - $item->discount)*$item->quantity) ?></a></td>
 				<td class="iconCell">
-					<? if ($item->product->bundle_items->count): ?>
-						<a href="#" class="add-bundle-item" title="Add bundle item" onclick="new PopupForm('onLoadFindBundleProductForm', {ajaxFields: $merge($(this).getForm().fieldsToHash(), {bundle_parent: <?= $item->id ?>})}); return false;">Add bundle item</a>
+					<? if ($item->product->bundle_offers->count): ?>
+						<a href="#" class="add-bundle-item" title="Add bundle" onclick="new PopupForm('onLoadFindBundleProductForm', {ajaxFields: $merge($(this).getForm().fieldsToHash(), {bundle_parent: <?= $item->id ?>})}); return false;">Add bundle</a>
 					<? else: ?>
-						<a href="#" class="add-bundle-item disabled" onclick="return false" title="Add bundle item">Add bundle item</a>
+						<a href="#" class="add-bundle-item disabled" onclick="return false" title="Add bundle">Add bundle</a>
 					<? endif ?>
 				</td>
 				<td class="iconCell last">
