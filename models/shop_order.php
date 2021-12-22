@@ -674,35 +674,18 @@ class Shop_Order extends Db_ActiveRecord
 			if (!$customer)
 			{
 				$new_customer = $customer = Shop_Customer::create();
+                $customer->init_columns_info();
 				if (!$register_customer)
 				{
-					$customer->init_columns_info();
 					$customer->guest = 1;
 				}
 				else
 				{
-					if (array_key_exists('customer_password', $options))
-					{
-						$password = $options['customer_password'];
-						if (!strlen($password))
-							$new_customer->generate_password();
-						else
-						{
-							$new_customer->password = $password;
-							$new_customer->password_confirm = $password;
-						}
-					} else
-					{
-						$new_customer->password = post('password', uniqid());
-						$new_customer->password_confirm = $new_customer->password;
-					}
-
-					$new_customer->init_columns_info();
+                    $password = array_key_exists('customer_password', $options) ? $options['customer_password'] : post('password', null);
+                    if(!empty($password)){
+                        $customer->password = $password;
+                    }
 				}
-			} else
-			{
-				$customer->password = null;
-				$customer->init_columns_info();
 			}
 
 			Shop_TaxClass::set_customer_context($customer);

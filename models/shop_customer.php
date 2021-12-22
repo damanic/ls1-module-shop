@@ -233,7 +233,7 @@
 				$this->validation->setError("Email ".$value." is already in use. Please specify another email address.", $name, true);
 
             $customers_assigned = Shop_Customer::find_customers_by_email_trace($value);
-            if($customers_assigned){
+            if($customers_assigned && $customers_assigned->count){
                 if(!$this->id){
                     $this->validation->setError("Email ".$value." has already been used. Please specify another email address.", $name, true);
                 } else {
@@ -417,39 +417,46 @@
 				}
 			}
 		}
-		
-		public function before_save($deferred_session_key = null)
-		{
-			$this->plain_password = $this->password;
 
-			if (!$this->guest)
-			{
-                if(strlen($this->password)){
-                    if($this->fetched['password'] !== $this->password){
-                        $hashed_pw = $this->password_to_hash($this->password);
-                        if($hashed_pw !== $this->fetched['password']){
-                            //update password
-                            $this->password = $hashed_pw;
-                        }
+        public function before_save($deferred_session_key = null)
+        {
+
+            $current_password_hash = isset($this->fetched['password']) ? $this->fetched['password'] : null;
+
+            if ($this->guest) {
+                if (!$this->customer_group_id) {
+                    $group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::guest_group);
+                    if ($group) {
+                        $this->customer_group_id = $group->id;
                     }
-                } else if( $this->is_new_record()) {
-                    $this->validation->setError('Please provide a password.', 'password', true);
+                }
+            } else {
+
+                if (!$this->customer_group_id) {
+                    $group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::registered_group);
+                    if ($group) {
+                        $this->customer_group_id = $group->id;
+                    }
                 }
 
-			}
-			if (!$this->customer_group_id)
-			{
-				if ($this->guest) {
-					$group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::guest_group);
-					if ($group)
-						$this->customer_group_id = $group->id;
-				} else {
-					$group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::registered_group);
-					if ($group)
-						$this->customer_group_id = $group->id;
-				}
-			}
-		}
+                if ($this->is_new_record() && empty($this->password)) {
+                    $this->generate_password();
+                }
+
+                $new_password = ($current_password_hash !== $this->password) ? $this->password : null;
+                if (!empty($new_password)) {
+                    $this->plain_password = $new_password;
+                    $hashed_pw = $this->password_to_hash($new_password);
+                    $this->password = $hashed_pw;
+                }
+
+            }
+
+            if(empty($this->password)){
+                $this->password = $current_password_hash; //empty passwords cannot overwrite previously saved passwords
+            }
+
+        }
 
 		public function __get($name)
 		{
@@ -586,30 +593,42 @@
 				throw new Phpr_ApplicationException("Error deleting customer. There are $order_num order(s) belonging to this customer.");
 		}
 
+        /**
+         * @param string $password The password to check
+         *
+         * @return bool Returns true if the given password matches the current password saved
+         */
+        public function is_current_password($password){
+            $saved_password = isset($this->fetched['password']) ? $this->fetched['password'] : null;
+            if(!empty($saved_password) && ($this->password_to_hash($password) == $saved_password)){
+                return true;
+            }
+            return false;
+        }
+
 		public function generate_password()
 		{
-			$password = null;
+			$new_password = null;
 			
 			$event_result = Backend::$events->fireEvent('shop:onBeforeGenerateCustomerPassword');
 			foreach ($event_result as $event_password)
 			{
 				if ($event_password) 
 				{
-					$password = $event_password;
+					$new_password = $event_password;
 					break;
 				}
 			}
 			
-			if (!strlen($password))
+			if (!strlen($new_password))
 			{
 				$letters = 'abcdefghijklmnopqrstuvwxyz23456789';
-				$password = null;
+				$new_password = null;
 				for ($i = 1; $i <= 6; $i++)
-					$password .= $letters[rand(0,33)];
+					$new_password .= $letters[rand(0,33)];
 			}
-			
-			$this->password_confirm = $password;
-			$this->password = $password;
+
+			return $this->plain_password = $this->password = $new_password;
 		}
 
 		public function generate_password_restore()
@@ -941,11 +960,14 @@
 		 * PHPR/Core Security function
 		 * Used internally for login purposes.
 		 * Locates a customer by login_id AND matching password
-		 * @param $login_id string Email address or other
-		 * @param $password string The customers password
+		 *
+		 * @param string $login_id        Email address or other
+		 * @param string $password        The customers password
+         * @param bool   $include_deleted Set to true if soft deleted accounts should be included
+		 *
 		 * @return Shop_Customer The associated customer if found
 		 */
-		public function findUser( $login_id, $password )
+		public function findUser( $login_id, $password, $include_deleted = false )
 		{
 			$event_result = Backend::$events->fireEvent('shop:onAuthenticateCustomer', $login_id, $password);
 			foreach ($event_result as $event_customer)
@@ -953,14 +975,19 @@
 				if ($event_customer || $event_customer === false)
 					return $event_customer;
 			}
-
 			//By default the login ID is the customers active EMAIL address
 			$login_id = trim(mb_strtolower($login_id));
             $password_hash = $this->password_to_hash($password);
-			return $this->where('email=?', $login_id)->where('shop_customers.password=?', $password_hash)->where('(shop_customers.guest is null or shop_customers.guest=0)')->where('shop_customers.deleted_at is null')->find();
+			$this->where('email=?', $login_id)->where('shop_customers.password=?', $password_hash)->where('(shop_customers.guest is null or shop_customers.guest=0)');
+            if (!$include_deleted){
+                $this->where('shop_customers.deleted_at is null');
+            }
+            return $this->find();
 		}
 
-		/**
+
+
+        /**
 		 * Finds customers that have used an email address
 		 * as their primary address (for account login)
 		 * @documentable

@@ -824,18 +824,11 @@
 
 			$redirect = post('redirect');
 			$validation = new Phpr_Validation();
-            $email = trim(mb_strtolower(post('email')));
-
-			$customer = Shop_Customer::create()
-				->where('email=?', $email)
-				->where('shop_customers.password=?', Phpr_SecurityFramework::create()->salted_hash(post('password')))
-				->where('(shop_customers.guest is null or shop_customers.guest=0)')->find();
-
+			$customer = Shop_Customer::create()->findUser(post('email'), post('password'), true);
 			if ($customer && $customer->deleted_at) {
 				$validation->add('email')->focusId('login_email');
 				$validation->setError( "Your customer account was deleted.", 'email', true );
 			}
-
 			if (!Phpr::$frontend_security->login($validation, $redirect, post('email'), post('password')))
 			{
 				$validation->add('email')->focusId('login_email');
@@ -1055,7 +1048,7 @@
 			if (!$validation->validate($_POST))
 				$validation->throwException();
 
-			if (Phpr_SecurityFramework::create()->salted_hash($validation->fieldValues['old_password']) != $this->customer->password)
+			if (!$this->customer->is_current_password($validation->fieldValues['old_password']))
 				$validation->setError('Invalid old password.', 'old_password', true);
 
 			try
@@ -1063,7 +1056,6 @@
 				$customer = Shop_Customer::create()->where('id=?', $this->customer->id)->find(null, array(), 'front_end');
 				$customer->disable_column_cache('front_end', true);
 				$customer->password = $validation->fieldValues['password'];
-				$customer->password_confirm = $validation->fieldValues['password_confirm'];
 				$customer->save();
 
 				if (post('flash'))
@@ -1110,7 +1102,7 @@
                 $validation->throwException();
 
             // Confirm password is correct
-            if (Phpr_SecurityFramework::create()->salted_hash($validation->fieldValues['password']) !== $this->customer->password)
+            if (!$this->customer->is_current_password($validation->fieldValues['password']))
                 $validation->setError('Invalid password.', 'password', true);
 
             try {
