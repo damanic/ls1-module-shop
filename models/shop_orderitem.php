@@ -1051,7 +1051,7 @@
 
         /**
          * Returns quantity of the bundle item product in each bundle.
-         * If the order item does not represent a bundle item, returns the $quantity property value.
+         * If the item does not represent a bundle item, returns the $quantity property value.
          * @documentable
          * @return integer Returns quantity of the bundle item product in each bundle.
          */
@@ -1060,12 +1060,19 @@
             if (!$this->is_bundle_item())
                 return $this->quantity;
 
-            $master_item = $this->get_master_bundle_order_item();
-            if (!$master_item)
+            $master_bundle_item = $this->get_master_bundle_order_item();
+            if (!$master_bundle_item)
                 return $this->quantity;
 
-            $per_unit = round($this->quantity/$master_item->quantity);
-            return max(1,min($master_item->quantity, $per_unit));
+            $total_quantity_bundled = $this->quantity;
+            $total_bundles = $master_bundle_item->quantity;
+            if(!$total_bundles || $total_bundles == 1){
+                return $total_quantity_bundled;
+            }
+
+            $quantity_per_bundle = max(1, $total_quantity_bundled/$total_bundles );
+            return round($quantity_per_bundle);
+
         }
 
         /**
