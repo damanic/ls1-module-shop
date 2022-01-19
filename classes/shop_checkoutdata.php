@@ -1132,8 +1132,7 @@
 				return $object ? $currency : $currency->code;
 			}
 			if($object){
-				$obj = new Shop_CurrencySettings();
-				$currency = $obj->find_by_code($checkout_data['currency_code']);
+                $currency = Shop_CurrencyHelper::get_currency_setting($checkout_data['currency_code']);
 				if($currency){
 					return $currency;
 				}
