@@ -1190,7 +1190,7 @@
                 $bundle_order_items = $this->get_bundle_items();
                 foreach ($bundle_order_items as $order_item) {
                     $list_price = $order_item->get_list_price();
-                    $price += ($list_price * $order_item->quantity);
+                    $price += ($list_price * $order_item->get_bundle_item_quantity());
                 }
             }
             return $price;
@@ -1203,7 +1203,7 @@
                 $bundle_order_items = $this->get_bundle_items();
                 foreach ($bundle_order_items as $order_item) {
                     $offer_price = $order_item->get_offer_price();
-                    $price += ($offer_price * $order_item->quantity);
+                    $price += ($offer_price * $order_item->get_bundle_item_quantity());
                 }
             }
             return $price;

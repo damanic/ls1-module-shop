@@ -232,15 +232,11 @@
 		 * quantity was 2 and it had a bundle item CPU with quantity 2, the actual quantity
 		 * for CPU would be 4, while the visible quantity, returned by this method, would be 2.
 		 * @documentable
-		 * @return Returns the item quantity.
+		 * @return int the item quantity.
 		 */
 		public function get_quantity()
 		{
-			$master_item = $this->get_master_bundle_item();
-			if (!$master_item)
-				return $this->quantity;
-				
-			return round($this->quantity/$master_item->quantity);
+            return $this->get_bundle_item_quantity();
 		}
 
 		/**
@@ -791,8 +787,8 @@
             if ($this->order_item && $this->order_item->bundle_master_order_item_id)
                 return true;
 
-            $item = $this->get_bundle_offer();
-            return $item ? true : false;
+            $bundle_item = $this->get_bundle_offer_item();
+            return $bundle_item ? true : false;
         }
 
         public function has_bundle_items()
@@ -827,7 +823,7 @@
 
             $result = $this->total_discount();
             foreach ($bundle_items as $item)
-                $result += $item->total_discount()*$item->get_quantity();
+                $result += $item->total_discount()*$item->get_bundle_item_quantity();
 
             return $result;
         }
@@ -839,7 +835,7 @@
                 foreach ($bundle_cart_items as $cart_item) {
                     $bundle_offer_item = $cart_item->get_bundle_offer_item();
                     $offer_price = $bundle_offer_item->get_list_price();
-                    $price += ($offer_price * $cart_item->quantity);
+                    $price += ($offer_price * $cart_item->get_bundle_item_quantity());
                 }
             }
             return $price;
@@ -852,7 +848,7 @@
                 foreach ($bundle_cart_items as $cart_item) {
                     $bundle_offer_item = $cart_item->get_bundle_offer_item();
                     $offer_price = $bundle_offer_item->get_offer_price();
-                    $price += ($offer_price * $cart_item->quantity);
+                    $price += ($offer_price * $cart_item->get_bundle_item_quantity());
                 }
             }
             return $price;
@@ -887,7 +883,28 @@
             if (!$this->native_cart_item)
                 return null;
 
-            return $this->native_cart_item->get_bundle_offer_item();
+            $item = $this->native_cart_item->get_bundle_offer_item();
+            $currency_context =  Shop_CheckoutData::get_currency(false);
+            if($item && $currency_context){
+                $item->set_currency_context($currency_context);
+            }
+            return $item;
+        }
+
+        /**
+         * Returns quantity of the bundle item product in each bundle.
+         * If the order item does not represent a bundle item, returns the $quantity property value.
+         * @documentable
+         * @return integer Returns quantity of the bundle item product in each bundle.
+         */
+        public function get_bundle_item_quantity()
+        {
+            $master_bundle_item = $this->get_master_bundle_item();
+            if (!$master_bundle_item)
+                return $this->quantity;
+
+            $per_unit = round($this->quantity/$master_bundle_item->quantity );
+            return max(1,min($master_bundle_item->quantity, $per_unit));
         }
 
         /**
@@ -1006,7 +1023,7 @@
             if (!$this->is_bundle_item())
                 return $this->total_price();
 
-            return $this->total_price(true, false, $this->get_quantity());
+            return $this->total_price(true, false, $this->get_bundle_item_quantity());
         }
 
         /**
@@ -1040,7 +1057,7 @@
 
             $result = $this->single_price();
             foreach ($bundle_items as $item)
-                $result += $item->single_price()*$item->get_quantity();
+                $result += $item->single_price()*$item->get_bundle_item_quantity();
 
             return $result;
         }

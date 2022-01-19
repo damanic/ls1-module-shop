@@ -812,14 +812,12 @@ class Shop_Order extends Db_ActiveRecord
 
 
                 if ($item->is_bundle_item()) {
-					$offer_item = $item->get_bundle_offer_item();
-					$price = $offer_item->get_price_no_tax($offer_item->bundle_offer->product, $effective_quantity, $customer->customer_group_id, $item->options);
                     /*
                      * NOTE
                      * Price overrides on bundle items are not factored into cart totals as a discount,
-                     * therefore in this context the price override is applied.
+                     * therefore in this context the items single price is the price after all discounts have been applied.
                      */
-                    $result = $offer_item->apply_price_override($price);
+                    $product_price = $item->single_price();
                 } else {
 					$item_om_record = $item->get_om_record();
 					if ($item_om_record) {

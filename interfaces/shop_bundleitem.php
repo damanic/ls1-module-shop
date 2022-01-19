@@ -75,6 +75,13 @@ interface Shop_BundleItem {
      */
     public function get_bundle_offer();
 
+    /**
+     * Returns quantity of the bundle item product in each bundle.
+     * If the order item does not represent a bundle item, returns the $quantity property value.
+     * @documentable
+     * @return integer Returns quantity of the bundle item product in each bundle.
+     */
+    public function get_bundle_item_quantity();
 
 
 }
