@@ -22,6 +22,8 @@
 	{
 		public $table_name = 'shop_bundle_item_products';
 		public $implement = 'Db_Sortable';
+        
+        protected $currency_context = null;
 		
 		const price_override_default = 'default';
 		const price_override_fixed = 'fixed';
@@ -211,7 +213,7 @@
          */
         public function get_offer_price(){
             if ($this->price_override_mode == self::price_override_fixed && is_numeric($this->price_or_discount)){
-                return $this->price_or_discount;
+                return $this->get_override_price_value();
             }
             $price = $this->get_sale_price_no_tax();
             return $this->apply_price_override($price);
@@ -226,14 +228,62 @@
                 }
 
                 if ($this->price_override_mode == self::price_override_fixed) {
-                    return $this->price_or_discount;
+                    return $this->get_override_price_value();
                 }
 
                 if ($this->price_override_mode == self::price_override_fixed_discount) {
-                    return max(0, $default_price - $this->price_or_discount);
+                    return max(0, $default_price - $this->get_override_price_value());
                 }
             }
             return $default_price;
+        }
+
+        /**
+         * Apply a currency context to the price discount values stored in this model.
+         * Price discount values are stored in the default shop currency.
+         * If a different currency context is set, the price discount values will be converted to the given currency context
+         *
+         * Only accepts ISO currency codes registered in Shop_CurrencySettings
+         *
+         * @param $currency_code string A valid ISO currency code
+         *
+         * @return void
+         */
+        public function set_currency_context($currency_code){
+            if($this->currency_context !== $currency_code){
+                $currency = Shop_CurrencyHelper::get_currency_setting($currency_code);
+                if(!$currency){
+                    throw new Phpr_ApplicationException('Currency code not found in Shop_CurrencySettings');
+                }
+                $this->currency_context = $currency->code;
+            }
+        }
+        
+        protected function get_currency_context(){
+            if($this->currency_context){
+                return $this->currency_context;
+            }
+            return Shop_CurrencySettings::get()->code;
+        }
+
+        /**
+         * Returns the override price value converted from default shop currency
+         * to the active currency context (if different).
+         * @return float The override price value
+         */
+        protected function get_override_price_value(){
+            $currency_context = $this->get_currency_context();
+            $shop_currency =  Shop_CurrencySettings::get();
+            if($currency_context !== $shop_currency->code){
+                traceLog($currency_context .' !== '. $shop_currency->code);
+                traceLog('converting '. $this->price_or_discount);
+                //do a currency conversion
+                $currency_converter = Shop_CurrencyConverter::create();
+                $from_currency_code =  $shop_currency->code;
+                $to_currency_code = $currency_context;
+                return $currency_converter->convert($this->price_or_discount, $from_currency_code, $to_currency_code, 4);
+            }
+            return $this->price_or_discount;
         }
 		
 		/** 
