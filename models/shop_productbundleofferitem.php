@@ -142,7 +142,7 @@
             $price = $this->get_sale_price_no_tax($product, 1, null, $product_options);
             $price = $this->apply_price_override($price);
             $include_tax = Shop_CheckoutData::display_prices_incl_tax();
-            if ($include_tax)
+            if (!$include_tax)
                 return $price;
 
             return Shop_TaxClass::get_total_tax($product->tax_class_id, $price) + $price;
@@ -218,15 +218,21 @@
         }
 
         public function apply_price_override($default_price){
-            if ($this->price_override_mode == self::price_override_percentage_discount)
-                return $default_price - $default_price*$this->price_or_discount/100;
+            if(is_numeric($this->price_or_discount)) {
+                if ($this->price_override_mode == self::price_override_percentage_discount) {
+                    if($this->price_or_discount > 0) {
+                        return $default_price - ($default_price * ($this->price_or_discount / 100));
+                    }
+                }
 
-            if ($this->price_override_mode == self::price_override_fixed)
-                return $this->price_or_discount;
+                if ($this->price_override_mode == self::price_override_fixed) {
+                    return $this->price_or_discount;
+                }
 
-            if ($this->price_override_mode == self::price_override_fixed_discount)
-                return  max(0, $default_price - $this->price_or_discount);
-
+                if ($this->price_override_mode == self::price_override_fixed_discount) {
+                    return max(0, $default_price - $this->price_or_discount);
+                }
+            }
             return $default_price;
         }
 		
