@@ -1088,40 +1088,6 @@
             return null;
         }
 
-
-        /**
-         * Returns unit price of a bundle. The price includes prices of all bundle items.
-         * @documentable
-         * @return float Returns unit price of a bundle.
-         */
-        public function get_bundle_single_price()
-        {
-            $result = $this->eval_single_price();
-
-            $items = $this->get_bundle_items();
-            foreach ($items as $item)
-                $result += $item->eval_single_price()*$item->get_bundle_item_quantity();
-
-            return $result;
-        }
-
-        /**
-         * Returns total bundle price.
-         * @documentable
-         * @return float Returns total bundle price.
-         */
-        public function get_bundle_total_price()
-        {
-            $result = $this->eval_total_price();
-
-            $items = $this->get_bundle_items();
-            foreach ($items as $item)
-                $result += $item->eval_total_price();
-
-            return $result;
-        }
-
-
         public function eval_bundle_item_total()
         {
             $master_item = $this->get_master_bundle_order_item();
@@ -1203,6 +1169,18 @@
             return $price;
         }
 
+        public function get_bundle_single_price()
+        {
+            $result = $this->eval_single_price();
+
+            $items = $this->get_bundle_items();
+            foreach ($items as $item)
+                $result += $item->eval_single_price()*$item->get_bundle_item_quantity();
+
+            return $result;
+        }
+
+
         public function get_bundle_offer_price()
         {
             $price = $this->get_offer_price();
@@ -1216,7 +1194,6 @@
             return $price;
         }
 
-
         public function get_bundle_total_list_price($quantity = null)
         {
             $quantity = $quantity ? $quantity : $this->quantity;
@@ -1225,6 +1202,18 @@
                 $price = $price * $quantity;
             }
             return  number_format($price,2, '.', '');
+        }
+
+
+        public function get_bundle_total_price()
+        {
+            $result = $this->eval_total_price();
+
+            $items = $this->get_bundle_items();
+            foreach ($items as $item)
+                $result += $item->eval_total_price();
+
+            return $result;
         }
 
         public function get_bundle_total_offer_price($quantity = null)

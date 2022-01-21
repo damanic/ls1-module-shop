@@ -841,6 +841,20 @@
             return $price;
         }
 
+        public function get_bundle_single_price()
+        {
+            if (!$this->native_cart_item)
+                return $this->single_price();
+
+            $bundle_items = $this->get_bundle_items();
+
+            $result = $this->single_price();
+            foreach ($bundle_items as $item)
+                $result += $item->single_price()*$item->get_bundle_item_quantity();
+
+            return $result;
+        }
+
         public function get_bundle_offer_price(){
             $price = $this->get_offer_price();
             if ($this->native_cart_item){
@@ -857,6 +871,15 @@
         public function get_bundle_total_list_price($quantity = null) {
             $quantity = $quantity ? $quantity : $this->quantity;
             $price = $this->get_bundle_list_price();
+            if($quantity){
+                $price = $price * $quantity;
+            }
+            return  number_format($price,2, '.', '');
+        }
+
+        public function get_bundle_total_price($quantity = null) {
+            $quantity = $quantity ? $quantity : $this->quantity;
+            $price = $this->get_bundle_single_price();
             if($quantity){
                 $price = $price * $quantity;
             }
@@ -1034,7 +1057,7 @@
 
         /**
          * @deprecated
-         * see get_bundle_total_list_price() , get_bundle_total_offer_price()
+         * see get_bundle_single_price(),  get_bundle_list_price() , get_bundle_offer_price()
          */
         public function bundle_total_price()
         {
@@ -1052,19 +1075,10 @@
 
         /**
          * @deprecated
-         * see get_bundle_list_price() , get_bundle_offer_price()
+         * see get_bundle_single_price(),  get_bundle_list_price() , get_bundle_offer_price()
          */
         public function bundle_single_price()
         {
-            if (!$this->native_cart_item)
-                return $this->single_price();
-
-            $bundle_items = $this->get_bundle_items();
-
-            $result = $this->single_price();
-            foreach ($bundle_items as $item)
-                $result += $item->single_price()*$item->get_bundle_item_quantity();
-
-            return $result;
+            return $this->get_bundle_single_price();
         }
 	}

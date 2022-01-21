@@ -37,7 +37,7 @@ interface Shop_BundleItem {
 
     /**
      * For items that are master bundle retail items,
-     * this will return the unit price for all items in the bundle without any discounts
+     * this will return the price of all items in the bundle prior to any bundled discount considerations
      * @documentable
      * @return float Returns the list price for a single bundle
      */
@@ -45,7 +45,15 @@ interface Shop_BundleItem {
 
     /**
      * For items that are master bundle retail items,
-     * this will return the price for a single bundle after discounts
+     * this will return the price for a single bundle offer after bundled discount considerations
+     * @documentable
+     * @return float Returns the offer price for a single bundle
+     */
+    public function get_bundle_single_price();
+
+    /**
+     * For items that are master bundle retail items,
+     * this will return the price for a single bundle offer after bundled discount and customer/cart discount considerations
      * @documentable
      * @return float Returns the offer price for a single bundle
      */
@@ -53,7 +61,7 @@ interface Shop_BundleItem {
 
     /**
      * For items that are master bundle retail items,
-     * this will return the price for bundle before discounts,
+     * this will return the price of all items in the bundle prior to any bundled discount considerations
      * multiplied by the total bundle quantity ordered.
      * @documentable
      * @return float Returns the total list price for the bundle quantity ordered
@@ -62,7 +70,16 @@ interface Shop_BundleItem {
 
     /**
      * For items that are master bundle retail items,
-     * this will return the price for the bundle after discounts,
+     * this will return the price for a single bundle offer after bundled discount considerations
+     * multiplied by the total bundle quantity ordered.
+     * @documentable
+     * @return float Returns the total offer price for the bundle quantity ordered
+     */
+    public function get_bundle_total_price();
+
+    /**
+     * For items that are master bundle retail items,
+     * this will return the price for a single bundle offer after bundled discount and customer/cart discount considerations
      * multiplied by the total bundle quantity ordered.
      * @documentable
      * @return float Returns the total offer price for the bundle quantity ordered
