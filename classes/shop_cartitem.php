@@ -937,6 +937,27 @@
         }
 
         /**
+         * Returns amount the item was discounted by the bundle.
+         * If the item does not represent a bundle item, returns null.
+         * @documentable
+         * @return float Returns the amount discounted
+         */
+        public function get_bundle_item_discount(){
+            if(!$this->is_bundle_item()){
+                return null;
+            }
+            $bundle_offer_item = $this->get_bundle_offer_item();
+            if($bundle_offer_item) {
+                $list_price = $bundle_offer_item->get_list_price();
+                $price = $this->single_price();
+                if ($price < $list_price) {
+                    return $list_price - $price;
+                }
+            }
+            return 0;
+        }
+
+        /**
          * Events
          */
 

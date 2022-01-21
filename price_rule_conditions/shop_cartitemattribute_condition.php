@@ -23,7 +23,7 @@
 		{
 			$attribute = $host_obj->subcondition;
 
-			if ($attribute == 'bundle_item')
+            if (in_array($attribute, array('discounted_bundle_item', 'bundle_item')))
 				return 'dropdown';
 			
 			return parent::get_value_control_type($host_obj);
@@ -33,8 +33,10 @@
 		{
 			$attribute = $host_obj->subcondition;
 
-			if ($attribute == 'bundle_item')
-				return array('false'=>'FALSE (product IS NOT a bundle item)', 'true'=>'TRUE (product IS a bundle item)');
+            if (in_array($attribute, array('discounted_bundle_item', 'bundle_item'))){
+                $discounted = ($attribute == 'discounted_bundle_item') ? 'discounted' : null;
+                return array('false'=>'FALSE (product IS NOT a '.$discounted.' bundle item)', 'true'=>'TRUE (product IS a '.$discounted.' bundle item)');
+            }
 			
 			return parent::get_value_dropdown_options($host_obj, $controller);
 		}
@@ -46,7 +48,7 @@
 				
 			$attribute = $host_obj->subcondition;
 
-			if ($attribute == 'bundle_item')
+            if (in_array($attribute, array('discounted_bundle_item', 'bundle_item')))
 				return null;
 			
 			return parent::prepare_reference_list_info($host_obj);
@@ -55,7 +57,7 @@
 		public function get_custom_text_value($parameters_host)
 		{
 			$attribute = $parameters_host->subcondition;
-			if ($attribute == 'bundle_item')
+            if (in_array($attribute, array('discounted_bundle_item', 'bundle_item')))
 				return $parameters_host->value == 'true' ? 'TRUE' : 'FALSE';
 			
 			return false;
@@ -71,7 +73,7 @@
 			$model = $this->get_model_obj();
 			$definitions = $model->get_column_definitions();
 			
-			if ($attribute == 'bundle_item')
+			if (in_array($attribute, array('discounted_bundle_item', 'bundle_item')))
 				return array('is'=>'is');
 
 			return parent::get_operator_options($host_obj);
@@ -132,6 +134,24 @@
 					return $is_bundle_item;
 			}
 
+            if ($attribute == 'discounted_bundle_item')
+            {
+                if (!array_key_exists('item', $params))
+                    throw new Phpr_ApplicationException('Error evaluating the cart item attribute condition: the item element is not found in the condition parameters.');
+
+                $is_discounted_bundle_item = false;
+                if($params['item']->is_bundle_item()){
+                    if($params['item']->get_bundle_item_discount()){
+                        traceLog($params['item']->get_bundle_item_discount());
+                        $is_discounted_bundle_item = true;
+                    }
+                }
+                if ($host_obj->value == 'false')
+                    return !$is_discounted_bundle_item;
+                else
+                    return $is_discounted_bundle_item;
+            }
+
 			return false;
 		}
 	}
@@ -148,7 +168,8 @@
 			'quantity'=>db_number,
 			'row_total'=>db_float,
 			'discount'=>db_float,
-			'bundle_item'=>db_bool
+			'bundle_item'=>db_bool,
+            'discounted_bundle_item'=>db_bool
 		);
 		
 		public function define_columns($context = null)
@@ -158,6 +179,7 @@
 			$this->define_column('row_total', 'Row total in the shopping cart');
 			$this->define_column('discount', 'Total line item discount');
 			$this->define_column('bundle_item', 'Product is a bundle item');
+            $this->define_column('discounted_bundle_item', 'Product is a discounted bundle item');
 		}
 		
 		public function get_condition_attributes()
