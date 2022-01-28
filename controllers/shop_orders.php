@@ -1819,7 +1819,7 @@
 			try
 			{
 				$order = $this->viewData['form_model'] = $this->getOrderObj($order_id);
-				$order->set_form_data(post('Shop_Order'));
+				$order->set_form_data();
 
 				echo ">>item_list<<";
 				$this->renderPartial('item_list');
@@ -1851,7 +1851,7 @@
 					}
 				}
 
-				$order->set_form_data(post('Shop_Order'));
+				$order->set_form_data();
 
 				echo ">>item_list<<";
 				$this->renderPartial('item_list');
@@ -2143,17 +2143,8 @@
 		protected function onUpdateShippingOptions($order_id)
 		{
 			$order = $this->viewData['form_model'] = $this->getOrderObj($order_id);
-			$orderData = post('Shop_Order');
-			if ($order->is_new_record()){
-				$order->set_form_data($orderData);
-			}
+			$order->set_form_data();
 
-			$order->set_shipping_address($orderData);
-			$order->coupon_id = array_key_exists('coupon_id', $orderData) ? $orderData['coupon_id'] : null;
-			$order->override_shipping_quote = array_key_exists('override_shipping_quote', $orderData) ? $orderData['override_shipping_quote'] : null;
-			$order->manual_shipping_quote = array_key_exists('manual_shipping_quote', $orderData) ? $orderData['manual_shipping_quote'] : null;
-			$order->shipping_method_id = array_key_exists('shipping_method_id', $orderData) ? $orderData['shipping_method_id'] : null;
-			
 			if (strpos($order->shipping_method_id, '_') !== false)
 			{
 				$parts = explode('_', $order->shipping_method_id);
@@ -2797,10 +2788,7 @@
 
 		protected function getAvailablePaymentMethods($order)
 		{
-			$data = post('Shop_Order', array());
-			if ($data)
-				$order->set_form_data($data);
-
+			$order->set_form_data();
 			return Shop_OrderHelper::getAvailablePaymentMethods($order,$this->formGetEditSessionKey());
 		}
 

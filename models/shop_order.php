@@ -456,22 +456,26 @@ class Shop_Order extends Db_ActiveRecord
 		$this->billing_zip = $data['billing_zip'];
 	}
 
-	public function set_form_data($data)
+	public function set_form_data($form_data=null)
 	{
-		$this->set_shipping_address($data);
-		$this->set_billing_address($data);
-		$this->tax_exempt = array_key_exists('tax_exempt', $data) ? $data['tax_exempt'] : null;
-		$this->override_shipping_quote = array_key_exists('override_shipping_quote', $data) ? $data['override_shipping_quote'] : null;
-		$this->manual_shipping_quote = array_key_exists('manual_shipping_quote', $data) ? $data['manual_shipping_quote'] : null;
-		$this->shipping_method_id = array_key_exists('shipping_method_id', $data) ? $data['shipping_method_id'] : null;
-		$this->shipping_sub_option = array_key_exists('shipping_sub_option', $data) ? $data['shipping_sub_option'] : $this->shipping_sub_option;
-		$this->payment_method_id = array_key_exists('payment_method_id', $data) ? $data['payment_method_id'] : null;
-		$this->coupon_id = array_key_exists('coupon_id', $data) ? $data['coupon_id'] : null;
-		$this->discount = array_key_exists('discount', $data) ? $data['discount'] : 0;
-		$this->free_shipping = array_key_exists('free_shipping', $data) ? $data['free_shipping'] : 0;
-		$currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : null;
-		if(($this->currency_code === null) || ($this->currency_code != $currency_code)){
-			$this->set_currency($currency_code);
+		$data = $form_data ? $form_data : post('Shop_Order', array());
+		if(!empty($data)){
+            $this->update($data);
+            $this->set_shipping_address($data);
+            $this->set_billing_address($data);
+            $this->tax_exempt = array_key_exists('tax_exempt', $data) ? $data['tax_exempt'] : null;
+            $this->override_shipping_quote = array_key_exists('override_shipping_quote', $data) ? $data['override_shipping_quote'] : null;
+            $this->manual_shipping_quote = array_key_exists('manual_shipping_quote', $data) ? $data['manual_shipping_quote'] : null;
+            $this->shipping_method_id = array_key_exists('shipping_method_id', $data) ? $data['shipping_method_id'] : null;
+            $this->shipping_sub_option = array_key_exists('shipping_sub_option', $data) ? $data['shipping_sub_option'] : $this->shipping_sub_option;
+            $this->payment_method_id = array_key_exists('payment_method_id', $data) ? $data['payment_method_id'] : null;
+            $this->coupon_id = array_key_exists('coupon_id', $data) ? $data['coupon_id'] : null;
+            $this->discount = array_key_exists('discount', $data) ? $data['discount'] : 0;
+            $this->free_shipping = array_key_exists('free_shipping', $data) ? $data['free_shipping'] : 0;
+            $currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : null;
+            if(($this->currency_code === null) || ($this->currency_code != $currency_code)){
+                $this->set_currency($currency_code);
+            }
 		}
 	}
 
