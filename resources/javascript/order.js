@@ -334,6 +334,28 @@ function handle_option_change()
 	});
 }
 
+function recalculate_shipping_options(){
+	$('Shop_Order_shipping_first_name').getForm().sendPhpr(
+		'onUpdateShippingOptions',
+		{
+			loadIndicator: {
+				show         : true,
+				hideOnSuccess: true
+			},
+			extraFields : {
+				'recalculate_shipping_quotes' : '1',
+			},
+			onSuccess    : function () {
+				update_shipping_quotes = false;
+			},
+			onAfterUpdate: function () {
+				assign_shipping_override_handler();
+				track_shipping_override();
+			}
+		}
+	);
+}
+
 window.addEvent('domready', function(){
 	if ($('phpr_lock_mode'))
 		return;
@@ -420,25 +442,7 @@ window.addEvent('domready', function(){
 		shipping_tab.addEvent('onTabClick', function () {
 			if (update_shipping_quotes) {
 				if(is_shipping_selector_active()) {
-					$('item_list').getForm().sendPhpr(
-						'onUpdateShippingOptions',
-						{
-							loadIndicator: {
-								show         : true,
-								hideOnSuccess: true
-							},
-							extraFields : {
-								'recalculate_shipping_quotes' : '1',
-							},
-							onSuccess    : function () {
-								update_shipping_quotes = false;
-							},
-							onAfterUpdate: function () {
-								assign_shipping_override_handler();
-								track_shipping_override();
-							}
-						}
-					)
+					recalculate_shipping_options();
 				}
 			}
 		});
@@ -463,7 +467,7 @@ window.addEvent('domready', function(){
 	})
 	
 	/*
-	 * Init order item option handlers - requred for Option Matrix
+	 * Init order item option handlers - required for Option Matrix
 	 */
 	
 	jQuery('.product_option-selector-container select').live('change', function(){
