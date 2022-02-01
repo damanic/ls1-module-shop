@@ -223,7 +223,7 @@
             if(is_numeric($this->price_or_discount)) {
                 if ($this->price_override_mode == self::price_override_percentage_discount) {
                     if($this->price_or_discount > 0) {
-                        return $default_price - ($default_price * ($this->price_or_discount / 100));
+                        return round($default_price - ($default_price * ($this->price_or_discount / 100)), 2);
                     }
                 }
 
