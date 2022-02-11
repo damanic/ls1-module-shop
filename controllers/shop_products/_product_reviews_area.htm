@@ -1,4 +1,4 @@
-<? $reviews = $form_model->list_all_reviews() ?>
+<? $reviews = Shop_ProductReview::create()->where('prv_product_id=?', $form_model->id)->order('created_at')->limit(300)->find_all_proxy();?>
 <div class="toolbar">
 	<?= backend_ctr_button('Approve selected', 'apply', array('href'=>'#', 'onclick'=>"return approve_selected_reviews()")) ?>
 	<?= backend_ctr_button('Delete selected', 'delete_document', array('href'=>'#', 'onclick'=>"return delete_selected_reviews()")) ?>
