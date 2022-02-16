@@ -476,8 +476,6 @@ class Shop_Order extends Shop_ActiveRecord
             $currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : $this->currency_code;
             if(($this->currency_code === null) || ($this->currency_code !== $currency_code)) {
                 $this->set_currency($currency_code); //sets the order currency and updates base rate
-            } else if($this->currency_code && !$this->is_paid()){
-                $this->set_currency_rate(); //updates the base rate
             }
 		}
 	}
