@@ -36,7 +36,7 @@
 	 * @package shop.models
 	 * @author LemonStand eCommerce Inc.
 	 */
-	class Shop_OrderItem extends Db_ActiveRecord implements Shop_RetailItem, Shop_BundleItem
+	class Shop_OrderItem extends Shop_ActiveRecord implements Shop_RetailItem, Shop_BundleItem
 	{
 		public $table_name = 'shop_order_items';
 

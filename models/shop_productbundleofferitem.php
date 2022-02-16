@@ -275,8 +275,6 @@
             $currency_context = $this->get_currency_context();
             $shop_currency =  Shop_CurrencySettings::get();
             if($currency_context !== $shop_currency->code){
-                traceLog($currency_context .' !== '. $shop_currency->code);
-                traceLog('converting '. $this->price_or_discount);
                 //do a currency conversion
                 $currency_converter = Shop_CurrencyConverter::create();
                 $from_currency_code =  $shop_currency->code;

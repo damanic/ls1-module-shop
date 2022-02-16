@@ -35,7 +35,7 @@
 	 * @package shop.models
 	 * @author LemonStand eCommerce Inc.
 	 */
-	class Shop_ShippingOption extends Db_ActiveRecord
+	class Shop_ShippingOption extends Shop_ActiveRecord
 	{
 		public $table_name = 'shop_shipping_options';
 		public $enabled = 1;

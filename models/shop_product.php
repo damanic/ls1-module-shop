@@ -91,7 +91,7 @@
  * @package shop.models
  * @author LemonStand eCommerce Inc.
  */
-class Shop_Product extends Db_ActiveRecord
+class Shop_Product extends Shop_ActiveRecord
 {
 	public $table_name = 'shop_products';
 

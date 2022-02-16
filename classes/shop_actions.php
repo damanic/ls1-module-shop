@@ -1744,7 +1744,7 @@
 		 * This action is a part of the {@link http://lemonstand.com/docs/implementing_the_step_by_step_checkout step-by-step checkout process}.
 		 * The Billing Information page is the first step of the conventional step-by-step checkout process.
 		 *
-		 * {@include docs/step-by-step-checkout}
+		 * {@include ../docs/step-by-step-checkout}
 		 *
 		 * <h3>Automatic customer registration</h3>
 		 * Besides the supported form fields described below this action supports fields for the automatic customer registration.
@@ -1848,7 +1848,7 @@
 		 * This action is a part of the {@link http://lemonstand.com/docs/implementing_the_step_by_step_checkout step-by-step checkout process}.
 		 * The Shipping Information page is the second step of the conventional step-by-step checkout process.
 		 *
-		 * {@include docs/step-by-step-checkout}
+		 * {@include ../docs/step-by-step-checkout}
 		 *
 		 * @action shop:checkout_shipping_info
 		 *
@@ -1956,7 +1956,7 @@
 		 * This action is a part of the {@link http://lemonstand.com/docs/implementing_the_step_by_step_checkout step-by-step checkout process}.
 		 * The Shipping Method page is the third step of the conventional step-by-step checkout process.
 		 *
-		 * {@include docs/step-by-step-checkout}
+		 * {@include ../docs/step-by-step-checkout}
 		 *
 		 * @input string $shipping_option An identifier of selected shipping method. Required.
 		 * You can use either radio button set or a SELECT element for representing a list of available shipping methods.
@@ -2047,7 +2047,7 @@
 		 * This action is a part of the {@link http://lemonstand.com/docs/implementing_the_step_by_step_checkout step-by-step checkout process}.
 		 * The Payment Method page is the fourth step of the conventional step-by-step checkout process.
 		 *
-		 * {@include docs/step-by-step-checkout}
+		 * {@include ../docs/step-by-step-checkout}
 		 *
 		 * @input integer $payment_method An identifier of selected {@link Shop_PaymentMethod payment method}. Required.
 		 * You can use either radio button set or a SELECT element for representing a list of available payment methods.
@@ -2159,7 +2159,7 @@
 		 * This action is a part of the {@link http://lemonstand.com/docs/implementing_the_step_by_step_checkout step-by-step checkout process}.
 		 * The Order Review page is the last step of the conventional step-by-step checkout process.
 		 *
-		 * {@include docs/step-by-step-checkout}
+		 * {@include ../docs/step-by-step-checkout}
 		 *
 		 * @input boolean $customer_auto_login Determines whether the customer should be automatically logged in after placing the order.
 		 * Accepted values are: 0, 1. See also the {@link http://lemonstand.com/docs/automatic_customer_registration Automatic customer registration} article.

@@ -18,7 +18,7 @@
 	 * @package shop.models
 	 * @author LemonStand eCommerce Inc.
 	 */
-	class Shop_ExtraOption extends Db_ActiveRecord
+	class Shop_ExtraOption extends Shop_ActiveRecord
 	{
 		public $table_name = 'shop_extra_options';
 		protected $api_added_columns = array();

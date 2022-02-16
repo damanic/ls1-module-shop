@@ -70,5 +70,18 @@ class Shop_ActiveRecord extends Db_ActiveRecord{
 		return Shop_CurrencyHelper::format_currency($value,2, $currency_code);
 	}
 
+    /**
+     * Returns a formatted currency value formatted according to the records internal currency code.
+     * This is used by the application framework to render currency values in list/presentation views
+     * @param float $value A currency value
+     * @return string Returns the formatted currency value.
+     */
+	public function format_currency($value){
+        if($this->internal_currency_code) {
+            return Shop_CurrencyHelper::format_currency($value, 2, $this->get_currency_code());
+        }
+        return format_currency($value,2);
+	}
+
 
 }

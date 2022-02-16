@@ -120,7 +120,7 @@
 			$this->form_redirect = url('/shop/orders');
 			$this->form_edit_save_redirect = url('/shop/orders/preview/%s?'.uniqid());
 			$this->form_create_save_redirect = url('/shop/orders/preview/%s?'.uniqid());
-			
+
 			$invoice_mode = Phpr::$router->param('param1') == 'invoice';
 			$parent_order_id = Phpr::$router->param('param2');
 
@@ -171,7 +171,7 @@
 			
 			if (Phpr::$router->action == 'create' && Phpr::$router->param('param1') == 'for-customer')
 				$this->form_create_save_redirect = url('/shop/customers/preview/'.Phpr::$router->param('param2'));
-			
+
 			Backend::$events->fireEvent('shop:onDisplayOrdersPage', $this);
 			
 			$this->addRss(url('/shop/orders/rss'));

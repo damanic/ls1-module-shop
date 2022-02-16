@@ -60,7 +60,7 @@ $phpr_order_no_tax_mode = false;
  * @package shop.models
  * @author LemonStand eCommerce Inc.
  */
-class Shop_Order extends Db_ActiveRecord
+class Shop_Order extends Shop_ActiveRecord
 {
 	public $table_name = 'shop_orders';
 	public $native_controller = 'Shop_Orders';
@@ -472,9 +472,12 @@ class Shop_Order extends Db_ActiveRecord
             $this->coupon_id = array_key_exists('coupon_id', $data) ? $data['coupon_id'] : null;
             $this->discount = array_key_exists('discount', $data) ? $data['discount'] : 0;
             $this->free_shipping = array_key_exists('free_shipping', $data) ? $data['free_shipping'] : 0;
-            $currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : null;
-            if(($this->currency_code === null) || ($this->currency_code != $currency_code)){
-                $this->set_currency($currency_code);
+
+            $currency_code = array_key_exists('currency_code', $data) ? $data['currency_code'] : $this->currency_code;
+            if(($this->currency_code === null) || ($this->currency_code !== $currency_code)) {
+                $this->set_currency($currency_code); //sets the order currency and updates base rate
+            } else if($this->currency_code && !$this->is_paid()){
+                $this->set_currency_rate(); //updates the base rate
             }
 		}
 	}
@@ -1117,7 +1120,7 @@ class Shop_Order extends Db_ActiveRecord
 
 	public function get_currency(){
 		$currency = new Shop_CurrencySettings();
-		$currency = $currency->where( 'code = :code', array('code' => $this->currency_code) )->limit(1)->find_all();
+		$currency = $currency->find_by_code( $this->currency_code );
 		return $currency;
 	}
 
