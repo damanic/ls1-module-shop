@@ -2490,6 +2490,10 @@ class Shop_Order extends Shop_ActiveRecord
 
 	protected function after_fetch()
 	{
+        //All order items inherit order currency
+        foreach($this->items as $item){
+            $item->set_currency_code($this->get_currency_code());
+        }
 		Backend::$events->fireEvent('shop:onAfterOrderRecordFetch', $this);
 	}
 
