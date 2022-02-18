@@ -533,13 +533,21 @@
 				if ($item->get_files_hash($session_key) != $this_files_hash)
 					continue;
 
-				foreach ($this->api_added_columns as $column_name)
-				{
-					$column = is_string($this->$column_name) ? trim($this->$column_name) : $this->$column_name;
-					
-					if ($column != $item->$column_name)
-						continue 2;
-				}
+                foreach ($this->api_added_columns as $column_name) {
+                    $column_value = is_string($this->$column_name) ? trim($this->$column_name) : $this->$column_name;
+                    $compare_value = is_string($item->$column_name) ? trim($item->$column_name) : $item->$column_name;
+                    if (is_array($column_value) || $column_value instanceof Countable) {
+                        if(count($column_value) > 0 && count($compare_value) > 0){
+                            if(count($column_value) !== count($compare_value)){
+                                continue 2;
+                            } else if ($column_value != $compare_value) {
+                                continue 2;
+                            }
+                        }
+                    }  else if ($column_value != $compare_value) {
+                        continue 2;
+                    }
+                }
 
 				return $item;
 			}
