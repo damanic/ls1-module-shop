@@ -82,7 +82,8 @@
 		);
 		
 		public $filter_switchers = array(
-			'hide_disabled'=>array('name'=>'Hide disabled products', 'class_name'=>'Shop_HideDisabledProductsSwitcher')
+			'hide_disabled'=>array('name'=>'Hide disabled products', 'class_name'=>'Shop_HideDisabledProductsSwitcher'),
+			'show_withbundleoffers'=>array('name'=>'Products with bundle offers', 'class_name'=>'Shop_DisplayProductBundleOfferSwitcher'),
 		);
 
 		protected $globalHandlers = array(
