@@ -466,8 +466,20 @@
 			$this->country =  in_array('country', $fields) ? $shipping_params->default_shipping_country_id : $this->country ;
 			$this->state = in_array('state', $fields) ?$shipping_params->default_shipping_state_id : $this->state;
 		}
-		
 
+        /**
+         * Check if the address is for a Post Office Box (PO Box)
+         * @return bool True if PO Box
+         */
+        public function is_po_box(){
+            $subject = str_replace(array("\r", "\n"), ', ', trim($this->get('street_address')));
+            $pattern = '/^(?!.*(?:(.*((p|post)[-.\s]*(o|off|office)[-.\s]*(box|bin)[-.\s]*)|.*((p |post)[-.\s]*(box|bin)[-.\s]*)))).*$/i';
+            if(preg_match($pattern, $subject)){
+                return false;
+            }
+            return true;
+        }
+		
 
 		protected function transliterate($value){
 			if ( !method_exists( 'Core_String', 'transliterate' ) ) {
