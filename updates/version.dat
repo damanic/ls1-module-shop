@@ -1039,3 +1039,4 @@
 #1.37.0 Improved product bundle support and customer account password management
 #1.37.1 Minor improvements for currency support and backend product admin.
 #1.37.2 Adds PO Box detection method for address objects
+#1.37.3 Adds new order scope email template variables
