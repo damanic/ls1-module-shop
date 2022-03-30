@@ -1528,6 +1528,26 @@ class Shop_Order extends Shop_ActiveRecord
 			$message_text = str_replace('{shipping_codes}', $codes_str, $message_text);
 		}
 
+        if (strpos($message_text, '{order_shipping_option}') !== false)
+        {
+            $method = $this->displayField('shipping_method');
+            $option = $this->displayField('shipping_sub_option');
+            $output = strlen($option) ? $option : $method;
+            $message_text = str_replace('{order_shipping_option}', $output, $message_text);
+        }
+
+        if (strpos($message_text, '{order_shipping_sub_option}') !== false)
+        {
+            $option = $this->displayField('shipping_sub_option');
+            $message_text = str_replace('{order_shipping_sub_option}', $option, $message_text);
+        }
+
+        if (strpos($message_text, '{order_shipping_method}') !== false)
+        {
+            $method = $this->displayField('shipping_method');
+            $message_text = str_replace('{order_shipping_method}', $method, $message_text);
+        }
+
 		return $message_text;
 	}
 

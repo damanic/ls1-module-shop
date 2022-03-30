@@ -573,7 +573,10 @@
 					'shipping_street_addr'=>array('Outputs a customer shipping street address.', '8260 Wharton Pl.'),
 					'shipping_city'=>array('Outputs a customer shipping city.', 'Mission'),
 					'shipping_zip'=>array('Outputs a customer shipping ZIP/Postal code.', 'V2V 7A4'),
-					'shipping_codes'=>array('Outputs a list of order shipping tracking codes.', '<ul><li>USPS: CJ1111111111US</li></ul>')
+					'shipping_codes'=>array('Outputs a list of order shipping tracking codes.', '<ul><li>USPS: CJ1111111111US</li></ul>'),
+					'order_shipping_method'=>array('Outputs the orders selected shipping method name.', 'USPS'),
+					'order_shipping_sub_option'=>array('Outputs the orders selected shipping sub option name.', 'Priority Mail'),
+					'order_shipping_option'=>array('Outputs the orders selected shipping sub option name if available, otherwise outputs the orders shipping method name.', 'Priority Mail'),
 				),
 				'Product review'=>array(
 					'review_author_name'=>array('Outputs a name of the product review author', 'John Smith'),
