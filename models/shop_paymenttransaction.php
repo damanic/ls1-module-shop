@@ -33,11 +33,14 @@
 			$this->define_relation_column('payment_method', 'payment_method', 'Payment Method ', db_varchar, '@name');
 			$this->define_column('actual_user_name', 'Created/Update By');
 			$this->define_column('transaction_value', 'Value');
+            $this->define_column('transaction_value_currency_code', 'Value Currency');
 			$this->define_column('transaction_complete', 'Settled');
 			$this->define_column('transaction_refund', 'Is Refund');
 			$this->define_column('transaction_void', 'Is Void');
 			$this->define_column('has_disputes', 'Has Disputes');
 			$this->define_column('liability_shifted', 'Liability Shifted');
+            $this->define_column('settlement_value', 'Settlement Value');
+            $this->define_column('settlement_currency_code', 'Settlement Value Currency');
 		}
 
 		public function define_form_fields($context = null)
@@ -45,56 +48,86 @@
 			$this->add_form_field('payment_method');
 			$this->add_form_field('transaction_status_name', 'left');
 			$this->add_form_field('transaction_status_code', 'right');
-			$this->add_form_field('transaction_id','left');
-			$this->add_form_field('actual_user_name', 'right');
+			$this->add_form_field('transaction_id');
+			$this->add_form_field('actual_user_name');
 			$this->add_form_field('user_note')->nl2br(true);
 		}
-		
-		public static function update_transaction($order, $payment_method_id, $transaction_id, $transaction_status_name, $transaction_status_code, $user_note = null, $data = null)
-		{
-			$obj = new self();
-			$obj->order_id = $order->id;
-			$obj->transaction_id = $transaction_id;
-			$obj->transaction_status_name = $transaction_status_name;
-			$obj->transaction_status_code = $transaction_status_code;
-			$obj->payment_method_id = $payment_method_id;
-			$obj->user_note = $user_note;
-			$obj->data_1 = $data;
-			$obj->save();
-		}
 
-		public static function add_transaction($order, $payment_method_id, $transaction_id, $transaction_data, $user_note = null){
+        /**
+         * @param Shop_Order $order
+         * @param int $payment_method_id
+         * @param int $transaction_id
+         * @param Shop_TransactionUpdate $transaction_data
+         * @param null $user_note
+         * @return Shop_PaymentTransaction
+         */
+        public static function add_transaction(
+            $order,
+            $payment_method_id,
+            $transaction_id,
+            $transaction_data,
+            $user_note = null
+        ) {
+            if (!is_a($transaction_data, 'Shop_TransactionUpdate')) {
+                throw new Phpr_ApplicationException('Invalid transaction data given, must be instance of Shop_TransactionUpdate');
+            }
 
-				if ( !is_a( $transaction_data, 'Shop_TransactionUpdate' ) ) {
-					throw new Phpr_ApplicationException( 'Invalid transaction data given, must be instance of Shop_TransactionUpdate' );
-				}
+            $transaction_currency_code = $transaction_data->transaction_value_currency_code ? $transaction_data->transaction_value_currency_code : $order->get_currency_code();
+            $settlement_currency_code = $transaction_data->settlement_value_currency_code ? $transaction_data->settlement_value_currency_code : $order->get_currency_code();
 
-				$payment_transaction                          = new self();
-				$payment_transaction->order_id                = $order->id;
-				$payment_transaction->payment_method_id       = $payment_method_id;
-				$payment_transaction->user_note               = $user_note;
-				$payment_transaction->transaction_id          = $transaction_id;
-				$payment_transaction->transaction_status_name = $transaction_data->transaction_status_name;
-				$payment_transaction->transaction_status_code = $transaction_data->transaction_status_code;
-				$payment_transaction->transaction_value       = $transaction_data->transaction_value;
-				$payment_transaction->transaction_complete    = $transaction_data->transaction_complete;
-				$payment_transaction->transaction_refund      = $transaction_data->transaction_refund;
-				$payment_transaction->transaction_void        = $transaction_data->transaction_void;
-				$payment_transaction->has_disputes            = $transaction_data->has_disputes;
-				$payment_transaction->liability_shifted       = $transaction_data->liability_shifted;
-				$payment_transaction->data_1                  = $transaction_data->data_1;
-				if ( isset( $transaction_data->created_at ) && !empty( $transaction_data->created_at ) ) {
-					$payment_transaction->auto_create_timestamps = array(); //use gateway timestamp
-					$payment_transaction->created_at             = $transaction_data->created_at;
-				}
-				$payment_transaction->save();
-				if ( $transaction_data->has_disputes ) {
-					foreach ( $transaction_data->get_disputes() as $dispute_update ) {
-						$payment_transaction->add_dispute( $dispute_update );
-					}
-				}
-			return $payment_transaction;
-		}
+            $payment_transaction = new self();
+            $payment_transaction->order_id = $order->id;
+            $payment_transaction->payment_method_id = $payment_method_id;
+            $payment_transaction->user_note = $user_note;
+            $payment_transaction->transaction_id = $transaction_id;
+            $payment_transaction->transaction_status_name = $transaction_data->transaction_status_name;
+            $payment_transaction->transaction_status_code = $transaction_data->transaction_status_code;
+            $payment_transaction->transaction_value = $transaction_data->transaction_value;
+            $payment_transaction->transaction_value_currency_code = $transaction_currency_code;
+            $payment_transaction->transaction_complete = $transaction_data->transaction_complete;
+            $payment_transaction->transaction_refund = $transaction_data->transaction_refund;
+            $payment_transaction->transaction_void = $transaction_data->transaction_void;
+            $payment_transaction->has_disputes = $transaction_data->has_disputes;
+            $payment_transaction->liability_shifted = $transaction_data->liability_shifted;
+            $payment_transaction->settlement_value = $transaction_data->settlement_value;
+            $payment_transaction->settlement_value_currency_code = $settlement_currency_code;
+            $payment_transaction->data_1 = $transaction_data->data_1;
+            if (isset($transaction_data->created_at) && !empty($transaction_data->created_at)) {
+                $payment_transaction->auto_create_timestamps = array(); //use gateway timestamp
+                $payment_transaction->created_at = $transaction_data->created_at;
+            }
+            $payment_transaction->save();
+            if ($transaction_data->has_disputes) {
+                foreach ($transaction_data->get_disputes() as $dispute_update) {
+                    $payment_transaction->add_dispute($dispute_update);
+                }
+            }
+            return $payment_transaction;
+        }
+
+        /**
+         * @deprecated  Use add_transaction()
+         * @param $order
+         * @param $payment_method_id
+         * @param $transaction_id
+         * @param $transaction_status_name
+         * @param $transaction_status_code
+         * @param null $user_note
+         * @param null $data
+         */
+        public static function update_transaction($order, $payment_method_id, $transaction_id, $transaction_status_name, $transaction_status_code, $user_note = null, $data = null)
+        {
+            $transactionUpdate                          = new Shop_TransactionUpdate();
+            $transactionUpdate->transaction_status_code = $transaction_status_code;
+            $transactionUpdate->transaction_status_name = $transaction_status_name;
+            $transactionUpdate->data_1                  = $data;
+            self::add_transaction(  $order,
+                $payment_method_id,
+                $transaction_id,
+                $transactionUpdate,
+                $user_note = null
+            );
+        }
 
 		public function add_dispute(Shop_TransactionDisputeUpdate $dispute_update){
 

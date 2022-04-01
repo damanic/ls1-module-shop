@@ -32,11 +32,32 @@
 
 
 		/**
-		 * @var string Specifies the transaction value.
+		 * @var float Specifies the transaction value.
 		 * The value is the amount paid or refunded by the transaction
 		 * @documentable
 		 */
 		public $transaction_value;
+
+        /**
+         * @var string Specifies the currency code for the transaction value.
+         * ISO 4217
+         * @documentable
+         */
+        public $transaction_value_currency_code;
+
+        /**
+         * @var float Specifies the amount dispersed/settled in vendors account
+         * The value is the amount paid or refunded by the transaction
+         * @documentable
+         */
+        public $settlement_value;
+
+        /**
+         * @var string Specifies the currency code for the settlement value.
+         * ISO 4217
+         * @documentable
+         */
+        public $settlement_value_currency_code;
 
 		/**
 		 * @var int Settlement complete flag
@@ -118,7 +139,8 @@
 				'transaction_refund',
 				'transaction_void',
 				'has_disputes',
-				'liability_shifted'
+				'liability_shifted',
+                'settlement_value',
 			);
 
 			foreach($relevant_fields as $field){
@@ -131,5 +153,3 @@
 		}
 
 	}
-
-?>

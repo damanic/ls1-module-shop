@@ -252,35 +252,46 @@
 		/*
 		 * Transaction management functions
 		 */
-		
-		/**
-		 * Adds or updates the payment transaction status
-		 * @param $host_obj ActiveRecord object containing configuration fields values
-		 * @param $order Order object
-		 * @param string $transaction_id Specifies a transaction identifier returned by the payment gateway. Example: kjkls
-		 * @param string $transaction_status_name Specifies a transaction status name, for example: Approved
-		 * @param string $transaction_status_code Specifies a transaction payment gateway-specific status code, for example: A
-		 * @param string $data Additional data for the transactions required for a payment method
-		 */
-		public function update_transaction_status($host_obj, $order, $transaction_id, $transaction_status_name, $transaction_status_code, $data = null)
-		{
-			Shop_PaymentTransaction::update_transaction(
-				$order, 
-				$host_obj->id,
-				$transaction_id, 
-				$transaction_status_name,
-				$transaction_status_code,
-				null,
-				$data
-			);
-		}
+
+        /**
+         * @deprecated Use add_transaction()
+         *
+         * Adds or updates the payment transaction status
+         * @param $host_obj ActiveRecord object containing configuration fields values
+         * @param $order Order object
+         * @param string $transaction_id Specifies a transaction identifier returned by the payment gateway. Example: kjkls
+         * @param string $transaction_status_name Specifies a transaction status name, for example: Approved
+         * @param string $transaction_status_code Specifies a transaction payment gateway-specific status code, for example: A
+         * @param string $data Additional data for the transactions required for a payment method
+         */
+        public function update_transaction_status(
+            $host_obj,
+            $order,
+            $transaction_id,
+            $transaction_status_name,
+            $transaction_status_code,
+            $data = null
+        ) {
+            $transactionUpdate = new Shop_TransactionUpdate();
+            $transactionUpdate->transaction_status_code = $transaction_status_code;
+            $transactionUpdate->data_1 = $data;
+            $transactionUpdate->transaction_status_name = $transaction_status_name;
+            Shop_PaymentTransaction::add_transaction(
+                $order,
+                $host_obj->id,
+                $transaction_id,
+                $transactionUpdate,
+                $user_note = null
+            );
+        }
 
 		/**
 		 * Adds payment transaction to order history. Use in place of update_transaction_status when confirming a settled or refunded payment value
-		 * @param $host_obj ActiveRecord object containing configuration fields values
-		 * @param $order Order object
+		 * @param ActiveRecord $host_obj object containing configuration fields values
+		 * @param Shop_Order $order  object
 		 * @param string $transaction_id Specifies a transaction identifier returned by the payment gateway. Example: kjkls
-		 * @param object Shop_TransactionUpdate $transaction_data
+		 * @param Shop_TransactionUpdate $transaction_data
+         * @param string $user_note Note to add to transaction
 		 */
 		public function add_transaction($host_obj, $order, $transaction_id, $transaction_data, $user_note = null)
 		{
@@ -293,17 +304,17 @@
 			);
 		}
 
-		/**
-		 * A gateway can provide a settlement exchange rate
-		 * when converting foreign currency payments to local bank account currency.
-		 * This method can be used to update the conversion rate stored on the order
-		 * with the actual rate used by the payment gateway for conversion.
-		 * The orders stored currency rate will only update if the given currency code matches the
-		 * orders currency code
-		 *
-		 * @param $order ActiveRecord object Shop_Order
-		 * @param string $payment_currency_code ISO currency code for payment
-		 * @param string $exchange_rate Exchange rate from payment currency to this shops base currency
+        /**
+         * A gateway can provide a settlement exchange rate
+         * when converting foreign currency payments to local bank account currency.
+         * This method can be used to update the conversion rate stored on the order
+         * with the actual rate used by the payment gateway for conversion.
+         * The orders stored currency rate will only update if the given currency code matches the
+         * orders currency code
+         *
+         * @param $order ActiveRecord object Shop_Order
+         * @param string $payment_currency_code ISO currency code for payment
+         * @param string $exchange_rate Exchange rate from payment currency to this shops base currency
 		 */
 		public function update_currency_data( $order, $payment_currency_code, $exchange_rate){
 			if(!empty($payment_currency_code) && ($order->get_currency_code() == $payment_currency_code)) {
