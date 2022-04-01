@@ -14,6 +14,7 @@ if($payment_type && $payment_type->supports_multiple_payments()){
 			<th class="date">Date and Time</th>
 			<th>Status</th>
 			<th>Value</th>
+            <th>Currency</th>
 			<th>Fraud Protection</th>
 			<th>Disputed</th>
 			<th  class="last">User</th>
@@ -31,6 +32,7 @@ if($payment_type && $payment_type->supports_multiple_payments()){
 			<td onclick="<?= $onClick ?>" class="date link"><a href="#" onclick="<?= $onClick ?>"><?= $record->displayField('created_at') ?></a></td>
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_status_name) ?></a></td>
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_value) ?></a></td>
+            <td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_value_currency_code) ?></a></td>
 			<td onclick="<?= $onClick ?>" class="icon"><a href="#" onclick="<?= $onClick ?>"><?= $record->liability_shifted ? '<img src="/modules/shop/resources/images/tick_shield.png" alt="Liability Shifted" title="Liability Shifted" style="width:24px; height:24px;"/>' : null ?></a></td>
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= $record->has_disputes ? '<img src="/modules/shop/resources/images/warning.png" alt="Transaction Disputed" title="Transaction Disputed" style="width:24px; height:24px;"/>' : null ?></a></td>
 			<td onclick="<?= $onClick ?>" class="last link"><a href="#" onclick="<?= $onClick ?>"><?= h($user_name) ?></a></td>

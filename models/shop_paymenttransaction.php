@@ -40,7 +40,7 @@
 			$this->define_column('has_disputes', 'Has Disputes');
 			$this->define_column('liability_shifted', 'Liability Shifted');
             $this->define_column('settlement_value', 'Settlement Value');
-            $this->define_column('settlement_currency_code', 'Settlement Value Currency');
+            $this->define_column('settlement_value_currency_code', 'Settlement Value Currency');
 		}
 
 		public function define_form_fields($context = null)
@@ -49,6 +49,8 @@
 			$this->add_form_field('transaction_status_name', 'left');
 			$this->add_form_field('transaction_status_code', 'right');
 			$this->add_form_field('transaction_id');
+            $this->add_form_field('settlement_value','left');
+            $this->add_form_field('settlement_value_currency_code','right');
 			$this->add_form_field('actual_user_name');
 			$this->add_form_field('user_note')->nl2br(true);
 		}
