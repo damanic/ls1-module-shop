@@ -25,13 +25,14 @@ if($payment_type && $payment_type->supports_multiple_payments()){
 			foreach ($form_model->payment_transactions as $record):
 				$onClick = "new PopupForm('preview_onLoadPaymentTransactionPreview', {ajaxFields: {'record_id': '{$record->id}'}}); return false;";
 				$user_name = $record->fetched_from_gateway ? 'gateway' : $record->displayField('created_user_name');
+                $currency_code = $record->transaction_value_currency_code ? $record->transaction_value_currency_code : $form_model->get_currency_code();
 		?>
 		<tr class="<?= Backend_Html::zebra('order_transactions') ?>">
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->displayField('payment_method')) ?></a></td>
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_id) ?></a></td>
 			<td onclick="<?= $onClick ?>" class="date link"><a href="#" onclick="<?= $onClick ?>"><?= $record->displayField('created_at') ?></a></td>
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_status_name) ?></a></td>
-			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_value) ?></a></td>
+			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= Shop_CurrencyHelper::format_currency($record->transaction_value,2, $currency_code ) ?></a></td>
             <td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= h($record->transaction_value_currency_code) ?></a></td>
 			<td onclick="<?= $onClick ?>" class="icon"><a href="#" onclick="<?= $onClick ?>"><?= $record->liability_shifted ? '<img src="/modules/shop/resources/images/tick_shield.png" alt="Liability Shifted" title="Liability Shifted" style="width:24px; height:24px;"/>' : null ?></a></td>
 			<td onclick="<?= $onClick ?>" class="link"><a href="#" onclick="<?= $onClick ?>"><?= $record->has_disputes ? '<img src="/modules/shop/resources/images/warning.png" alt="Transaction Disputed" title="Transaction Disputed" style="width:24px; height:24px;"/>' : null ?></a></td>
