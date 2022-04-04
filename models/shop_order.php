@@ -547,25 +547,26 @@ class Shop_Order extends Shop_ActiveRecord
 	 * Returns shipping address information object.
 	 * The object is populated with shipping address information from the order.
 	 * @documentable
-	 * @return Shop_CheckoutAddressInfo Returns an address information object.
+	 * @return Shop_AddressInfo Returns an address information object.
 	 */
 	public function get_shipping_address_info()
 	{
-		$result = new Shop_CheckoutAddressInfo();
-		$result->act_as_billing_info = false;
+        $result = new Shop_AddressInfo();
+        $result->act_as_billing_info = false;
 
-		$result->first_name = $this->shipping_first_name;
-		$result->last_name = $this->shipping_last_name;
-		$result->company = $this->shipping_company;
-		$result->phone = $this->shipping_phone;
-		$result->country = $this->shipping_country_id;
-		$result->state = $this->shipping_state_id;
-		$result->street_address = $this->shipping_street_addr;
-		$result->city = $this->shipping_city;
-		$result->zip = $this->shipping_zip;
-		$result->shipping_addr_is_business = $this->is_business;
+        $result->first_name = $this->shipping_first_name;
+        $result->last_name = $this->shipping_last_name;
+        $result->company = $this->shipping_company;
+        $result->phone = $this->shipping_phone;
+        $result->email = $this->billing_email ? $this->billing_email : $this->customer->email;
+        $result->street_address = $this->shipping_street_addr;
+        $result->city = $this->shipping_city;
+        $result->state = $this->shipping_state_id;
+        $result->country = $this->shipping_country_id;
+        $result->zip = $this->shipping_zip;
+        $result->shipping_addr_is_business = $this->is_business;
 
-		return $result;
+        return $result;
 	}
 
 	/**
@@ -2069,7 +2070,7 @@ class Shop_Order extends Shop_ActiveRecord
 		 * Apply shipping tax
 		 */
 
-		$shipping_info                      = new Shop_CheckoutAddressInfo();
+		$shipping_info                      = new Shop_AddressInfo();
 		$shipping_info->act_as_billing_info = false;
 		$shipping_info->load_from_customer( $customer );
 

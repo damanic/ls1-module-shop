@@ -254,7 +254,7 @@
 		/**
 		 * Checks whether the address represented with the object matches the address represented with another address information object.
 		 * @documentable
-		 * @param Shop_CheckoutAddressInfo $address_info Specifies another address information object to compare with.
+		 * @param Shop_AddressInfo $address_info Specifies another address information object to compare with.
 		 * @return boolean Returns TRUE if the address matches. Returns FALSE otherwise.
 		 */
 		public function equals($address_info)
