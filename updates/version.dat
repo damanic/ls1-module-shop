@@ -1040,3 +1040,4 @@
 #1.37.1 Minor improvements for currency support and backend product admin.
 #1.37.2 Adds PO Box detection method for address objects
 #1.37.3 Adds new order scope email template variables
+#1.37.4 Support currency and settlement value in payment transaction logs
