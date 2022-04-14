@@ -186,17 +186,13 @@
 		public function accepts_order($order, $throw_exception=false){
 
 			if($this->requires_payment_transaction_refunds && $order->transaction_operations_allowed()){
-				$payment_type = $order->payment_method->get_paymenttype_object();
-				if($payment_type && $payment_type->supports_multiple_payments()){
-					$paid = $payment_type->get_total_paid($order) ;
-					$refunded = $payment_type->get_refunds_total($order);
-					if(($payment_type->get_total_paid($order) > 0)  && ($payment_type->get_total_paid($order) !== $payment_type->get_refunds_total($order))){
-						if($throw_exception){
-							throw new Phpr_ApplicationException('Payment transactions on this order must be refunded before progressing to this status.');
-						}
-						return false;
-					}
-				}
+                $transaction_paid = Shop_PaymentTransaction::get_order_balance($order);
+                if($transaction_paid !== null && $transaction_paid > 0){
+                    if($throw_exception){
+                        throw new Phpr_ApplicationException('Payment transactions on this order must be refunded before progressing to this status.');
+                    }
+                    return false;
+                }
 			}
 
 			return true;

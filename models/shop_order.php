@@ -1724,26 +1724,41 @@ class Shop_Order extends Shop_ActiveRecord
 		return true;
 	}
 
+    public function get_payment_transaction_methods(){
+        $payment_methods = array();
+        if($this->payment_transactions) {
+            foreach($this->payment_transactions as $transaction){
+                $payment_methods[$transaction->payment_method_id] = $transaction->payment_method;
+            }
+        }
+        return $payment_methods;
+    }
+
+    public function get_payment_transaction_types(){
+        $payment_types = array();
+        $payment_methods = $this->get_payment_transaction_methods();
+        foreach($payment_methods as $payment_method){
+            $payment_type = $payment_method->get_paymenttype_object();
+            $payment_types[get_class($payment_type)] = $payment_type;
+        }
+        return $payment_types;
+    }
+
 	public function get_payment_due(){
-		$payable = $this->get_total_value_payable();
-		$due = $payable ? $payable : 0;
-		if ($this->is_paid()){
-			$due = 0;
-		}
-		if($this->id){
-			if($this->payment_method){
-				$payment_type = $this->payment_method->get_paymenttype_object();
-				if($payment_type && $payment_type->supports_multiple_payments()){
-					$payment_due = $payable - $payment_type->get_total_paid($this);
-					$due =  round($payment_due,2);
-				}
-			}
-			}
-
-
-		return $due;
-		}
-
+        $payable = $this->get_total_value_payable();
+        $due = $payable ? $payable : 0;
+        if ($this->is_paid()) {
+            $due = 0;
+        }
+        if ($this->id) {
+            $transaction_paid = Shop_PaymentTransaction::get_order_balance($this);
+            if($transaction_paid !== null){
+                $payable -= $transaction_paid;
+                $due = round($payable, 2);
+            }
+        }
+        return $due;
+    }
 	/**
 	 * This method is used to help determine the amount of payment still due for an order.
 	 * It allows external modules to discount part of the total order value from being considered as due for payment.

@@ -206,8 +206,101 @@
 			return Db_DbHelper::scalarArray($sql, $bind);
 		}
 
-		
-		public function list_available_transitions()
+
+        /**
+         * Returns the balance of all transaction payments and refunds for the given order
+         * @param $order ActiveRecord object Shop_Order
+         * @param boolean $include_pending If payments pending should be included (not yet settled)
+         * @return float|null Return value if transactions occurred, otherwise NULL
+         */
+        public static function get_order_balance($order, $include_pending=true){
+            $value = null;
+            $paid = self::get_order_total_paid($order, $include_pending);
+            $refunded = self::get_order_total_refunded($order,$include_pending);
+            $total_value = $paid - $refunded;
+            if(($paid > 0) || ($refunded > 0)){
+                return round($total_value, 2);
+            }
+            return null; //no transaction activity
+        }
+
+        /**
+         * Returns total sum of all paid transactions for the given order
+         * @param $order ActiveRecord object Shop_Order
+         * @param boolean $include_pending If payments pending should be included (not yet settled)
+         * @return float Return value if all incoming transactions recorded
+         */
+        public static function get_order_total_paid($order, $include_pending=true){
+                $total_payment = 0;
+                $add_where = $include_pending ? null : 'AND transaction_complete = 1';
+                $sql_where = "shop_payment_transactions.id in (SELECT MAX(id)
+							 	     FROM shop_payment_transactions
+							 		 WHERE order_id = :order_id $add_where
+							 		 AND transaction_refund IS NULL
+							 		 AND transaction_void IS NULL
+							 		 GROUP BY transaction_id
+							 		 ORDER BY created_at, transaction_complete DESC)";
+
+                $void_transaction_ids = self::get_void_transaction_ids($order);
+                if(count($void_transaction_ids)){
+                    $sql_where .= ' AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)';
+                }
+                $bind = array(
+                    'order_id' => $order->id,
+                    'void_transaction_ids' => $void_transaction_ids
+                );
+                $transactions = self::create()->where($sql_where, $bind)->find_all();
+                if($transactions){
+                    foreach($transactions as $transaction){
+                        if($transaction->transaction_value ){
+                            $total_payment += $transaction->transaction_value;
+                        }
+
+                    }
+                }
+                return round($total_payment, 2);
+        }
+
+        /**
+         * Returns total sum of all refund transactions for the given order
+         * @param $order ActiveRecord object Shop_Order
+         * @param boolean $include_pending If refunds pending should be included (not yet settled)
+         * @return float Return value if all outgoing transactions recorded
+         */
+        public static function get_order_total_refunded($order, $include_pending=true){
+                $total_refunded = 0;
+                $add_where = $include_pending ? null : 'AND transaction_complete = 1';
+                $sql_where = "shop_payment_transactions.id in (SELECT MAX(id)
+							 	     FROM shop_payment_transactions
+							 		 WHERE order_id = :order_id $add_where
+							 		 AND transaction_refund = 1
+							 		 AND transaction_void IS NULL
+							 		 GROUP BY transaction_id
+							 		 ORDER BY created_at, transaction_complete DESC)";
+
+                $void_transaction_ids = self::get_void_transaction_ids($order);
+                if(count($void_transaction_ids)){
+                    $sql_where .= ' AND shop_payment_transactions.transaction_id NOT IN (:void_transaction_ids)';
+                }
+                $bind = array(
+                    'order_id' => $order->id,
+                    'void_transaction_ids' => $void_transaction_ids
+                );
+                $transactions = self::create()->where($sql_where, $bind)->find_all();
+                if($transactions){
+                    foreach($transactions as $transaction){
+                        if($transaction->transaction_value ){
+                            $total_refunded += $transaction->transaction_value;
+                        }
+
+                    }
+                }
+                return round($total_refunded, 2);
+        }
+
+
+
+        public function list_available_transitions()
 		{   
 			if (!$this->payment_method)
 				throw new Phpr_ApplicationException('Payment method not found');

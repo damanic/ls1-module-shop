@@ -6,22 +6,22 @@
 				Total Paid
 			</h3>
 
-			<p><?= $form_model->format_currency($payment_type->get_payments_total($form_model, $include_pending=true)) ?></p>																</p>
+			<p><?= $form_model->format_currency(Shop_PaymentTransaction::get_order_total_paid($form_model, $include_pending=true)) ?></p>																</p>
 			<p class="description">Includes payments in process</p>
 		</li>
 		<li>
 			<h3>Total Received</h3>
-			<p><?= $form_model->format_currency($payment_type->get_payments_total($form_model, $include_pending=false)) ?></p>
+			<p><?= $form_model->format_currency(Shop_PaymentTransaction::get_order_total_paid($form_model, $include_pending=false)) ?></p>
 			<p class="description">Payments confirmed as settled/received</p>
 		</li>
 		<li>
 			<h3>Total Refunded</h3>
-			<p><?= $form_model->format_currency($payment_type->get_refunds_total($form_model, $include_pending=true)) ?></p>
+			<p><?= $form_model->format_currency(Shop_PaymentTransaction::get_order_total_refunded($form_model, $include_pending=true)) ?></p>
 			<p class="description">Includes refunds in process</p>
 		</li>
 		<li>
 			<h3>Refunds Complete</h3>
-			<p><?= $form_model->format_currency($payment_type->get_refunds_total($form_model, $include_pending=false)) ?></p>
+			<p><?= $form_model->format_currency(Shop_PaymentTransaction::get_order_total_refunded($form_model, $include_pending=false)) ?></p>
 			<p class="description">Refunds confirmed as settled</p>
 		</li>
 		<?
