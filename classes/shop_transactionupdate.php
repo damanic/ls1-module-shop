@@ -142,14 +142,13 @@
 				'liability_shifted',
                 'settlement_value',
 			);
-
 			foreach($relevant_fields as $field){
-				if($this->$field != $old_status->$field){
+                $newValue = is_numeric($this->$field) ? round($this->$field,8) : trim( (string) $this->$field);
+                $oldValue = is_numeric($old_status->$field) ? round($old_status->$field,8) : trim( (string) $this->$field);
+				if($newValue != $oldValue){
 					return false;
 				}
 			}
-
 			return true;
 		}
-
 	}
