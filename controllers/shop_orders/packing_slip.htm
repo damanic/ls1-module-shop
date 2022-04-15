@@ -32,11 +32,20 @@
 		<? endif ?>
 
 		<div class="toolbar">
-			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="window.print()">Print</a>
+			<script>
+				function print_packingSlips(){
+					jQuery('#print-container--PackingSlips').printThis({
+						pageTitle: '<?= $this->app_page_title ?>', // add title to print page
+						importStyle : true
+					});
+				}
+			</script>
+			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="print_packingSlips()">Print</a>
 			<div class="clear"></div>
+
 		</div>
 
-		<div class="print_sheets">
+		<div id="print-container--PackingSlips" class="print_sheets">
 			<? foreach ($orders as $order):
 				$split_to_pages = false;
 				if ($page_breaks_rule == 'breaks')

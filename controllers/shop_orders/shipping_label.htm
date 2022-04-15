@@ -47,11 +47,19 @@
 		<? endif ?>
 
 		<div class="toolbar">
-			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="window.print()">Print</a>
+			<script>
+				function print_ShippingLabels(){
+					jQuery('#print-container--ShippingLabels').printThis({
+						pageTitle: '<?= $this->app_page_title ?>', // add title to print page
+						importStyle : true
+					});
+				}
+			</script>
+			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="print_ShippingLabels()">Print</a>
 			<div class="clear"></div>
 		</div>
 
-		<div class="shipping_label_prints">
+		<div id="print-container--ShippingLabels" class="shipping_label_prints">
 			<? 
 				$counter=1;
 				$split_to_pages = false;

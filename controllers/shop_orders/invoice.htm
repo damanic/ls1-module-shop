@@ -32,11 +32,19 @@
 		<? endif ?>
 
 		<div class="toolbar">
-			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="window.print()">Print</a>
+			<script>
+				function print_Invoices(){
+					jQuery('#print-container--Invoices').printThis({
+						pageTitle: '<?= $this->app_page_title ?>', // add title to print page
+						importStyle : true
+					});
+				}
+			</script>
+			<a class="imageLink print img_noBottomPading" href="javascript:;" onclick="print_Invoices()">Print</a>
 			<div class="clear"></div>
 		</div>
 
-		<div class="print_sheets">
+		<div id="print-container--Invoices" class="print_sheets">
 			<?
 				foreach ($orders as $order):
 					$invoice_date = $order->get_invoice_date();
