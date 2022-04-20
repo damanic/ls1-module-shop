@@ -1,3 +1,124 @@
+html{
+	font-family: Arial, Verdana, sans-serif;
+}
+
+ul, li{
+	list-style-type: none;
+}
+
+/* Printable table */
+table.print_table {
+	width: 100%;
+	border-collapse: collapse;
+	font: normal 13px/130% Arial, Verdana, sans-serif;
+	color: #333333;
+	margin-bottom: 15px;
+}
+table.print_table tr.even {
+	background-color: #f5f5f5;
+}
+table.print_table th.number,
+table.print_table td.number {
+	text-align: right;
+}
+table.print_table td,
+table.print_table th {
+	text-align: left;
+	vertical-align: top;
+	padding: 2px 5px;
+}
+table.print_table th:first-child,
+table.print_table td:first-child {
+	padding-left: 0;
+}
+table.print_table th:last-child,
+table.print_table td:last-child {
+	padding-right: 0;
+}
+table.print_table thead th,
+table.print_table thead td {
+	border-bottom: 2px solid #ccc;
+	font-weight: bold;
+	color: #111;
+}
+table.print_table tbody {
+	border-bottom: 1px solid #555;
+}
+table.print_table tbody th,
+table.print_table tbody td {
+	font-size: 12px;
+	border-top: 1px solid #ddd;
+}
+table.print_table tbody tr:first-child th,
+table.print_table tbody tr:first-child td {
+	border-top: none;
+}
+table.print_table tr.grand_total td,
+table.print_table tr.grand_total th {
+	border-top: 1px solid #333;
+	font-size: 15px;
+	font-weight: bold;
+}
+table.print_table:last-child {
+	margin-bottom: 0;
+}
+table.print_table.totals {
+	float: right;
+	width: auto;
+}
+table.print_table.totals th,
+table.print_table.totals td {
+	color: #111;
+	text-align: right;
+	font-weight: normal;
+}
+/* Printable layout */
+table.print_layout_table {
+	border: none;
+	border-collapse: collapse;
+	width: 100%;
+	margin-bottom: 15px;
+}
+table.print_layout_table td {
+	padding-right: 1cm;
+	padding-bottom: 10px;
+}
+table.print_layout_table td p:last-child {
+	padding-bottom: 0;
+}
+table.print_layout_table td.last {
+	padding-right: 0 !important;
+}
+table.print_layout_table td.logo {
+	width: 100px;
+}
+table.print_layout_table td.inv_number {
+	text-align: right;
+}
+table.print_layout_table td.inv_number h3:last-child {
+	padding-bottom: 0;
+}
+div.print_sheet {
+	page-break-after: always;
+	border-bottom: 1px dotted #333333;
+	padding-bottom: 15px;
+	margin-bottom: 15px;
+	page-break-inside: avoid;
+}
+div.print_sheet.no_page_breaks {
+	page-break-after: avoid !important;
+	border-bottom: 1px dotted #333333 !important;
+	padding-bottom: 15px !important;
+	margin-bottom: 15px !important;
+}
+div.print_sheets div.print_sheet:last-child,
+div.print_sheets div.print_sheet.no_page_breaks:last-child {
+	page-break-after: avoid !important;
+	border-bottom: none !important;
+	padding-bottom: 0 !important;
+	margin-bottom: 0 !important;
+}
+
 h3
 {
 	font-size: 15px;
@@ -89,3 +210,4 @@ td.invoice_details ul span
 {
 	border-bottom: 1px solid #ccc!important;
 }
+
