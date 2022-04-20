@@ -84,23 +84,26 @@ class Shop_TransactionDisputeUpdate {
 		$this->gateway_api_data   = $update_data->gateway_api_data;
 	}
 
-	public function is_same_status( $old_status ) {
-		$relevant_fields = array(
-			'amount_disputed',
-			'amount_lost',
-			'status_description',
-			'reason_description',
-			'case_closed',
-			'notes',
-		);
-
-		foreach ( $relevant_fields as $field ) {
-			if ( $this->$field != $old_status->$field ) {
-				return false;
-			}
-		}
-
-		return true;
-	}
+    public function is_same_status($old_status)
+    {
+        $relevant_fields = array(
+            'amount_disputed',
+            'amount_lost',
+            'status_description',
+            'reason_description',
+            'case_closed',
+            'notes',
+        );
+        foreach ($relevant_fields as $field) {
+            $newValue = is_numeric($this->$field) ? round($this->$field, 8) : trim($this->$field);
+            $oldValue = is_numeric($old_status->$field) ? round($old_status->$field, 8) : trim($old_status->$field);
+            $newValue = (string)$newValue;
+            $oldValue = (string)$oldValue;
+            if ($newValue !== $oldValue) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }

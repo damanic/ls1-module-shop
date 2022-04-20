@@ -131,24 +131,27 @@
 			$this->liability_shifted = 1;
 		}
 
-		public function is_same_status($old_status){
-			$relevant_fields = array(
-				'transaction_status_code',
-				'transaction_value',
-				'transaction_complete',
-				'transaction_refund',
-				'transaction_void',
-				'has_disputes',
-				'liability_shifted',
+        public function is_same_status($old_status)
+        {
+            $relevant_fields = array(
+                'transaction_status_code',
+                'transaction_value',
+                'transaction_complete',
+                'transaction_refund',
+                'transaction_void',
+                'has_disputes',
+                'liability_shifted',
                 'settlement_value',
-			);
-			foreach($relevant_fields as $field){
-                $newValue = is_numeric($this->$field) ? round($this->$field,8) : trim( (string) $this->$field);
-                $oldValue = is_numeric($old_status->$field) ? round($old_status->$field,8) : trim( (string) $this->$field);
-				if($newValue != $oldValue){
-					return false;
-				}
-			}
-			return true;
-		}
+            );
+            foreach ($relevant_fields as $field) {
+                $newValue = is_numeric($this->$field) ? round($this->$field, 8) : trim($this->$field);
+                $oldValue = is_numeric($old_status->$field) ? round($old_status->$field, 8) : trim($old_status->$field);
+                $newValue = (string)$newValue;
+                $oldValue = (string)$oldValue;
+                if ($newValue !== $oldValue) {
+                    return false;
+                }
+            }
+            return true;
+        }
 	}
