@@ -10,13 +10,19 @@ class Shop_OrderDocsHelper{
      * @return string|void string of PDF file output
      */
     public static function getPdfOutput($order, $template_info, $variant){
-        $pdfOutputResults = Backend::$events->fireEvent('shop:onGetOrderDocPdfOutput', $order, $template_info, $variant);
-        if($pdfOutputResults){
-            foreach($pdfOutputResults as $pdfOutput){
-                if(is_string($pdfOutput) && stripos($pdfOutput,'%PDF') === 0){
-                    return $pdfOutput;
+
+        try {
+            $pdfOutputResults = Backend::$events->fireEvent('shop:onGetOrderDocPdfOutput', $order, $template_info,
+                $variant);
+            if ($pdfOutputResults) {
+                foreach ($pdfOutputResults as $pdfOutput) {
+                    if (is_string($pdfOutput) && stripos($pdfOutput, '%PDF') === 0) {
+                        return $pdfOutput;
+                    }
                 }
             }
+        } catch( Exception $e){
+            traceLog($e->getMessage());
         }
 
         $html = self::getHtmlOutput($order,$template_info,$variant, true);
@@ -136,6 +142,25 @@ class Shop_OrderDocsHelper{
             }
         }
         return $variants;
+    }
+
+
+    public static function getVariants($templateInfo = null){
+        if(!$templateInfo){
+            $company_info = Shop_CompanyInformation::get();
+            $templateInfo = $company_info->get_invoice_template();
+        }
+        return isset($templateInfo['variants']) ? $templateInfo['variants'] : array();
+    }
+
+    public static function variantExists($variantName, $templateInfo=null){
+        $variants = self::getVariants($templateInfo);
+        foreach ( $variants as $variant => $params ) {
+            if($variant == $variantName){
+                return true;
+            }
+        }
+        return false;
     }
 
     public static function get_view_data($order){

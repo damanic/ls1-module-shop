@@ -161,6 +161,14 @@
                 null => 'No',
                 'invoice' => 'Invoice',
             );
+            $supported_variants = Shop_OrderDocsHelper::getVariants();
+            if($supported_variants){
+                foreach($supported_variants as $variant => $variantInfo){
+                    $title = isset($variantInfo['title']) ? $variantInfo['title'] : $variant;
+                    $options[$variant] = $title;
+                }
+            }
+
             if ($key_value != -1)
             {
                 if (!strlen($key_value))
@@ -392,7 +400,11 @@
                 $companyInfo = Shop_CompanyInformation::get();
                 $templateInfo = $companyInfo->get_invoice_template();
                 if ($templateInfo) {
-                    $variant = Shop_OrderDocsHelper::get_default_variant($order, $templateInfo);
+                    if(Shop_OrderDocsHelper::variantExists($this->notify_attach_document)){
+                        $variant = $this->notify_attach_document;
+                    } else {
+                        $variant = Shop_OrderDocsHelper::get_default_variant($order, $templateInfo);
+                    }
                     $pdfOutput = Shop_OrderDocsHelper::getPdfOutput($order, $templateInfo, $variant);
                     if($pdfOutput){
                         if(!$identifier){
