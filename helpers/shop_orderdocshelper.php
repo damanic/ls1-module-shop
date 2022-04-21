@@ -19,11 +19,13 @@ class Shop_OrderDocsHelper{
             if (!stristr($html, '<html')) {
                 $html = '<html>' . PHP_EOL . $html . PHP_EOL . '</html>';
             }
-            $domPdf = new Dompdf\Dompdf();
-            $domPdf->loadHtml($html);
-            $domPdf->setPaper('A4', 'portrait');
-            $domPdf->render();
-            return $domPdf->output();
+            if (version_compare(phpversion(), '7.1.0', '>=')) { //DOM PDF requirement
+                $domPdf = new Dompdf\Dompdf();
+                $domPdf->loadHtml($html);
+                $domPdf->setPaper('A4', 'portrait');
+                $domPdf->render();
+                return $domPdf->output();
+            }
         }
         return null;
     }
