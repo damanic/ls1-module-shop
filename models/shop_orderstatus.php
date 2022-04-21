@@ -76,7 +76,7 @@
 			$this->define_column('color', 'Color')->invisible()->validation()->required("Please select status color.");
 			$this->define_multi_relation_column('transitions', 'outcoming_transitions', 'Transitions', "concat((select name from shop_order_statuses where shop_order_statuses.id=shop_status_transitions.to_state_id), ' (', (select name from shop_roles where shop_roles.id=shop_status_transitions.role_id),')')");
 			$this->define_column('notify_customer', 'Notify Customer')->validation();
-            $this->define_column('notify_attach_document', 'Attach Invoice');
+            $this->define_column('notify_attach_document', 'Attach Order Document');
 			$this->define_column('notify_recipient', 'Notify Transition Recipients')->validation(); 
 			$this->define_column('update_stock', 'Update Stock')->validation();
 			$this->define_column('requires_payment_transaction_refunds', 'Requires Payment Refunds')->validation();
@@ -113,8 +113,9 @@
 
 			$this->add_form_field('transitions')->tab('Transitions')->renderAs('status_transitions')->comment('A list of order statuses an order can be transferred from this status and user roles responsible for transitions.', 'above')->referenceSort('id');
 			$this->add_form_field('notify_customer','left')->tab('Notifications')->comment('Notify customer when orders enter this status.');
-            $this->add_form_field('notify_attach_document','right')->renderAs(frm_checkbox)->tab('Notifications')->comment('Attaches a PDF copy of the order invoice to the email notification.');
             $this->add_form_field('customer_message_template')->tab('Notifications')->comment('Please select an email message template to send to customer. To manage email templates open <a target="_blank" href="'.url('/system/email_templates').'">Email Templates</a> page.', 'above', true)->renderAs(frm_dropdown)->emptyOption('<please select template>')->cssClassName('checkbox_align');
+            $this->add_form_field('notify_attach_document')->renderAs(frm_dropdown)->tab('Notifications')->comment('Adds a PDF copy of the order document to the email notification.','above')->cssClassName('checkbox_align');
+
             $this->add_form_field('notify_recipient')->tab('Notifications')->comment('Notify users responsible for processing orders with this status when an order enters this status.');
 			$this->add_form_field('notifications')->tab('Notifications')->comment('Alternatively you can select user roles which should receive a notification when orders enter this status.', 'above');
 			$this->add_form_field('system_message_template')->tab('Notifications')->comment('Please select an email message template to send to users. To manage email templates open <a target="_blank" href="'.url('/system/email_templates').'">Email Templates</a> page. The notification is sent only if the Notify Transition Recipients option is enabled or a user role is selected in the Notify User Roles list above.', 'above', true)->renderAs(frm_dropdown)->emptyOption('<please select template>'); 
@@ -154,6 +155,22 @@
 			
 			return false;
 		}
+
+        public function get_notify_attach_document_options($key_value = -1){
+            $options = array(
+                null => 'No',
+                'invoice' => 'Invoice',
+            );
+            if ($key_value != -1)
+            {
+                if (!strlen($key_value))
+                    return null;
+
+                return $options[$key_value] ? $options[$key_value] : null;
+            }
+
+            return $options;
+        }
 
 		public function get_order_lock_action_options($key_value = -1){
 			$options = array(
