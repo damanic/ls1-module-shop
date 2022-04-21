@@ -142,7 +142,6 @@
                 $is_discounted_bundle_item = false;
                 if($params['item']->is_bundle_item()){
                     if($params['item']->get_bundle_item_discount()){
-                        traceLog($params['item']->get_bundle_item_discount());
                         $is_discounted_bundle_item = true;
                     }
                 }
