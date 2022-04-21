@@ -76,6 +76,7 @@
 			$this->define_column('color', 'Color')->invisible()->validation()->required("Please select status color.");
 			$this->define_multi_relation_column('transitions', 'outcoming_transitions', 'Transitions', "concat((select name from shop_order_statuses where shop_order_statuses.id=shop_status_transitions.to_state_id), ' (', (select name from shop_roles where shop_roles.id=shop_status_transitions.role_id),')')");
 			$this->define_column('notify_customer', 'Notify Customer')->validation();
+            $this->define_column('notify_attach_document', 'Attach Invoice');
 			$this->define_column('notify_recipient', 'Notify Transition Recipients')->validation(); 
 			$this->define_column('update_stock', 'Update Stock')->validation();
 			$this->define_column('requires_payment_transaction_refunds', 'Requires Payment Refunds')->validation();
@@ -111,9 +112,10 @@
 
 
 			$this->add_form_field('transitions')->tab('Transitions')->renderAs('status_transitions')->comment('A list of order statuses an order can be transferred from this status and user roles responsible for transitions.', 'above')->referenceSort('id');
-			$this->add_form_field('notify_customer')->tab('Notifications')->comment('Notify customer when orders enter this status.');
-			$this->add_form_field('customer_message_template')->tab('Notifications')->comment('Please select an email message template to send to customer. To manage email templates open <a target="_blank" href="'.url('/system/email_templates').'">Email Templates</a> page.', 'above', true)->renderAs(frm_dropdown)->emptyOption('<please select template>')->cssClassName('checkbox_align'); 
-			$this->add_form_field('notify_recipient')->tab('Notifications')->comment('Notify users responsible for processing orders with this status when an order enters this status.');
+			$this->add_form_field('notify_customer','left')->tab('Notifications')->comment('Notify customer when orders enter this status.');
+            $this->add_form_field('notify_attach_document','right')->renderAs(frm_checkbox)->tab('Notifications')->comment('Attaches a PDF copy of the order invoice to the email notification.');
+            $this->add_form_field('customer_message_template')->tab('Notifications')->comment('Please select an email message template to send to customer. To manage email templates open <a target="_blank" href="'.url('/system/email_templates').'">Email Templates</a> page.', 'above', true)->renderAs(frm_dropdown)->emptyOption('<please select template>')->cssClassName('checkbox_align');
+            $this->add_form_field('notify_recipient')->tab('Notifications')->comment('Notify users responsible for processing orders with this status when an order enters this status.');
 			$this->add_form_field('notifications')->tab('Notifications')->comment('Alternatively you can select user roles which should receive a notification when orders enter this status.', 'above');
 			$this->add_form_field('system_message_template')->tab('Notifications')->comment('Please select an email message template to send to users. To manage email templates open <a target="_blank" href="'.url('/system/email_templates').'">Email Templates</a> page. The notification is sent only if the Notify Transition Recipients option is enabled or a user role is selected in the Notify User Roles list above.', 'above', true)->renderAs(frm_dropdown)->emptyOption('<please select template>'); 
 			
@@ -265,83 +267,157 @@
 					$notification_allowed = $payment_method->get_paymenttype_object()->allow_new_order_notification($payment_method, $order);
 				}
 			}
-			
-			/*
-			 * Send notifications to the application users
-			 */
-			
-			$users = Users_User::create()->from('users', 'distinct users.*');
-			$users->join('shop_status_notifications', 'shop_status_notifications.shop_status_id=\''.$this->id.'\'');
-			$users->where('shop_status_notifications.shop_role_id=users.shop_role_id');
-			$users->where('(users.status is null or users.status = 0)');
 
-			$status_users = $users->find_all();
-			$users_to_notify = $status_users->as_array(null, 'email');
+            if(!$notification_allowed){
+                return;
+            }
 
-			if ($this->notify_recipient)
+            /*
+             * Send notifications to the application users
+             */
+			if ($this->notify_recipient || $this->notifications->count())
 			{
-				
-				$users = Users_User::create()->from('users', 'distinct users.*');
-				$users->join('shop_status_transitions', 'shop_status_transitions.from_state_id=\''.$this->id.'\'');
-				$users->where('shop_role_id=shop_status_transitions.role_id');
-				$users->where('(users.status is null or users.status = 0)');
-				
-				if ($status_users->count)
-				{
-					$user_ids = $status_users->as_array('id');
-					$users->where('users.id not in (?)', array($user_ids));
-				}
-
-				$transition_users = $users->find_all();
-				foreach ($transition_users as $user)
-					$users_to_notify[$user->email] = $user;
-			}
-
-			if ($users_to_notify)
-			{
-				if ($this->code == Shop_OrderStatus::status_new)
-					$order = Shop_Order::create()->find($order->id);
-
-				$template = $this->system_message_template;
-
-				if ($template)
-				{
-					$stop_message = false;
-					$result = Backend::$events->fireEvent('shop:onBeforeOrderInternalStatusMessageSent', $order, $this);
-					foreach ($result as $value) 
-					{
-						if ($value === false)
-							$stop_message = true;
-					}
-
-					if (!$stop_message)
-						$order->send_team_notifications($template, new Db_DataCollection($users_to_notify), $comment, array('prev_status'=>$this));
-				}
+                $this->sendUserNotification($order, $comment);
 			}
 			
 			/*
 			 * Send notification to customer
 			 */
-			if ($this->notify_customer && $notification_allowed)
+			if ($this->notify_customer)
 			{
-				$template = $this->customer_message_template;
-				if ($template)
-				{
-					try
-					{
-						$stop_message = false;
-						$result = Backend::$events->fireEvent('shop:onBeforeOrderCustomerStatusMessageSent', $order, $this);
-						foreach ($result as $value)
-						{
-							if ($value === false)
-								$stop_message = true;
-						}
-						if (!$stop_message)
-							$order->send_customer_notification($template, $comment, array('prev_status'=>$this));
-					} catch (Exception $ex){}
-				}
+                $this->sendCustomerNotification($order, $comment);
 			}
 		}
+
+        protected function sendUserNotification($order, $comment = null){
+
+            $template = $this->system_message_template;
+            if(!$template){
+                return false;
+            }
+
+            $notify_transition_roles = $this->notify_recipient;
+            $notify_selected_roles = $this->notifications->count();
+            if(!$notify_transition_roles && !$notify_selected_roles){
+                return false;
+            }
+
+            $role_ids = array();
+            $users_to_notify = null;
+
+            if($notify_selected_roles) {
+                $role_ids = array_merge($role_ids, $this->notifications->as_array('id'));
+            }
+            if($notify_transition_roles) {
+                $transition_role_ids = Db_DbHelper::scalarArray('SELECT role_id FROM shop_status_transitions WHERE from_state_id = ?', $this->id);
+                if($transition_role_ids){
+                    $role_ids = array_merge($role_ids, $transition_role_ids);
+                }
+            }
+
+            if(count($role_ids)){
+                $users  = Users_User::create()->where('(users.status is null OR users.status = 0)');
+                $users->where('users.shop_role_id IN (?)', array($role_ids));
+                $users = $users->find_all();
+                $users_to_notify = $users->as_array(null,'email');
+            }
+
+            if ($users_to_notify)
+            {
+                if ($this->code == Shop_OrderStatus::status_new)
+                    $order = Shop_Order::create()->find($order->id);
+
+                $result = Backend::$events->fireEvent('shop:onBeforeOrderInternalStatusMessageSent', $order, $this);
+                foreach ($result as $value) {
+                    if ($value === false)
+                        return false; //abort sendUserNotification
+                }
+                $order->send_team_notifications($template, new Db_DataCollection($users_to_notify), $comment, array('prev_status'=>$this));
+            }
+
+            return true;
+
+        }
+
+        protected function sendCustomerNotification($order, $comment=null){
+            $template = $this->customer_message_template;
+            if ($template) {
+                try {
+                    $results = Backend::$events->fireEvent('shop:onBeforeOrderCustomerStatusMessageSent', $order, $this);
+                    foreach ($results as $value) {
+                        if ($value === false)
+                            return false; //abort sendCustomerNotification
+                    }
+
+                    $attachmentIdentifier = $order->order_hash.'-oscna';
+                    if($this->notify_attach_document){
+                        $template = $this->addCustomerNotificationAttachments($order, $template, $attachmentIdentifier);
+                    }
+
+                    $order->send_customer_notification($template, $comment, array('prev_status' => $this));
+
+                    if($this->notify_attach_document){
+                        $this->deleteCustomerNotificationAttachments($template, $attachmentIdentifier);
+                    }
+
+                } catch (Exception $ex){}
+            }
+        }
+
+        /**
+         * Adds order invoice to customer notification template as PDF attachment
+         * @param Shop_Order $order
+         * @param System_EmailTemplate $notificationTemplate
+         * @return System_EmailTemplate The updated notification template
+         */
+        protected function addCustomerNotificationAttachments($order, $notificationTemplate, $identifier=null){
+            try {
+                $companyInfo = Shop_CompanyInformation::get();
+                $templateInfo = $companyInfo->get_invoice_template();
+                if ($templateInfo) {
+                    $variant = Shop_OrderDocsHelper::get_default_variant($order, $templateInfo);
+                    $pdfOutput = Shop_OrderDocsHelper::getPdfOutput($order, $templateInfo, $variant);
+                    if($pdfOutput){
+                        if(!$identifier){
+                            $identifier = $order->order_hash;
+                        }
+                        $filename = $variant.'_'.$identifier.'.pdf';
+                        $fullPath = PATH_APP.'temp/'.$filename;
+                        $pdfFileSaved = @file_put_contents($fullPath, $pdfOutput);
+                        if($pdfFileSaved !== false){
+                            $attachmentName = $variant ? $variant.'pdf' : 'invoice.pdf';
+                            $notificationTemplate->addEmailAttachment($fullPath, $attachmentName);
+                        }
+                    }
+                }
+            } catch (Exception $e){
+                traceLog($e->getMessage());
+            }
+
+            return $notificationTemplate;
+        }
+
+        /**
+         * Deletes attachments added by addCustomerNotificationAttachments() from filesystem.
+         * @param System_EmailTemplate $notificationTemplate
+         * @param string A string identifier present in filepath or filename.
+         * @return void
+         */
+        protected function deleteCustomerNotificationAttachments($notificationTemplate, $identifier){
+            try {
+                $attachments = $notificationTemplate->getEmailAttachments();
+                if($attachments){
+                    foreach($attachments as $attachmentPath => $attachmentFileName){
+                        if(stristr($attachmentPath,$identifier) && is_file($attachmentPath)){
+                            @unlink($attachmentPath);
+                        }
+                    }
+                }
+            } catch (Exception $e){
+                traceLog($e->getMessage());
+            }
+        }
+
 		
 		public static function list_all_statuses()
 		{
