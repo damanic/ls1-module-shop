@@ -1043,3 +1043,4 @@
 #1.37.4 Support currency and settlement value in payment transaction logs
 #1.37.5 Minor improvements related to order payment transactions
 #1.37.6 Fixes issue with gateway transaction updates
+#1.37.8 Adds option to attach copy of invoice as PDF on order status transition notifications
