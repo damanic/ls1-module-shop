@@ -10,10 +10,15 @@ class Shop_OrderDocsHelper{
      * @return string|void string of PDF file output
      */
     public static function getPdfOutput($order, $template_info, $variant){
-        $pdfOutput = Backend::$events->fireEvent('shop:onGetOrderDocPdfOutput', $order, $template_info, $variant);
-        if(is_string($pdfOutput) && stripos($pdfOutput,'%PDF') === 0){
-           return $pdfOutput;
+        $pdfOutputResults = Backend::$events->fireEvent('shop:onGetOrderDocPdfOutput', $order, $template_info, $variant);
+        if($pdfOutputResults){
+            foreach($pdfOutputResults as $pdfOutput){
+                if(is_string($pdfOutput) && stripos($pdfOutput,'%PDF') === 0){
+                    return $pdfOutput;
+                }
+            }
         }
+
         $html = self::getHtmlOutput($order,$template_info,$variant, true);
         if($html) {
             if (!stristr($html, '<html')) {
@@ -195,7 +200,7 @@ class Shop_OrderDocsHelper{
         }
 
         //Event allows HTML output to be modified (eg. output HTML that renders a pdf in iframe).
-        $htmlModified = Backend::$events->fireEvent('shop:onBeforeRenderOrderDoc', $html);
+        $htmlModified = Backend::$events->fire_event(array('name' => 'shop:onBeforeRenderOrderDoc', 'type' => 'update_result'), $html, array());
         if($htmlModified){
             echo $htmlModified;
         }
