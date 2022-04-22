@@ -1061,11 +1061,8 @@
 			}
 
 			$updated_options = Backend::$events->fire_event(array('name' => 'shop:onUpdateShippingOptions', 'type' => 'update_result'), $result, $params);
-			if($updated_options){
-				$result = $updated_options;
-			}
+            return is_array($updated_options) ? $updated_options : $result;
 
-			return $result;
 		}
 
 
