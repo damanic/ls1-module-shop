@@ -411,7 +411,7 @@
                             $identifier = $order->order_hash;
                         }
                         $filename = $variant.'_'.$identifier.'.pdf';
-                        $fullPath = PATH_APP.'temp/'.$filename;
+                        $fullPath = PATH_APP.'/temp/'.$filename;
                         $pdfFileSaved = @file_put_contents($fullPath, $pdfOutput);
                         if($pdfFileSaved !== false){
                             $attachmentName = $variant ? $variant.'pdf' : 'invoice.pdf';
