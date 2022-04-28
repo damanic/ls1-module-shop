@@ -1044,3 +1044,4 @@
 #1.37.5 Minor improvements related to order payment transactions
 #1.37.6 Fixes issue with gateway transaction updates
 #1.37.8 Adds option to attach copy of invoice as PDF on order status transition notifications
+#1.37.9 Fixes PHP5 compatibility issue

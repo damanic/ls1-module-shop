@@ -1,7 +1,7 @@
-'.idea'
-'composer.json'
-'composer.lock'
-'composer.phar'
+.idea
+composer.json
+composer.lock
+composer.phar
 '.DS_Store'
 /behaviors/shop_currencybehavior/resources/css/.sass-cache/
 /updates/_carry_from_system_lateral.sql
