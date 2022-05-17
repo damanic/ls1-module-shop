@@ -17,6 +17,8 @@
 
 		public function __construct()
 		{
+            parent::__construct();
+
 			$user = Phpr::$security->getUser();
 			if ($user && $user->get_permission('shop', 'manage_orders_and_customers'))
 				$this->list_record_url = url('/shop/orders/preview/%s/').mb_strtolower(get_class($this));
@@ -24,8 +26,6 @@
 			$this->list_control_panel_partial = PATH_APP.'/modules/shop/controllers/partials/_reports_export_buttons.htm';
 			
 			Backend::$events->fireEvent('shop:onExtendReportFilters', $this);
-
-			parent::__construct();
 		}
 		
 		public function refererUrl()
