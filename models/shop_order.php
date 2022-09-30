@@ -162,7 +162,7 @@ class Shop_Order extends Shop_ActiveRecord
 		$this->define_column('shipping_quote', 'Shipping Quote')->currency(true);
 		$this->define_column('shipping_tax', 'Shipping Tax')->defaultInvisible()->currency(true);
 		$this->define_column('shipping_sub_option', 'Shipping Option')->defaultInvisible();
-		$this->define_column('total', 'Total')->currency(true);
+		$this->define_column('total', 'Order Total')->currency(true);
 		$this->define_column('tax_total', 'Tax Total')->currency(true);
 		$this->define_column('total_cost', 'Total Cost')->defaultInvisible()->currency(true);
 		$this->define_column('subtotal_before_discounts', 'Subtotal Before Discounts')->currency(true)->invisible();
@@ -198,7 +198,7 @@ class Shop_Order extends Shop_ActiveRecord
 		$this->define_column('manual_shipping_quote', 'Shipping quote')->invisible();
 		$this->define_column('shipping_discount', 'Internal Shipping Discount')->currency(true)->invisible();
 		$this->define_column('total_shipping_discount', 'Shipping Quote Discount')->currency(true)->invisible();
-		$this->define_column('shipping_quote_discounted', 'Shipping Quote')->currency(true)->invisible();
+		$this->define_column('shipping_quote_discounted', 'Shipping Total')->currency(true)->defaultInvisible();
 		$this->define_column('shipping_quote_no_discount', 'Shipping Quote Before Discounts')->currency(true)->invisible();
 
 
@@ -229,19 +229,18 @@ class Shop_Order extends Shop_ActiveRecord
 
 			$this->add_form_field( 'customer_ip' )->tab( 'Order Details' )->noForm();
 
-			$this->add_form_field( 'subtotal_before_discounts', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Subtotal before discounts</strong><br/>The sum of all order items without discounts applied' );
-			$this->add_form_field( 'discount', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Discount</strong><br/>Total amount of discount' );
-			$this->add_form_field( 'subtotal', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Order subtotal</strong><br/>Subtotal is a sum of all order items, taking into account applied discounts' );
-			$this->add_form_field( 'goods_tax', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Sales tax</strong><br/>Sum of all taxes applied to all order items' );
+			$this->add_form_field( 'subtotal_before_discounts', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total value of order items before discounts' );
+			$this->add_form_field( 'discount', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total amount to discount from order items' );
+			$this->add_form_field( 'subtotal', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total value of order items after discounts' );
+			$this->add_form_field( 'goods_tax', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total amount of tax to apply to order items' );
 
-			$this->add_form_field( 'shipping_quote_no_discount', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Shipping Price</strong><br/>The shipping quote calculated before any discounts applied' );
-			$this->add_form_field( 'total_shipping_discount', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Shipping Discount</strong><br/>Total amount of shipping discount applied' );
+			$this->add_form_field( 'shipping_quote_no_discount', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total value of shipping before discounts' );
+			$this->add_form_field( 'total_shipping_discount', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total amount to discount from shipping' );
+			$this->add_form_field( 'shipping_quote_discounted', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total value of shipping after discounts' );
+			$this->add_form_field( 'shipping_tax', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( 'Total amount of tax to apply to shipping' );
 
-			$this->add_form_field( 'shipping_quote_discounted', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Cost of shipping</strong><br/>The cost of shipping, including handling fee, if applicable' );
-			$this->add_form_field( 'shipping_tax', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Shipping tax</strong><br/>Sum of all taxes applied to the shipping service' );
-
-			$this->add_form_field( 'tax_total', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Total tax amount</strong><br/>Tax  total = Sales Tax + Shipping Tax' );
-			$this->add_form_field( 'total', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( '<strong>Total order amount</strong><br/>Total = Subtotal + Shipping Quote + Tax Total' );
+			$this->add_form_field( 'tax_total', 'right' )->tab( 'Order Details' )->noForm()->previewHelp( 'Tax Total = Sales Tax + Shipping Tax' );
+			$this->add_form_field( 'total', 'left' )->tab( 'Order Details' )->noForm()->previewHelp( 'Order Total = Subtotal + Shipping Total + Tax Total' );
 
 			if ( $this->tax_exempt ) {
 				$this->add_form_field( 'tax_exempt' )->tab( 'Order Details' );
