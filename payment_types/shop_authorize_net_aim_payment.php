@@ -144,7 +144,7 @@
 		 * Payment processing
 		 */
 
-		private function format_form_fields(&$fields)
+		protected function format_form_fields(&$fields)
 		{
 			$result = array();
 			foreach($fields as $key=>$val)
@@ -153,7 +153,7 @@
 			return implode('&', $result);
 		}
 		
-		private function post_data($endpoint, $fields)
+		protected function post_data($endpoint, $fields)
 		{
 			$poststring = array();
 
@@ -187,12 +187,12 @@
 			return $response;
 		}
 
-		private function parse_response($response)
+		protected function parse_response($response)
 		{
 			return explode("|", $response);
 		}
 
-		private function prepare_fields_log($fields)
+		protected function prepare_fields_log($fields)
 		{
 			unset($fields['x_login']);
 			unset($fields['x_tran_key']);
