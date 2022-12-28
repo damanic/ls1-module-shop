@@ -76,17 +76,21 @@
 
             $transaction_currency_code = $transaction_data->transaction_value_currency_code ? $transaction_data->transaction_value_currency_code : $order->get_currency_code();
             $settlement_currency_code = $transaction_data->settlement_value_currency_code ? $transaction_data->settlement_value_currency_code : $order->get_currency_code();
+            $transaction_data_created_at = $transaction_data->get_created_at();
+            $existing_transaction_log = false;
 
-
-            //If the transaction status event has already been logged (with same created_at datetime)
-            //we update instead of duplicate.
-            $existing_transaction_log = new self();
-            $existing_transaction_log->where('order_id = ?', $order->id);
-            $existing_transaction_log->where('payment_method_id = ?', $payment_method_id);
-            $existing_transaction_log->where('transaction_id = ?', $transaction_id);
-            $existing_transaction_log->where('transaction_status_code = ?',  $transaction_data->transaction_status_code);
-            $existing_transaction_log->where('created_at = ?',  $transaction_data->created_at);
-            $existing_transaction_log = $existing_transaction_log->find();
+            if($transaction_data_created_at) {
+                //If the transaction status event has already been logged (with same created_at datetime)
+                //we can update instead of duplicate.
+                $existing_transaction_log = new self();
+                $existing_transaction_log->where('order_id = ?', $order->id);
+                $existing_transaction_log->where('payment_method_id = ?', $payment_method_id);
+                $existing_transaction_log->where('transaction_id = ?', $transaction_id);
+                $existing_transaction_log->where('transaction_status_code = ?',
+                    $transaction_data->transaction_status_code);
+                $existing_transaction_log->where('created_at = ?', $transaction_data_created_at);
+                $existing_transaction_log = $existing_transaction_log->find();
+            }
 
             $payment_transaction = $existing_transaction_log ? $existing_transaction_log : new self();
             $payment_transaction->order_id = $order->id;
@@ -105,9 +109,9 @@
             $payment_transaction->settlement_value = $transaction_data->settlement_value;
             $payment_transaction->settlement_value_currency_code = $settlement_currency_code;
             $payment_transaction->data_1 = $transaction_data->data_1;
-            if (isset($transaction_data->created_at) && !empty($transaction_data->created_at)) {
+            if ($transaction_data_created_at) {
                 $payment_transaction->auto_create_timestamps = array(); //use gateway timestamp
-                $payment_transaction->created_at = $transaction_data->created_at;
+                $payment_transaction->created_at = $transaction_data_created_at;
             }
             $payment_transaction->save();
             if ($transaction_data->has_disputes) {
@@ -161,7 +165,7 @@
 			$dispute->amount_disputed = $dispute_update->amount_disputed;
 			$dispute->amount_lost = $dispute_update->amount_lost;
 			$dispute->status_description = $dispute_update->status_description;
-			$dispute->reason_desription = $dispute_update->reason_desription;
+			$dispute->reason_description = $dispute_update->reason_description;
 			$dispute->case_closed = $dispute_update->case_closed;
 			$dispute->notes = $dispute_update->notes;
 			$dispute->gateway_api_data = $dispute_update->gateway_api_data;

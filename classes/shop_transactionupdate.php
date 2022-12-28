@@ -103,6 +103,14 @@
 		 */
 		public $liability_shifted;
 
+        /**
+         * @var Phpr_DateTime The datetime the transaction update was recorded by the payment gateway.
+         * Allows the payment gateway to set the datetime created for this transaction update.
+         * If set this value is used as the datetime stamp in payment transaction logs.
+         * @documentable
+         */
+        public $created_at;
+
 
 		public function __construct($transaction_status_code=null, $transaction_status_name=null, $data_1 = null, $value = null, $complete = null, $refund = null, $void=null) {
 			$this->transaction_status_code = $transaction_status_code;
@@ -153,5 +161,12 @@
                 }
             }
             return true;
+        }
+
+        public function get_created_at(){
+            if($this->created_at && is_a($this->created_at,'Phpr_DateTime')){
+                return $this->created_at;
+            }
+            return null;
         }
 	}

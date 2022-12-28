@@ -58,7 +58,7 @@ class Shop_PaymentTransactionDispute extends Db_ActiveRecord {
 			$this->amount_disputed = $dispute_update->amount_disputed;
 			$this->amount_lost = $dispute_update->amount_lost;
 			$this->status_description = $dispute_update->status_description;
-			$this->reason_desription = $dispute_update->reason_desription;
+			$this->reason_description = $dispute_update->reason_description;
 			$this->case_closed = $dispute_update->case_closed;
 			$this->notes = $dispute_update->notes;
 			$this->gateway_api_data = $dispute_update->gateway_api_data;
