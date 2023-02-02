@@ -8,12 +8,13 @@ declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
 
-use function array_map;
-use function count;
-use function max;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+
+use function array_map;
+use function count;
+use function max;
 use function reset;
 use function usort;
 
@@ -60,6 +61,11 @@ class VolumePacker implements LoggerAwareInterface
     protected $packAcrossWidthOnly = false;
 
     /**
+     * @var bool
+     */
+    protected $beStrictAboutItemOrdering = false;
+
+    /**
      * @var LayerPacker
      */
     private $layerPacker;
@@ -97,6 +103,12 @@ class VolumePacker implements LoggerAwareInterface
     public function packAcrossWidthOnly(): void
     {
         $this->packAcrossWidthOnly = true;
+    }
+
+    public function beStrictAboutItemOrdering(bool $beStrict): void
+    {
+        $this->beStrictAboutItemOrdering = $beStrict;
+        $this->layerPacker->beStrictAboutItemOrdering($beStrict);
     }
 
     /**
@@ -167,7 +179,7 @@ class VolumePacker implements LoggerAwareInterface
             $layerStartDepth = static::getCurrentPackedDepth($layers);
             $packedItemList = $this->getPackedItemList($layers);
 
-            //do a preliminary layer pack to get the depth used
+            // do a preliminary layer pack to get the depth used
             $preliminaryItems = clone $items;
             $preliminaryLayer = $this->layerPacker->packLayer($preliminaryItems, clone $packedItemList, 0, 0, $layerStartDepth, $boxWidth, $boxLength, $this->box->getInnerDepth() - $layerStartDepth, 0, true);
             if (count($preliminaryLayer->getItems()) === 0) {
@@ -177,7 +189,7 @@ class VolumePacker implements LoggerAwareInterface
             if ($preliminaryLayer->getDepth() === $preliminaryLayer->getItems()[0]->getDepth()) { // preliminary === final
                 $layers[] = $preliminaryLayer;
                 $items = $preliminaryItems;
-            } else { //redo with now-known-depth so that we can stack to that height from the first item
+            } else { // redo with now-known-depth so that we can stack to that height from the first item
                 $layers[] = $this->layerPacker->packLayer($items, $packedItemList, 0, 0, $layerStartDepth, $boxWidth, $boxLength, $this->box->getInnerDepth() - $layerStartDepth, $preliminaryLayer->getDepth(), true);
             }
         }
@@ -213,7 +225,7 @@ class VolumePacker implements LoggerAwareInterface
      */
     private function stabiliseLayers(array $oldLayers): array
     {
-        if ($this->hasConstrainedItems) { // constraints include position, so cannot change
+        if ($this->hasConstrainedItems || $this->beStrictAboutItemOrdering) { // constraints include position, so cannot change
             return $oldLayers;
         }
 

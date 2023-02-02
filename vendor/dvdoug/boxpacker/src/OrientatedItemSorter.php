@@ -8,11 +8,13 @@ declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
 
-use function max;
-use function min;
-use const PHP_INT_MAX;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
+
+use function max;
+use function min;
+
+use const PHP_INT_MAX;
 
 /**
  * Figure out best choice of orientations for an item and a given context.
@@ -101,7 +103,7 @@ class OrientatedItemSorter implements LoggerAwareInterface
 
     public function __invoke(OrientatedItem $a, OrientatedItem $b)
     {
-        //Prefer exact fits in width/length/depth order
+        // Prefer exact fits in width/length/depth order
         $orientationAWidthLeft = $this->widthLeft - $a->getWidth();
         $orientationBWidthLeft = $this->widthLeft - $b->getWidth();
         $widthDecider = $this->exactFitDecider($orientationAWidthLeft, $orientationBWidthLeft);

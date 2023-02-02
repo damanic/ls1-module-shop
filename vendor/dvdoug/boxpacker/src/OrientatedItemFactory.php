@@ -8,11 +8,12 @@ declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
 
-use function array_filter;
-use function count;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\NullLogger;
+
+use function array_filter;
+use function count;
 use function usort;
 
 /**
@@ -25,7 +26,9 @@ class OrientatedItemFactory implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    /** @var Box */
+    /**
+     * @var Box
+     */
     protected $box;
 
     /**
@@ -36,9 +39,9 @@ class OrientatedItemFactory implements LoggerAwareInterface
     protected $singlePassMode = false;
 
     /**
-     * @var OrientatedItem[]
+     * @var bool[]
      */
-    protected static $emptyBoxCache = [];
+    protected static $emptyBoxStableItemOrientationCache = [];
 
     public function __construct(Box $box)
     {
@@ -114,7 +117,7 @@ class OrientatedItemFactory implements LoggerAwareInterface
     ): array {
         $permutations = $this->generatePermutations($item, $prevItem);
 
-        //remove any that simply don't fit
+        // remove any that simply don't fit
         $orientations = [];
         foreach ($permutations as $dimensions) {
             if ($dimensions[0] <= $widthLeft && $dimensions[1] <= $lengthLeft && $dimensions[2] <= $depthLeft) {
@@ -126,45 +129,6 @@ class OrientatedItemFactory implements LoggerAwareInterface
             $orientations = array_filter($orientations, function (OrientatedItem $i) use ($x, $y, $z, $prevPackedItemList) {
                 return $i->getItem()->canBePacked($this->box, $prevPackedItemList, $x, $y, $z, $i->getWidth(), $i->getLength(), $i->getDepth());
             });
-        }
-
-        return $orientations;
-    }
-
-    /**
-     * @return OrientatedItem[]
-     */
-    public function getPossibleOrientationsInEmptyBox(Item $item): array
-    {
-        $cacheKey = $item->getWidth() .
-            '|' .
-            $item->getLength() .
-            '|' .
-            $item->getDepth() .
-            '|' .
-            ($item->getKeepFlat() ? '2D' : '3D') .
-            '|' .
-            $this->box->getInnerWidth() .
-            '|' .
-            $this->box->getInnerLength() .
-            '|' .
-            $this->box->getInnerDepth();
-
-        if (isset(static::$emptyBoxCache[$cacheKey])) {
-            $orientations = static::$emptyBoxCache[$cacheKey];
-        } else {
-            $orientations = $this->getPossibleOrientations(
-                $item,
-                null,
-                $this->box->getInnerWidth(),
-                $this->box->getInnerLength(),
-                $this->box->getInnerDepth(),
-                0,
-                0,
-                0,
-                new PackedItemList()
-            );
-            static::$emptyBoxCache[$cacheKey] = $orientations;
         }
 
         return $orientations;
@@ -197,12 +161,8 @@ class OrientatedItemFactory implements LoggerAwareInterface
             return $stableOrientations;
         }
 
-        if (count($unstableOrientations) > 0) {
-            $stableOrientationsInEmptyBox = $this->getStableOrientationsInEmptyBox($item);
-
-            if (count($stableOrientationsInEmptyBox) === 0) {
-                return $unstableOrientations;
-            }
+        if ((count($unstableOrientations) > 0) && !$this->hasStableOrientationsInEmptyBox($item)) {
+            return $unstableOrientations;
         }
 
         return [];
@@ -211,21 +171,52 @@ class OrientatedItemFactory implements LoggerAwareInterface
     /**
      * Return the orientations for this item if it were to be placed into the box with nothing else.
      */
-    protected function getStableOrientationsInEmptyBox(Item $item): array
+    protected function hasStableOrientationsInEmptyBox(Item $item): bool
     {
-        $orientationsInEmptyBox = $this->getPossibleOrientationsInEmptyBox($item);
+        $cacheKey = $item->getWidth() .
+            '|' .
+            $item->getLength() .
+            '|' .
+            $item->getDepth() .
+            '|' .
+            ($item->getKeepFlat() ? '2D' : '3D') .
+            '|' .
+            $this->box->getInnerWidth() .
+            '|' .
+            $this->box->getInnerLength() .
+            '|' .
+            $this->box->getInnerDepth();
 
-        return array_filter(
-            $orientationsInEmptyBox,
-            function (OrientatedItem $orientation) {
+        if (isset(static::$emptyBoxStableItemOrientationCache[$cacheKey])) {
+            return static::$emptyBoxStableItemOrientationCache[$cacheKey];
+        }
+
+        $orientations = $this->getPossibleOrientations(
+            $item,
+            null,
+            $this->box->getInnerWidth(),
+            $this->box->getInnerLength(),
+            $this->box->getInnerDepth(),
+            0,
+            0,
+            0,
+            new PackedItemList()
+        );
+
+        $stableOrientations = array_filter(
+            $orientations,
+            static function (OrientatedItem $orientation) {
                 return $orientation->isStable();
             }
         );
+        static::$emptyBoxStableItemOrientationCache[$cacheKey] = count($stableOrientations) > 0;
+
+        return static::$emptyBoxStableItemOrientationCache[$cacheKey];
     }
 
     private function generatePermutations(Item $item, ?OrientatedItem $prevItem): array
     {
-        //Special case items that are the same as what we just packed - keep orientation
+        // Special case items that are the same as what we just packed - keep orientation
         if ($prevItem && $prevItem->isSameDimensions($item)) {
             return [[$prevItem->getWidth(), $prevItem->getLength(), $prevItem->getDepth()]];
         }
@@ -235,16 +226,16 @@ class OrientatedItemFactory implements LoggerAwareInterface
         $l = $item->getLength();
         $d = $item->getDepth();
 
-        //simple 2D rotation
-        $permutations[$w . $l . $d] = [$w, $l, $d];
-        $permutations[$l . $w . $d] = [$l, $w, $d];
+        // simple 2D rotation
+        $permutations[$w . '|' . $l . '|' . $d] = [$w, $l, $d];
+        $permutations[$l . '|' . $w . '|' . $d] = [$l, $w, $d];
 
-        //add 3D rotation if we're allowed
+        // add 3D rotation if we're allowed
         if (!$item->getKeepFlat()) {
-            $permutations[$w . $d . $l] = [$w, $d, $l];
-            $permutations[$l . $d . $w] = [$l, $d, $w];
-            $permutations[$d . $w . $l] = [$d, $w, $l];
-            $permutations[$d . $l . $w] = [$d, $l, $w];
+            $permutations[$w . '|' . $d . '|' . $l] = [$w, $d, $l];
+            $permutations[$l . '|' . $d . '|' . $w] = [$l, $d, $w];
+            $permutations[$d . '|' . $w . '|' . $l] = [$d, $w, $l];
+            $permutations[$d . '|' . $l . '|' . $w] = [$d, $l, $w];
         }
 
         return $permutations;

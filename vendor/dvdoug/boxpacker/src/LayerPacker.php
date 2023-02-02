@@ -8,12 +8,13 @@ declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
 
-use function array_merge;
-use function iterator_to_array;
-use function max;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+
+use function array_merge;
+use function iterator_to_array;
+use function max;
 use function sort;
 
 /**
@@ -51,6 +52,11 @@ class LayerPacker implements LoggerAwareInterface
     private $orientatedItemFactory;
 
     /**
+     * @var bool
+     */
+    private $beStrictAboutItemOrdering = false;
+
+    /**
      * Constructor.
      */
     public function __construct(Box $box)
@@ -77,6 +83,11 @@ class LayerPacker implements LoggerAwareInterface
         $this->orientatedItemFactory->setSinglePassMode($singlePassMode);
     }
 
+    public function beStrictAboutItemOrdering(bool $beStrict): void
+    {
+        $this->beStrictAboutItemOrdering = $beStrict;
+    }
+
     /**
      * Pack items into an individual vertical layer.
      */
@@ -94,7 +105,7 @@ class LayerPacker implements LoggerAwareInterface
         while ($items->count() > 0) {
             $itemToPack = $items->extract();
 
-            //skip items that will never fit e.g. too heavy
+            // skip items that will never fit e.g. too heavy
             if (!$this->checkNonDimensionalConstraints($itemToPack, $remainingWeightAllowed, $packedItemList)) {
                 continue;
             }
@@ -109,17 +120,12 @@ class LayerPacker implements LoggerAwareInterface
                 $rowLength = max($rowLength, $packedItem->getLength());
                 $prevItem = $orientatedItem;
 
-                //Figure out if we can stack items on top of this rather than side by side
-                //e.g. when we've packed a tall item, and have just put a shorter one next to it.
+                // Figure out if we can stack items on top of this rather than side by side
+                // e.g. when we've packed a tall item, and have just put a shorter one next to it.
                 $stackableDepth = ($guidelineLayerDepth ?: $layer->getDepth()) - $packedItem->getDepth();
                 if ($stackableDepth > 0) {
                     $stackedLayer = $this->packLayer($items, $packedItemList, $x, $y, $z + $packedItem->getDepth(), $x + $packedItem->getWidth(), $y + $packedItem->getLength(), $stackableDepth, $stackableDepth, $considerStability);
                     $layer->merge($stackedLayer);
-                }
-
-                //Having now placed an item, there is space *within the same row* along the length. Pack into that.
-                if ($rowLength - $orientatedItem->getLength() > 0) {
-                    $layer->merge($this->packLayer($items, $packedItemList, $x, $y + $orientatedItem->getLength(), $z, $widthForLayer, $rowLength, $depthForLayer, $layer->getDepth(), $considerStability));
                 }
 
                 $x += $packedItem->getWidth();
@@ -132,7 +138,7 @@ class LayerPacker implements LoggerAwareInterface
                 continue;
             }
 
-            if ($items->count() > 0) { // skip for now, move on to the next item
+            if (!$this->beStrictAboutItemOrdering && $items->count() > 0) { // skip for now, move on to the next item
                 $this->logger->debug("doesn't fit, skipping for now");
                 $skippedItems[] = $itemToPack;
                 // abandon here if next item is the same, no point trying to keep going. Last time is not skipped, need that to trigger appropriate reset logic
@@ -143,12 +149,16 @@ class LayerPacker implements LoggerAwareInterface
             }
 
             if ($x > $startX) {
+                // Having now placed items, there is space *within the same row* along the length. Pack into that.
+                $this->logger->debug('No more fit in width wise, packing along remaining length');
+                $layer->merge($this->packLayer($items, $packedItemList, $x, $y + $rowLength, $z, $widthForLayer, $lengthForLayer - $rowLength, $depthForLayer, $layer->getDepth(), $considerStability));
+
                 $this->logger->debug('No more fit in width wise, resetting for new row');
                 $y += $rowLength;
                 $x = $startX;
                 $rowLength = 0;
                 $skippedItems[] = $itemToPack;
-                $items = ItemList::fromArray($skippedItems, true);
+                $items = ItemList::fromArray(array_merge($skippedItems, iterator_to_array($items)), true);
                 $skippedItems = [];
                 $prevItem = null;
                 continue;

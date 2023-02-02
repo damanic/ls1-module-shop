@@ -8,21 +8,23 @@ declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+use Traversable;
+
 use function array_key_last;
 use function array_pop;
 use function array_reverse;
 use function array_slice;
-use ArrayIterator;
 use function count;
-use Countable;
 use function current;
 use function end;
-use IteratorAggregate;
 use function key;
-use const PHP_VERSION_ID;
 use function prev;
-use Traversable;
 use function usort;
+
+use const PHP_VERSION_ID;
 
 /**
  * List of items to be packed, ordered by volume.
@@ -46,17 +48,26 @@ class ItemList implements Countable, IteratorAggregate
     private $isSorted = false;
 
     /**
+     * @var ItemSorter
+     */
+    private $sorter;
+
+    /**
      * Does this list contain constrained items?
      *
      * @var bool
      */
     private $hasConstrainedItems;
 
+    public function __construct(?ItemSorter $sorter = null)
+    {
+        $this->sorter = $sorter ?: new DefaultItemSorter();
+    }
+
     /**
      * Do a bulk create.
      *
-     * @param  Item[]   $items
-     * @return ItemList
+     * @param Item[] $items
      */
     public static function fromArray(array $items, bool $preSorted = false): self
     {
@@ -67,9 +78,11 @@ class ItemList implements Countable, IteratorAggregate
         return $list;
     }
 
-    public function insert(Item $item): void
+    public function insert(Item $item, int $qty = 1): void
     {
-        $this->list[] = $item;
+        for ($i = 0; $i < $qty; ++$i) {
+            $this->list[] = $item;
+        }
         $this->isSorted = false;
         $this->hasConstrainedItems = $this->hasConstrainedItems || $item instanceof ConstrainedPlacementItem;
     }
@@ -80,7 +93,8 @@ class ItemList implements Countable, IteratorAggregate
     public function remove(Item $item): void
     {
         if (!$this->isSorted) {
-            usort($this->list, [$this, 'compare']);
+            usort($this->list, [$this->sorter, 'compare']);
+            $this->list = array_reverse($this->list); // internal sort is largest at the end
             $this->isSorted = true;
         }
 
@@ -114,7 +128,8 @@ class ItemList implements Countable, IteratorAggregate
     public function extract(): Item
     {
         if (!$this->isSorted) {
-            usort($this->list, [$this, 'compare']);
+            usort($this->list, [$this->sorter, 'compare']);
+            $this->list = array_reverse($this->list); // internal sort is largest at the end
             $this->isSorted = true;
         }
 
@@ -127,7 +142,8 @@ class ItemList implements Countable, IteratorAggregate
     public function top(): Item
     {
         if (!$this->isSorted) {
-            usort($this->list, [$this, 'compare']);
+            usort($this->list, [$this->sorter, 'compare']);
+            $this->list = array_reverse($this->list); // internal sort is largest at the end
             $this->isSorted = true;
         }
 
@@ -140,12 +156,12 @@ class ItemList implements Countable, IteratorAggregate
 
     /**
      * @internal
-     * @return ItemList
      */
     public function topN(int $n): self
     {
         if (!$this->isSorted) {
-            usort($this->list, [$this, 'compare']);
+            usort($this->list, [$this->sorter, 'compare']);
+            $this->list = array_reverse($this->list); // internal sort is largest at the end
             $this->isSorted = true;
         }
 
@@ -162,7 +178,8 @@ class ItemList implements Countable, IteratorAggregate
     public function getIterator(): Traversable
     {
         if (!$this->isSorted) {
-            usort($this->list, [$this, 'compare']);
+            usort($this->list, [$this->sorter, 'compare']);
+            $this->list = array_reverse($this->list); // internal sort is largest at the end
             $this->isSorted = true;
         }
 
@@ -193,19 +210,5 @@ class ItemList implements Countable, IteratorAggregate
         }
 
         return $this->hasConstrainedItems;
-    }
-
-    private static function compare(Item $itemA, Item $itemB): int
-    {
-        $volumeDecider = $itemA->getWidth() * $itemA->getLength() * $itemA->getDepth() <=> $itemB->getWidth() * $itemB->getLength() * $itemB->getDepth();
-        if ($volumeDecider !== 0) {
-            return $volumeDecider;
-        }
-        $weightDecider = $itemA->getWeight() - $itemB->getWeight();
-        if ($weightDecider !== 0) {
-            return $weightDecider;
-        }
-
-        return $itemB->getDescription() <=> $itemA->getDescription();
     }
 }

@@ -8,19 +8,18 @@ declare(strict_types=1);
 
 namespace DVDoug\BoxPacker;
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
+use SplObjectStorage;
+
 use function array_filter;
 use function array_map;
 use function array_merge;
 use function array_sum;
 use function count;
 use function iterator_to_array;
-use function max;
-use const PHP_INT_MAX;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LogLevel;
-use Psr\Log\NullLogger;
-use SplObjectStorage;
 use function usort;
 
 /**
@@ -48,11 +47,17 @@ class WeightRedistributor implements LoggerAwareInterface
     private $boxesQtyAvailable;
 
     /**
+     * @var PackedBoxSorter
+     */
+    private $packedBoxSorter;
+
+    /**
      * Constructor.
      */
-    public function __construct(BoxList $boxList, SplObjectStorage $boxQuantitiesAvailable)
+    public function __construct(BoxList $boxList, PackedBoxSorter $packedBoxSorter, SplObjectStorage $boxQuantitiesAvailable)
     {
         $this->boxes = $boxList;
+        $this->packedBoxSorter = $packedBoxSorter;
         $this->boxesQtyAvailable = $boxQuantitiesAvailable;
         $this->logger = new NullLogger();
     }
@@ -78,12 +83,12 @@ class WeightRedistributor implements LoggerAwareInterface
             foreach ($boxes as $a => &$boxA) {
                 foreach ($boxes as $b => &$boxB) {
                     if ($b <= $a || $boxA->getWeight() === $boxB->getWeight()) {
-                        continue; //no need to evaluate
+                        continue; // no need to evaluate
                     }
 
                     $iterationSuccessful = $this->equaliseWeight($boxA, $boxB, $targetWeight);
                     if ($iterationSuccessful) {
-                        $boxes = array_filter($boxes, static function (?PackedBox $box) { //remove any now-empty boxes from the list
+                        $boxes = array_filter($boxes, static function (?PackedBox $box) { // remove any now-empty boxes from the list
                             return $box instanceof PackedBox;
                         });
                         break 2;
@@ -92,7 +97,7 @@ class WeightRedistributor implements LoggerAwareInterface
             }
         } while ($iterationSuccessful);
 
-        //Combine back into a single list
+        // Combine back into a single list
         $packedBoxes = new PackedBoxList();
         $packedBoxes->insertFromArray($boxes);
 
@@ -126,15 +131,15 @@ class WeightRedistributor implements LoggerAwareInterface
 
             $newLighterBoxes = $this->doVolumeRepack(array_merge($underWeightBoxItems, [$overWeightItem]), $underWeightBox->getBox());
             if ($newLighterBoxes->count() !== 1) {
-                continue; //only want to move this item if it still fits in a single box
+                continue; // only want to move this item if it still fits in a single box
             }
 
             $underWeightBoxItems[] = $overWeightItem;
 
-            if (count($overWeightBoxItems) === 1) { //sometimes a repack can be efficient enough to eliminate a box
+            if (count($overWeightBoxItems) === 1) { // sometimes a repack can be efficient enough to eliminate a box
                 $boxB = $newLighterBoxes->top();
                 $boxA = null;
-                $this->boxesQtyAvailable[$boxB->getBox()] = $this->boxesQtyAvailable[$boxB->getBox()] - 1;
+                $this->boxesQtyAvailable[$underWeightBox->getBox()] = $this->boxesQtyAvailable[$underWeightBox->getBox()] - 1;
                 $this->boxesQtyAvailable[$overWeightBox->getBox()] = $this->boxesQtyAvailable[$overWeightBox->getBox()] + 1;
 
                 return true;
@@ -143,15 +148,15 @@ class WeightRedistributor implements LoggerAwareInterface
             unset($overWeightBoxItems[$key]);
             $newHeavierBoxes = $this->doVolumeRepack($overWeightBoxItems, $overWeightBox->getBox());
             if (count($newHeavierBoxes) !== 1) {
-                continue; //this should never happen, if we can pack n+1 into the box, we should be able to pack n
+                continue; // this should never happen, if we can pack n+1 into the box, we should be able to pack n
             }
 
-            $this->boxesQtyAvailable[$boxA->getBox()] = $this->boxesQtyAvailable[$boxA->getBox()] + 1;
-            $this->boxesQtyAvailable[$boxB->getBox()] = $this->boxesQtyAvailable[$boxB->getBox()] + 1;
+            $this->boxesQtyAvailable[$overWeightBox->getBox()] = $this->boxesQtyAvailable[$overWeightBox->getBox()] + 1;
+            $this->boxesQtyAvailable[$underWeightBox->getBox()] = $this->boxesQtyAvailable[$underWeightBox->getBox()] + 1;
             $this->boxesQtyAvailable[$newHeavierBoxes->top()->getBox()] = $this->boxesQtyAvailable[$newHeavierBoxes->top()->getBox()] - 1;
             $this->boxesQtyAvailable[$newLighterBoxes->top()->getBox()] = $this->boxesQtyAvailable[$newLighterBoxes->top()->getBox()] - 1;
             $underWeightBox = $boxB = $newLighterBoxes->top();
-            $boxA = $newHeavierBoxes->top();
+            $overWeightBox = $boxA = $newHeavierBoxes->top();
 
             $anyIterationSuccessful = true;
         }
@@ -165,11 +170,12 @@ class WeightRedistributor implements LoggerAwareInterface
     private function doVolumeRepack(iterable $items, Box $currentBox): PackedBoxList
     {
         $packer = new Packer();
+        $packer->setLogger($this->logger);
         $packer->setBoxes($this->boxes); // use the full set of boxes to allow smaller/larger for full efficiency
         foreach ($this->boxes as $box) {
             $packer->setBoxQuantity($box, $this->boxesQtyAvailable[$box]);
         }
-        $packer->setBoxQuantity($currentBox, max(PHP_INT_MAX, $this->boxesQtyAvailable[$currentBox] + 1));
+        $packer->setBoxQuantity($currentBox, $this->boxesQtyAvailable[$currentBox] + 1);
         $packer->setItems($items);
 
         return $packer->doVolumePacking(true, true);
@@ -197,6 +203,6 @@ class WeightRedistributor implements LoggerAwareInterface
 
     private static function calculateVariance(int $boxAWeight, int $boxBWeight)
     {
-        return ($boxAWeight - (($boxAWeight + $boxBWeight) / 2)) ** 2; //don't need to calculate B and ÷ 2, for a 2-item population the difference from mean is the same for each box
+        return ($boxAWeight - (($boxAWeight + $boxBWeight) / 2)) ** 2; // don't need to calculate B and ÷ 2, for a 2-item population the difference from mean is the same for each box
     }
 }
