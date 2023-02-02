@@ -9,7 +9,7 @@
 	 * @author LemonStand eCommerce Inc.
 	 * @package shop.classes
 	 */
-	class Shop_CartItem implements Shop_RetailItem, Shop_BundleItem
+	class Shop_CartItem implements Shop_RetailItem, Shop_BundleItem, Shop_ShippableItem
 	{
 		/**
 		 * @var string Specifies the item key.

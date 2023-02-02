@@ -21,6 +21,8 @@ class Shop_BoxPacker {
 	protected $dimensions_in_cm = false;
 	protected $unpackable_items = array();
 
+    protected static $cache = array();
+
 	public function __construct() {
 		if (version_compare(phpversion(), '7.1.0', '<')) {
 			throw new Phpr_ApplicationException('Error: Shop_Boxpacker requires PHP >= 7.1');
@@ -31,8 +33,17 @@ class Shop_BoxPacker {
 	}
 
 	/**
+     * Returns a collection of packed boxes given a collection of packable items.
+     *
+     * Boxes available for packing are defined in System -> Settings -> Shipping Settings
+     * A specific set of boxes can be passed to the $boxes param, otherwise all system configured
+     * boxes will be considered for packing.
+     *
+     * If the same collection of items and boxes are presented in the same execution cycle a cached result
+     * will be returned.
+     *
 	 * @param array $items  Array of Shop_CartItem or Shop_OrderItem
-	 * @param null  $boxes Optional array of Shop_BoxPacker_Box objects that can be used for packing
+	 * @param null  $boxes Optional array of Shop_ShippingBox objects that can be used for packing
 	 * @param array $info Supporting information that could influence packing constraints. Passed to shop:onBoxPackerPack event
 	 *
 	 * @return PackedBoxList|false
@@ -47,7 +58,11 @@ class Shop_BoxPacker {
 			'context' => null,
 			'order' => null
 		);
-		$data = array_merge($default_info,$info);
+		$info = array_merge($default_info,$info);
+        $box_ids = $boxes->as_array('id');
+        sort($box_ids, SORT_NUMERIC);
+        $cache_keys[] = 'boxids:'.serialize($box_ids);
+
 
 		$packable_list = $this->get_packable_items_list($items);
 
@@ -65,8 +80,9 @@ class Shop_BoxPacker {
 
 		$packable_items = $packable_list['items'];
 		foreach ( $items as $item ) {
-            $item_key = (isset($item->key) && $item->key) ? $item->key : $item->id;;
+            $item_key = (isset($item->key) && $item->key) ? $item->key : $item->id;
 			if ( isset( $packable_items[$item_key] ) ) {
+                $cache_keys[] = $item_key.'-x-'.$item->quantity;
 				$quantity = $item->quantity;
 				while ( $quantity > 0 ) {
 					$quantity--;
@@ -75,6 +91,7 @@ class Shop_BoxPacker {
 				}
 				if ( isset( $packable_items[$item_key]['extras'] ) ) {
 					foreach ( $packable_items[$item_key]['extras'] as $extra ) {
+                        $cache_keys[] = $item_key.'|'.$extra->weight.'x'.$extra->width.$extra->height.'x'.$extra->depth;
 						$packer_items[] = $extra;
 						$item_count++;
 					}
@@ -108,8 +125,13 @@ class Shop_BoxPacker {
 			$packer->addItem( $packer_item );
 		}
 
-		$packed_boxes = $packer->pack();
-		return $packed_boxes;
+
+        sort($cache_keys);
+        $cache_key = md5(serialize($cache_keys));
+        if(isset(self::$cache[$cache_key])){
+            return self::$cache[$cache_key];
+        }
+        return self::$cache[$cache_key] = $packer->pack();
 	}
 
 	public function get_packable_items_list($items){
@@ -281,7 +303,7 @@ class Shop_BoxPacker {
 	}
 
 	/**
-	 * Returns total volume for a collection of Shop_OrderItem
+	 * Returns total volume for a collection of Shop_ShippableItem
 	 * This method allows you to calculate shipping dimensions and weight based on packing boxes available
 	 * @documentable
 	 * @param array $items A collection of Shop_OrderItem
@@ -290,21 +312,7 @@ class Shop_BoxPacker {
 	public static function get_items_total_volume($items){
 		$volume = 0;
 		foreach ( $items as $item ) {
-			$shipping_enabled = $item->product->product_type->shipping;
-			if($shipping_enabled) {
-				$volume += $item->total_volume();
-			}
-			$extras = false;
-			if(isset($item->extra_options)){
-				$extras = $item->extra_options;
-			} else if(method_exists($item,'get_extra_option_objects')) {
-				$extras = $item->get_extra_option_objects();
-			}
-			if($extras){
-				foreach ($extras as $extra_item) {
-					$volume += $extra_item->volume();
-				}
-			}
+            $volume += $item->total_volume();
 		}
 		return $volume;
 	}

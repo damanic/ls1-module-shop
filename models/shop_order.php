@@ -195,7 +195,7 @@ class Shop_Order extends Shop_ActiveRecord
 		$this->define_column('tax_exempt', 'Tax Exempt')->defaultInvisible();;
 
 		$this->define_column('override_shipping_quote', 'Fixed shipping quote')->invisible();
-		$this->define_column('manual_shipping_quote', 'Shipping quote')->invisible();
+		$this->define_column('manual_shipping_quote', 'Manual shipping quote')->invisible();
 		$this->define_column('shipping_discount', 'Internal Shipping Discount')->currency(true)->invisible();
 		$this->define_column('total_shipping_discount', 'Shipping Quote Discount')->currency(true)->invisible();
 		$this->define_column('shipping_quote_discounted', 'Shipping Total')->currency(true)->defaultInvisible();
