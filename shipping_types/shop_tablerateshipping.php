@@ -37,6 +37,8 @@ class Shop_TableRateShipping extends Shop_ShippingType
 		if ($context == 'preview')
 			return;
 
+        $host_obj->add_form_partial( PATH_APP . '/modules/shop/shipping_types/shop_tablerateshipping/_rates_description.htm' )->tab( 'Rates' );
+
 		$host_obj->add_field('rates', 'Rates')->tab('Rates')->renderAs(frm_widget, array(
 			'class'=>'Db_GridWidget',
 			'sortable'=>true,
@@ -46,7 +48,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
 			'columns'=>array(
 				'country'=>array('title'=>'Country Code', 'type'=>'text', 'autocomplete'=>'remote', 'autocomplete_custom_values'=>true, 'minLength'=>0, 'width'=>100),
 				'state'=>array('title'=>'State Code', 'type'=>'text', 'autocomplete'=>'remote', 'autocomplete_custom_values'=>true, 'minLength'=>0, 'width'=>100),
-				'zip'=>array('title'=>'ZIP', 'type'=>'text', 'width'=>100),
+				'zip'=>array('title'=>'Postal Code (ZIP)', 'type'=>'text', 'width'=>200),
 				'city'=>array('title'=>'City', 'type'=>'text'),
 
 				'min_weight'=>array('title'=>'Min Weight', 'type'=>'text', 'align'=>'right', 'width'=>50),
@@ -267,9 +269,10 @@ class Shop_TableRateShipping extends Shop_ShippingType
 
 			$rates['zip'] = trim(mb_strtoupper($rates['zip']));
 
-			/*
-			 * Validate numeric fields
-			 */
+
+            /*
+             * Validate numeric fields
+             */
 
 			$prev_value = null;
 			$prev_code = null;
@@ -365,9 +368,9 @@ class Shop_TableRateShipping extends Shop_ShippingType
         $state = strlen($p['state_id']) ? Shop_CountryState::find_by_id($p['state_id']) : null;
 		$state_code = $state ? mb_strtoupper($state->code) : '*';
 
-		$zip = trim(mb_strtoupper(str_replace(' ', '', $p['zip'])));
+        $zip = empty($p['zip']) ? '*' : $p['zip'];
 
-		$city = str_replace('-', '', str_replace(' ', '', trim(mb_strtoupper($p['city']))));
+        $city = str_replace('-', '', str_replace(' ', '', trim(mb_strtoupper($p['city']))));
 		if (!strlen($city))
 			$city = '*';
 
@@ -384,21 +387,9 @@ class Shop_TableRateShipping extends Shop_ShippingType
 			if (mb_strtoupper($row['state']) != $state_code && $row['state'] != '*')
 				continue;
 
-			if ($row['zip'] != '' && $row['zip'] != '*')
-			{
-				$row['zip'] = str_replace(' ', '', $row['zip']);
-
-				if ($row['zip'] != $zip)
-				{
-					if (mb_substr($row['zip'], -1) != '*')
-						continue;
-
-					$len = mb_strlen($row['zip'])-1;
-
-					if (mb_substr($zip, 0, $len) != mb_substr($row['zip'], 0, $len))
-						continue;
-				}
-			}
+            if(!$this->is_zip_code_match($zip, $row['zip'])){
+                 continue;
+            }
 
 			$row_city = isset($row['city']) && strlen($row['city']) ? str_replace('-', '', str_replace(' ', '', mb_strtoupper($row['city']))) : '*';
 			if ($row_city != $city && $row_city != '*')
@@ -635,6 +626,100 @@ class Shop_TableRateShipping extends Shop_ShippingType
             return $dimensions;
         }
         return false;
+    }
+
+
+    /**
+     * Check to see if the shipping address ZIP matches the
+     * rate field expression.
+     *
+     * Valid Expressions:
+     *    - Wild card asterisk at end of string. Eg. `CODE-A*`
+     *    - Number range in brackets. Eg. `CODE-[1-3]`
+     *    - Comma seperated list. Eg. `CODE-[1-3], CODE-B, CODE-A`
+     *
+     * @param $addressZip string The shipping address ZIP to match
+     * @param $rateZipField string The rate zip code expression to check against
+     * @return bool True if address ZIP matches rate expression
+     */
+    protected function is_zip_code_match($addressZip, $rateZipField){
+        if(trim($rateZipField) == '*'){
+            return true;
+        }
+        if(empty($rateZipField)){
+            return false;
+        }
+
+        $addressZip = trim(mb_strtoupper(str_replace(' ', '', $addressZip)));
+        $rateZipField = trim(mb_strtoupper(str_replace(' ', '', $rateZipField)));
+
+        if($addressZip == $rateZipField){
+            return true;
+        }
+
+        //Check for expressions
+        $rateZipArray = $this->get_zip_code_array($rateZipField);
+        foreacH($rateZipArray as $zip){
+            if(!strpos($zip, '*')){
+                if($zip == $addressZip){
+                    return true;
+                }
+            } else {
+                $zip = str_replace('*', '.*', $zip);
+                if ( preg_match('/'. $zip .'/', $addressZip, $matches) === 1 ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Takes a ZIP code or ZIP code expression from the rate table and converts into
+     * an array of ZIP codes.
+     *
+     * Multiple ZIP codes can be presented in comma delimited format
+     * - EG: `CODE-1, CODE-2, CODE-3` will return array containing three postcodes
+     *
+     * A run of numbered postcodes can be presented with a sequential number range presented in brackets
+     * - EG. `CODE-[1-3]` will return array containing three postcodes
+     *
+     * These methods can be combined
+     * - EG. `CODE-[1-3], CODE-[22-29], CODE-128`
+     *
+     * @param $zipFieldVal string A ZIP field value from the rate table
+     * @return array Array of ZIP CODES
+     */
+    protected function get_zip_code_array( $zipFieldVal ){
+        $array = array();
+        if($zipFieldVal) {
+            $rateZips = explode( ',', $zipFieldVal );
+            if ( $rateZips ) {
+                foreach ( $rateZips as $zip ) {
+                    $zip = trim(mb_strtoupper(str_replace(' ', '', $zip)));
+                    if ( preg_match( '/\[(.*?)\]/', $zip, $match ) == 1 ) {
+                        if ( isset( $match[1] ) ) {
+                            $number_range = $match[1];
+                            if ( stristr( $number_range, '-' ) ) {
+                                $numbers    = explode( '-', $number_range );
+                                $min_number = isset( $numbers[0] ) ? $numbers[0] : false;
+                                $max_number = isset( $numbers[1] ) ? $numbers[1] : false;
+                                if ( is_numeric( $min_number ) && is_numeric( $max_number ) ) {
+                                    $current_number = $min_number;
+                                    while ( $current_number <= $max_number ) {
+                                        $array[] = str_replace( "[$min_number-$max_number]", $current_number, $zip );
+                                        $current_number++;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        $array[] = $zip;
+                    }
+                }
+            }
+        }
+        return $array;
     }
 
 
