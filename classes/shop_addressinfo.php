@@ -272,6 +272,11 @@
 				$address_info->is_business == $this->is_business;
 		}
 
+        /**
+         * @param $field string The field name to get
+         * @param $default string The default value to return if no field value found
+         * @return string|null The field or default value
+         */
 		public function get($field, $default = null){
 			$value = null;
 
@@ -294,7 +299,16 @@
 				$value = $this->get('first_name').' '.$this->get('last_name');
 			}
 
-			return $value ? $value : $default;
+            if($value !== null) {
+                $value = (string)$value;
+                $value = trim($value);
+            }
+
+            if(!strlen($value)){
+                return (string) $default;
+            }
+
+			return $value;
 		}
 
 		public function get_relation_obj($field){
@@ -479,7 +493,6 @@
             }
             return true;
         }
-		
 
 		protected function transliterate($value){
 			if ( !method_exists( 'Core_String', 'transliterate' ) ) {
