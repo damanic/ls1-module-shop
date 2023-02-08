@@ -61,14 +61,22 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 	 * @documentable
 	 *
 	 * @param Shop_Customer $customer Specifies the customer object if it is presented.
+     * @param  array $post_data Specify user posted data to process, if empty the $_POST global will be used
 	 */
-	public function set_from_post( $customer = null ) {
+	public function set_from_post( $customer = null, $post_data = array() ) {
 
-		$data = $_POST;
+		$data = empty($post_data) ? $_POST : $post_data;
 		if($customer){
-			$data['first_name'] = post('first_name', $customer->first_name);
-			$data['last_name'] = post('last_name', $customer->last_name);
-			$data['email'] = post('email', $customer->email);
+            $protect_fields = array(
+                'first_name',
+                'last_name',
+                'email'
+            );
+            foreach($protect_fields as $field){
+                if(!isset($data[$field]) || !$data[$field] ){
+                    $data[$field] = $customer->$field;
+                }
+            }
 		}
 		$validation = $this->validate($data);
 		$this->first_name = $validation->fieldValues['first_name'];
@@ -82,8 +90,8 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 		$this->city           = $validation->fieldValues['city'];
 		$this->zip            = $validation->fieldValues['zip'];
 		$this->country        = $validation->fieldValues['country'];
-		$this->is_business    = post( 'is_business' );
-		$this->state          = post( 'state' );
+		$this->is_business    = isset($post_data['is_business']) ? $post_data['is_business'] : null;
+		$this->state          = isset($post_data['state']) ? $post_data['state'] : null;
 	}
 
 	public function validate($data=null){
@@ -94,7 +102,7 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 			$validation->add( 'email', 'Email' )->fn( 'trim' )->fn( 'mb_strtolower' )->required( "Please specify an email address." )->email();
 		}
 		$validation->add( 'company', 'Company' )->fn( 'trim' );
-		$validation->add( 'phone', 'Phone' )->fn( 'trim' );
+		$validation->add( 'phone', 'Phone' )->fn( 'trim' )->regexp('/^\+?[0-9]+$/','Phone numbers can only contain numbers and the + sign',true);
 		$validation->add( 'street_address', 'Street Address' )->fn( 'trim' )->required( "Please specify a street address." );
 		$validation->add( 'city', 'City' )->fn( 'trim' )->required( "Please specify a city." );
 		$validation->add( 'zip', 'Zip/Postal Code' )->fn( 'trim' )->required( "Please specify a ZIP/postal code." );
@@ -108,5 +116,3 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 	}
 
 }
-
-?>
