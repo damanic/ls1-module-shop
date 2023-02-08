@@ -2058,9 +2058,16 @@
 			$order->override_shipping_quote = array_key_exists('override_shipping_quote', $orderData) ? $orderData['override_shipping_quote'] : null;
 
 
-			/*
-			 * Validate shipping parameters
-			 */
+            /*
+             * Add validations that should only interrupt on backend form save
+             */
+            $field = $order->find_column_definition('billing_phone')->validation()->fn( 'trim' )->regexp('/^\+?[0-9]+$/','Phone numbers can only contain numbers and the + sign',true);
+            $field = $order->find_column_definition('shipping_phone')->validation()->fn( 'trim' )->regexp('/^\+?[0-9]+$/','Phone numbers can only contain numbers and the + sign',true);
+
+
+            /*
+             * Validate shipping parameters
+             */
 
 			$shipping_method_id = $order->shipping_method_id;
 			if (strpos($shipping_method_id, '_') !== false)
