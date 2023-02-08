@@ -102,13 +102,23 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 			$validation->add( 'email', 'Email' )->fn( 'trim' )->fn( 'mb_strtolower' )->required( "Please specify an email address." )->email();
 		}
 		$validation->add( 'company', 'Company' )->fn( 'trim' );
-		$validation->add( 'phone', 'Phone' )->fn( 'trim' )->regexp('/^\+?[0-9]+$/','Phone numbers can only contain numbers and the + sign',true);
+		$validation->add( 'phone', 'Phone' )->fn( 'trim' );
 		$validation->add( 'street_address', 'Street Address' )->fn( 'trim' )->required( "Please specify a street address." );
 		$validation->add( 'city', 'City' )->fn( 'trim' )->required( "Please specify a city." );
 		$validation->add( 'zip', 'Zip/Postal Code' )->fn( 'trim' )->required( "Please specify a ZIP/postal code." );
 		$validation->add( 'country', 'Country' )->required( "Please select a country." );
 
-		$data = $data ? $data : $this;
+        $updated_validation = Backend::$events->fire_event(
+            array(
+                'name' => 'shop:onValidateCheckoutAddressInfo',
+                'type' => 'update_result'
+            ),
+            $validation, array()
+        );
+
+        $validation = is_a($updated_validation, 'Phpr_Validation') ? $updated_validation : $validation;
+
+        $data = $data ? $data : $this;
 		if ( !$validation->validate( $data ) ) {
 			$validation->throwException();
 		}
