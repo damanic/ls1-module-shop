@@ -3290,12 +3290,40 @@
 		}
 
 		public function on_updateCustomerProfile()
-		{
-			$customer = Shop_Customer::create()->where('id=?', $this->customer->id)->find(null, array(), 'front_end');
-			$customer->disable_column_cache('front_end', true);
-			$customer->init_columns_info('front_end');
-			$customer->validation->focusPrefix = null;
-			$customer->password = null;
+        {
+            $customer = Shop_Customer::create()->where('id=?', $this->customer->id)->find(null, array(), 'front_end');
+            $customer->disable_column_cache('front_end', true);
+            $customer->init_columns_info('front_end');
+            $customer->validation->focusPrefix = null;
+            $customer->password = null;
+
+            $addressTypes = array(
+                'billing',
+                'shipping'
+            );
+            foreach($addressTypes as $addressType) {
+                if (isset($_POST[$addressType.'_street_addr']) ) {
+                    $addressData = array();
+                    foreach ($_POST as $key => $val) {
+                        if (stristr($key, $addressType."_")) {
+                            $compatKey = str_replace($addressType.'_', '', $key);
+                            $compatKey = ($compatKey == 'street_addr') ? 'street_address' : $compatKey;
+                            $compatKey = ($compatKey == 'state_id') ? 'state' : $compatKey;
+                            $compatKey = ($compatKey == 'country_id') ? 'country' : $compatKey;
+                            $addressData[$compatKey] = $val;
+                        }
+                    }
+                    //validate customers address data as AddressInfo
+                    if ($addressData) {
+                        $addressInfo = new Shop_CheckoutAddressInfo();
+                        if($addressType == 'billing'){
+                            $addressInfo->act_as_billing_info = true;
+                        }
+                        $addressInfo->set_from_post($customer, $addressData);
+                    }
+                }
+            }
+
 			$customer->save($_POST);
 
 			Shop_CheckoutData::load_from_customer($customer, true);
