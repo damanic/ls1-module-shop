@@ -390,17 +390,6 @@
 				Phpr::$response->ajaxReportException($ex, true, true);
 			}
 		}
-
-        public function formBeforeSave($customer, $session_key)
-        {
-
-            /*
-             * Add validations that should only interrupt on backend form save
-             */
-            $field = $customer->find_column_definition('phone')->validation()->fn( 'trim' )->regexp('/^\+?[0-9]+$/','Phone numbers can only contain numbers and the + sign',true);
-            $field = $customer->find_column_definition('shipping_phone')->validation()->fn( 'trim' )->regexp('/^\+?[0-9]+$/','Phone numbers can only contain numbers and the + sign',true);
-
-        }
 		
 		/*
 		 * Import products
