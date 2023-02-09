@@ -90,8 +90,8 @@ class Shop_CheckoutAddressInfo extends Shop_AddressInfo {
 		$this->city           = $validation->fieldValues['city'];
 		$this->zip            = $validation->fieldValues['zip'];
 		$this->country        = $validation->fieldValues['country'];
-		$this->is_business    = isset($post_data['is_business']) ? $post_data['is_business'] : null;
-		$this->state          = isset($post_data['state']) ? $post_data['state'] : null;
+		$this->is_business    = isset($data['is_business']) ? $data['is_business'] : null;
+		$this->state          = isset($data['state']) ? $data['state'] : null;
 	}
 
 	public function validate($data=null){
