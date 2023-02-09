@@ -1047,3 +1047,4 @@
 #1.37.9 Fixes PHP5 compatibility issue
 #1.37.10 Minor improvements and fixes for payment transaction logs and generic reports
 #1.37.11 Minor improvements to Authorize.net AIM class
+#1.38.0 Advanced Table Rate Shipping
