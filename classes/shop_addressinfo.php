@@ -1,4 +1,4 @@
-<?
+<?php
 
 	/**
 	 * Represents a customer shipping or billing address.
@@ -292,7 +292,7 @@
 			}
 
 			if($this->transliterate && in_array($field, $this->transliterate_fields)){
-				$value = $this->transliterate($value);
+                $value = $this->transliterate_value($value);
 			}
 
 			if($field == 'full_name'){
@@ -494,16 +494,20 @@
             return true;
         }
 
-		protected function transliterate($value){
-			if ( !method_exists( 'Core_String', 'transliterate' ) ) {
-				traceLog( 'Warning: Update CORE version >= 1.13.26 to support transliteration' );
-				return $value;
-			}
+        /**
+         * @param $enabled
+         * @return $this
+         */
+        public function enable_transliterate($enabled=true){
+            $this->transliterate = $enabled;
+            return $this;
+        }
 
-			return Core_String::transliterate($value);
 
-		}
-
+        protected function transliterate_value($value)
+        {
+            return Strings::transliterate($value);
+        }
 
 
 		protected function get_public_properties(){
@@ -553,7 +557,9 @@
 
 
 		/**
-		 * @deprecated Set the $transliterate property to true, and use get() methods instead!
+         * @deprecated
+         * Use $addressInfo->enable_transliterate(true);
+         *
 		 *
 		 * Returns a new address info object with transliterated values
 		 * Note: The returned object will replace country/state IDs with transliterated names.
@@ -562,28 +568,23 @@
 		 */
 		public function get_transliterated_info(){
 
-			$this->transliterate = true;
+            $this->transliterate = true;
 
-			if ( !method_exists( 'Core_String', 'transliterate' ) ) {
-				traceLog( 'Warning: Update CORE version >= 1.13.26 to support transliteration' );
-				return $this;
-			}
+            if (!method_exists('Core_String', 'transliterate')) {
+                traceLog('Warning: Update CORE version >= 1.13.26 to support transliteration');
+                return $this;
+            }
 
-			$properties = $this->get_public_properties();
+            $info = new self();
+            foreach ($info->transliterate_fields as $field_name) {
+                if(property_exists($info,$field_name)){
+                    $info->{$property_name} = $this->get($field_name);
+                }
+            }
 
-			$info = new self();
-			foreach($properties as $property_name){
-				$info->{$property_name} = $this->get($property_name);
-			}
+            $this->transliterate = false;
 
-			$this->transliterate = false;
-
-			return $info;
+            return $info;
 		}
 
 	}
-
-
-
-
-?>
