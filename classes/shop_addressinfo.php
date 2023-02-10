@@ -506,7 +506,12 @@
 
         protected function transliterate_value($value)
         {
-            return Strings::transliterate($value);
+            if ( !method_exists( 'Core_String', 'transliterate' ) ) {
+                traceLog( 'Warning: Update CORE version >= 1.13.26 to support transliteration' );
+                return $value;
+            }
+
+            return Core_String::transliterate($value);
         }
 
 
