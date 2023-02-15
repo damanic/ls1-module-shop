@@ -38,7 +38,7 @@
                 $provider = $this->shop_shipping_tracker_provider;
             }
             if(!$provider && $this->code_shipping_method){
-                $provider = $this->code_shipping_method->get_shippingtype_object()->getShippingTrackerProvider();
+                $provider = $this->code_shipping_method->get_shippingtype_object()->getShippingTracker();
             }
             return $provider;
         }
