@@ -1519,8 +1519,11 @@ class Shop_Order extends Shop_ActiveRecord
 			if ($codes->count)
 			{
 				$codes_str = '<ul>';
-				foreach ($codes as $code)
-					$codes_str .= '<li>'.h($code->displayField('code_shipping_method')).': '.h($code->code).'</li>';
+				foreach ($codes as $code) {
+                    $trackingProvider = $code->getShippingTrackerProvider();
+                    $codeLink = $trackingProvider ? '<a href="'.h($trackingProvider->getTrackerUrl($code->code, $this->id)).'">'. h($code->code).'</a>' :  h($code->code);
+                    $codes_str .= '<li>' . h($code->getShippingTrackerProviderName()). ': ' .$codeLink . '</li>';
+                }
 
 				$codes_str .= '</ul>';
 			}

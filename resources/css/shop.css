@@ -336,6 +336,9 @@ ul.status_transition li div p.link a:hover {
 .ungroup_product {
   background: transparent url('../images/shape_ungroup.png') no-repeat 5px 4px;
 }
+.tracking {
+  background: transparent url('../images/tracking.png') no-repeat 5px 5px;
+}
 td.iconCell .ungroup_product {
   background-position: left top;
 }

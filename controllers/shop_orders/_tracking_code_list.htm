@@ -1,26 +1,29 @@
-<? if(!$form_model->is_order_locked()):?>
 <div class="toolbar read_only_table">
 	<a class="imageLink new_document img_noBottomPading" onclick="new PopupForm('preview_onLoadShippingCodeForm'); return false;" href="#">Add tracking code</a>
+    <? if ($this->currentUser->get_permission('shop', 'manage_shop_settings')): ?>
+        <a class="imageLink tracking img_noBottomPading" href="<?= url('/shop/shipping_tracking_providers') ?>" target="_blank">Tracking providers</a>
+    <?endif;?>
 	<div class="clear"></div>
 </div>
-<?endif;?>
 
 <? $codes = Shop_OrderTrackingCode::find_by_order($form_model) ?>
 <table class="simpleList">
 	<thead>
 		<tr>
-			<th>Shipping Method</th>
-			<th class="<?= !$codes->count ? 'last' : null ?>">Code</th>
+			<th>Tracking Provider</th>
+            <th class="<?= !$codes->count ? 'last' : null ?>">Tracking Code</th>
 			<? if ($codes->count): ?>
 				<th class="iconCell last">&nbsp;</th>
 			<? endif ?>
 		</tr>
 	</thead>
 	<tbody>
-		<? foreach ($codes as $record): ?>
+		<? foreach ($codes as $record): $trackingProvider = $record->getShippingTrackerProvider(); ?>
 		<tr class="<?= Backend_Html::zebra('shipping_codes') ?>">
-			<td><?= h($record->displayField('code_shipping_method')) ?></td>
-			<td ><?= h($record->code) ?></td>
+			<td><?= h($record->getShippingTrackerProviderName()) ?></td>
+            <td>
+                <?= $trackingProvider ? '<a href="'.$trackingProvider->getTrackerUrl($record->code, $form_model->id).'" target="_blank">'.h($record->code).'</a>' : $record->code ?>
+            </td>
 			<td class="iconCell last">
 				<? if(!$form_model->is_order_locked()):?>
 				<a onclick="return $(this).getForm().sendPhpr('preview_onDeleteTrackingCode', {extraFields: {code_id: <?= $record->id ?>}, confirm: 'Do you really want to delete this tracking code?', update: 'tracking_code_list', loadIndicator: {show: false}});" title="Remove code" class="deleteDocument" href="#">Delete code</a>

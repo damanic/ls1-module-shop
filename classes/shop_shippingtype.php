@@ -155,6 +155,15 @@
 			
 		}
 
+        /**
+         * Return a class that implements the Shop_ShippingTracker Interface
+         * This can be used to provide access to tracking events over API
+         * @return Shop_ShippingTracker|null
+         */
+        public function getShippingTrackerProvider(){
+            return null;
+        }
+
 
 	}	
 
