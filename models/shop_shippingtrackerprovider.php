@@ -1,6 +1,6 @@
  <?php
 
-     class Shop_ShippingTrackerProvider extends Db_ActiveRecord implements Shop_ShippingTracker {
+     class Shop_ShippingTrackerProvider extends Db_ActiveRecord implements Shop_ShippingTrackerInterface {
 
          public $table_name = 'shop_shipping_tracker_providers';
          protected $trackingCodePlaceHolder = '{tracking-code}';

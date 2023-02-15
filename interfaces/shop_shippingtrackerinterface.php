@@ -1,5 +1,5 @@
 <?php
-interface Shop_ShippingTracker{
+interface Shop_ShippingTrackerInterface{
 
 
     /**

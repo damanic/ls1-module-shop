@@ -155,9 +155,9 @@ abstract class Shop_ShippingType extends Core_XmlController
     }
 
     /**
-     * Return a class that implements the ShippingTracker Interface
+     * Return a class that implements the Shop_ShippingTrackerInterface
      * This can be used to provide access to tracking events over API
-     * @return ShippingTracker|null
+     * @return Shop_ShippingTrackerInterface|null
      */
     public function getShippingTracker()
     {

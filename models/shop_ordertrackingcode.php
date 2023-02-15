@@ -30,7 +30,7 @@
         /**
          * Get a shipping tracker provider that can return
          * a tracking URL and tracking events.
-         * @return null|Shop_ShippingTracker
+         * @return null|Shop_ShippingTrackerInterface
          */
         public function getShippingTrackerProvider(){
             $provider = null;
