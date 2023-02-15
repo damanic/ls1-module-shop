@@ -1049,4 +1049,4 @@
 #1.37.11 Minor improvements to Authorize.net AIM class
 #1.38.0 Advanced Table Rate Shipping
 #1.38.1 Fix issue with checkout address validation
-#1.39.0 Adds Tracking Providers to shipping tracking codes
+#1.39.0 Tracking providers for shipping tracking codes
