@@ -23,6 +23,11 @@ interface Shop_ShippingTracker{
     public function getTrackerUrl($trackingCode, $orderId=null);
 
     /**
+     * @return bool TRUE if getTrackerDetails can be provided, otherwise FALSE
+     */
+    public function providesTrackerDetails();
+
+    /**
      * If the tracker can provide real time tracking detail over API it
      * can return the details of tracking events as an array of Shop_ShippingTrackerDetail
      * objects

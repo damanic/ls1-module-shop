@@ -47,8 +47,12 @@
              return str_replace($this->trackingCodePlaceHolder,$trackingCode,$this->tracker_url_format);
          }
 
+         public function providesTrackerDetails(){
+             return false;
+         }
+
          /*
-          * NO API, return empty array
+          * Not supported
           */
          public function getTrackerDetails($trackingCode, $orderId=null)
          {
