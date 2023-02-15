@@ -33,7 +33,7 @@ class Shop_ShippingTrackerDetail {
         $this->trackingCode = (string) $trackingCode;
         $this->message = (string) $message;
         $this->statusCode = (string) $statusCode;
-        $this->datetime = $message;
+        $this->datetime = $datetime;
     }
 
     /**
