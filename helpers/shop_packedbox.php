@@ -98,6 +98,10 @@ class Shop_PackedBox {
 		return $this->convert_dimension_unit($depth, $unit);
 	}
 
+    public function get_volume($unit='native'){
+        return $this->get_depth($unit) * $this->get_width($unit) * $this->get_height($unit);
+    }
+
 	public function get_native_dimension_unit(){
 		if(!$this->native_dimension_unit){
 			$this->load_native_units();
