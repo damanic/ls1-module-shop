@@ -2455,19 +2455,32 @@ class Shop_Order extends Shop_ActiveRecord
 		$coupon = $this->coupon_id ? Shop_Coupon::create()->find($this->coupon_id) : null;
 		$coupon_code = $coupon ? $coupon->code : null;
 		$customer = $this->customer_id ? Shop_Customer::create()->find($this->customer_id) : null;
+        $cart_items = $this->getCartItemsShipping($this->items);
+        $total_volume = 0;
+        $total_weight = 0;
+        $total_item_num = 0;
+        foreach($cart_items as $cart_item){
+            $free_shipping = property_exists($cart_item, 'free_shipping') && $cart_item->free_shipping;
+            if($free_shipping){
+                continue;
+            }
+            $total_volume += $cart_item->total_volume();
+            $total_weight += $cart_item->total_weight();
+            $total_item_num += $cart_item->get_quantity();
+        }
 
 		$params = array(
 			'order' => $this,
 			'shipping_info' => $shipping_info,
 			'total_price' =>  $this->eval_subtotal_before_discounts(),
-			'total_volume' => $this->get_total_volume(),
-			'total_weight'=> $this->get_total_weight(),
-			'total_item_num' => $this->get_item_count(),
+			'total_volume' => $total_volume,
+			'total_weight'=> $total_weight,
+			'total_item_num' => $total_item_num,
 			'include_tax' => $include_tax,
 			'display_prices_including_tax' => $include_tax ? $include_tax : Shop_CheckoutData::display_prices_incl_tax(), //out of scope
 			'return_disabled' => false,
 			'order_items' => $this->items,
-			'cart_items' =>  Shop_OrderHelper::items_to_cart_items_array($this->items),
+			'cart_items' =>  $cart_items,
 			'customer_group_id' => null,
 			'customer' => $customer,
 			'shipping_option_id' => null,
@@ -2501,9 +2514,14 @@ class Shop_Order extends Shop_ActiveRecord
 		return $external_discount;
 	}
 
-	public function get_items_shipping() {
+    /**
+     * Returns items that can be shipped
+     * @param Shop_OrderItem[] $orderItems  If none provided, the items saved on record will be evaluated.
+     */
+	public function get_items_shipping($orderItems = array()) {
 		$items_shipping = array();
-		foreach ($this->items as $item){
+        $items = $orderItems ? $orderItems : $this->items;
+		foreach ($items as $item){
 			$shipping_enabled = isset($item->product->product_type->id) ? $item->product->product_type->shipping : true;
 			if($shipping_enabled){
 				$items_shipping[] = $item;
@@ -2523,6 +2541,33 @@ class Shop_Order extends Shop_ActiveRecord
 		}
 		return $count;
 	}
+
+    /**
+     * Returns items that require shipping as CartItems
+     * This method will identify items that are marked for free shipping
+     * by order applied discount rules.
+     * @param Shop_OrderItem[]
+     * @return Shop_CartItem[]
+     */
+    public function getCartItemsShipping($orderItems){
+        $orderItems = $this->get_items_shipping($orderItems);
+        $appliedDiscounts = $this->get_applied_cart_rules();
+        $cartItems = Shop_OrderHelper::items_to_cart_items_array($orderItems);
+        $map1 = array();
+        $map2 = array();
+        foreach ($cartItems as $cart_item) {
+            $map1[$cart_item->key] = 0;
+            $map2[$cart_item->key] = 0;
+        }
+        if($appliedDiscounts && $cartItems) {
+            foreach ($appliedDiscounts as $discount) {
+                if (is_a($discount->get_action_obj(), 'Shop_CartProductFreeShipping_Action')) {
+                    $discount->eval_discount($cartItems, $this->subtotal_before_discounts, $map1 , $map2, $this->customer);
+                }
+            }
+        }
+        return $cartItems;
+    }
 
 	protected function after_fetch()
 	{
