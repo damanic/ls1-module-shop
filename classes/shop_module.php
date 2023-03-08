@@ -369,9 +369,10 @@
 			}
 		}
 
-		public function frontEndLogin()
+		public function frontEndLogin($customer)
 		{
 			Shop_Cart::move_cart();
+			Shop_CheckoutData::load_from_customer($customer);
 		}
 
 		public function backendLogin()
