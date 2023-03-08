@@ -104,7 +104,8 @@
 		public function subscribeEvents()
 		{
 			Backend::$events->addEvent('cms:onDeletePage', $this, 'allowDeletePage');
-			Backend::$events->addEvent('onFrontEndLogin', $this, 'frontEndLogin');
+			Backend::$events->addEvent('onFrontEndLogin', $this, 'onFrontEndLogin');
+			Backend::$events->addEvent('onAfterFrontEndLogin', $this, 'onAfterFrontEndLogin');
 			Backend::$events->addEvent('onDeleteEmailTemplate', $this, 'checkTemplateDeletion');
 			Backend::$events->addEvent('onLogin', $this, 'backendLogin');
 			Backend::$events->addEvent('cms:onRegisterTwigExtension', $this, 'register_twig_extension');
@@ -369,9 +370,12 @@
 			}
 		}
 
-		public function frontEndLogin($customer)
-		{
+		public function onFrontEndLogin(){
 			Shop_Cart::move_cart();
+		}
+
+		public function onAfterFrontEndLogin($customer)
+		{
 			Shop_CheckoutData::load_from_customer($customer);
 		}
 
