@@ -62,8 +62,9 @@
 
 				//mark hidden discount applied only if exposed shipping option is selected
 				$discount_shipping_option_id = is_object($host_obj->shipping_option) ? $host_obj->shipping_option->id  : $host_obj->shipping_option;
-				$selected_shipping_option = Shop_CheckoutData::get_shipping_method();
-				if($selected_shipping_option && $selected_shipping_option->id == $discount_shipping_option_id){
+				$selectedShippingQuote = Shop_CheckoutData::getSelectedShippingQuote();
+
+				if($selectedShippingQuote && $selectedShippingQuote->getShippingOptionId() == $discount_shipping_option_id){
 					$this->set_applied(true);
 				} else {
 					$this->set_applied(false);
