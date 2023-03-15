@@ -421,8 +421,6 @@
         public function before_save($deferred_session_key = null)
         {
 
-            $current_password_hash = isset($this->fetched['password']) ? $this->fetched['password'] : null;
-
             if ($this->guest) {
                 if (!$this->customer_group_id) {
                     $group = Shop_CustomerGroup::create()->find_by_code(Shop_CustomerGroup::guest_group);
@@ -443,6 +441,8 @@
                     $this->generate_password();
                 }
 
+
+                $current_password_hash = isset($this->fetched['password']) ? $this->fetched['password'] : null;
                 $new_password = ($current_password_hash !== $this->password) ? $this->password : null;
                 if (!empty($new_password)) {
                     $this->plain_password = $new_password;
@@ -450,11 +450,13 @@
                     $this->password = $hashed_pw;
                 }
 
+                if(empty($this->email)){
+                    throw new Phpr_ApplicationException("Registered customer must have an email address");
+                }
+
             }
 
-            if(empty($this->password)){
-                $this->password = $current_password_hash; //empty passwords cannot overwrite previously saved passwords
-            }
+
 
         }
 
