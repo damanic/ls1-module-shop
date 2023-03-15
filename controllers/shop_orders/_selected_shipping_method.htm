@@ -1,7 +1,7 @@
 <?php
 $selected_shipping_option = $form_model->shipping_method_id;
-if ($form_model->shipping_sub_option_id)
-	$selected_shipping_option = $form_model->shipping_sub_option_id;
+if ($form_model->shipping_sub_option)
+	$selected_shipping_option = $form_model->getAppliedShippingQuoteId();
 ?>
 
 <ul class="recordSelector">
