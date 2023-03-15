@@ -1,8 +1,12 @@
 <li class="field radio full reference" id="form_field_shipping_method_idShop_Order">
 	<?
 	if($form_model->shipping_method_id && !post('recalculate_shipping_quotes', false)){
+        $quoteDescription = $form_model->shipping_method->name;
+        if($form_model->shipping_sub_option){
+            $quoteDescription .= ' > '.$form_model->shipping_sub_option;
+        }
 		$this->renderPartial('selected_shipping_method',array(
-			'selected_shipping_quote_description' => $form_model->shipping_method->name.' > '.$form_model->shipping_sub_option,
+			'selected_shipping_quote_description' => $quoteDescription,
 			'selected_shipping_quote_price' => $form_model->shipping_quote
 		));
 	} else {
