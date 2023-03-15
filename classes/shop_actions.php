@@ -1332,6 +1332,10 @@
 		{
 			global $activerecord_no_columns_info;
 
+            if($this->customer){
+                Shop_CheckoutData::load_from_customer($this->customer, false);
+            }
+
 			$checkout_step = post('checkout_step');
 			$skip_to = post('skip_to');
 
