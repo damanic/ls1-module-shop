@@ -1,4 +1,4 @@
-<?
+<?php
 
 	/**
 	 * Contains information collected during the checkout process.
@@ -12,7 +12,8 @@
 	 */
 	class Shop_CheckoutData
 	{
-		protected static $_customer_override = null;
+
+        protected static $_customer_override = null;
 		
 		/**
 		 * Loads shipping and billing address information from a customer object.
@@ -128,6 +129,31 @@
 			}
 		}
 
+
+        /**
+         * This method checks to see if a Shop_AddressInfo object is stored in the checkout session.
+         * This method does not check to see if the stored Address object is considered complete.
+         * @param bool $requireShippingAddress Set to true if checking for both billing and shipping address objects.
+         * @return bool True if Shop_AddressInfo object exists in session, otherwise false.
+         */
+        public static function hasAddressInfo($requireShippingAddress = false){
+            $checkout_data = self::load();
+            if (!array_key_exists('billing_info', $checkout_data)){
+                return false;
+                if(!is_a($checkout_data['billing_info'], 'Shop_AddressInfo')){
+                    return false;
+                }
+            }
+            if($requireShippingAddress){
+                if (!array_key_exists('shipping_info', $checkout_data)){
+                    return false;
+                }
+                if(!is_a($checkout_data['billing_info'], 'Shop_AddressInfo')){
+                    return false;
+                }
+            }
+            return true;
+        }
 		/**
 		 * Returns the billing address information.
 		 * If the billing address information is not set in the checkout data,
@@ -315,388 +341,156 @@
 		 * Shipping method
 		 */
 
-		/**
-		 * Returns a shipping method information previously set with {@link Shop_CheckoutData::set_shipping_method() set_shipping_method()} method.
-		 * The method returns an object with the following fields:
-		 * <ul>
-		 *   <li><em>id</em> - specifies the shipping method identifier.</li>
-		 *   <li><em>sub_option_id</em> - specifies the shipping method specific sub-option identifier (for multi-option shipping methods).</li>
-		 *   <li><em>name</em> - specifies the shipping method name.</li>
-		 *   <li><em>sub_option_name</em> - specifies the shipping sub-option name.</li>
-		 *   <li><em>ls_api_code</em> - specifies the shipping method API code.</li>
-		 *   <li><em>quote</em> - specifies the shipping quote.</li>
-		 *   <li><em>quote_no_tax</em> - specifies the shipping quote without the shipping tax applied.</li>
-		 *   <li><em>quote_tax_incl</em> - specifies the shipping quote with the shipping tax applied.</li>
-		 *   <li><em>is_free</em> - determines the shipping option is free.</li>
-		 *   <li><em>internal_id</em> - specifies the internal shipping method identifier, which includes both shipping method identifier
-		 *       and shipping sub-option identifier, for example  <em>2_9b6fd8f11e836e9c3aceb8933d7a710b</em>.</li>
-		 * </ul>
-		 * If the shipping method has not been set yet, the object's fields are empty.
-		 * @documentable
-		 * @return mixed Returns an object.
-		 */
-		public static function get_shipping_method()
-		{
-			$checkout_data = self::load();
 
-			if (!array_key_exists('shipping_method_obj', $checkout_data))
-			{
-				$method = array(
-					'id'=>null,
-					'sub_option_id'=>null,
-					'quote'=>0,
-					'quote_no_tax'=>0,
-					'quote_tax_incl'=>0,
-					'name'=>null,
-					'sub_option_name'=>null,
-					'is_free'=>false,
-					'internal_id'=>null,
-					'ls_api_code'=>null,
-					'quote_data' => array()
-				);
-				return (object)$method;
-			}
-
-			return $checkout_data['shipping_method_obj'];
-		}
-
-		/**
-		 * Sets a shipping method. 
-		 * You can use the {@link Shop_ShippingOption::find_by_api_code()} method for finding a specific shipping method.
-		 * <pre>Shop_CheckoutData::set_shipping_method(Shop_ShippingOption::find_by_api_code('default')->id);</pre>
-		 * For multi-option shipping methods, like FedEx the <em>$shipping_method_id</em> parameter
-		 * should contain both shipping method identifier and shipping method specific option identifier,
-		 * separated with the underscore character, for example: <em>2_9b6fd8f11e836e9c3aceb8933d7a710b</em>
-		 * @documentable
-		 * @see http://lemonstand.com/docs/creating_shipping_method_partial/ Creating the Shipping Method partial
-		 * @param string $shipping_method_id Specifies the shipping method identifier.
-		 * @param string $cart_name Specifies the shopping cart name. 
-		 */
-		public static function set_shipping_method($shipping_option_id = null, $cart_name = 'main')
-		{
-			$method = self::get_shipping_method();
-
-			$specific_option_id = $shipping_option_id;
-			
-			$selected_shipping_option_id = $shipping_option_id ? $shipping_option_id : post('shipping_option');
-			if (!$selected_shipping_option_id)
-				throw new Cms_Exception('Please select shipping method.');
-
-			$sub_option_id = null;
-			if (strpos($selected_shipping_option_id, '_') !== false)
-			{
-				$parts = explode('_', $selected_shipping_option_id);
-				$selected_shipping_option_id = $parts[0];
-				$sub_option_id = $parts[1];
-			}
-
-			$option = Shop_ShippingOption::create();
-			if (!$specific_option_id)
-				$option->where('enabled=1');
-
-			$option = $option->find($selected_shipping_option_id);
-			if (!$option)
-				throw new Cms_Exception('Shipping method not found.');
-
-			if (!$option->multi_option) {
-				$method->sub_option_id = $option->id.'_'.$sub_option_id;
-			}
-
-			self::update_shipping_method($option, $method, $cart_name);
-			self::save_custom_fields();
-		}
-
-		/**
-		 * Refreshes shipping method quote and re-saves.
-		 * @documentable
-		 * @param string $cart_name Specifies the shopping cart name.
-		 */
-
-		public static function refresh_active_shipping_quote($cart_name = 'main'){
-			self::update_shipping_method(null,null, $cart_name);
-		}
-
-		/**
-		 * Deletes the shipping method information from the checkout data.
-		 * @documentable
-		 */
-		public static function reset_shipping_method()
-		{
-			$checkout_data = self::load();
-			if (array_key_exists('shipping_method_obj', $checkout_data))
-				unset($checkout_data['shipping_method_obj']);
-
-			self::save($checkout_data);
-		}
-
-		protected static function update_shipping_method($option=null, $method=null, $cart_name = 'main'){
-			$method = is_object($method) ? $method : self::get_shipping_method();
-			$option = is_a($option, 'Shop_ShippingOption') ? $option : self::get_shipping_method_option();
-
-			try {
-				if(!$option){
-					self::reset_shipping_method();
-					throw new ApplicationException('Shipping option is not valid');
-				}
-				$option->define_form_fields();
-				$option->apply_checkout_quote($cart_name);
-			} catch (exception $ex) {
-				// Rethrow system exception as CMS exception
-				throw new Cms_Exception($ex->getMessage());
-			}
-
-			if (!$option->multi_option)
-			{
-				$method->quote_no_discount = $option->quote_no_discount;
-				$method->discount = $option->discount;
-				$method->quote_no_tax = $option->quote_no_tax;
-				$method->quote = $option->quote;
-				$method->sub_option_id = null;
-				$method->sub_option_name = null;
-				$method->internal_id = $option->id;
-				$method->is_free = $option->is_free;
-				$method->quote_data = $option->quote_data;
-			} else {
-				$sub_option_found = false;
-				foreach ($option->sub_options as $key => $rate_obj) {
-					$sub_option_id = $option->id . '_' . md5( $rate_obj->name );
-					if ($method->sub_option_id == $sub_option_id) {
-						$sub_option_found = true;
-						$method->quote_no_discount = $rate_obj->quote_no_discount;
-						$method->quote = $rate_obj->quote;
-						$method->quote_no_tax = $rate_obj->quote_no_tax;
-						$method->sub_option_id = $sub_option_id;
-						$method->sub_option_name = $rate_obj->name;
-						$method->internal_id = $option->id.'_'.$rate_obj->id;
-						$method->discount  = $rate_obj->discount;
-						$method->is_free = $rate_obj->is_free;
-						$method->quote_data = $rate_obj->quote_data;
-						break;
-					}
-				}
-
-				if (!$sub_option_found)
-					throw new Cms_Exception('Selected shipping option is not applicable.');
-			}
-
-			$method->id = $option->id;
-			$method->name = $option->name;
-			$method->ls_api_code = $option->ls_api_code;
-			if ($method->is_free) {
-				$method->quote = 0;
-				$method->quote_no_tax = 0;
-			}
-			$checkout_data = self::load();
-			$checkout_data['shipping_method_obj'] = $method;
-			self::save($checkout_data);
-		}
-
-		protected static function get_shipping_method_option(){
-			$method = self::get_shipping_method();
-			$id = $method->internal_id;
-			if (strpos($id, '_') !== false) {
-				$parts = explode('_', $id);
-				$id = $parts[0];
-			}
-			if(is_numeric($id)){
-				$option = Shop_ShippingOption::create()->find($id);
-				if($option){
-					return $option;
-				}
-			}
-			return false;
-		}
+        /**
+         * Returns the user selected shipping quote or null
+         * If the shipping quote saved in session is in a different
+         * currency to active checkout currency, it is no longer
+         * considered valid, and will not be returned.
+         *
+         * @return Shop_ShippingOptionQuote|null
+         */
+        public static function getSelectedShippingQuote(){
+            $checkout_data = self::load();
+            if (!array_key_exists('selected_shipping_quote', $checkout_data))
+            {
+                return null;
+            }
+            $quote = $checkout_data['selected_shipping_quote'];
+            $activeCurrencyCode = self::get_currency(false);
+            if($activeCurrencyCode && ($activeCurrencyCode !== $quote->getCurrencyCode())){
+                return null;
+            }
+            return $quote;
+        }
 
 
-		protected static function get_total_per_product_cost($cart_name)
-		{
-			$cart_items = Shop_Cart::list_active_items($cart_name);
-			$shipping_info = self::get_shipping_info();
+        /**
+         * Saves the selected shipping quote to the cart.
+         * @documentable
+         * @param string $shippingQuoteId Specifies the selected shipping quote identifier
+         * @param string $cart_name Specifies the shopping cart name.
+         */
+        public static function setSelectedShippingQuote($shippingQuoteId = null, $cart_name = 'main')
+        {
 
-			$total_per_product_cost = 0;
-			foreach ($cart_items as $item)
-			{
-				$product = $item->product;
-				if ($product)
-					$total_per_product_cost += $product->get_shipping_cost($shipping_info->country, $shipping_info->state, $shipping_info->zip)*$item->quantity;
-			}
 
-			return $total_per_product_cost;
-		}
 
-		/**
-		 * Returns a list of available shipping methods.
-		 * The list of available shipping methods is based on the customer's shipping location
-		 * and the cart contents. The method returns a list of {@link Shop_ShippingOption} objects. The {@link Shop_ShippingOption}
-		 * class has the following properties which are required for displaying a list of available options:
-		 * <ul>
-		 *   <li><em>quote</em> - specifies the shipping quote.</li>
-		 *   <li><em>quote_no_tax</em> - specifies the shipping quote without the shipping tax applied.</li>
-		 *   <li><em>quote_tax_incl</em> - specifies the shipping quote with the shipping tax applied.</li>
-		 *   <li><em>sub_options</em> - an array of the the shipping method specific sub-options.</li>
-		 *   <li><em>multi_option</em> - indicates whether the option has sub-options.</li>
-		 *   <li><em>error_hint</em> - an optional error message. This field is not empty in case if the shipping method
-		 *       returned an error. The content of this field can be displayed in the list of shipping methods.</li>
-		 * </ul>
-		 * The <em>sub_options</em> array is not empty only for multi-option shipping methods (FedEx, USPS, etc.). Each element in the array 
-		 * is an object with the following fields:
-		 * <ul>
-		 *   <li><em>id</em> - specifies the sub-option identifier. Identifiers are specific for each shipping method.</li>
-		 *   <li><em>name</em> - specifies the sub-option name.</li>
-		 *   <li><em>quote</em> - specifies the sub-option shipping quote.</li>
-		 *   <li><em>is_free</em> - indicates whether the sub-option is free</li>
-		 * </ul>
-		 * @documentable
-		 * @see http://lemonstand.com/docs/creating_shipping_method_partial/ Creating the Shipping Method partial
-		 * @param Shop_Customer $customer Specifies the customer object. 
-		 * A currently logged in customer can be loaded with {@link Cms_Controller::get_customer()}.
-		 * @param string $cart_name Specifies the shopping cart name.
-		 * @param array $options Specifies options for filtering.
-		 * @return array Returns an array of {@link Shop_ShippingOption} objects.
-		 */
-		public static function list_available_shipping_options($customer, $cart_name = 'main', $options=array())
-		{
-			global $activerecord_no_columns_info;
+            $shippingQuoteId = $shippingQuoteId ? $shippingQuoteId : post('shipping_option');
 
-			$default_options = array(
-				'cart_name' => $cart_name,
-				'include_tax'=>1,
-				'customer_group_id' => Cms_Controller::get_customer_group_id(),
-			);
 
-			$options = array_merge($default_options,$options);
-			$customer = Cms_Controller::get_customer();
+            if (!$shippingQuoteId)
+                throw new Cms_Exception('Please select shipping method.');
 
-			$shipping_info = Shop_CheckoutData::get_shipping_info();
 
-			//run eval discounts on cart items to mark free shipping items, updates by reference
-			$cart_items = Shop_Cart::list_active_items($cart_name);
-			self::eval_discounts($cart_name, $cart_items);
 
-			$params = array(
-				'display_prices_including_tax' => $options['include_tax'] ? $options['include_tax'] : Shop_CheckoutData::display_prices_incl_tax(),
-				'shipping_info' => $shipping_info,
-				'total_price'=>Shop_Cart::total_price_no_tax($cart_name, false),
-				'total_volume'=>Shop_Cart::total_items_volume($cart_items),
-				'total_weight'=>Shop_Cart::total_items_weight($cart_items),
-				'total_item_num'=>Shop_Cart::get_item_total_num($cart_name),
-				'cart_items'=>$cart_items,
-				'customer' => is_object($customer) ? $customer : null,
-				'customer_id' => is_object($customer) ? $customer->id : $customer,
-				'customer_group_id' => Cms_Controller::get_customer_group_id(),
-				'currency_code'=> self::get_currency($as_object=false),
-				'payment_method' => Shop_CheckoutData::get_payment_method(),
-				'coupon_code' => Shop_CheckoutData::get_coupon_code(),
-			);
+            $selectedShippingQuote = self::getSelectedShippingQuote();
+            if($selectedShippingQuote && $selectedShippingQuote->getShippingQuoteId() == $shippingQuoteId){
+                return; //already set
+            }
 
-			$params = array_merge($params, $options);
+            $selectedShippingOptionId = $shippingQuoteId;
+            if(!is_numeric($shippingQuoteId)){
+                $selectedShippingOptionId = Shop_ShippingOptionQuote::getOptionIdFromQuoteId($shippingQuoteId);
+            }
 
-			$available_options = Shop_ShippingOption::get_applicable_options($params);
-			$available_options = self::add_discount_applied_shipping_options($available_options,$params);
+            $shippingOption = Shop_ShippingOption::create();
+            $shippingOption = $shippingOption->find($selectedShippingOptionId);
+            if (!$shippingOption)
+                throw new Cms_Exception('Shipping method not found.');
 
-			if (!Shop_ShippingParams::get()->display_shipping_service_errors) {
-				$options = array();
-				foreach ($available_options as $key=>$option)
-				{
-					if (!strlen($option->error_hint))
-						$options[$key] = $option;
-				}
-				
-				$available_options = $options;
-			}
+            self::applySelectedShippingQuote($shippingOption, $shippingQuoteId, $cart_name);
+            self::save_custom_fields();
+        }
 
-			$multi_options = array();
-			$options = array();
-			foreach ($available_options as $key=>$option)
-			{
-				if ($option->multi_option)
-					$multi_options[$key] = $option;
-				else
-					$options[$key] = $option;
-			}
+        /**
+         * This allows a shipping option to be assigned to the cart without specifying
+         * a quote ID.  This can be used when quote ID is irrelevant
+         * (e.g. a shipping option that always returns a single quote).
+         *
+         * @param Shop_ShippingOption $shippingOption The shipping option selected
+         * @param string $cartName The cart name to apply to
+         * @return void
+         */
+        public static function setSelectedShippingOption(Shop_ShippingOption $shippingOption, $cartName = 'main'){
+            self::applySelectedShippingQuote($shippingOption, null, $cartName);
+            self::save_custom_fields();
+        }
 
-			return $multi_options + $options;
-		}
+        /**
+         * Recalculates the shipping cost for selected shipping option
+         * @param string $cartName
+         * @return void
+         */
+        public static function refreshActiveShippingQuote($cartName = 'main'){
+            $selectedShippingQuote = self::getSelectedShippingQuote();
+            if($selectedShippingQuote){
+                self::resetSelectedShippingQuote();
+                self::applySelectedShippingQuote($selectedShippingQuote->getShippingOption(),$selectedShippingQuote->getShippingOptionId(), $cartName);
+            }
+        }
 
-		/**
-		 * Allows discount rules to expose hidden shipping options
-		 * @ignore
-		 * @param array $shipping_options Specifies the shipping option list to flatten.
-		 * @param array $params Specifies the shipping calculation parameters.
-		 * @return array Returns an updated array of shipping options.
-		 */
-		protected static function add_discount_applied_shipping_options($shipping_options, $params=array()){
+        /**
+         * Removes the customers shipping quote selection.
+         * @return void
+         */
+        public static function resetSelectedShippingQuote(){
 
-			$payment_method = is_object($params['payment_method']) ? $params['payment_method'] : null;
-			$payment_method_obj = $payment_method ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
-			$cart_name = isset($params['cart_name'])? $params['cart_name'] : 'main';
-			$customer_id = isset($params['customer_id']) ? $params['customer_id'] : Cms_Controller::get_customer();
+            $checkout_data = self::load();
+            if (array_key_exists('selected_shipping_quote', $checkout_data))
+                unset($checkout_data['selected_shipping_quote']);
 
-			$discount_info = Shop_CartPriceRule::evaluate_discount(
-				$payment_method_obj,
-				null,
-				isset($params['cart_items']) ? $params['cart_items'] : Shop_Cart::list_active_items($cart_name),
-				isset($params['shipping_info']) ? $params['shipping_info'] : Shop_CheckoutData::get_shipping_info(),
-				isset($params['coupon_code']) ? $params['coupon_code'] : Shop_CheckoutData::get_coupon_code(),
-				$customer_id,
-				isset($params['total_price']) ? $params['total_price'] : Shop_Cart::total_price_no_tax($cart_name, false)
-			);
-			if ( isset( $discount_info->add_shipping_options ) && count( $discount_info->add_shipping_options ) ) {
-				foreach ( $discount_info->add_shipping_options as $option_id ) {
-					$option = Shop_ShippingOption::create()->find( $option_id );
-					if ( $option ) {
-						$shipping_options[] = $option;
-					}
-				}
-			}
-			return $shipping_options;
-		}
+            self::save($checkout_data);
+        }
 
+        /**
+         * This method returns Shipping Options that qualify for this checkout session.
+         * Shipping options returned do not include quotes for this checkout.
+         * You can check for shipping quotes using methods in the returned shipping options.
+         * @param string $cartName
+         * @param Shop_Customer|null $customer
+         * @return array|Shop_ShippingOption[]
+         */
+        public static function getApplicableShippingOptions($cartName='main', $customer){
+            return Shop_ShippingOption::getShippingOptionsForCheckout($cartName, $customer);
+        }
+
+
+
+        /**
+         * Get an array of Shop_ShippingOptions that have been exposed by discount rules
+         * @param string $cart_name
+         * @return array|Shop_ShippingOption[] Array of shipping options
+         */
 		public static function get_discount_applied_shipping_options($cart_name = 'main'){
+            $shipping_options = array();
+
 			//run eval discounts on cart items to mark free shipping items, updates by reference
 			$cart_items = Shop_Cart::list_active_items($cart_name);
 			self::eval_discounts($cart_name, $cart_items);
-			$options = array();
-			$params = array(
-				'cart_name' => $cart_name,
-				'cart_items' => $cart_items,
-				'payment_method' =>Shop_CheckoutData::get_payment_method(),
-			);
-			return self::add_discount_applied_shipping_options($options, $params);
-		}
+            $payment_method = Shop_CheckoutData::get_payment_method();
+            $payment_method_obj = $payment_method ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
 
-		/**
-		 * Converts multi-option shipping options to single-option options.
-		 * Flat shipping option lists simplify front-end coding.
-		 * @documentable
-		 * @param array $shipping_options Specifies the shipping option list to flatten.
-		 * @return array Returns an array of flat shipping options.
-		 */
-		public static function flatten_shipping_options($shipping_options)
-		{
-			$result = array();
-			
-			foreach ($shipping_options as $key=>$option)
-			{
-				if ($option->multi_option) 
-				{
-					foreach ($option->sub_options as $sub_option)
-					{
-						$sub_option->multi_option_name = $option->name;
-						$sub_option->multi_option = true;
-						$sub_option->multi_option_id = $option->id;
-						$sub_option->description = $option->description;
-						$sub_option->error_hint = $option->error_hint;
-						$result[$sub_option->id] = $sub_option;
-					}
-				}
-				else
-					$result[$key] = $option;
-			}
-			
-			return $result;
-		}
+            $discount_info = Shop_CartPriceRule::evaluate_discount(
+                $payment_method_obj,
+                null,
+                $cart_items,
+                Shop_CheckoutData::get_shipping_info(),
+                Shop_CheckoutData::get_coupon_code(),
+                Cms_Controller::get_customer(),
+                Shop_Cart::total_price_no_tax($cart_name, false)
+            );
+            if ( isset( $discount_info->add_shipping_options ) && count( $discount_info->add_shipping_options ) ) {
+                foreach ( $discount_info->add_shipping_options as $option_id ) {
+                    $option = Shop_ShippingOption::create()->find( $option_id );
+                    if ( $option ) {
+                        $shipping_options[$option->id] = $option;
+                    }
+                }
+            }
+            return $shipping_options;
 
+		}
 
 		
 		/*
@@ -753,7 +547,7 @@
 		 * The information is calculated basing on the checkout data set with 
 		 * {@link Shop_CheckoutData::set_billing_info() set_billing_info()},
 		 * {@link Shop_CheckoutData::set_shipping_info() set_shipping_info()},
-		 * {@link Shop_CheckoutData::set_shipping_method() set_shipping_method()},
+		 * {@link Shop_CheckoutData::setSelectedShippingQuote() setSelectedShippingQuote()},
 		 * {@link Shop_CheckoutData::set_payment_method() set_payment_method()} methods or basing on default
 		 * values if possible. 
 		 * The method returns an object with the following fields:
@@ -787,18 +581,21 @@
 			 * Apply discounts
 			 */
 
-			$shipping_method = Shop_CheckoutData::get_shipping_method();
-			$payment_method = Shop_CheckoutData::get_payment_method();
+            $shippingMethodObj = null;
+			$selectedShippingQuote = Shop_CheckoutData::getSelectedShippingQuote();
+            if($selectedShippingQuote) {
+                $shippingMethodObj = $selectedShippingQuote->getShippingOption();
+            }
 
+			$payment_method = Shop_CheckoutData::get_payment_method();
 			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id($payment_method->id) : null;
-			$shipping_method_obj = $shipping_method->id ? Shop_ShippingOption::find_by_id($shipping_method->id) : null;
 
 
 			$cart_items = Shop_Cart::list_active_items($cart_name);
 
 			$discount_info = Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj, 
-				$shipping_method_obj, 
+				$shippingMethodObj,
 				$cart_items,
 				$shipping_info,
 				Shop_CheckoutData::get_coupon_code(), 
@@ -817,18 +614,17 @@
 			$total = $subtotal + $goods_tax;
 
 			$shipping_taxes = array();
-
-			if (!array_key_exists($shipping_method->internal_id, $discount_info->free_shipping_options) && strlen($shipping_method->id))
-			{
-				$shipping_taxes = self::get_shipping_taxes($shipping_method,$cart_name);
-				$total += $shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
-				$total += $shipping_quote = $shipping_method->quote_no_tax;
-			}
-			else
-			{
-				$shipping_tax = 0;
-				$shipping_quote = 0;
-			}
+            $shipping_tax = 0;
+            $shipping_quote = 0;
+            if($selectedShippingQuote) {
+                if (!array_key_exists( $selectedShippingQuote->getShippingOptionId(), $discount_info->free_shipping_options )
+                && !array_key_exists( $selectedShippingQuote->getShippingQuoteId(), $discount_info->free_shipping_options )
+                ) {
+                    $shipping_taxes = self::getShippingTaxes($cart_name, $selectedShippingQuote);
+                    $total += $shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
+                    $total += $shipping_quote = $selectedShippingQuote->getPrice();
+                }
+            }
 
 			$result = array(
 				'goods_tax'=>$goods_tax,
@@ -853,11 +649,15 @@
 
 		public static function eval_discounts($cart_name = 'main', $cart_items = null)
 		{
-			$shipping_method = Shop_CheckoutData::get_shipping_method();
-			$payment_method = Shop_CheckoutData::get_payment_method();
+            $shippingOptionObj = null;
+			$selectedShippingQuote = Shop_CheckoutData::getSelectedShippingQuote();
+            if($selectedShippingQuote){
+                $shippingOptionObj = $selectedShippingQuote->getShippingOption();
+            }
 
+            $payment_method = Shop_CheckoutData::get_payment_method();
 			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::find_by_id($payment_method->id) : null;
-			$shipping_method_obj = $shipping_method->id ? Shop_ShippingOption::find_by_id($shipping_method->id) : null;
+
 
 			$shipping_info = Shop_CheckoutData::get_shipping_info();
 			$subtotal = Shop_Cart::total_price_no_tax($cart_name, false);
@@ -867,7 +667,7 @@
 
 			$discount_info = Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj,
-				$shipping_method_obj,
+				$shippingOptionObj,
 				$cart_items,
 				$shipping_info,
 				Shop_CheckoutData::get_coupon_code(),
@@ -976,11 +776,11 @@
 		 */
 
 		/**
-		 * Creates a new order order. 
+		 * Creates a new order.
 		 * The checkout information must be prepared with 
 		 * {@link Shop_CheckoutData::set_billing_info() set_billing_info()},
 		 * {@link Shop_CheckoutData::set_shipping_info() set_shipping_info()},
-		 * {@link Shop_CheckoutData::set_shipping_method() set_shipping_method()},
+		 * {@link Shop_CheckoutData::setSelectedShippingQuote() setSelectedShippingQuote()},
 		 * {@link Shop_CheckoutData::set_payment_method() set_payment_method()} methods before this method is called. 
 		 * @documentable
 		 * @param Shop_Customer Specifies a currently logged in customer. 
@@ -1154,8 +954,8 @@
 			if (array_key_exists('customer_password', $checkout_data))
 				unset($checkout_data['customer_password']);
 
-			if (array_key_exists('shipping_method_obj', $checkout_data))
-				unset($checkout_data['shipping_method_obj']);
+			if (array_key_exists('selected_shipping_quote', $checkout_data))
+				unset($checkout_data['selected_shipping_quote']);
 
 			if (array_key_exists('custom_fields', $checkout_data))
 				unset($checkout_data['custom_fields']);
@@ -1173,23 +973,80 @@
 			self::save($checkout_data);
 		}
 
-		/**
-		 * Returns a set of shipping tax rates based on customers cart data
-		 * @param        $shipping_method
-		 * @param string $cart_name
-		 *
-		 * @return array|mixed
-		 */
-		public static function get_shipping_taxes($shipping_method, $cart_name='main'){
-			$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shipping_method->id, Shop_CheckoutData::get_shipping_info(), $shipping_method->quote_no_tax);
-			$return = Backend::$events->fireEvent('shop:onCheckoutGetShippingTaxes', $shipping_taxes, $shipping_method, $cart_name);
-			foreach($return as $updated_shipping_taxes) {
-				if($updated_shipping_taxes)
-					return $updated_shipping_taxes;
-			}
 
-			return $shipping_taxes;
-		}
+        /**
+         * Returns a set of shipping tax rates based on customers cart data
+         * @param string $cartName
+         * @param Shop_ShippingOptionQuote|null $shippingQuote
+         * @return array Array of tax info
+         */
+        public static function getShippingTaxes($cartName='main', $shippingQuote = null){
+            $shippingTaxes = array();
+            if(!$shippingQuote){
+                $shippingQuote = self::getSelectedShippingQuote();
+            }
+            if($shippingQuote) {
+                $shippingOptionId = $shippingQuote->getShippingOptionId();
+                $shippingTaxes = Shop_TaxClass::get_shipping_tax_rates(
+                    $shippingOptionId,
+                    Shop_CheckoutData::get_shipping_info(),
+                    $shippingQuote->getPrice()
+                );
+                $return = Backend::$events->fireEvent(
+                    'shop:onCheckoutGetShippingTaxes',
+                    $shippingTaxes,
+                    $shippingQuote,
+                    $cartName
+                );
+                foreach ($return as $updated_shipping_taxes) {
+                    if ($updated_shipping_taxes) {
+                        return $updated_shipping_taxes;
+                    }
+                }
+            }
+            return $shippingTaxes;
+        }
+
+
+        protected static function applySelectedShippingQuote($shippingOption=null, $shippingQuoteId=null, $cart_name = 'main'){
+            $quotes = array();
+            try {
+                if(!$shippingOption){
+                    self::resetSelectedShippingQuote();
+                    throw new ApplicationException('Shipping option is not valid');
+                }
+                $shippingOption->apply_checkout_quote($cart_name);
+                $quotes = $shippingOption->getQuotes();
+            } catch (exception $ex) {
+                // Rethrow system exception as CMS exception
+                throw new Cms_Exception($ex->getMessage());
+            }
+
+            if(!$quotes){
+                throw new Cms_Exception('Selected shipping option is not applicable.');
+            }
+
+            $selectedQuote = null;
+            if(count($quotes) === 1 && !$shippingQuoteId){
+                $selectedQuote = $quotes[0];
+            } else {
+                foreach($quotes as $quote){
+                    if($quote->getShippingQuoteId() == $shippingQuoteId) {
+                        $selectedQuote = $quote;
+                        break;
+                    } else if (is_numeric($shippingQuoteId) && ($quote->getShippingOptionId() == $shippingQuoteId)){
+                        $selectedQuote = $quote;
+                        break;
+                    }
+                }
+            }
+            if (!$selectedQuote)
+                throw new Cms_Exception('Selected shipping option is not applicable 2.');
+
+            $checkout_data = self::load();
+            $checkout_data['selected_shipping_quote'] = $selectedQuote;
+            self::save($checkout_data);
+        }
 
 		protected static function load()
 		{
@@ -1206,15 +1063,313 @@
 		// Deprecated methods
 		//
 
-		/**
-		 * @ignore
-		 * @deprecated Use {@link Shop_CheckoutData::reset_shipping_method()} instead.
-		 *
-		 */
-		public static function reset_shiping_method() // deprecated
-		{
-			self::reset_shipping_method();
-		}
-	}
 
-?>
+        /**
+         * @deprecated
+         * @use self::getApplicableShippingOptions();
+         *
+         * This method returns available shipping options AND calls for shipping quotes as
+         * part of the availability requirement. You can now use the method getApplicableShippingOptions()
+         * and call for shipping quotes on the returned shipping options IF required.
+         *
+         * Returns a list of available shipping methods.
+         * The list of available shipping methods is based on the customer's shipping location
+         * and the cart contents. The method returns a list of {@link Shop_ShippingOption} objects. The {@link Shop_ShippingOption}
+         * class has the following properties which are required for displaying a list of available options:
+         * <ul>
+         *   <li><em>quote</em> - specifies the shipping quote.</li>
+         *   <li><em>quote_no_tax</em> - specifies the shipping quote without the shipping tax applied.</li>
+         *   <li><em>quote_tax_incl</em> - specifies the shipping quote with the shipping tax applied.</li>
+         *   <li><em>sub_options</em> - an array of the the shipping method specific sub-options.</li>
+         *   <li><em>multi_option</em> - indicates whether the option has sub-options.</li>
+         *   <li><em>error_hint</em> - an optional error message. This field is not empty in case if the shipping method
+         *       returned an error. The content of this field can be displayed in the list of shipping methods.</li>
+         * </ul>
+         * The <em>sub_options</em> array is not empty only for multi-option shipping methods (FedEx, USPS, etc.). Each element in the array
+         * is an object with the following fields:
+         * <ul>
+         *   <li><em>id</em> - specifies the sub-option identifier. Identifiers are specific for each shipping method.</li>
+         *   <li><em>name</em> - specifies the sub-option name.</li>
+         *   <li><em>quote</em> - specifies the sub-option shipping quote.</li>
+         *   <li><em>is_free</em> - indicates whether the sub-option is free</li>
+         * </ul>
+         * @documentable
+         * @see http://lemonstand.com/docs/creating_shipping_method_partial/ Creating the Shipping Method partial
+         * @param Shop_Customer $customer Specifies the customer object.
+         * A currently logged in customer can be loaded with {@link Cms_Controller::get_customer()}.
+         * @param string $cart_name Specifies the shopping cart name.
+         * @param array $options Specifies options for filtering.
+         * @return array Returns an array of {@link Shop_ShippingOption} objects.
+         */
+        public static function list_available_shipping_options($customer, $cart_name = 'main', $options=array())
+        {
+            global $activerecord_no_columns_info;
+
+            $default_options = array(
+                'cart_name' => $cart_name,
+                'include_tax'=>1,
+                'customer_group_id' => Cms_Controller::get_customer_group_id(),
+            );
+
+            $options = array_merge($default_options,$options);
+            $customer = Cms_Controller::get_customer();
+
+            $shipping_info = Shop_CheckoutData::get_shipping_info();
+
+            //run eval discounts on cart items to mark free shipping items, updates by reference
+            $cart_items = Shop_Cart::list_active_items($cart_name);
+            self::eval_discounts($cart_name, $cart_items);
+
+            $params = array(
+                'display_prices_including_tax' => $options['include_tax'] ? $options['include_tax'] : Shop_CheckoutData::display_prices_incl_tax(),
+                'shipping_info' => $shipping_info,
+                'total_price'=>Shop_Cart::total_price_no_tax($cart_name, false),
+                'total_volume'=>Shop_Cart::total_items_volume($cart_items),
+                'total_weight'=>Shop_Cart::total_items_weight($cart_items),
+                'total_item_num'=>Shop_Cart::get_item_total_num($cart_name),
+                'cart_items'=>$cart_items,
+                'customer' => is_object($customer) ? $customer : null,
+                'customer_id' => is_object($customer) ? $customer->id : $customer,
+                'customer_group_id' => Cms_Controller::get_customer_group_id(),
+                'currency_code'=> self::get_currency($as_object=false),
+                'payment_method' => Shop_CheckoutData::get_payment_method(),
+                'coupon_code' => Shop_CheckoutData::get_coupon_code(),
+            );
+
+            $params = array_merge($params, $options);
+
+            $available_options = Shop_ShippingOption::get_applicable_options($params);
+            $discountOptions = self::add_discount_applied_shipping_options($available_options,$params);
+            foreach($discountOptions as $option){
+                $option->apply_checkout_quote($cart_name);
+                $available_options[$option->id]  = $option;
+            }
+
+            if (!Shop_ShippingParams::get()->display_shipping_service_errors) {
+                foreach ($available_options as $key=>$option)
+                {
+                    if (strlen($option->error_hint)) {
+                        traceLog('ERROR HINT ' . $option->error_hint);
+                        unset($available_options[$key]);
+                    }
+                }
+            }
+            return  $available_options;
+        }
+
+        /**
+         * @deprecated
+         * @use self::getSelectedShippingQuote()
+         *
+         * Returns a shipping method information previously set with {@link Shop_CheckoutData::set_shipping_method() setSelectedShippingQuote()} method.
+         * The method returns an object with the following fields:
+         * <ul>
+         *   <li><em>id</em> - specifies the shipping method identifier.</li>
+         *   <li><em>sub_option_id</em> - specifies the shipping method specific sub-option identifier (for multi-option shipping methods).</li>
+         *   <li><em>name</em> - specifies the shipping method name.</li>
+         *   <li><em>sub_option_name</em> - specifies the shipping sub-option name.</li>
+         *   <li><em>ls_api_code</em> - specifies the shipping method API code.</li>
+         *   <li><em>quote</em> - specifies the shipping quote.</li>
+         *   <li><em>quote_no_tax</em> - specifies the shipping quote without the shipping tax applied.</li>
+         *   <li><em>quote_tax_incl</em> - specifies the shipping quote with the shipping tax applied.</li>
+         *   <li><em>is_free</em> - determines the shipping option is free.</li>
+         *   <li><em>internal_id</em> - specifies the internal shipping method identifier, which includes both shipping method identifier
+         *       and shipping sub-option identifier, for example  <em>2_9b6fd8f11e836e9c3aceb8933d7a710b</em>.</li>
+         * </ul>
+         * If the shipping method has not been set yet, the object's fields are empty.
+         * @documentable
+         * @return mixed Returns an object.
+         */
+        public static function get_shipping_method()
+        {
+            $checkout_data = self::load();
+
+            if (!array_key_exists('selected_shipping_quote', $checkout_data))
+            {
+                $method = array(
+                    'id'=>null,
+                    'sub_option_id'=>null,
+                    'quote'=>0,
+                    'quote_no_tax'=>0,
+                    'quote_tax_incl'=>0,
+                    'name'=>null,
+                    'sub_option_name'=>null,
+                    'is_free'=>false,
+                    'internal_id'=>null,
+                    'ls_api_code'=>null,
+                    'quote_data' => array()
+                );
+                return (object)$method;
+            }
+
+            return $checkout_data['selected_shipping_quote'];
+        }
+
+        /**
+         * @deprecated
+         * @use self::setSelectedShippingQuote()
+         * Sets a shipping method.
+         * You can use the {@link Shop_ShippingOption::find_by_api_code()} method for finding a specific shipping method.
+         * <pre>Shop_CheckoutData::set_shipping_method(Shop_ShippingOption::find_by_api_code('default')->id);</pre>
+         * For multi-option shipping methods, like FedEx the <em>$shipping_method_id</em> parameter
+         * should contain both shipping method identifier and shipping method specific option identifier,
+         * separated with the underscore character, for example: <em>2_9b6fd8f11e836e9c3aceb8933d7a710b</em>
+         *
+         * @param string $shippingOptionId Specifies a Shop_ShippingOption identifier.
+         * @param string $cartName Specifies the shopping cart name.
+         */
+        public static function set_shipping_method($shippingOptionId = null, $cartName = 'main')
+        {
+
+
+            $selectedShippingOptionId = $shippingOptionId ? $shippingOptionId : post('shipping_option');
+
+            if (strpos($shippingOptionId, '_') !== false)
+            {
+
+                //Legacy: Not a shippingOptionId, process as shippingQuoteId
+                self::setSelectedShippingQuote($selectedShippingOptionId, $cartName);
+                return;
+            }
+
+            $shippingOption = Shop_ShippingOption::create();
+            $shippingOption = $shippingOption->find($selectedShippingOptionId);
+            if(!$shippingOption){
+                throw new Cms_Exception('Shipping method not found.');
+            }
+
+            self::applySelectedShippingQuote($shippingOption, null, $cartName);
+            self::save_custom_fields();
+        }
+
+        /**
+         * @deprecated
+         * @use self::resetSelectedShippingQuote()
+         * Deletes the shipping method information from the checkout data.
+         * @documentable
+         */
+        public static function reset_shipping_method()
+        {
+            self::resetSelectedShippingQuote();
+        }
+
+        /**
+         * @deprecated
+         * @use self::refreshActiveShippingQuote()
+         * Refreshes selected shipping quote and re-saves.
+         * @documentable
+         * @param string $cart_name Specifies the shopping cart name.
+         */
+
+        public static function refresh_active_shipping_quote($cart_name = 'main'){
+            self::refreshActiveShippingQuote($cart_name);
+        }
+
+        /**
+         * @deprecated
+         * @use self::getShippingTaxes
+         * Returns a set of shipping tax rates based on customers cart data
+         *
+         * @param Shop_ShippingOption $shippingOption
+         * @param string $cart_name
+         * @return array
+         */
+        public static function get_shipping_taxes($shippingOption, $cart_name='main'){
+            $shipping_taxes = Shop_TaxClass::get_shipping_tax_rates($shippingOption->id, Shop_CheckoutData::get_shipping_info(), $shippingOption->quote_no_tax);
+            $return = Backend::$events->fireEvent('shop:onCheckoutGetShippingTaxes', $shipping_taxes, $shippingOption, $cart_name);
+            foreach($return as $updated_shipping_taxes) {
+                if($updated_shipping_taxes)
+                    return $updated_shipping_taxes;
+            }
+
+            return $shipping_taxes;
+        }
+
+        /**
+         * @deprecated
+         * Use the getQuotes() method on Shop_ShippingOption
+         */
+        public static function flatten_shipping_options($shipping_options)
+        {
+            $result = array();
+
+            foreach ($shipping_options as $option) {
+                if (is_a($option, 'Shop_ShippingOptionQuote')) {
+                    $result[$option->id] = $option;
+                } else if (is_a($option, 'Shop_ShippingOption')) {
+                    $quotes = $option->getQuotes();
+                    if($quotes){
+                        foreach ($quotes as $quote) {
+                            $result[$quote->id] = $quote;
+                        }
+                    }
+                    else if($option->is_free) {
+                        //Return for legacy code expecting empty quote (zero value, free).
+                        $quote = new Shop_ShippingOptionQuote($option->id);
+                        $quote->setPrice(0);
+                        $result[$quote->id] = $quote;
+                    }
+
+                }
+            }
+            return $result;
+        }
+
+        /**
+         * @deprecated
+         * Not used
+         */
+        protected static function get_total_per_product_cost($cart_name)
+        {
+            $cart_items = Shop_Cart::list_active_items($cart_name);
+            $shipping_info = self::get_shipping_info();
+
+            $total_per_product_cost = 0;
+            foreach ($cart_items as $item)
+            {
+                $product = $item->product;
+                if ($product)
+                    $total_per_product_cost += $product->get_shipping_cost($shipping_info->country, $shipping_info->state, $shipping_info->zip)*$item->quantity;
+            }
+
+            return $total_per_product_cost;
+        }
+
+        /**
+         * @deprecated Use get_discount_applied_shipping_options()
+         * Allows discount rules to expose hidden shipping options
+         * @ignore
+         * @param array $shipping_options Specifies the shipping option list to flatten.
+         * @param array $params Specifies the shipping calculation parameters.
+         * @return array Returns an updated array of shipping options.
+         */
+        protected static function add_discount_applied_shipping_options($shipping_options, $params=array()){
+
+            $payment_method = is_object($params['payment_method']) ? $params['payment_method'] : null;
+            $payment_method_obj = $payment_method ? Shop_PaymentMethod::find_by_id( $payment_method->id ) : null;
+            $cart_name = isset($params['cart_name'])? $params['cart_name'] : 'main';
+            $customer_id = isset($params['customer_id']) ? $params['customer_id'] : Cms_Controller::get_customer();
+
+            $discount_info = Shop_CartPriceRule::evaluate_discount(
+                $payment_method_obj,
+                null,
+                isset($params['cart_items']) ? $params['cart_items'] : Shop_Cart::list_active_items($cart_name),
+                isset($params['shipping_info']) ? $params['shipping_info'] : Shop_CheckoutData::get_shipping_info(),
+                isset($params['coupon_code']) ? $params['coupon_code'] : Shop_CheckoutData::get_coupon_code(),
+                $customer_id,
+                isset($params['total_price']) ? $params['total_price'] : Shop_Cart::total_price_no_tax($cart_name, false)
+            );
+            if ( isset( $discount_info->add_shipping_options ) && count( $discount_info->add_shipping_options ) ) {
+                foreach ( $discount_info->add_shipping_options as $option_id ) {
+                    $option = Shop_ShippingOption::create()->find( $option_id );
+                    if ( $option ) {
+                        $shipping_options[$option->id] = $option;
+                    }
+                }
+            }
+            return $shipping_options;
+        }
+
+
+    }
+
