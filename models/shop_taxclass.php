@@ -329,19 +329,25 @@
 			return self::$shipping_tax_class;
 		}
 
-		public static function get_shipping_tax_rates($shipping_option_id, $shipping_info, $shipping_quote)
+        /**
+         * @param int $shippingOptionId ID for Shop_ShippingOption
+         * @param Shop_AddressInfo $shippingAddressInfo  Shipping address info
+         * @param string $shippingPrice The shipping quote price
+         * @return array Array of tax info
+         */
+		public static function get_shipping_tax_rates($shippingOptionId, $shippingAddressInfo, $shippingPrice)
 		{
 			if (self::is_tax_exempt_context())
 				return array();
 
-			if (!Shop_ShippingOption::is_taxable($shipping_option_id))
+			if (!Shop_ShippingOption::is_taxable($shippingOptionId))
 				return array();
 
 			$obj = self::get_shipping_tax_class();
 			if (!$obj)
 				return array();
 
-			return $obj->get_tax_rates($shipping_quote, $shipping_info);
+			return $obj->get_tax_rates($shippingPrice, $shippingAddressInfo);
 		}
 		
 		public static function eval_total_tax($tax_list)
