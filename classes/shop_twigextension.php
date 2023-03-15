@@ -56,14 +56,27 @@
 		{
 			return Shop_Cart::list_active_items($cart_name);
 		}
-		
-		public function shipping_method_selected($shipping_method, $shipping_option)
-		{
-			if ($shipping_option->multi_option)
-				return $shipping_option->multi_option_id == $shipping_method->id && $shipping_option->id == $shipping_method->sub_option_id;
-				
-			return $shipping_option->id == $shipping_method->id;
-		}
+
+        /**
+         * @deprecated
+         * This method should no longer be used, it persists only to support legacy code.
+         * Compare selected shipping quote IDs, not shipping methods!
+         */
+        function shipping_method_selected($shippingQuote1, $shippingQuote2)
+        {
+            traceLog('Use of deprecated helper method `shipping_method_selected`.');
+            if(is_a($shippingQuote1, 'Shop_ShippingOptionQuote') && is_a($shippingQuote2, 'Shop_ShippingOptionQuote') ){
+                if($shippingQuote1->getShippingQuoteId() == $shippingQuote2->getShippingQuoteId()){
+                    return true;
+                }
+                return false;
+            }
+
+            if ($shippingQuote2->multi_option)
+                return $shippingQuote2->multi_option_id == $shippingQuote1->id && $shippingQuote2->id == $shippingQuote1->sub_option_id;
+
+            return $shippingQuote2->id == $shippingQuote1->id;
+        }
 
 		public function category_filter($source, $sort_order = 'front_end_sort_order')
 		{
