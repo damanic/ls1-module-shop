@@ -516,7 +516,7 @@
 
 
 		protected function get_public_properties(){
-			$reflection = new ReflectionObject($this);
+			$reflection = new ReflectionClass($this);
 			$properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
 
 			$property_array = array();
@@ -542,7 +542,7 @@
 					$property_value = property_exists($property_value, 'id') ? $property_value->id : null;
 				}
 
-				$record[$property_name] = $this->{$property_name};
+				$record[$property_name] = $property_value;
 			}
 
 			$this->serialized = $record;
@@ -559,6 +559,16 @@
 				$this->serialized = null;
 			}
 		}
+
+        /**
+         * Returns a hash for the address
+         * Can be sued to check for changes or
+         * for comparison.
+         * @return string
+         */
+        public function getHash(){
+            return md5(serialize($this));
+        }
 
 
 		/**
