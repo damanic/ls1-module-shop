@@ -140,15 +140,15 @@
             $checkout_data = self::load();
             if (!array_key_exists('billing_info', $checkout_data)){
                 return false;
-                if(!is_a($checkout_data['billing_info'], 'Shop_AddressInfo')){
-                    return false;
-                }
+            }
+            if(!is_a($checkout_data['billing_info'], 'Shop_AddressInfo')){
+                return false;
             }
             if($requireShippingAddress){
                 if (!array_key_exists('shipping_info', $checkout_data)){
                     return false;
                 }
-                if(!is_a($checkout_data['billing_info'], 'Shop_AddressInfo')){
+                if(!is_a($checkout_data['shipping_info'], 'Shop_AddressInfo')){
                     return false;
                 }
             }
