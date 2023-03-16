@@ -111,7 +111,6 @@ class Shop_Order extends Shop_ActiveRecord
 	);
 
 	public $shipping_sub_option_id;
-	public $internal_shipping_suboption_id;
 
 	protected $api_added_columns = array();
 
@@ -557,13 +556,17 @@ class Shop_Order extends Shop_ActiveRecord
         $result->last_name = $this->shipping_last_name;
         $result->company = $this->shipping_company;
         $result->phone = $this->shipping_phone;
-        $result->email = $this->billing_email ? $this->billing_email : $this->customer->email;
+        $result->email = $this->billing_email;
         $result->street_address = $this->shipping_street_addr;
         $result->city = $this->shipping_city;
         $result->state = $this->shipping_state_id;
         $result->country = $this->shipping_country_id;
         $result->zip = $this->shipping_zip;
         $result->shipping_addr_is_business = $this->is_business;
+
+        if(!$result->email && $this->customer){
+            $result->email  = $this->customer->email;
+        }
 
         return $result;
 	}
@@ -708,17 +711,22 @@ class Shop_Order extends Shop_ActiveRecord
 			 * Calculate discounts
 			 */
 
-			$payment_method = Shop_CheckoutData::get_payment_method();
-			$shipping_method = Shop_CheckoutData::get_shipping_method();
+			$selectedShippingQuote = Shop_CheckoutData::getSelectedShippingQuote();
+            $shippingOptionObj =  null;
+            if($selectedShippingQuote && $selectedShippingQuote->getShippingOptionId()){
+                $selectedShippingQuote->setTaxInclMode(false);
+                $shippingOptionObj = Shop_ShippingOption::create()->find($selectedShippingQuote->getShippingOptionId());
+            }
 
+            $payment_method = Shop_CheckoutData::get_payment_method();
 			$payment_method_obj = $payment_method->id ? Shop_PaymentMethod::create()->find($payment_method->id) : null;
-			$shipping_method_obj = $shipping_method->id ? Shop_ShippingOption::create()->find($shipping_method->id) : null;
+
 
 			$subtotal = Shop_Cart::total_price_no_tax($cart_name, false);
 
 			$discount_info = Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj,
-				$shipping_method_obj,
+				$shippingOptionObj,
 				$cart_items,
 				$shipping_info,
 				Shop_CheckoutData::get_coupon_code(),
@@ -747,15 +755,16 @@ class Shop_Order extends Shop_ActiveRecord
 			$shipping_info->save_to_order($order);
 			$billing_info->save_to_order($order);
 
-			$order->shipping_method_id = $shipping_method->id;
-			$order->shipping_quote = round($shipping_method->quote_no_tax, 2);
-			$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
+			$order->shipping_method_id = $shippingOptionObj ? $shippingOptionObj->id : null;
+			$order->shipping_quote = $selectedShippingQuote ? round($selectedShippingQuote->getPrice(), 2) : 0;
+			$order->shipping_discount = $selectedShippingQuote ? round($selectedShippingQuote->getDiscount(), 2) : 0;
 
-			$shipping_taxes = Shop_CheckoutData::get_shipping_taxes($shipping_method,$cart_name);
+			$shipping_taxes = Shop_CheckoutData::getShippingTaxes($cart_name, $selectedShippingQuote);
 			$order->apply_shipping_tax_array($shipping_taxes);
 			$order->shipping_tax = $shipping_tax = Shop_TaxClass::eval_total_tax($shipping_taxes);
-			$order->shipping_sub_option = $shipping_method->sub_option_name;
-
+            if($selectedShippingQuote && ($selectedShippingQuote->getShippingServiceName() !== $shippingOptionObj->name)) {
+                $order->shipping_sub_option = $selectedShippingQuote ? $selectedShippingQuote->getShippingServiceName() : null;
+            }
 			$order->payment_method_id = $payment_method->id;
 			$order->goods_tax = $goods_tax = $tax_info->tax_total;
 
@@ -768,7 +777,13 @@ class Shop_Order extends Shop_ActiveRecord
 			$order->discount = $discount_info->cart_discount;
 			$order->set_sales_taxes($tax_info->taxes);
 
-			$order->free_shipping = array_key_exists($shipping_method->internal_id, $discount_info->free_shipping_options) ? 1 : 0;
+			$order->free_shipping = (
+                $selectedShippingQuote && (
+                    array_key_exists($selectedShippingQuote->getShippingOptionId(), $discount_info->free_shipping_options)
+                    || array_key_exists( $selectedShippingQuote->getShippingQuoteId(), $discount_info->free_shipping_options )
+                )
+            );
+
 
 			if ($order->free_shipping) {
 				$order->shipping_quote = 0;
@@ -1341,6 +1356,11 @@ class Shop_Order extends Shop_ActiveRecord
 
 		if ($name == 'goods_tax_total')
 			return $this->goods_tax;
+
+        if($name === 'internal_shipping_suboption_id'){
+            //traceLog('Use of deprecated property `internal_shipping_suboption_id`. Use getAppliedShippingQuoteId() ');
+            return $this->getAppliedShippingQuoteId();
+        }
 
 		return parent::__get($name);
 	}
@@ -2042,46 +2062,21 @@ class Shop_Order extends Shop_ActiveRecord
 		 * Set shipping and payment methods
 		 */
 
+        $order->payment_method_id = $this->payment_method_id;
 		$order->shipping_method_id  = $this->shipping_method_id;
 		$order->shipping_sub_option = $this->shipping_sub_option;
-
-		$order->payment_method_id = $this->payment_method_id;
+        $order->shipping_quote                 = $this->shipping_quote;
+        $order->shipping_discount              = $this->shipping_discount;
 
 		/*
 		 * Calculate shipping cost
 		 */
-		$shipping_options = $order->list_available_shipping_options( $session_key, false );
+		$shipping_options = $order->getApplicableShippingOptions( $session_key, $frontendOnly = false);
 
 		if ( !array_key_exists( $order->shipping_method_id, $shipping_options ) ) {
 			throw new Phpr_ApplicationException( 'Shipping method ' . $this->shipping_method->name . ' is not applicable.' );
 		}
 
-		$shipping_method = $shipping_options[$order->shipping_method_id];
-
-		if ( !$shipping_method->multi_option ) {
-			$order->shipping_quote                 = round( $shipping_method->quote_no_tax, 2 );
-			$order->shipping_discount              = isset( $shipping_method->discount ) ? round( $shipping_method->discount, 2 ) : 0;
-			$order->shipping_sub_option            = null;
-			$order->internal_shipping_suboption_id = $order->shipping_method_id;
-		} else {
-			$sub_option_id = md5( $order->shipping_sub_option );
-			$option_found  = false;
-
-			foreach ( $shipping_method->sub_options as $sub_option ) {
-				if ( $sub_option->id == $order->shipping_method_id . '_' . $sub_option_id ) {
-					$order->shipping_quote                 = round( $sub_option->quote_no_tax, 2 );
-					$order->shipping_discount              = round( $sub_option->discount, 2 );
-					$order->shipping_sub_option            = $sub_option->name;
-					$order->internal_shipping_suboption_id = $order->shipping_method_id . '_' . $sub_option->suboption_id;
-					$option_found                          = true;
-					break;
-				}
-			}
-
-			if ( !$option_found ) {
-				throw new Phpr_ApplicationException( 'Shipping method ' . $this->shipping_method->name . '/' . $order->shipping_sub_option . ' is not applicable.' );
-			}
-		}
 
 		/*
 		 * Apply shipping tax
@@ -2117,7 +2112,7 @@ class Shop_Order extends Shop_ActiveRecord
 
 			$discount_info = Shop_CartPriceRule::evaluate_discount(
 				$payment_method_obj,
-				$shipping_method,
+                $order->shipping_method,
 				$cart_items,
 				$shipping_info,
 				$this->columnValue( 'coupon' ),
@@ -2126,7 +2121,10 @@ class Shop_Order extends Shop_ActiveRecord
 
 			$order->discount = $discount_info->cart_discount;
 
-			$order->free_shipping = array_key_exists( $order->internal_shipping_suboption_id, $discount_info->free_shipping_options );
+			$order->free_shipping = (
+                array_key_exists( $order->shipping_method_id, $discount_info->free_shipping_options )
+                || array_key_exists( $order->getAppliedShippingQuoteId(), $discount_info->free_shipping_options )
+            );
 			foreach ( $cart_items as $cart_item ) {
 				$cart_item->order_item->discount = $cart_item->total_discount_no_tax();
 			}
@@ -2424,6 +2422,20 @@ class Shop_Order extends Shop_ActiveRecord
 		return $this->shipping_discount;
 	}
 
+    /**
+     * Returns an ID string for orders currently applied shipping quote.
+     * This is compatible with Shop_ShippingOptionQuote::getShippingQuoteId()
+     * and is intended for use in form selectors.
+     *
+     * @todo Applied Shop_ShippingOptionQuote object should be stored on order record for access
+     *
+     *
+     * @return string
+     */
+    public function getAppliedShippingQuoteId(){
+        return $this->shipping_method_id.'_'.md5($this->shipping_sub_option);
+    }
+
 
 	public function get_item_count(){
 		$total_item_num = 0;
@@ -2441,6 +2453,34 @@ class Shop_Order extends Shop_ActiveRecord
 		return $total_volume;
 	}
 
+    /**
+     * This method returns Shipping Options that qualify for this order.
+     * Shipping options returned do not include quotes for this order.
+     * You can check for shipping quotes using methods in the returned shipping options.
+     * @param $deferred_session_key
+     * @param $frontend_only
+     * @return Shop_ShippingOption[] Shipping options that apply
+     */
+    public function getApplicableShippingOptions($deferred_session_key=null, $frontend_only = false){
+        $items = $this->items;
+        $deferred_items = empty($deferred_session_key) ? false : $this->list_related_records_deferred('items', $deferred_session_key);
+        if($deferred_items && $deferred_items->count){
+            $this->items = $deferred_items; //consider deferred assignments in these calculations
+        }
+
+        $options = Shop_ShippingOption::getShippingOptionsForOrder($this, $frontend_only);
+        $this->items = $items;
+        return $options;
+    }
+
+    /**
+     * @deprecated This method returns available shipping options AND calls for shipping quotes as
+     * part of the availability requirement. You can now use the method getApplicableShippingOptions()
+     * and call for shipping quotes on the returned shipping options IF required.
+     * @param $deferred_session_key
+     * @param $frontend_only
+     * @return array
+     */
 	public function list_available_shipping_options( $deferred_session_key=null, $frontend_only = false){
 
 		$items = $this->items;
