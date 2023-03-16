@@ -1525,7 +1525,6 @@
 		public function edit_formBeforeRender($model)
 		{
 			//setup manual shipping override
-			$model->shipping_sub_option_id = $model->shipping_method_id.'_'.md5($model->shipping_sub_option);
 			if(!$model->has_shipping_quote_override()) {
 				$model->manual_shipping_quote = $model->shipping_quote;
 			}
@@ -2062,19 +2061,17 @@
              * Validate shipping parameters
              */
 
-			$shipping_method_id = $order->shipping_method_id;
-			if (strpos($shipping_method_id, '_') !== false)
-			{
-				$parts = explode('_', $order->shipping_method_id);
-				$order->shipping_sub_option_id = $shipping_method_id;
-				$order->shipping_method_id = $parts[0];
-				$shipping_sub_option = array_key_exists('shipping_sub_option', $orderData) ? $orderData['shipping_sub_option'] : false;
-				if($shipping_sub_option !== false){
-					$order->shipping_sub_option = $shipping_sub_option;
-				}
-			} else {
-				$order->shipping_sub_option = null;
-			}
+            //Has been possible for shipping quote ID to be applied to this field.
+            //If shipping_method_id is not numeric as expected, treat as quote ID.
+            if($order->shipping_method_id && !is_numeric($order->shipping_method_id)){
+                $order->shipping_method_id = Shop_ShippingOptionQuote::getOptionIdFromQuoteId($order->shipping_method_id);
+                $shipping_sub_option = array_key_exists('shipping_sub_option', $orderData) ? $orderData['shipping_sub_option'] : false;
+                if($shipping_sub_option !== false){
+                    $order->shipping_sub_option = $shipping_sub_option;
+                }
+            } else {
+                $order->shipping_sub_option = null;
+            }
 			
 			if ($order->override_shipping_quote)
 			{
@@ -2145,12 +2142,12 @@
 			$order = $this->viewData['form_model'] = $this->getOrderObj($order_id);
 			$order->set_form_data();
 
-			if (strpos($order->shipping_method_id, '_') !== false)
-			{
-				$parts = explode('_', $order->shipping_method_id);
-				$order->shipping_sub_option_id = $order->shipping_method_id;
-				$order->shipping_method_id = $parts[0];
-			}
+            //Has been possible for shipping quote ID to be applied to this field.
+            //If shipping_method_id is not numeric as expected, treat as quote ID.
+            if($order->shipping_method_id && !is_numeric($order->shipping_method_id)){
+                $order->shipping_method_id = Shop_ShippingOptionQuote::getOptionIdFromQuoteId($order->shipping_method_id);
+            }
+
 
 			if ($order->is_new_record())
 			{
@@ -2792,43 +2789,4 @@
 			return Shop_OrderHelper::getAvailablePaymentMethods($order,$this->formGetEditSessionKey());
 		}
 
-		/**
-		 * @deprecated since v1.3
-		 */
-		protected function getAvailableShippingMethods($order)
-		{
-			return $order->list_available_shipping_options($this->formGetEditSessionKey(), false);
-		}
-
-
-		/**
-		 * @deprecated since v1.3
-		 */
-		protected function findLastOrder()
-		{
-			return Shop_OrderHelper::findLastOrder();
-		}
-
-		/**
-		 * @deprecated since v1.3
-		 */
-		private function find_customer($order, $check_order_data = false)
-		{
-			return Shop_OrderHelper::find_customer($order,$check_order_data);
-		}
-
-		/**
-		 * @deprecated since v1.3
-		 */
-		private function find_customer_group_id($order)
-		{
-			$customer = Shop_OrderHelper::find_customer($order);
-
-			if ($customer)
-				return $customer->customer_group_id;
-			else
-				return Shop_CustomerGroup::get_guest_group()->id;
-		}
-
 	}
-?>
