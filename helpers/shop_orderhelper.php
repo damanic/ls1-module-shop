@@ -30,7 +30,11 @@ class Shop_OrderHelper{
 			$customer,
 			$subtotal);
 
-		$order->free_shipping = array_key_exists($order->internal_shipping_suboption_id, $discount_info->free_shipping_options);
+		$order->free_shipping = (
+            array_key_exists( $order->shipping_method_id, $discount_info->free_shipping_options )
+            || array_key_exists( $order->getAppliedShippingQuoteId(), $discount_info->free_shipping_options )
+        );
+
 
 		foreach ($cart_items as $cart_item)
 		{
@@ -101,56 +105,45 @@ class Shop_OrderHelper{
 
 		//recalculating quotes optional
 		if ($options['recalculate_shipping'] && strlen($order->shipping_method_id) && strlen($order->shipping_country_id)) {
+            //recalc all
+            $order->shipping_quote = 0;
+            $order->shipping_tax = 0;
 
-			//recalc all
-			$order->shipping_quote = 0;
-			$order->shipping_tax = 0;
+            $shipping_method_id = $order->shipping_method_id;
+            $shipping_method_sub_option_name = $order->shipping_sub_option;
+            $internalQuoteId = $order->getAppliedShippingQuoteId();
 
-			$methods = $order->list_available_shipping_options($deferred_session_key, false);
+            //Get shipping options available to order
+            $shippingQuote = null;
+            $methods = $order->getApplicableShippingOptions($deferred_session_key, false);
+            if (isset($methods[$shipping_method_id])) {
+                //if available fetch quote
+                $method = $methods[$shipping_method_id];
+                $quotes = $method->getQuoteForOrder($order, $deferred_session_key);
+                if ($quotes) {
+                    foreach ($quotes as $quote) {
+                        if (!$shipping_method_sub_option_name) {
+                            $shippingQuote = $quote;
+                            break;
+                        }
+                        if ($quote->getShippingQuoteId() == $order->getAppliedShippingQuoteId()) {
+                            $shippingQuote = $quote;
+                            break;
+                        }
+                    }
+                }
+            }
 
-			$shipping_method_id = $order->shipping_method_id;
-			$sub_option_hash = null;
-
-			if (strpos($shipping_method_id, '_') !== false)
-			{
-				$parts = explode('_', $shipping_method_id);
-				$shipping_method_id = $parts[0];
-				$sub_option_hash = $parts[1];
-			} else
-				$sub_option_hash = self::getShippingSubOptionHash($order);
-
-			$order->shipping_method_id = $shipping_method_id;
-
-			if (array_key_exists($shipping_method_id, $methods))
-			{
-				$shipping_method = $methods[$shipping_method_id];
-				$quote = $shipping_method->quote_no_tax;
-
-				if (!$shipping_method->multi_option)
-				{
-					$order->shipping_quote = round($quote, 2);
-					$order->shipping_discount = isset($shipping_method->discount) ? round($shipping_method->discount, 2) : 0;
-					$order->shipping_sub_option = null;
-					$order->internal_shipping_suboption_id = $shipping_method_id;
-				}
-				else
-				{
-					foreach ($shipping_method->sub_options as $sub_option)
-					{
-						if ($sub_option->id == $order->shipping_method_id.'_'.$sub_option_hash)
-						{
-							$order->shipping_quote = round($sub_option->quote_no_tax, 2);
-							$order->shipping_discount = round($sub_option->discount, 2);
-							$order->shipping_sub_option = $sub_option->name;
-							$order->internal_shipping_suboption_id = $order->shipping_method_id.'_'.$sub_option->suboption_id;
-							break;
-						}
-					}
-				}
-
-			}
-		}
-
+            if ($shippingQuote) {
+                $shippingQuote->setTaxInclMode(false);
+                $order->shipping_quote = round($shippingQuote->getPrice(), 2);
+                $order->shipping_discount = round($shippingQuote->getDiscount(), 2);
+                $order->shipping_sub_option = null;
+                if($shippingQuote->getShippingServiceName() !== $shippingQuote->getShippingOption()->name){
+                    $order->shipping_sub_option = $shippingQuote->getShippingServiceName();
+                }
+            }
+        }
 
 		if (!$items)
 		{
@@ -244,16 +237,6 @@ class Shop_OrderHelper{
 			return Shop_CustomerGroup::get_guest_group()->id;
 	}
 
-
-	/**
-	 * Gets shipping methods available for order
-	 * @documentable
-	 * @deprecated Use {@link Shop_Order::list_available_shipping_options()} method instead.
-	 */
-	public static function getAvailableShippingMethods($order, $deferred_session_key=null) {
-		return $order->list_available_shipping_options($deferred_session_key, false);
-	}
-
 	public static function items_to_cart_items_array($items){
 		$cart_items = array();
 		foreach ($items as $item)
@@ -333,8 +316,16 @@ class Shop_OrderHelper{
 		return $obj->where('parent_order_id is null')->order('id desc')->find();
 	}
 
+    /**
+     * @deprecated
+     * Use getAppliedShippingQuoteId() on the Shop_Order object
+     * @see Shop_Order::getAppliedShippingQuoteId()
+     * @param $order
+     * @return mixed|string
+     */
 	public static function getShippingSubOptionHash($order){
-		$string = (isset($order->shipping_sub_option_id) && !empty($order->shipping_sub_option_id)) ? $order->shipping_sub_option_id : $order->shipping_sub_option;
+		$string = (isset($order->shipping_sub_option_id) && !empty($order->shipping_sub_option_id))
+            ? $order->shipping_sub_option_id : $order->shipping_sub_option;
 
 		if (strpos($string, '_') !== false) {
 			$parts = explode('_', $string);
@@ -357,14 +348,7 @@ class Shop_OrderHelper{
 	 * @return array|mixed
 	 */
 	public static function get_shipping_taxes($order, $deferred_session_key=null){
-		$shipping_info = array();
-		$shipping_info['country'] = $order->shipping_country_id;
-		$shipping_info['state'] = $order->shipping_state_id;
-		$shipping_info['zip'] = $order->shipping_zip;
-		$shipping_info['city'] = $order->shipping_city;
-		$shipping_info['street_address'] = $order->shipping_street_addr;
-		$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $order->shipping_method_id, (object) $shipping_info, $order->get_shipping_quote() );
-
+		$shipping_taxes = Shop_TaxClass::get_shipping_tax_rates( $order->shipping_method_id, $order->get_shipping_address_info(), $order->get_shipping_quote() );
 		$eval_order = clone $order;
 		$eval_order->items = empty($deferred_session_key) ? $order->items : $order->list_related_records_deferred('items', $deferred_session_key);
 		$return = Backend::$events->fireEvent('shop:onOrderGetShippingTaxes', $shipping_taxes, $eval_order);
