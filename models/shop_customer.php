@@ -450,6 +450,10 @@
                     $this->password = $hashed_pw;
                 }
 
+                if(empty($this->password)){
+                    $this->password = $current_password_hash; //empty passwords cannot overwrite previously saved passwords
+                }
+
                 if(empty($this->email)){
                     throw new Phpr_ApplicationException("Registered customer must have an email address");
                 }
