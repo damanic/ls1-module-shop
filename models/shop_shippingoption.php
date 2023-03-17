@@ -417,6 +417,10 @@
 
         /**
          * Returns quotes for a given order.
+         *
+         * Note: This function actions the free shipping item discount rule
+         * by excluding items marked as free shipping from shipping rate consideration.
+         *
          * @param Shop_Order $order
          * @param string $deferred_session_key
          * @return Shop_ShippingOptionQuote[]
@@ -437,7 +441,21 @@
             }
             $shipping_info = new Shop_AddressInfo();
             $shipping_info->load_from_order($order, false);
+
             $cartItems = $order->getCartItemsShipping($order->items);
+            if(!count($cartItems)){
+                return array(); // no items to ship, no quotes to return
+            }
+
+            $quotableCartItems = $this->filterFreeShippingItems($cartItems);
+            if($quotableCartItems){
+                //Exclude items marked for free shipping from shipping rate consideration.
+                $cartItems = $quotableCartItems;
+            } else {
+                // all items are free!
+                // continue to fetch rates for free items to determine services available
+                // the services will be marked as free on buildQuotes()
+            }
 
             $eventParams = $this->getEventParamsForOrder($order);
             $eventParamUpdates = Backend::$events->fireEvent( 'shop:onBeforeShippingQuote', $this, $eventParams );
@@ -467,6 +485,10 @@
 
         /**
          * Return quotes for checkout state
+         *
+         * Note: This function actions the free shipping item discount rule
+         * by excluding items marked as free shipping from shipping rate consideration.
+         *
          * @param string $cart_name
          * @return Shop_ShippingOptionQuote[]
          */
@@ -482,6 +504,19 @@
             //run eval discounts on cart items to mark free shipping items, updates by reference
             $cartItems = Shop_Cart::list_active_items($cart_name);
             Shop_CheckoutData::eval_discounts($cart_name, $cartItems);
+            if(!count($cartItems)){
+                return array(); // no items to ship, no quotes to return
+            }
+
+            $quotableCartItems = $this->filterFreeShippingItems($cartItems);
+            if($quotableCartItems){
+                //Exclude items marked for free shipping from shipping rate consideration
+                $cartItems = $quotableCartItems;
+            } else {
+                // all items are free!
+                // continue to fetch rates for free items to determine services available
+                // the services will be marked as free on buildQuotes()
+            }
 
             $eventParams = array_merge(self::getEventParamsForCart($cart_name), $this->getEventParamsForShippingOption());
             $internalEventKeys = array_keys($eventParams);
@@ -845,6 +880,11 @@
             $shippingInfo = $eventParams['shipping_info'];
             $handlingFee =  $eventParams['handling_fee'];
 
+            $freeQuotes = false;
+            $quotableItems = $this->filterFreeShippingItems($eventParams['cart_items']);
+            if(!count($quotableItems)){
+                $freeQuotes = true;
+            }
 
             /*
              * Calculate per product fees
@@ -892,6 +932,7 @@
                 $quoteInfo->setRateInfo($rateInfo);
 
                 if (
+                    $freeQuotes ||
                     array_key_exists( $quoteInfo->getShippingOptionId(), $discount_info->free_shipping_options )
                     || array_key_exists( $quoteInfo->getShippingQuoteId(), $discount_info->free_shipping_options )
                     || $quoteInfo->getPrice() == 0
@@ -1002,6 +1043,24 @@
         }
 
 
+        /**
+         * Check for free_shipping discount parameter
+         * on retail items and remove item from array if
+         * free_shipping is true
+         *
+         * @param Shop_RetailItemInterface[] $items
+         * @return Shop_RetailItemInterface[]
+         */
+        private function filterFreeShippingItems($items){
+            $result = array();
+            foreach($items as $item){
+                if(property_exists($item, 'free_shipping') && $item->free_shipping){
+                    continue;
+                }
+                $result[] = $item;
+            }
+            return $result;
+        }
 
         private function getEventParamsForShippingOption(){
             return array(
