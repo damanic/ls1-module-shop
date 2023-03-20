@@ -451,7 +451,7 @@
          * @param Shop_Customer|null $customer
          * @return array|Shop_ShippingOption[]
          */
-        public static function getApplicableShippingOptions($cartName='main', $customer){
+        public static function getApplicableShippingOptions($cartName='main', $customer=null){
             return Shop_ShippingOption::getShippingOptionsForCheckout($cartName, $customer);
         }
 
