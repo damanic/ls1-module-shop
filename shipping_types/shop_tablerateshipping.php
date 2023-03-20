@@ -601,9 +601,9 @@ class Shop_TableRateShipping extends Shop_ShippingType
         $serviceInfo = new Shop_ShippingServiceInfo();
         $serviceInfo->serviceName = $shippingOption->carrier_service_name;
         $serviceInfo->carrierName = $shippingOption->carrier_name;
-        $serviceInfo->providesTracking = $shippingOption->provides_tracking;
-        $serviceInfo->providesProofOfDelivery = $shippingOption->provides_proofofdelivery;
-        $serviceInfo->requiresRecipientPhoneNumber = $shippingOption->requires_receipient_phone_number;
+        $serviceInfo->providesTracking = (bool)$shippingOption->provides_tracking;
+        $serviceInfo->providesProofOfDelivery = (bool)$shippingOption->provides_proofofdelivery;
+        $serviceInfo->requiresRecipientPhoneNumber = (bool)$shippingOption->requires_receipient_phone_number;
 
         $rate = new Shop_ShippingRate();
         $rate->setShippingOptionId($shippingOption->id);
