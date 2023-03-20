@@ -74,7 +74,9 @@
 		 * @documentable
 		 */
 		public $order_item = null;
-		
+
+        protected $currencyCode = null;
+
 		protected $de_cache = array();
 		
 		/**
@@ -1102,4 +1104,20 @@
         {
             return $this->get_bundle_single_price();
         }
-	}
+
+        public function getCurrencyCode()
+        {
+            if($this->currencyCode){
+                return $this->currencyCode;
+            }
+
+            //return active checkout currency
+            return Shop_CheckoutData::get_currency(false);
+        }
+
+        public function setCurrencyCode($code){
+            if(is_string($code) && strlen($code) === 3){
+                $this->currencyCode = $code;
+            }
+        }
+    }

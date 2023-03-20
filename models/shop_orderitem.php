@@ -435,7 +435,7 @@
 		 */
 		public function convert_to_cart_item()
 		{
-			$result = new Shop_CartItem();
+			$cartItem = new Shop_CartItem();
 			
 			$extra_options = array();
 			$this_extra_options = $this->get_extra_option_objects();
@@ -449,15 +449,16 @@
 			}
 			
 			$options = $this->get_options();
-			$result->key = Shop_InMemoryCartItem::gen_item_key($this->product->id, $options, $key_options, array(), null);
-			$result->product = $this->product;
-			$result->options = $options;
-			$result->extra_options = $extra_options;
-			$result->quantity = $this->quantity;
-			$result->price_preset = $this->price;
-			$result->order_item = $this;
+			$cartItem->key = Shop_InMemoryCartItem::gen_item_key($this->product->id, $options, $key_options, array(), null);
+			$cartItem->product = $this->product;
+			$cartItem->options = $options;
+			$cartItem->extra_options = $extra_options;
+			$cartItem->quantity = $this->quantity;
+			$cartItem->price_preset = $this->price;
+			$cartItem->order_item = $this;
+            $cartItem->setCurrencyCode($this->getCurrencyCode());
 			
-			return $result;
+			return $cartItem;
 		}
 
 		public function extra_checked_price($name)
@@ -1044,6 +1045,12 @@
 		/*
 		 * Shop_RetailItem Interface methods
 		 */
+
+        public function getCurrencyCode()
+        {
+            return $this->parent_order->get_currency_code();
+        }
+
 		public function get_list_price() {
 			return $this->eval_single_price();
 		}
@@ -1541,6 +1548,5 @@
         {
             $this->get_bundle_items();
         }
-
 
     }

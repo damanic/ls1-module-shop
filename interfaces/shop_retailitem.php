@@ -41,4 +41,11 @@ interface Shop_RetailItem {
     public function get_tax_class_id();
 
 
+    /**
+     * Return a ISO 4217 currency code for the prices returned on this item
+     * @return string
+     */
+    public function getCurrencyCode();
+
+
 }
