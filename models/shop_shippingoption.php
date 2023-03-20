@@ -1048,8 +1048,8 @@
          * on retail items and remove item from array if
          * free_shipping is true
          *
-         * @param Shop_RetailItemInterface[] $items
-         * @return Shop_RetailItemInterface[]
+         * @param Shop_RetailItem[] $items
+         * @return Shop_RetailItem[]
          */
         private function filterFreeShippingItems($items){
             $result = array();
