@@ -12,17 +12,20 @@ interface Shop_ShippingServiceInterface {
     public function getServiceName();
 
     /**
-     * @return boolean If the service provides end to end tracking
+     * NULL if unknown
+     * @return boolean|null If the service provides end to end tracking
      */
     public function providesTracking();
 
     /**
-     * @return boolean If the service provides proof of delivery
+     * NULL if unknown
+     * @return boolean|null If the service provides proof of delivery
      */
     public function providesProofOfDelivery();
 
     /**
-     * @return boolean If the carrier requires a phone number for delivery recipient
+     * NULL if unknown
+     * @return boolean|null If the carrier requires a phone number for delivery recipient
      */
     public function requiresRecipientPhoneNumber();
 
@@ -33,10 +36,11 @@ interface Shop_ShippingServiceInterface {
      * Note: DDU replaced with DAP as of 2010
      * @return array An array of incoterms this service can be shipped under
      */
-    public function supportedIncoterms();
+    public function getSupportedIncoterms();
 
     /**
-     * @return int Estimated number of days required to deliver this service
+     * NULL if unknown
+     * @return int|null Estimated number of days required to deliver this service
      */
     public function getDeliveryDays();
 

@@ -19,23 +19,35 @@ class Shop_ShippingServiceInfo implements Shop_ShippingServiceInterface {
     }
 
     public function providesTracking(){
+        if($this->providesTracking === null){
+            return null;
+        }
         return (bool)$this->providesTracking;
     }
 
     public function providesProofOfDelivery(){
+        if($this->providesProofOfDelivery === null){
+            return null;
+        }
         return (bool)$this->providesProofOfDelivery;
     }
 
-    public function supportedIncoterms(){
+    public function getSupportedIncoterms(){
         return is_array($this->supportedIncoterms) ? $this->supportedIncoterms() : array();
     }
 
     public function getDeliveryDays(){
+        if($this->deliveryDays === null){
+            return null;
+        }
         return (int) $this->deliveryDays;
     }
 
     public function requiresRecipientPhoneNumber()
     {
+        if($this->requiresRecipientPhoneNumber === null){
+            return null;
+        }
         return (bool)$this->requiresRecipientPhoneNumber;
     }
 }
