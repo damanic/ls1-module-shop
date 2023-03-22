@@ -405,18 +405,24 @@
 
 
         /**
-         * Given an array of shipping quotes this method will
-         *  update the selected shipping quote if found in the $shippingQuotes array,
+         * Given an array of shipping quotes this method will update
+         * the selected shipping quote if found in the $shippingQuotes array.
+         *
+         * Set the $reset parameter to TRUE if the selected shipping quote
+         * should be reset/removed if not found in $shippingQuotes array.
          *
          * @param Shop_ShippingOptionQuote[] $shippingQuotes
+         * @param bool $resetSelected Set to true if selected shipping option should be reset when not found
          * @return void
          */
-        public static function onQuotesApplied($shippingQuotes){
+        public static function onQuotesUpdated($shippingQuotes, $resetSelected=false){
+            $selectedFound = false;
             $selectedShippingQuote = self::getSelectedShippingQuote();
             if($selectedShippingQuote) {
                 $selectedRateInfo = $selectedShippingQuote->getRateInfo();
                 foreach ($shippingQuotes as $shippingQuote) {
                     if ($shippingQuote->getShippingQuoteId() == $selectedShippingQuote->getShippingQuoteId() ){
+                        $selectedFound = true;
                         $rateIdMatch = true;
                         $rateInfo = $shippingQuote->getRateInfo();
                         if($rateInfo && $selectedRateInfo) {
@@ -432,6 +438,10 @@
                         }
                     }
                 }
+            }
+            if($resetSelected && !$selectedFound){
+                //remove selected shipping quote
+                self::resetSelectedShippingQuote();
             }
         }
 
@@ -485,6 +495,26 @@
          */
         public static function getApplicableShippingOptions($cartName='main', $customer=null){
             return Shop_ShippingOption::getShippingOptionsForCheckout($cartName, $customer);
+        }
+
+
+        /**
+         * This method returns a list of shipping quotes for the current state of this checkout session
+         * @param string $cartName
+         * @param Shop_Customer|null $customer
+         * @return array|Shop_ShippingOptionQuote[]
+         */
+        public static function getShippingQuotes($cartName='main', $customer=null){
+            $applicableOptions = Shop_CheckoutData::getApplicableShippingOptions($cartName, $customer);
+            $shippingQuotes = array();
+            foreach ($applicableOptions as $index=>$option) {
+                $option->apply_checkout_quote($cartName);
+                foreach( $option->getQuotes() as $quote){
+                    $shippingQuotes[$quote->getShippingQuoteId()] = $quote;
+                }
+            }
+            self::onQuotesUpdated($shippingQuotes);
+            return $shippingQuotes;
         }
 
 

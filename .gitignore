@@ -1,4 +1,5 @@
 .idea
+.github/
 composer.json
 composer.lock
 composer.phar

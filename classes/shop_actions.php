@@ -611,20 +611,9 @@ class Shop_Actions extends Cms_ActionScope
         Shop_CheckoutData::set_shipping_info($info);
 
         $applicableOptions = Shop_CheckoutData::getApplicableShippingOptions($cart_name, $this->customer);
-        $shippingQuotes = array();
-        foreach ($applicableOptions as $index=>$option) {
-            $option->apply_checkout_quote($cart_name);
-            $quotes = $option->getQuotes();
-            if (!$quotes) {
-                unset($applicableOptions[$index]);
-                continue;
-            }
-            foreach($quotes as $quote){
-                $shippingQuotes[$quote->getShippingQuoteId()] = $quote;
-            }
-        }
-
         $this->data['shipping_options'] = $applicableOptions;
+
+        $shippingQuotes = Shop_CheckoutData::getShippingQuotes($cart_name, $this->customer);
         $this->data['shipping_quotes'] = $this->data['shipping_options_flat'] = $shippingQuotes;
     }
 
@@ -1510,18 +1499,7 @@ class Shop_Actions extends Cms_ActionScope
                 Shop_CheckoutData::set_shipping_info();
 
             $applicableOptions = Shop_CheckoutData::getApplicableShippingOptions($cart_name, $this->customer);
-            $shippingQuotes = array();
-            foreach ($applicableOptions as $index=>$option) {
-                $option->apply_checkout_quote($cart_name);
-                $quotes = $option->getQuotes();
-                if (!$quotes) {
-                    unset($applicableOptions[$index]);
-                    continue;
-                }
-                foreach($quotes as $quote){
-                    $shippingQuotes[$quote->getShippingQuoteId()] = $quote;
-                }
-            }
+            $shippingQuotes = Shop_CheckoutData::getShippingQuotes($cart_name, $this->customer);
 
             $this->data['shipping_options'] = $applicableOptions;
             $this->data['shipping_quotes'] = $this->data['shipping_options_flat'] = $shippingQuotes;
@@ -2066,18 +2044,7 @@ class Shop_Actions extends Cms_ActionScope
         Shop_CheckoutData::set_cart_id(Shop_Cart::get_content_id($cart_name));
 
         $applicableOptions = Shop_CheckoutData::getApplicableShippingOptions($cart_name, $this->customer);
-        $shippingQuotes = array();
-        foreach ($applicableOptions as $index=>$option) {
-            $option->apply_checkout_quote($cart_name);
-            $quotes = $option->getQuotes();
-            if (!$quotes) {
-                unset($applicableOptions[$index]);
-                continue;
-            }
-            foreach($quotes as $quote){
-                $shippingQuotes[$quote->getShippingQuoteId()] = $quote;
-            }
-        }
+        $shippingQuotes = Shop_CheckoutData::getShippingQuotes($cart_name, $this->customer);
 
         $this->data['shipping_options'] = $applicableOptions;
         $this->data['shipping_quotes'] = $shippingQuotes;
