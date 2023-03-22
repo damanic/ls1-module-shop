@@ -586,7 +586,7 @@
 			$quotes = $this->getQuoteForCheckout($cart_name);
             if($quotes){
                 $this->applyQuotes($quotes, $eventParams);
-                Shop_CheckoutData::onQuotesApplied($quotes);
+                Shop_CheckoutData::onQuotesApplied($this->getQuotes());
                 return true;
             }
 			return false;
