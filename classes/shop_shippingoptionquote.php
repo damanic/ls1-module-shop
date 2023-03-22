@@ -51,7 +51,7 @@ class Shop_ShippingOptionQuote{
      */
    public function __construct($shippingOptionId){
 
-       $this->shippingOptionId = $shippingOptionId;
+       $this->shippingOptionId = (int) $shippingOptionId;
    }
 
     /**
@@ -173,7 +173,7 @@ class Shop_ShippingOptionQuote{
      * @return int
      */
    public function getShippingOptionId(){
-       return $this->shippingOptionId;
+       return (int) $this->shippingOptionId;
    }
 
     /**
