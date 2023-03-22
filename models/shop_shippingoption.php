@@ -575,7 +575,7 @@
 
 		/**
 		 * Fetches fully considered quote based on current checkout state,
-		 * and applies the quote to this option model
+		 * and applies the quote to this option model.
 		 * @documentable
 		 * @param string $cart_name Cart name to consider
 		 * @return boolean Returns TRUE if quote applied.
@@ -586,6 +586,7 @@
 			$quotes = $this->getQuoteForCheckout($cart_name);
             if($quotes){
                 $this->applyQuotes($quotes, $eventParams);
+                Shop_CheckoutData::onQuotesApplied($quotes);
                 return true;
             }
 			return false;
