@@ -403,6 +403,38 @@
             self::save_custom_fields();
         }
 
+
+        /**
+         * Given an array of shipping quotes this method will
+         *  update the selected shipping quote if found in the $shippingQuotes array,
+         *
+         * @param Shop_ShippingOptionQuote[] $shippingQuotes
+         * @return void
+         */
+        public static function onQuotesApplied($shippingQuotes){
+            $selectedShippingQuote = self::getSelectedShippingQuote();
+            if($selectedShippingQuote) {
+                $selectedRateInfo = $selectedShippingQuote->getRateInfo();
+                foreach ($shippingQuotes as $shippingQuote) {
+                    if ($shippingQuote->getShippingQuoteId() == $selectedShippingQuote->getShippingQuoteId() ){
+                        $rateIdMatch = true;
+                        $rateInfo = $shippingQuote->getRateInfo();
+                        if($rateInfo && $selectedRateInfo) {
+                            $rateIdMatch = $rateInfo->getId() === $selectedRateInfo->getId();
+                        }
+                        $priceMatch = $shippingQuote->getPrice() == $selectedShippingQuote->getPrice();
+                        if(!$rateIdMatch || !$priceMatch){
+                            //quote has been updated, resave
+                            $checkout_data = self::load();
+                            $checkout_data['selected_shipping_quote'] = $shippingQuote;
+                            self::save($checkout_data);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         /**
          * This allows a shipping option to be assigned to the cart without specifying
          * a quote ID.  This can be used when quote ID is irrelevant
