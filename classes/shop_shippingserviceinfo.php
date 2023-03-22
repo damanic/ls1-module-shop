@@ -33,7 +33,7 @@ class Shop_ShippingServiceInfo implements Shop_ShippingServiceInterface {
     }
 
     public function getSupportedIncoterms(){
-        return is_array($this->supportedIncoterms) ? $this->supportedIncoterms() : array();
+        return is_array($this->supportedIncoterms) ? $this->supportedIncoterms : array();
     }
 
     public function getDeliveryDays(){
