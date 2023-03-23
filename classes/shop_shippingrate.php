@@ -111,9 +111,14 @@ class Shop_ShippingRate{
 
     /**
      * Get the shipping service name (customer facing)
+     * If a name has not been assigned, the name
+     * will be returned from getCarrierServiceName()
      * @return string
      */
     public function getShippingServiceName(){
+        if(!$this->shippingServiceName){
+            return $this->getCarrierServiceName();
+        }
         return $this->shippingServiceName;
     }
 
@@ -126,6 +131,20 @@ class Shop_ShippingRate{
         return $this->carrierServiceInfo;
     }
 
+
+    /**
+     * Returns the carrier service description/name for this rate
+     * from carrier service info.
+     * @return string|null
+     */
+    public function getCarrierServiceName()
+    {
+        $carrierServiceInfo = $this->getCarrierServiceInfo();
+        if($carrierServiceInfo){
+            return trim($carrierServiceInfo->getCarrierName().' '.$carrierServiceInfo->getServiceName());
+        }
+        return null;
+    }
 
     /**
      * Get the monetary value.
