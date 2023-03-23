@@ -205,6 +205,10 @@ class Shop_BoxPacker {
 			$depth  = $item->height; //In this case item height is box depth
 			$weight = $item->weight;
 		}
+        $width = is_numeric($width) ? $width : 0;
+        $length = is_numeric($length) ? $length : 0;
+        $depth = is_numeric($depth) ? $depth : 0;
+        $weight = is_numeric($weight) ? $weight : 0;
 
 		if(!$force && (!$width || !$length || !$depth)){
 			return false; // cannot pack items with no given dimensions

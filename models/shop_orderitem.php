@@ -817,52 +817,57 @@
 
         public function volume()
         {
-            $result = $this->om('volume');
+            $volume = $this->om('volume');
+            $volume = is_numeric($volume) ? $volume : 0;
             $extras = $this->get_extra_option_objects();
             foreach ($extras as $option)
-                $result += $option->volume();
+                $volume += $option->volume();
 
-            return $result;
+            return $volume;
         }
 
         public function weight()
         {
-            $result = $this->om('weight');
+            $weight = $this->om('weight');
+            $weight = is_numeric($weight) ? $weight : 0;
             $extras = $this->get_extra_option_objects();
             foreach ($extras as $option)
-                $result += $option->weight;
+                $weight += $option->weight;
 
-            return $result;
+            return $weight;
         }
 
         public function depth()
         {
-            $result = $this->om('depth');
+            $depth = $this->om('depth');
+            $depth = is_numeric($depth) ? $depth : 0;
             $extras = $this->get_extra_option_objects();
             foreach ($extras as $option)
-                $result += $option->depth;
+                $depth += $option->depth;
 
-            return $result;
+            return $depth;
         }
 
         public function width()
         {
-            $result = $this->om('width');
+            $width = $this->om('width');
+            $width = is_numeric($width) ? $width : 0;
             $extras = $this->get_extra_option_objects();
             foreach ($extras as $option)
-                $result += $option->width;
+                $width += $option->width;
 
-            return $result;
+            return $width;
         }
 
         public function height()
         {
-            $result = $this->om('height');
+            $height = $this->om('height');
+            $height = is_numeric($height) ? $height : 0;
             $extras = $this->get_extra_option_objects();
             foreach ($extras as $option)
-                $result += $option->height;
+                $height += $option->height;
 
-            return $result;
+            return $height;
         }
 
 		/**

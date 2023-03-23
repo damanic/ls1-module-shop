@@ -850,10 +850,11 @@ class Shop_Order extends Shop_ActiveRecord
                 }
                 
 				$obj->price = $product_price;
-				$obj->cost = $item->om('cost');
+                $cost =  $item->om('cost');
+				$obj->cost = is_numeric($cost) ? $cost : 0;
+                $total_cost += $obj->cost*$item->quantity;
 				$obj->discount = $item->applied_discount;
 
-				$total_cost += $obj->cost*$item->quantity;
 
 				if (array_key_exists($cart_item_index, $tax_info->item_taxes))
 				{

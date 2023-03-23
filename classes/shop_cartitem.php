@@ -271,10 +271,11 @@
 			if($this->free_shipping && !$include_free_shipping){
 				return 0;
 			}
-			$result = $this->om('volume');
+			$volume = $this->om('volume');
+            $volume = is_numeric($volume) ? $volume : 0;
 			foreach ($this->extra_options as $option)
-				$result += $option->volume();
-			return $result;
+				$volume += $option->volume();
+			return $volume;
 		}
 
 		/**
@@ -303,10 +304,11 @@
 			if($this->free_shipping && !$include_free_shipping){
 				return 0;
 			}
-			$result = $this->om('weight');
+			$weight = $this->om('weight');
+            $weight = is_numeric($weight) ? $weight : 0;
 			foreach ($this->extra_options as $option)
-				$result += $option->weight;
-			return $result;
+				$weight += $option->weight;
+			return $weight;
 		}
 
 		/**
@@ -336,10 +338,11 @@
 			if($this->free_shipping && !$include_free_shipping){
 				return 0;
 			}
-			$result = $this->om('depth');
+			$depth = $this->om('depth');
+            $depth = is_numeric($depth) ? $depth : 0;
 			foreach ($this->extra_options as $option)
-				$result += $option->depth;
-			return $result;
+				$depth += $option->depth;
+			return $depth;
 		}
 		/**
 		 * Returns the total depth of the cart item.
@@ -368,10 +371,11 @@
 			if($this->free_shipping && !$include_free_shipping){
 				return 0;
 			}
-			$result = $this->om('width');
+			$width = $this->om('width');
+            $width = is_numeric($width) ? $width : 0;
 			foreach ($this->extra_options as $option)
-				$result += $option->width;
-			return $result;
+				$width += $option->width;
+			return $width;
 		}
 
 		/**
@@ -400,10 +404,11 @@
 			if($this->free_shipping && !$include_free_shipping){
 				return 0;
 			}
-			$result = $this->om('height');
+			$height = $this->om('height');
+            $height = is_numeric($height) ? $height : 0;
 			foreach ($this->extra_options as $option)
-				$result += $option->height;
-			return $result;
+				$height += $option->height;
+			return $height;
 		}
 
 

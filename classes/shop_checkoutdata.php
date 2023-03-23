@@ -588,7 +588,7 @@
 		
 		/**
 		 * Sets a specific coupon code. 
-		 * This method doesn't checks whether the coupon code exists or valid.
+		 * This method doesn't check whether the coupon code exists or valid.
 		 * @documentable
 		 * @param string $code Specifies the coupon code.
 		 */
