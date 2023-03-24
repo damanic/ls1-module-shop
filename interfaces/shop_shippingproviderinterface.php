@@ -25,9 +25,17 @@ interface Shop_ShippingProviderInterface {
      * @param Shop_ShippableItem[] $items
      * @param Shop_AddressInfo $toAddress Usually derived from Shop_CheckoutData::get_shipping_info()
      * @param Shop_AddressInfo|null $fromAddress If not given the senders address in system shipping config can be used
+     * @param string $context Can be used to inform provider of execution context. E.g. 'getQuoteForCheckout'
      * @return Shop_ShippingRate[] Iterable collection of shipping rates
      */
-    public function getItemRates(Shop_ShippingOption $shippingOption, $items, Shop_AddressInfo $toAddress, Shop_AddressInfo $fromAddress = null);
+    public function getItemRates(
+        Shop_ShippingOption $shippingOption,
+        $items,
+        Shop_AddressInfo
+        $toAddress,
+        Shop_AddressInfo $fromAddress = null,
+        $context = ''
+    );
 
 
 
@@ -39,9 +47,16 @@ interface Shop_ShippingProviderInterface {
      * @param Shop_AddressInfo $toAddress The destination address
      * @param Shop_PackedBox[] $packedBoxes Iterable collection of packed box objects
      * @param Shop_AddressInfo|null $fromAddress If not given the senders address in system shipping config can be used
+     * @param string $context Can be used to inform provider of execution context. E.g. 'getQuoteForCheckout'
      * @return Shop_ShippingRate[] Iterable collection of shipping rate objects
      */
-    public function getPackedBoxRates(Shop_ShippingOption $shippingOption, Shop_AddressInfo $toAddress, array $packedBoxes, Shop_AddressInfo $fromAddress = null);
+    public function getPackedBoxRates(
+        Shop_ShippingOption $shippingOption,
+        Shop_AddressInfo $toAddress,
+        array $packedBoxes,
+        Shop_AddressInfo $fromAddress = null,
+        $context = ''
+    );
 
     /**
      * @return bool TRUE if provider can generate shipping labels. otherwise FALSE

@@ -467,7 +467,7 @@
 
             try {
                 $shippingProvider->setEventParameters($eventParams); //legacy support
-                $rates = $shippingProvider->getItemRates($this, $cartItems, $shipping_info );
+                $rates = $shippingProvider->getItemRates($this, $cartItems, $shipping_info, null, 'getQuoteForOrder' );
             } catch (exception $ex) {
                 $this->error_hint = $ex->getMessage();
             }
@@ -548,7 +548,7 @@
             if($rates === null){
                 try {
                     $shippingProvider->setEventParameters($eventParams); //legacy support
-                    $rates = $shippingProvider->getItemRates($this, $cartItems, $shippingInfo );
+                    $rates = $shippingProvider->getItemRates($this, $cartItems, $shippingInfo, null, 'getQuoteForCheckout' );
                     $this->setCheckoutRateCache($cacheKey, $rates);
                 } catch (Exception $ex) {
                     traceLog($ex->getMessage());

@@ -362,7 +362,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
 		return true;
 	}
 
-    public function getItemRates(Shop_ShippingOption $shippingOption, $items, Shop_AddressInfo $toAddress, Shop_AddressInfo $fromAddress = null){
+    public function getItemRates(Shop_ShippingOption $shippingOption, $items, Shop_AddressInfo $toAddress, Shop_AddressInfo $fromAddress = null, $context = ''){
 
         $rates = array();
         $itemInfo = array(
@@ -469,7 +469,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
 
     }
 
-    public function getPackedBoxRates(Shop_ShippingOption $shippingOption, Shop_AddressInfo $toAddress, array $packedBoxes, Shop_AddressInfo $fromAddress = null){
+    public function getPackedBoxRates(Shop_ShippingOption $shippingOption, Shop_AddressInfo $toAddress, array $packedBoxes, Shop_AddressInfo $fromAddress = null, $context = ''){
         $rates = array();
         $totalPrice = null;
         foreach($packedBoxes as $packedBox){
