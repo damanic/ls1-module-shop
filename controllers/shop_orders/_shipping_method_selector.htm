@@ -40,7 +40,7 @@ foreach ($shipping_options as $index=>$option) {
                         <?
                             if($serviceInfo){
                                 $carrierDescription = trim($serviceInfo->getCarrierName().' '.$serviceInfo->getServiceName());
-                                echo !empty($carrierDescription) ? ': <i>'.h($carrierDescription).'</i>' : null;
+                                echo !empty($carrierDescription) ? ' <small> &raquo; '.h($carrierDescription).'</small>' : null;
                             }
 
                         ?>
@@ -68,7 +68,7 @@ foreach ($shipping_options as $index=>$option) {
                         <?
                         if($serviceInfo){
                             $carrierDescription = trim($serviceInfo->getCarrierName().' '.$serviceInfo->getServiceName());
-                            echo !empty($carrierDescription) ? ': <i>'.h($carrierDescription).'</i>' : null;
+                            echo !empty($carrierDescription) ? ' <small> &raquo; '.h($carrierDescription).'</small>' : null;
                         }
                         ?>
 						<span class="right"><?= $quote->getDiscount() ? '<del>'.$form_model->format_currency($quote->getPriceNoDiscount()).'</del>' : null ?> <?= $form_model->format_currency($quote->getPrice()) ?></span>
