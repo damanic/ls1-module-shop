@@ -51,12 +51,11 @@ foreach ($shipping_options as $index=>$option) {
                 <? endforeach; ?>
 			<? endif ?>
 
-			<? foreach ($shipping_options as $option):
-				if (!$option->error_hint && !$option->sub_options)
-					continue;
-				?>
+			<? foreach ($shipping_options as $option):?>
 				<li class="header"><?= h($option->name) ?></li>
-				<? if (!$option->error_hint): ?>
+				<? if ($option->error_hint): ?>
+                    <li class="error"><?= h($option->error_hint) ?></li>
+                <? endif; ?>
 				<? foreach ($option->getQuotes() as $quote):
                     $ui_selected = ($quote->getShippingQuoteId() == $selected_shipping_quote_id) && ($quote->getPrice() == $current_quote);
                     $serviceInfo = $quote->getRateInfo()->getCarrierServiceInfo();
@@ -76,9 +75,6 @@ foreach ($shipping_options as $index=>$option) {
 						<input type="hidden" value="<?= $quote->getShippingQuoteId() ?>"/>
 					</li>
 				<? endforeach ?>
-			<? else: ?>
-				<li class="error"><?= h($option->error_hint) ?></li>
-			<? endif ?>
 			<? endforeach ?>
 
 			<? if (!count($table_rates) && !count($shipping_options)): ?>
