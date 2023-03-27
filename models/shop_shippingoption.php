@@ -458,12 +458,7 @@
             }
 
             $eventParams = $this->getEventParamsForOrder($order);
-            $eventParamUpdates = Backend::$events->fireEvent( 'shop:onBeforeShippingQuote', $this, $eventParams );
-            foreach ( $eventParamUpdates as $eventParamUpdate ) {
-                if ( is_array( $eventParamUpdate ) ) {
-                    $eventParams   = array_merge( $eventParams, $eventParamUpdate );
-                }
-            }
+            $eventParams = $this->onBeforeShippingQuote($eventParams);
 
             try {
                 $shippingProvider->setEventParameters($eventParams); //legacy support
@@ -480,7 +475,21 @@
                 $order->items = $items; //restore items
             }
 
-            return $this->buildQuotes($rates, $eventParams);
+            $quotes = $this->buildQuotes($rates, $eventParams);
+
+            //Allow event subscribers to update quotes
+            $updatedQuotes = Backend::$events->fire_event(
+                array(
+                    'name' => 'shop:onUpdateShippingQuotesForOrder',
+                    'type' => 'update_result'
+                ),
+                $quotes,
+                $order
+            );
+            if(is_array($updatedQuotes) && $this->isArrayOfObjectType($updatedQuotes,'Shop_ShippingOptionQuote')){
+                $quotes = $updatedQuotes;
+            }
+            return $quotes;
         }
 
         /**
@@ -520,12 +529,7 @@
 
             $eventParams = array_merge(self::getEventParamsForCart($cart_name), $this->getEventParamsForShippingOption());
             $internalEventKeys = array_keys($eventParams);
-            $eventParamUpdates = Backend::$events->fireEvent( 'shop:onBeforeShippingQuote', $this, $eventParams );
-            foreach ( $eventParamUpdates as $eventParamUpdate ) {
-                if ( is_array( $eventParamUpdate ) ) {
-                    $eventParams   = array_merge( $eventParams, $eventParamUpdate );
-                }
-            }
+            $eventParams = $this->onBeforeShippingQuote($eventParams);
 
             //
             // CHECK CACHE
@@ -561,6 +565,20 @@
                 $quotes = $this->buildQuotes($rates, $eventParams);
             }
             $this->setCheckoutQuoteCache($cacheKey,$quotes);
+
+            //Allow event subscribers to update quotes
+            $updatedQuotes = Backend::$events->fire_event(
+                array(
+                    'name' => 'shop:onUpdateShippingQuotesForCheckout',
+                    'type' => 'update_result'
+                ),
+                $quotes,
+                $cart_name
+            );
+            if(is_array($updatedQuotes) && $this->isArrayOfObjectType($updatedQuotes,'Shop_ShippingOptionQuote')){
+                $quotes = $updatedQuotes;
+            }
+
             return $quotes;
         }
 
@@ -1040,6 +1058,17 @@
                 return true;
 
             return in_array($customer_group_id, self::$customer_group_filter_cache[$option_id]);
+        }
+
+
+        private function onBeforeShippingQuote($eventParams){
+            $eventParamUpdates = Backend::$events->fireEvent( 'shop:onBeforeShippingQuote', $this, $eventParams );
+            foreach ( $eventParamUpdates as $eventParamUpdate ) {
+                if ( is_array( $eventParamUpdate ) ) {
+                    $eventParams   = array_merge( $eventParams, $eventParamUpdate );
+                }
+            }
+            return $eventParams;
         }
 
 
@@ -1796,6 +1825,26 @@
          * @return Shop_ShippingOption[] Array of shipping options
          */
         private function event_onUpdateShippingOptionsForOrder($options, $order, $frontendOnly, $includeDisabled){}
+
+
+
+        /**
+         * @event shop:onUpdateShippingQuotesForCheckout
+         * @package shop.events
+         * @param Shop_ShippingOptionQuote[] $quotes Array of shipping quotes
+         * @param string $cartName Cart Name
+         * @return Shop_ShippingOptionQuote[] Array of shipping quotes
+         */
+        private function event_onUpdateShippingQuotesForCheckout($quotes, $cartName){}
+
+        /**
+         * @event shop:onUpdateShippingQuotesForOrder
+         * @package shop.events
+         * @param Shop_ShippingOptionQuote[] $quotes Array of shipping quotes
+         * @param Shop_Order $order Order
+         * @return Shop_ShippingOptionQuote[] Array of shipping quotes
+         */
+        private function event_onUpdateShippingQuotesForOrder($quotes, $order){}
 
 		/**
 		 * Allows to add to the CACHE_SHIPPING_METHODS cache key.
