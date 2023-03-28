@@ -358,6 +358,7 @@ function recalculate_shipping_options(){
 			onAfterUpdate: function () {
 				assign_shipping_override_handler();
 				track_shipping_override();
+				updateTotals();
 			}
 		}
 	);
