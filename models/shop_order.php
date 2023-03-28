@@ -2166,7 +2166,8 @@ class Shop_Order extends Shop_ActiveRecord
 		foreach ( $items as $item ) {
 			$subtotal   += $item->subtotal;
 			$discount   += $item->discount;
-			$total_cost += $item->product->cost * $item->quantity;
+            $itemCost = is_numeric($item->product->cost) ? $item->product->cost  : 0;
+			$total_cost += $itemCost * $item->quantity;
 		}
 
 		$order->total_cost = $total_cost;

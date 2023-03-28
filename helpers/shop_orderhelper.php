@@ -158,7 +158,8 @@ class Shop_OrderHelper{
 			$discount += $item->discount*$item->quantity;
 			$subtotal += $item->eval_total_price();
 			$subtotal_before_discounts += $item->single_price*$item->quantity;
-			$total_cost += $item->quantity*$item->cost;
+            $itemCost = is_numeric($item->cost) ? $item->cost : 0;
+			$total_cost += $item->quantity*$itemCost;
 		}
 
 
