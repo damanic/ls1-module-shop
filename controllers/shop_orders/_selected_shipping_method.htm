@@ -1,9 +1,3 @@
-<?php
-$selected_shipping_option = $form_model->shipping_method_id;
-if ($form_model->shipping_sub_option)
-	$selected_shipping_option = $form_model->getAppliedShippingQuoteId();
-?>
-
 <ul class="recordSelector">
 			<li class="header">Selected Shipping Method</li>
 				<li>
@@ -40,5 +34,7 @@ if ($form_model->shipping_sub_option)
 		<div class="clear"></div>
 	</li>
 
-	<input type="hidden" class="master" name="Shop_Order[shipping_method_id]" value="<?= $selected_shipping_option ?>" id="shipping_method_id"/>
+	<input type="hidden" name="Shop_Order[shipping_method_id]" value="<?= $form_model->shipping_method_id ?>"/>
+    <input type="hidden" name="Shop_Order[shipping_sub_option]" value="<?= $form_model->shipping_sub_option ?>"/>
+    <input type="hidden" value="<?= $form_model->getAppliedShippingQuoteId() ?>" id="shipping_quote_id"/>
 

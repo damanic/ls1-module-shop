@@ -47,7 +47,6 @@ foreach ($shipping_options as $index=>$option) {
 
                         ?>
                         <span class="right"><?= $quote->getDiscount() ? '<del>'.$form_model->format_currency($quote->getPriceNoDiscount()).'</del>' : null ?> <?= $form_model->format_currency($quote->getPrice()) ?></span>
-						<input type="hidden" value="<?= $quote->getShippingQuoteId() ?>"/>
 					</li>
                     <? endforeach; ?>
                 <? endforeach; ?>
@@ -76,7 +75,6 @@ foreach ($shipping_options as $index=>$option) {
                         }
                         ?>
 						<span class="right"><?= $quote->getDiscount() ? '<del>'.$form_model->format_currency($quote->getPriceNoDiscount()).'</del>' : null ?> <?= $form_model->format_currency($quote->getPrice()) ?></span>
-						<input type="hidden" value="<?= $quote->getShippingQuoteId() ?>"/>
 					</li>
 				<? endforeach ?>
 			<? endforeach ?>
@@ -86,8 +84,7 @@ foreach ($shipping_options as $index=>$option) {
 			<? endif ?>
 		</ul>
 		<input type="hidden" name="Shop_Order[shipping_method_id]" value="<?= $ui_selected ? $form_model->shipping_method_id : null ?>" id="shipping_method_id"/>
-        <input type="hidden" name="Shop_Order[shipping_quote_id]" value="<?= $ui_selected ? $selected_shipping_quote_id : null ?>" id="shipping_quote_id"/>
-		<input type="hidden"  name="Shop_Order[shipping_quote]" value="<?= $form_model->shipping_quote ?>" id="shipping_method_quote"/>
 		<input type="hidden"  name="Shop_Order[shipping_sub_option]" value="<?= $form_model->shipping_sub_option ?>" id="shipping_method_sub_option"/>
-
+        <input type="hidden" name="Shop_Order[shipping_quote]"  value="<?= $form_model->shipping_quote ?>" id="shipping_method_quote"/>
+        <input type="hidden" value="<?= $ui_selected ? $selected_shipping_quote_id : null ?>" id="shipping_quote_id"/>
 </div>
