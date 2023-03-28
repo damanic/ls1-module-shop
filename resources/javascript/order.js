@@ -320,6 +320,47 @@ function record_selector_click(item)
 	window.fireEvent('phpr_recordselector_click', [selector_root]);
 }
 
+function record_selector_click(item)
+{
+	var selector = $(item).getParent();
+	var selector_root = selector.getParent();
+
+	selector.getElements('li.selectable').each(function(current_item){
+		current_item.removeClass('current');
+	});
+
+	//Shipping Method Selector
+	if (selector_root.id == 'shipping_option_selector') {
+
+		var shippingRate = item.dataset.price;
+		var suboptionName = item.dataset.suboptionname;
+		var shippingOptionId = item.dataset.shippingoptionid;
+		var shippingQuoteId = item.dataset.shippingquoteid;
+
+		var formInputShippingOptionId = $('shipping_method_id');
+		formInputShippingOptionId.value = shippingOptionId;
+
+		var formInputShippingQuoteId = $('shipping_quote_id');
+		formInputShippingQuoteId.value = shippingQuoteId;
+
+		var formInputSubOptionName = $('shipping_method_sub_option');
+		formInputSubOptionName.value = suboptionName;
+
+		var formInputShippingQuotePrice = $('shipping_method_quote');
+		formInputShippingQuotePrice.value = shippingRate;
+	}
+
+	//Payment Method Selector
+	if (selector_root.id == 'payment_method_selector') {
+		var paymentMethodId = item.dataset.paymentmethodid;
+		var formInputPaymentMethodId = $('payment_method_id');
+		formInputPaymentMethodId.value = paymentMethodId;
+	}
+
+	$(item).addClass('current');
+	window.fireEvent('phpr_recordselector_click', [selector_root]);
+}
+
 function handle_option_change()
 {
 	if (!$('Shop_OrderItem_auto_discount_price_eval').checked)

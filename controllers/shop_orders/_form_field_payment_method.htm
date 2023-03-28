@@ -7,9 +7,10 @@
 		<ul class="recordSelector">
 			<? if ($payment_options): ?>
 				<? foreach ($payment_options as $option): ?>
-					<li class="selectable <?= ((int)$form_model->payment_method_id == (int)$option->id) ? 'current' : null ?>" onclick="record_selector_click(this)">
+					<li class="selectable <?= ((int)$form_model->payment_method_id == (int)$option->id) ? 'current' : null ?>"
+                        onclick="record_selector_click(this)"
+                        data-paymentmethodid="<?= $option->id ?>">
 						<?= h($option->name) ?>
-						<input type="hidden" value="<?= $option->id ?>"/>
 					</li>
 				<? endforeach ?>
 			<? else: ?>
@@ -17,6 +18,6 @@
 			<? endif ?>
 		</ul>
 		
-		<input class="master" type="hidden" value="<?= $form_model->payment_method_id ?>" name="Shop_Order[payment_method_id]"/>
+		<input type="hidden" value="<?= $form_model->payment_method_id ?>" name="Shop_Order[payment_method_id]" id="payment_method_id"/>
 	</div>
 </li>
