@@ -293,38 +293,6 @@ function record_selector_click(item)
 	var selector = $(item).getParent();
 	var selector_root = selector.getParent();
 
-	var shippingRate = item.dataset.price;
-	var suboptionName = item.dataset.suboptionname;
-	var shippingOptionId = item.dataset.shippingoptionid;
-	var shippingQuoteId = item.dataset.shippingquoteid;
-
-	selector.getElements('li.selectable').each(function(current_item){
-		current_item.removeClass('current');
-	});
-
-	if (selector_root.id == 'shipping_option_selector') {
-		var formInputShippingOptionId = $('shipping_method_id');
-		formInputShippingOptionId.value = shippingOptionId;
-
-		var formInputShippingQuoteId = $('shipping_quote_id');
-		formInputShippingQuoteId.value = shippingQuoteId;
-
-		var formInputSubOptionName = $('shipping_method_sub_option');
-		formInputSubOptionName.value = suboptionName;
-
-		var formInputShippingQuotePrice = $('shipping_method_quote');
-		formInputShippingQuotePrice.value = shippingRate;
-	}
-
-	$(item).addClass('current');
-	window.fireEvent('phpr_recordselector_click', [selector_root]);
-}
-
-function record_selector_click(item)
-{
-	var selector = $(item).getParent();
-	var selector_root = selector.getParent();
-
 	selector.getElements('li.selectable').each(function(current_item){
 		current_item.removeClass('current');
 	});
