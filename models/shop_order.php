@@ -114,6 +114,8 @@ class Shop_Order extends Shop_ActiveRecord
 
 	protected $api_added_columns = array();
 
+    private $shipping_quote_id;
+
 	public function __construct($values = null, $options = array()){
 		if(class_exists('Db_ModelLog')){ //backward compatibility with older core versions
 			$this->implement = 'Db_ModelLog';
@@ -465,6 +467,7 @@ class Shop_Order extends Shop_ActiveRecord
             $this->override_shipping_quote = array_key_exists('override_shipping_quote', $data) ? $data['override_shipping_quote'] : null;
             $this->manual_shipping_quote = array_key_exists('manual_shipping_quote', $data) ? $data['manual_shipping_quote'] : null;
             $this->shipping_method_id = array_key_exists('shipping_method_id', $data) ? $data['shipping_method_id'] : null;
+            $this->shipping_quote_id = array_key_exists('shipping_quote_id', $data) ? $data['shipping_quote_id'] : null;
             $this->shipping_sub_option = array_key_exists('shipping_sub_option', $data) ? $data['shipping_sub_option'] : $this->shipping_sub_option;
             $this->payment_method_id = array_key_exists('payment_method_id', $data) ? $data['payment_method_id'] : null;
             $this->coupon_id = array_key_exists('coupon_id', $data) ? $data['coupon_id'] : null;

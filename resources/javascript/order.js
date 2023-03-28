@@ -292,21 +292,28 @@ function record_selector_click(item)
 {
 	var selector = $(item).getParent();
 	var selector_root = selector.getParent();
-	var selected_input = $(item).getElement('input');
+
+	var shippingRate = item.dataset.price;
+	var suboptionName = item.dataset.suboptionname;
+	var shippingOptionId = item.dataset.shippingoptionid;
+	var shippingQuoteId = item.dataset.shippingquoteid;
+
 	selector.getElements('li.selectable').each(function(current_item){
 		current_item.removeClass('current');
 	});
-	
-	var master_input = selector_root.getElement('input.master');
-	master_input.value = selected_input.value;
 
 	if (selector_root.id == 'shipping_option_selector') {
-		var shippingRate = item.dataset.price;
-		var suboptionName = item.dataset.suboptionname;
-		var quote_input = $('shipping_method_quote');
-		quote_input.value = shippingRate;
-		var suboption_input = $('shipping_method_sub_option');
-		suboption_input.value = suboptionName;
+		var formInputShippingOptionId = $('shipping_method_id');
+		formInputShippingOptionId.value = shippingOptionId;
+
+		var formInputShippingQuoteId = $('shipping_quote_id');
+		formInputShippingQuoteId.value = shippingQuoteId;
+
+		var formInputSubOptionName = $('shipping_method_sub_option');
+		formInputSubOptionName.value = suboptionName;
+
+		var formInputShippingQuotePrice = $('shipping_method_quote');
+		formInputShippingQuotePrice.value = shippingRate;
 	}
 
 	$(item).addClass('current');

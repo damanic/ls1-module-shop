@@ -35,7 +35,9 @@ foreach ($shipping_options as $index=>$option) {
 					<li class="selectable <?= $ui_selected ? 'current' : null ?>"
 						onclick="record_selector_click(this)"
 						data-price="<?=$quote->getPrice()?>"
-						data-suboptionname="">
+						data-suboptionname=""
+                        data-shippingoptionid="<?=$quote->getShippingOptionId()?>"
+                        data-shippingquoteid="<?=$quote->getShippingQuoteId()?>">
 						<?= h($quote->getShippingServiceName())?>
                         <?
                             if($serviceInfo){
@@ -63,7 +65,9 @@ foreach ($shipping_options as $index=>$option) {
 					<li class="selectable <?= $ui_selected ? 'current' : null ?>"
 						onclick="record_selector_click(this)"
 						data-price="<?=$quote->getPrice()?>"
-						data-suboptionname="<?=$quote->getShippingServiceName()?>">
+						data-suboptionname="<?=$quote->getShippingServiceName()?>"
+                        data-shippingoptionid="<?=$quote->getShippingOptionId()?>"
+                        data-shippingquoteid="<?=$quote->getShippingQuoteId()?>">
 						<?= h($quote->getShippingServiceName()) ?>
                         <?
                         if($serviceInfo){
@@ -81,7 +85,8 @@ foreach ($shipping_options as $index=>$option) {
 				<li class="noData">No shipping options available for the selected shipping location.</li>
 			<? endif ?>
 		</ul>
-		<input type="hidden" class="master" name="Shop_Order[shipping_method_id]" value="<?= $ui_selected ? $selected_shipping_quote_id : null ?>" id="shipping_method_id"/>
+		<input type="hidden" name="Shop_Order[shipping_method_id]" value="<?= $ui_selected ? $form_model->shipping_method_id : null ?>" id="shipping_method_id"/>
+        <input type="hidden" name="Shop_Order[shipping_quote_id]" value="<?= $ui_selected ? $selected_shipping_quote_id : null ?>" id="shipping_quote_id"/>
 		<input type="hidden"  name="Shop_Order[shipping_quote]" value="<?= $form_model->shipping_quote ?>" id="shipping_method_quote"/>
 		<input type="hidden"  name="Shop_Order[shipping_sub_option]" value="<?= $form_model->shipping_sub_option ?>" id="shipping_method_sub_option"/>
 

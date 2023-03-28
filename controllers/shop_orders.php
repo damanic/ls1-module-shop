@@ -2064,7 +2064,8 @@
             //Has been possible for shipping quote ID to be applied to this field.
             //If shipping_method_id is not numeric as expected, treat as quote ID.
             if($order->shipping_method_id && !is_numeric($order->shipping_method_id)){
-                $order->shipping_method_id = Shop_ShippingOptionQuote::getOptionIdFromQuoteId($order->shipping_method_id);
+                $shippingQuoteId = $order->shipping_method_id;
+                $order->shipping_method_id = Shop_ShippingOptionQuote::getOptionIdFromQuoteId($shippingQuoteId);
                 $shipping_sub_option = array_key_exists('shipping_sub_option', $orderData) ? $orderData['shipping_sub_option'] : false;
                 if($shipping_sub_option !== false){
                     $order->shipping_sub_option = $shipping_sub_option;
@@ -2145,7 +2146,8 @@
             //Has been possible for shipping quote ID to be applied to this field.
             //If shipping_method_id is not numeric as expected, treat as quote ID.
             if($order->shipping_method_id && !is_numeric($order->shipping_method_id)){
-                $order->shipping_method_id = Shop_ShippingOptionQuote::getOptionIdFromQuoteId($order->shipping_method_id);
+                $shippingQuoteId = $order->shipping_method_id;
+                $order->shipping_method_id = Shop_ShippingOptionQuote::getOptionIdFromQuoteId($shippingQuoteId);
             }
 
 
