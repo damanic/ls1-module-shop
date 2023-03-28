@@ -61,7 +61,8 @@
 		
 		public $applied_discount = 0;
 		protected $api_added_columns = array();
-		protected static $cache = array();
+        protected static $cache = array();
+
 
 		/*
 		 * Single price is price of an item without extras
@@ -1047,14 +1048,19 @@
 			return Shop_OptionMatrix::get_property($options, $property_name, $this->product, true);
 		}
 
+
 		/*
 		 * Shop_RetailItem Interface methods
 		 */
 
         public function getCurrencyCode()
         {
-            return $this->parent_order->get_currency_code();
+            if(is_a($this->parent_order ,'Shop_Order')){
+                return $this->parent_order->get_currency_code();
+            }
+            return $this->get_currency_code();
         }
+
 
 		public function get_list_price() {
 			return $this->eval_single_price();

@@ -898,6 +898,7 @@ class Shop_Order extends Shop_ActiveRecord
 			}
 
 			foreach ($items as $item)
+                $item->set_currency_code($order->get_currency_code());
 				$order->items->add($item, $session_key);
 
 			/*
@@ -2054,6 +2055,7 @@ class Shop_Order extends Shop_ActiveRecord
 
 		$session_key = $session_key ? $session_key : uniqid( 'front_end_order', true );
 		foreach ( $items as $item ) {
+            $item->set_currency_code($order->get_currency_code());
 			$order->items->add( $item, $session_key );
 		}
 

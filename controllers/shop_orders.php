@@ -1743,8 +1743,10 @@
 
 					$same_item->save(null, $this->formGetEditSessionKey());
 					$item->delete();
-				} else
-					$order->items->add($item, post('edit_session_key'));
+				} else{
+                    $item->set_currency_code($order->get_currency_code());
+                    $order->items->add($item, post('edit_session_key'));
+                }
 					
 				echo ">>data_placeholder<<";
 				echo "no_data";
