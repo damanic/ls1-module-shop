@@ -510,6 +510,7 @@
             foreach ($applicableOptions as $index=>$option) {
                 $option->apply_checkout_quote($cartName);
                 foreach( $option->getQuotes() as $quote){
+                    $quote->setCachedShippingOption($option); //legacy support, includes applied quotes
                     $shippingQuotes[$quote->getShippingQuoteId()] = $quote;
                 }
             }

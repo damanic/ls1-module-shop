@@ -610,11 +610,17 @@ class Shop_Actions extends Cms_ActionScope
         $info->is_business = post('is_business');
         Shop_CheckoutData::set_shipping_info($info);
 
-        $applicableOptions = Shop_CheckoutData::getApplicableShippingOptions($cart_name, $this->customer);
-        $this->data['shipping_options'] = $applicableOptions;
+
 
         $shippingQuotes = Shop_CheckoutData::getShippingQuotes($cart_name, $this->customer);
+        $shippingOptions = array();
+        if($shippingQuotes){
+            foreach($shippingQuotes as $shippingQuote){
+                $shippingOptions[$shippingQuote->getShippingOptionId()] = $shippingQuote->getShippingOption();
+            }
+        }
         $this->data['shipping_quotes'] = $this->data['shipping_options_flat'] = $shippingQuotes;
+        $this->data['shipping_options'] = $shippingOptions;
     }
 
     /**
@@ -1498,10 +1504,14 @@ class Shop_Actions extends Cms_ActionScope
             if (!$skip_data)
                 Shop_CheckoutData::set_shipping_info();
 
-            $applicableOptions = Shop_CheckoutData::getApplicableShippingOptions($cart_name, $this->customer);
             $shippingQuotes = Shop_CheckoutData::getShippingQuotes($cart_name, $this->customer);
-
-            $this->data['shipping_options'] = $applicableOptions;
+            $shippingOptions = array();
+            if($shippingQuotes){
+                foreach($shippingQuotes as $shippingQuote){
+                    $shippingOptions[$shippingQuote->getShippingOptionId()] = $shippingQuote->getShippingOption();
+                }
+            }
+            $this->data['shipping_options'] = $shippingOptions;
             $this->data['shipping_quotes'] = $this->data['shipping_options_flat'] = $shippingQuotes;
             $this->data['checkout_step'] = 'shipping_method';
             $shipping_quote = 0;
@@ -2043,10 +2053,15 @@ class Shop_Actions extends Cms_ActionScope
         $cart_name = post('cart_name', 'main');
         Shop_CheckoutData::set_cart_id(Shop_Cart::get_content_id($cart_name));
 
-        $applicableOptions = Shop_CheckoutData::getApplicableShippingOptions($cart_name, $this->customer);
         $shippingQuotes = Shop_CheckoutData::getShippingQuotes($cart_name, $this->customer);
+        $shippingOptions = array();
+        if($shippingQuotes){
+            foreach($shippingQuotes as $shippingQuote){
+                $shippingOptions[$shippingQuote->getShippingOptionId()] = $shippingQuote->getShippingOption();
+            }
+        }
 
-        $this->data['shipping_options'] = $applicableOptions;
+        $this->data['shipping_options'] = $shippingOptions;
         $this->data['shipping_quotes'] = $shippingQuotes;
         $selectedShippingMethod = Shop_CheckoutData::get_shipping_method();
         $this->data['shipping_method'] = $selectedShippingMethod; //@deprecated

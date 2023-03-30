@@ -303,6 +303,19 @@ class Shop_ShippingOptionQuote{
     }
 
     /**
+     * Helper method for legacy support
+     * This can be used to inject a shippingOption
+     * into cache that has had quotes applied.
+     * Effectively this will update the object
+     * returned by getShippingOption();
+     * @param Shop_ShippingOption $shippingOption
+     * @return void
+     */
+    public function setCachedShippingOption(Shop_ShippingOption $shippingOption){
+        self::$optionCache[$shippingOption->id] = $shippingOption;
+    }
+
+    /**
      * Use of this method is discouraged. Tax considerations
      * should not be handled by this class.
      *
