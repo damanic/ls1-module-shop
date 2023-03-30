@@ -715,7 +715,7 @@ class Shop_Order extends Shop_ActiveRecord
             $shippingOptionObj =  null;
             if($selectedShippingQuote && $selectedShippingQuote->getShippingOptionId()){
                 $selectedShippingQuote->setTaxInclMode(false);
-                $shippingOptionObj = Shop_ShippingOption::create()->find($selectedShippingQuote->getShippingOptionId());
+                $shippingOptionObj = $selectedShippingQuote->getShippingOption();
             }
 
             $payment_method = Shop_CheckoutData::get_payment_method();
@@ -848,7 +848,7 @@ class Shop_Order extends Shop_ActiveRecord
 						$product_price = $item->single_price_no_tax(false, $effective_quantity) - $product_discount;
 					}
                 }
-                
+
 				$obj->price = $product_price;
                 $cost =  $item->om('cost');
 				$obj->cost = is_numeric($cost) ? $cost : 0;
@@ -897,9 +897,10 @@ class Shop_Order extends Shop_ActiveRecord
 
 			}
 
-			foreach ($items as $item)
+			foreach ($items as $item) {
                 $item->set_currency_code($order->get_currency_code());
-				$order->items->add($item, $session_key);
+                $order->items->add($item, $session_key);
+            }
 
 			/*
 			 * Set customer notes and custom fields
