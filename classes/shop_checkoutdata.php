@@ -1,7 +1,7 @@
 <?php
 
 	/**
-	 * Contains information collected during the checkout process.
+	 * Stores information collected during the checkout process in a user session variable.
 	 * The class acts as an internal checkout data storage. It has methods for setting and loading the checkout information,
 	 * along with a method for placing a new order. It allows to implement custom checkout scenarios. The default {@link action@shop:checkout actions}
 	 * use this class internally. 
@@ -14,6 +14,26 @@
 	{
 
         protected static $_customer_override = null;
+
+        /**
+         * This method indicates if the CheckoutData session
+         * has been initialized. This can be used to check if
+         * session expired.
+         *
+         * @return bool
+         */
+        public static function isSessionActive(){
+            return Phpr::$session->has('shop_checkout_data');
+        }
+
+        /**
+         * Removes the session key
+         * The checkout data session will no longer be considered active.
+         * @return void
+         */
+        public static function destroySession(){
+            Phpr::$session->remove('shop_checkout_data');
+        }
 		
 		/**
 		 * Loads shipping and billing address information from a customer object.
@@ -26,7 +46,7 @@
 		 */
 		public static function load_from_customer($customer, $force = false)
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			if (array_key_exists('billing_info', $checkout_data) && !$force)
 				return;
 				
@@ -73,7 +93,7 @@
 			} else
 				$info->act_as_billing_info = true;
 
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$checkout_data['billing_info'] = $info;
 			
 			self::save($checkout_data);
@@ -86,7 +106,7 @@
 		{
 			if (!post('register_customer'))
 			{
-				$checkout_data = self::load();
+				$checkout_data = self::get();
 				$checkout_data['register_customer'] = false;
 
 				self::save($checkout_data);
@@ -115,13 +135,13 @@
 				if ($customer_password != $confirmation)
 					$validation->setError( post('passwords_match_error', 'Password and confirmation password do not match.'), 'customer_password', true );
 
-				$checkout_data = self::load();
+				$checkout_data = self::get();
 				$checkout_data['customer_password'] = $customer_password;
 				$checkout_data['register_customer'] = true;
 
 				self::save($checkout_data);
 			} else {
-				$checkout_data = self::load();
+				$checkout_data = self::get();
 				$checkout_data['customer_password'] = null;
 				$checkout_data['register_customer'] = true;
 
@@ -137,7 +157,7 @@
          * @return bool True if Shop_AddressInfo object exists in session, otherwise false.
          */
         public static function hasAddressInfo($requireShippingAddress = false){
-            $checkout_data = self::load();
+            $checkout_data = self::get();
             if (!array_key_exists('billing_info', $checkout_data)){
                 return false;
             }
@@ -164,7 +184,7 @@
 		 */
 		public static function get_billing_info()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 
 			if (!array_key_exists('billing_info', $checkout_data))
 			{
@@ -215,7 +235,7 @@
 		 */
 		public static function get_payment_method()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 
 			if (!array_key_exists('payment_method_obj', $checkout_data))
 			{
@@ -260,7 +280,7 @@
 			$method->name = $db_method->name;
 			$method->ls_api_code = $db_method->ls_api_code;
 
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$checkout_data['payment_method_obj'] = $method;
 			self::save($checkout_data);
 			self::save_custom_fields();
@@ -287,7 +307,7 @@
 			} else
 				$info->act_as_billing_info = false;
 
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$checkout_data['shipping_info'] = $info;
 			self::save($checkout_data);
 			self::save_custom_fields();
@@ -308,7 +328,7 @@
 			$info = self::get_shipping_info();
 			$info->set_location($country_id, $state_id, $zip);
 
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$checkout_data['shipping_info'] = $info;
 			self::save($checkout_data);
 			self::save_custom_fields();
@@ -324,7 +344,7 @@
 		 */
 		public static function get_shipping_info()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 
 			if (!array_key_exists('shipping_info', $checkout_data) || !$checkout_data['shipping_info']->country)
 			{
@@ -351,7 +371,7 @@
          * @return Shop_ShippingOptionQuote|null
          */
         public static function getSelectedShippingQuote(){
-            $checkout_data = self::load();
+            $checkout_data = self::get();
             if (!array_key_exists('selected_shipping_quote', $checkout_data))
             {
                 return null;
@@ -431,7 +451,7 @@
                         $priceMatch = $shippingQuote->getPrice() == $selectedShippingQuote->getPrice();
                         if(!$rateIdMatch || !$priceMatch){
                             //quote has been updated, resave
-                            $checkout_data = self::load();
+                            $checkout_data = self::get();
                             $checkout_data['selected_shipping_quote'] = $shippingQuote;
                             self::save($checkout_data);
                             break;
@@ -478,7 +498,7 @@
          */
         public static function resetSelectedShippingQuote(){
 
-            $checkout_data = self::load();
+            $checkout_data = self::get();
             if (array_key_exists('selected_shipping_quote', $checkout_data))
                 unset($checkout_data['selected_shipping_quote']);
 
@@ -579,7 +599,7 @@
 		 */
 		public static function get_coupon_code()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 
 			if (!array_key_exists('coupon_code', $checkout_data))
 				return null;
@@ -595,7 +615,7 @@
 		 */
 		public static function set_coupon_code($code)
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$checkout_data['coupon_code'] = $code;
 			self::save($checkout_data);
 			self::save_custom_fields();
@@ -747,7 +767,7 @@
 		
 		public static function set_cart_id($value)
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$checkout_data['cart_id'] = $value;
 			self::save($checkout_data);
 		}
@@ -762,7 +782,7 @@
 		 */
 		public static function get_cart_id()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			return array_key_exists('cart_id', $checkout_data) ? $checkout_data['cart_id'] : null;
 		}
 
@@ -778,7 +798,7 @@
 		 */
 		public static function set_customer_notes($notes)
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$checkout_data['customer_notes'] = $notes;
 			self::save($checkout_data);
 			self::save_custom_fields();
@@ -791,7 +811,7 @@
 		 */
 		public static function get_customer_notes()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			return array_key_exists('customer_notes', $checkout_data) ? $checkout_data['customer_notes'] : null;
 		}
 
@@ -805,7 +825,7 @@
 			if ($data === null)
 				$data = $_POST;
 				
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 
 			if (!array_key_exists('custom_fields', $checkout_data))
 				$checkout_data['custom_fields'] = array();
@@ -818,7 +838,7 @@
 		
 		public static function get_custom_fields()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			if (!array_key_exists('custom_fields', $checkout_data))
 				return array();
 				
@@ -862,7 +882,7 @@
 
 			$payment_method->define_form_fields();
 			
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$customer_password = array_key_exists('customer_password', $checkout_data) ? $checkout_data['customer_password'] : null;
 			$register_customer_opt = array_key_exists('register_customer', $checkout_data) ? $checkout_data['register_customer'] : false;
 			
@@ -964,7 +984,7 @@
 		}
 
 		public static function is_currency_set(){
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			if (!array_key_exists('currency_code', $checkout_data) || !$checkout_data['currency_code'] ){
 				return false;
 			}
@@ -972,7 +992,7 @@
 		}
 
 		public static function set_currency($currency=null){
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			$currency_code = null;
 
 			if(is_a($currency,'Shop_CurrencySettings')){
@@ -989,7 +1009,7 @@
 		}
 
 		public static function get_currency($object=true){
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			if (!self::is_currency_set() ){
 				$currency = Shop_CurrencySettings::get();
 				return $object ? $currency : $currency->code;
@@ -1010,7 +1030,7 @@
 
 		public static function reset_data()
 		{
-			$checkout_data = self::load();
+			$checkout_data = self::get();
 			if (array_key_exists('register_customer', $checkout_data))
 				unset($checkout_data['register_customer']);
 			
@@ -1027,7 +1047,8 @@
 		}
 		
 		/**
-		 * Removes any checkout data from the session.
+		 * Removes all checkout data.
+         * The session will still be considered active.
 		 * @documentable
 		 */
 		public static function reset_all()
@@ -1106,19 +1127,30 @@
             if (!$selectedQuote)
                 throw new Cms_Exception('Selected shipping option is not applicable 2.');
 
-            $checkout_data = self::load();
+            $checkout_data = self::get();
             $checkout_data['selected_shipping_quote'] = $selectedQuote;
             self::save($checkout_data);
         }
 
-		protected static function load()
+        
+        protected static function get(){
+            if(!self::isSessionActive()){
+                self::init();
+            }
+            $data = Phpr::$session->get('shop_checkout_data');
+            return is_array($data) ? $data : array();
+        }
+		protected static function init($reset=false)
 		{
-			return Phpr::$session->get('shop_checkout_data', array());
+            Phpr::$session->set('shop_checkout_data', array());
 		}
 		
-		protected static function save(&$data)
+		protected static function save($data)
 		{
-			Phpr::$session['shop_checkout_data'] = $data;
+            if(!is_array($data)){
+                throw new Phpr_ApplicationException('Cannot save CheckoutData');
+            }
+            Phpr::$session->set('shop_checkout_data', $data);
 		}
 
 
@@ -1245,7 +1277,7 @@
          */
         public static function get_shipping_method()
         {
-            $checkout_data = self::load();
+            $checkout_data = self::get();
 
             if (!array_key_exists('selected_shipping_quote', $checkout_data))
             {

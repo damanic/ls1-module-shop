@@ -1339,7 +1339,7 @@ class Shop_Actions extends Cms_ActionScope
     {
         global $activerecord_no_columns_info;
 
-        if($this->customer && !Shop_CheckoutData::hasAddressInfo()){
+        if(!Shop_CheckoutData::hasAddressInfo() && $this->customer){
             Shop_CheckoutData::load_from_customer($this->customer, true);
         }
 
