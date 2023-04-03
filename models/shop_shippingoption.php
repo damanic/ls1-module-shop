@@ -1420,13 +1420,15 @@
 
         private static function applyFilterCountry($shippingOptions, Shop_AddressInfo $address){
             $results = array();
-            foreach($shippingOptions as $shippingOption) {
+            foreach ($shippingOptions as $shippingOption) {
                 $shippingType = $shippingOption->get_shippingtype_object();
                 if ($shippingType->config_countries()) {
-                    $countryIds = Db_DbHelper::scalarArray(
-                        'select shop_country_id from shop_shippingoptions_countries where shop_shipping_option_id=:id',
-                        array('id' => $shippingOption->id)
-                    );
+                    $countries = $shippingOption->countries;
+                    if($countries->count() == 0) {
+                        $results[] = $shippingOption;
+                        continue;
+                    }
+                    $countryIds = $countries->as_array('id');
                     if ($countryIds && !in_array($address->country, $countryIds)) {
                         continue;
                     }
