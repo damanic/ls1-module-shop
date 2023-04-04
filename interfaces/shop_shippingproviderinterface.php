@@ -30,9 +30,8 @@ interface Shop_ShippingProviderInterface {
      */
     public function getItemRates(
         Shop_ShippingOption $shippingOption,
-        $items,
-        Shop_AddressInfo
-        $toAddress,
+        array $items,
+        Shop_AddressInfo $toAddress,
         Shop_AddressInfo $fromAddress = null,
         $context = ''
     );
