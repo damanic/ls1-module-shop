@@ -382,6 +382,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
         $price = $this->findShippingPrice($shippingOption,$toAddress,$itemInfo);
 
         if($price === null){
+
             return $rates;
         }
 
@@ -462,7 +463,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
                 }
             }
         }
-        
+
 
         $rates[] = $this->buildShippingRate($shippingOption, $price);
         return $rates;
@@ -643,25 +644,25 @@ class Shop_TableRateShipping extends Shop_ShippingType
         );
         $boxInfo = array_merge($expectedBoxInfoParams, $boxInfo);
 
-        if($shippingOption->max_box_weight !== null){
+        if($shippingOption->max_box_weight && is_numeric($shippingOption->max_box_weight)){
             if(Core_Number::compare_float($boxInfo['weight'], $shippingOption->max_box_weight) >= 0){
                 //too heavy
                 return false;
             }
         }
-        if($shippingOption->max_box_length !== null){
+        if($shippingOption->max_box_length && is_numeric($shippingOption->max_box_length)){
             if(Core_Number::compare_float($boxInfo['length'], $shippingOption->max_box_length) >= 0){
                 //too long
                 return false;
             }
         }
-        if($shippingOption->max_box_width !== null){
+        if($shippingOption->max_box_width && is_numeric($shippingOption->max_box_width)){
             if(Core_Number::compare_float($boxInfo['width'], $shippingOption->max_box_width) >= 0){
                 //too wide
                 return false;
             }
         }
-        if($shippingOption->max_box_height !== null){
+        if($shippingOption->max_box_height && is_numeric($shippingOption->max_box_height)){
             if(Core_Number::compare_float($boxInfo['height'], $shippingOption->max_box_height) >= 0){
                 //too tall
                 return false;
