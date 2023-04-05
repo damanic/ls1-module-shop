@@ -115,7 +115,7 @@ abstract class Shop_ShippingType extends Core_XmlController implements Shop_Ship
      * that have not implemented Shop_ShippingProviderInterface;
      * @see Shop_ShippingProviderInterface
      */
-    public function getItemRates(Shop_ShippingOption $shippingOption, $items, Shop_AddressInfo $toAddress, Shop_AddressInfo $fromAddress = null, $context = ''){
+    public function getItemRates(Shop_ShippingOption $shippingOption, array $items, Shop_AddressInfo $toAddress, Shop_AddressInfo $fromAddress = null, $context = ''){
 
         $rates = array();
 
@@ -207,7 +207,6 @@ abstract class Shop_ShippingType extends Core_XmlController implements Shop_Ship
      */
     public function getPackedBoxRates(Shop_ShippingOption $shippingOption, Shop_AddressInfo $toAddress, array $packedBoxes, Shop_AddressInfo $fromAddress = null, $context = ''){
 
-        $rates = array();
         $items = array();
         foreach($packedBoxes as $packedBox){
             foreach($packedBox->get_items() as $item){
