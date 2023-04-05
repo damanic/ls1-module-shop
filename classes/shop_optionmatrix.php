@@ -6,7 +6,7 @@
 		
 		/**
 		 * Returns product's property by the property name.
-		 * @param array $options Specifies product option values or Shop_OptionMatrixRecord object. 
+		 * @param array|Shop_OptionMatrixRecord $options Specifies product option values or Shop_OptionMatrixRecord object.
 		 * Option values should be specified in the following format: 
 		 * ['Option name 1'=>'option value 1', 'Option name 2'=>'option value 2']
 		 * or: ['option_key_1'=>'option value 1', 'option_key_2'=>'option value 2']
@@ -44,16 +44,11 @@
 				$product_property_name = $om_record->is_property_supported($property_name);
 				if ($product_property_name !== true)
 					return self::get_product_property($product, $property_name);
-				
-				/* 
-				 * If record is found, load its property value
-				 */
-				
-				$result = $om_record->$property_name;
+
 
 				/*
 				 * If property is price or sale_price, return the OM record price - 
-				 * it will fallback to the product price automatically if needed.
+				 * it will fall back to the product price automatically if needed.
 				 */
 				
 				if ($property_name == 'price')
@@ -74,28 +69,29 @@
 				if ($property_name == 'volume')
 					return $om_record->get_volume($product);
 
+                /*
+                 * If record is found, load its property value
+                 */
+
+                $result = $om_record->$property_name;
+
 				/* 
 				 * If the property is empty, fallback to the product's property
 				 */
 
 				if (
-					(is_object($result) && ($result instanceof Db_DataCollection) && !$result->count) ||
+					(($result instanceof Db_DataCollection) && !$result->count) ||
 					(is_array($result) && !count($result)) ||
 					(!is_object($result) && !is_array($result) && !strlen($result))
 				)
 					return self::get_product_property($product, $property_name);
 
-				/*
-				 * Some properties (price) require extra processing
-				 */
-				
-				// 
 					
 				return $result;
 			}
 			
 			/*
-			 * If record is not found, but product has Option Matrix records and the requesed property is "disabled"
+			 * If record is not found, but product has Option Matrix records and the requested property is "disabled"
 			 * return TRUE - we consider non-existing Option Matrix records as disabled.
 			 */
 			
