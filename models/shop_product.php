@@ -3001,8 +3001,11 @@ class Shop_Product extends Shop_ActiveRecord
 	 */
 	public function volume()
 	{
-		return $this->width*$this->height*$this->depth;
-	}
+        $width = is_numeric($this->width) ? $this->width : 0;
+        $height = is_numeric($this->height) ? $this->height : 0;
+        $depth = is_numeric($this->depth) ? $this->depth : 0;
+        return $width*$height*$depth;
+    }
 
 	/**
 	 * Returns a {@link http://lemonstand.com/docs/product_page/ product page} URL, based on the URL passed in the parameter.

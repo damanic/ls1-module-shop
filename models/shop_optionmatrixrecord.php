@@ -732,6 +732,10 @@
 			$width = Shop_OptionMatrix::get_property($this, 'width', $product);
 			$height = Shop_OptionMatrix::get_property($this, 'height', $product);
 			$depth = Shop_OptionMatrix::get_property($this, 'depth', $product);
+
+            if(!is_numeric($width) || !is_numeric($height) || !is_numeric($depth)){
+                return 0;
+            }
 			
 			return $width*$height*$depth;
 		}
