@@ -442,9 +442,22 @@
             $shipping_info = new Shop_AddressInfo();
             $shipping_info->load_from_order($order, false);
 
+            if(!count($order->items)){
+                return array(); // no items, no quotes
+            }
+
             $cartItems = $order->getCartItemsShipping($order->items);
             if(!count($cartItems)){
-                return array(); // no items to ship, no quotes to return
+                /*
+                 * LS orders require shipping option selection even if the order contains zero shippable items.
+                 * If this shipping option is a table rate with the API code `no_shipping_required` we continue
+                 * to pass the order items for rate calculation so that a free `No Shipping Required` option can be returned.
+                 */
+                if(is_a($shippingProvider,'Shop_TableRateShipping') && $this->ls_api_code == 'no_shipping_required'){
+                    $cartItems = Shop_OrderHelper::items_to_cart_items_array($order->items);
+                } else {
+                    return array(); // no items to ship, no quotes to return
+                }
             }
 
             $quotableCartItems = $this->filterFreeShippingItems($cartItems);
