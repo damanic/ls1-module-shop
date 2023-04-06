@@ -1125,7 +1125,7 @@
                 }
             }
             if (!$selectedQuote)
-                throw new Cms_Exception('Selected shipping option is not applicable 2.');
+                throw new Cms_Exception('Selected shipping option is not applicable.');
 
             $checkout_data = self::get();
             $checkout_data['selected_shipping_quote'] = $selectedQuote;
