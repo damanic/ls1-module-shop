@@ -147,6 +147,11 @@ abstract class Shop_ShippingType extends Core_XmlController implements Shop_Ship
 
         $params = array_merge($params, $this->getEventParameters());
         $quote = $this->get_quote($params);
+        try{
+            $shippingProvider = $this->get_shippingtype_object();
+        } catch (Exception $e) {
+            $shippingProvider = null;
+        }
         if(is_array($quote)){
             foreach($quote as $serviceName => $quoteEntry){
                 if(!isset($quoteEntry['id'])){
@@ -155,6 +160,9 @@ abstract class Shop_ShippingType extends Core_XmlController implements Shop_Ship
                 $rate = new Shop_ShippingRate();
                 $rate->setId($quoteEntry['id']);
                 $rate->setShippingOptionId($shippingOption->id);
+                if($shippingProvider){
+                    $rate->setShippingProviderClassName(get_class($shippingProvider));
+                }
                 $rate->setShippingServiceName($serviceName);
                 $rate->setRate($quoteEntry['quote']);
                 $rates[] = $rate;
@@ -162,6 +170,9 @@ abstract class Shop_ShippingType extends Core_XmlController implements Shop_Ship
         } else if(is_numeric($quote)) {
                 $rate = new Shop_ShippingRate();
                 $rate->setShippingOptionId($shippingOption->id);
+                if($shippingProvider){
+                    $rate->setShippingProviderClassName(get_class($shippingProvider));
+                }
                 $rate->setShippingServiceName($shippingOption->name);
                 $rate->setRate($quote);
                 $rates[] = $rate;

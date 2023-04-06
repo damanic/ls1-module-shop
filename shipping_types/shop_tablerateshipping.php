@@ -608,6 +608,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
 
         $rate = new Shop_ShippingRate();
         $rate->setShippingOptionId($shippingOption->id);
+        $rate->setShippingProviderClassName('Shop_TableRateShipping');
         $rate->setShippingServiceName($shippingOption->name);
         $rate->setRate($price);
         $rate->setCarrierServiceInfo($serviceInfo);

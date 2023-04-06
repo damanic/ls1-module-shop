@@ -43,6 +43,10 @@ class Shop_ShippingRate{
      */
     protected $currencyCode;
 
+    /**
+     * @var string|null Class name for associated ShippingProviderInterface
+     */
+    protected $shippingProviderClassName = null;
 
     /**
      * Set the ID for the rate.
@@ -61,6 +65,15 @@ class Shop_ShippingRate{
      */
     public function setShippingOptionId($id){
         $this->shippingOptionId = $id;
+    }
+
+    /**
+     * Set the ShippingProviderInterface class name associated with this rate
+     * @param string $className
+     * @return void
+     */
+    public function setShippingProviderClassName($className){
+        $this->shippingProviderClassName = $className;
     }
 
     /**
@@ -98,6 +111,9 @@ class Shop_ShippingRate{
      * @return string
      */
     public function getId(){
+        if(!$this->id){
+            return $this->getShippingOptionId().'_'.md5($this->getShippingServiceName());
+        }
         return $this->id;
     }
 
@@ -155,7 +171,7 @@ class Shop_ShippingRate{
     public function getRate($currencyCode = null){
         if($currencyCode && $currencyCode !== $this->getCurrencyCode()){
             $currency_converter  = Shop_CurrencyConverter::create();
-            $currency_converter->convert( $this->rate, $this->getCurrencyCode(), $currencyCode );
+            return $currency_converter->convert( $this->rate, $this->getCurrencyCode(), $currencyCode );
         }
         return $this->rate;
     }
@@ -169,6 +185,48 @@ class Shop_ShippingRate{
             return $this->currencyCode = Shop_CurrencySettings::get()->code;
         }
         return $this->currencyCode;
+    }
+
+    /**
+     * Get the ShippingProvider associated with this rate
+     * If ShippingProvider cannot be determined null will be returned.
+     * @return Shop_ShippingProviderInterface|null
+     */
+    public function getShippingProvider(){
+
+        if($this->shippingProviderClassName){
+            if(Phpr::$classLoader->load($this->shippingProviderClassName)) {
+                $className = $this->shippingProviderClassName;
+                return new $className();
+            }
+        }
+        if($this->shippingOptionId){
+            try {
+                $shippingOption = $this->getShippingOption();
+                if ($shippingOption) {
+                    return $shippingOption->get_shippingtype_object();
+                }
+            }catch(\Exception $e){
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the ShippingOption associated with this rate
+     * If no ShippingOption ID is set, null will be returned.
+     * @return Shop_ShippingOption|null
+     */
+    public function getShippingOption()
+    {
+        if($this->shippingOptionId) {
+            $shippingOption = Shop_ShippingOption::create()->find($this->shippingOptionId);
+            if(is_a($shippingOption,'Shop_ShippingOption') && $shippingOption->id){
+                return $shippingOption;
+            }
+        }
+        return null;
     }
 
 
