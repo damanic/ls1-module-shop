@@ -125,6 +125,9 @@
 		 */
 		public function convert($value, $from_currency, $to_currency, $round = 2)
 		{
+            if(!is_numeric($value) || $value == 0){
+                return 0;
+            }
 			$result = $value*$this->get_rate($from_currency, $to_currency);
 			return $round === null ? $result : round($result, $round);
 		}
@@ -138,6 +141,9 @@
 		 */
 		public function convert_from($value, $from_currency, $round = 2)
 		{
+            if(!is_numeric($value) || $value == 0){
+                return 0;
+            }
 			$result = $value*$this->get_rate($from_currency, Shop_CurrencySettings::get()->code);
 			return $round === null ? $result : round($result, $round);
 		}
