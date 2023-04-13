@@ -329,6 +329,7 @@ class Shop_Product extends Shop_ActiveRecord
 
 		$this->define_column('shipping_hs_code', 'Harmonized System Code')->defaultInvisible();
 		$this->define_column('shipping_hs_code_extended', 'Extended Harmonized System Code')->defaultInvisible();
+        $this->define_column('shipping_customs_description', 'Customs Description')->defaultInvisible();
 
 		$this->define_column('net_unit_quantity', 'Net Quantity')->defaultInvisible();
 		$this->define_column('net_unit_code', 'Net Quantity Unit')->defaultInvisible();
@@ -464,7 +465,14 @@ class Shop_Product extends Shop_ActiveRecord
 			if($shipping_params->enable_hs_codes) {
 				$this->add_form_field( 'shipping_hs_code' )->renderAs( frm_dropdown )->emptyOption( '- please select -' )->cssClassName( 'search-contains--false' )->tab( 'Shipping' )->comment( 'A six digit tariff code can be selected to facilitate customs clearance when shipping internationally','above' );
 				$this->add_form_field( 'shipping_hs_code_extended','left' )->renderAs( frm_text )->tab( 'Shipping' )->comment( 'Enter a full tariff code here if a code longer than 6 digits is required, or if the code cannot be found in the selection options above.', 'above' );
-			}
+                $this->add_form_field('shipping_customs_description', 'right')
+                    ->renderAs(frm_text)
+                    ->tab('Shipping')
+                    ->comment(
+                        'Enter a description of the product for customs clearance purposes.',
+                        'above'
+                    );
+            }
 			$this->add_form_field( 'bulky_shipping_item' )->tab( 'Shipping' )->comment( 'Bulky/oversize items can be excluded from discount offers' );
 
 			if ($context == 'grouped')
@@ -4019,27 +4027,87 @@ class Shop_Product extends Shop_ActiveRecord
 			if ($keyValue == null)
 				return $result;
 
-			$name = Db_DbHelper::scalar("SELECT CONCAT(description,' [ ',code,' ]') as value FROM shop_shipping_hs_codes WHERE code = ?",$keyValue);
+			$name = Shop_HsCodes::getHsCodeDescription($keyValue);
 
 			if ($name)
-				return $name;
+				return $name .' ['.$keyValue.']';
 		}
 
 		return $result;
 	}
 
 	protected function list_shipping_hs_code_options(){
-		$sql = "SELECT code, CONCAT(description,' [ ',code,' ]') as value
- 					FROM shop_shipping_hs_codes
- 					WHERE CHAR_LENGTH(code) = 6";
-		$result = Db_DbHelper::queryArray($sql);
+        $codes = Shop_HsCodes::listHsCodes();
 		$options = array();
-		foreach($result as $data){
-			$options[$data['code']] = $data['value'];
+		foreach($codes as $code => $description){
+			$options[$code] = $description.' ['.$code.']';
 		}
 		return $options;
 	}
 
+    /**
+     * Returns a customs description for the product
+     * @param string $optionSku Optional SKU if description is for a product option matrix record
+     * @return string Customs Description
+     */
+    public function getCustomsDescription($optionSku = null)
+    {
+        $hasOptionSku = null;
+        $optionSkuData = null;
+        $customsDescription = $this->shipping_customs_description;
+
+        if($optionSku){
+            foreach ($this->option_matrix_records as $omr) {
+                if ($omr->sku == $optionSku && !$omr->disabled) {
+                    $hasOptionSku = true;
+                    break;
+                }
+            }
+        }
+
+        if ($hasOptionSku && $optionSku !== $this->sku) {
+            $optionSkuData = Db_DbHelper::object('SELECT shipping_customs_description, net_unit_code, net_unit_quantity FROM shop_products WHERE sku = ?', $optionSku);
+            $customsDescription = $optionSkuData ? $optionSkuData->shipping_customs_description : null;
+        }
+
+        if($customsDescription){
+            return $customsDescription;
+        }
+
+        //No explicit customs description found, fire event to get one
+        $results = Backend::$events->fireEvent('shop:onProductGetCustomsDescription', $this, $optionSku);
+        if ($results) {
+            foreach ($results as $customsDescription) {
+                if ($customsDescription) {
+                    return $customsDescription;
+                }
+            }
+        }
+
+        //No event handler found, use default
+        $product = $this;
+        $customsDescription = $this->name;
+        $net_unit = $optionSkuData ?  $optionSkuData->net_unit_code : $this->get_net_unit()->symbol;
+        $net_unit_quantity = $optionSkuData ? $optionSkuData->net_unit_quantity : $this->net_unit_quantity;
+        if ($optionSku) {
+            foreach ($this->option_matrix_records as $omr) {
+                if ($omr->sku == $optionSku && !$omr->disabled) {
+                    $customsDescription .= ' -';
+                    foreach ($omr->record_options as $ro) {
+                        $customsDescription .= ' ' . $ro->option_value;
+                    }
+                    break;
+                }
+            }
+        }
+        if ($net_unit_quantity) {
+            $net_unit_quantity = (string) $net_unit_quantity + 0;
+            $customsDescription .= ' - '.$net_unit_quantity;
+            $customsDescription .= $net_unit;
+        }
+
+        return $customsDescription;
+    }
 
 	/*
 	 * Deprecated methods
@@ -4904,7 +4972,6 @@ class Shop_Product extends Shop_ActiveRecord
 	 * @see Shop_Product::find_products
 	 * @package shop.events
 	 * @author LemonStand eCommerce Inc.
-	 * @param Shop_Product $product Specifies the product object.
 	 * @return array Returns a list of column names.
 	 */
 	private function event_onGetProductSearchSortColumns() {}
@@ -4916,8 +4983,9 @@ class Shop_Product extends Shop_ActiveRecord
 	 * @package shop.events
 	 * @author Matt Manning (github:damanic)
 	 * @param Shop_Product $product The product object onto which additional where() conditions can be applied.
+     * @param Shop_Customer $customer The customer object
 	 */
-	private function event_onProductApplyCustomerVisibility() {}
+	private function event_onProductApplyCustomerVisibility($product, $customer) {}
 
 	/**
 	 * Triggered when a customer visibility check is performed on a product
@@ -4925,7 +4993,22 @@ class Shop_Product extends Shop_ActiveRecord
 	 * @package shop.events
 	 * @author Matt Manning (github:damanic)
 	 * @param Array $params An array that contains the product object and customer object.
-	 * return boolean Return false if the product should not be visible
+	 * @return bool Return false if the product should not be visible
 	 */
-	private function event_onProductVisibleForCustomer() {}
+	private function event_onProductVisibleForCustomer($params) {}
+
+
+    /**
+     * This event fires when a product does not have a customs description.
+     * Subscribers to this event should return a string that can be used as the customs description.
+     * @event shop:onProductGetCustomsDescription
+     * @param Shop_Product $product The product object
+     * @param string $optionSku If applicable, the SKU for the products option matrix record
+     * @return string The customs description
+     * @author Matt Manning (github:damanic)
+     * @package shop.events
+     */
+    private function event_onProductGetCustomsDescription($product, $optionSku)
+    {
+    }
 }
