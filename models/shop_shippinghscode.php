@@ -1,8 +1,16 @@
 <?php
 
+/**
+ * @deprecated Use Shop_HsCodes instead
+ */
 class Shop_ShippingHSCode extends Db_ActiveRecord {
 
 	public $table_name = 'shop_shipping_hs_codes';
+
+    public function __construct(){
+        traceLog('Use of deprecated class `Shop_ShippingHSCode`. Use Shop_HsCodes instead.');
+        parent::__construct();
+    }
 
 
 	public static function create( $init_columns = false ) {
@@ -22,6 +30,7 @@ class Shop_ShippingHSCode extends Db_ActiveRecord {
 	public function define_form_fields( $context = null ) {}
 
 	public static function find_unique_codes() {
+        traceLog('Use of deprecated method `find_unique_codes()`. Use Shop_HsCodes::listHsCodes() instead.');
 		$obj    = self::create();
 		$obj->where( 'CHAR_LENGTH(code) = 6' );
 		$obj->group( 'shop_shipping_hs_codes.code' );
