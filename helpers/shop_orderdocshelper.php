@@ -224,12 +224,14 @@ class Shop_OrderDocsHelper{
             return false;
         }
 
+
         //Event allows HTML output to be modified (eg. output HTML that renders a pdf in iframe).
         $htmlModified = Backend::$events->fire_event(array('name' => 'shop:onBeforeRenderOrderDoc', 'type' => 'update_result'), $html, array());
         if($htmlModified){
             echo $htmlModified;
+        } else {
+            echo $html;
         }
-        echo $html;
     }
 
     /**
