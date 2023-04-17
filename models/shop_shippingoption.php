@@ -796,22 +796,24 @@
         public static function getShippingOptionsForOrder($order, $frontendOnly = false, $includeDisabled = false)
         {
             $weight = $order->get_total_weight();
-
+            $includeZeroWeightOptions = false;
             if($weight !== 0) {
-                //Shipping option minimum and maximum weight restrictions are evaluated against ACTUAL item weight.
-                //However, if a discount rule effectively reduces the item shipping weight to ZERO
-                //this method will look for shipping options that allow for ZERO weight.
+                //Shipping option minimum and maximum weight restrictions are evaluated against ACTUAL weight.
+                //However, a discount rule can effectively reduce the order shipping weight to ZERO
+                //by marking all order items as eligible for FREE SHIPPING. In this case we should include shipping options
+                //that have their min and max weight limit set to ZERO.
+                //TLDR: Expose free shipping options.
                 $itemsShipping = $order->getCartItemsShipping($order->items);
                 if ($itemsShipping) {
                     $discountedWeight = Shop_Cart::total_items_weight($itemsShipping);
                     if ($discountedWeight === 0) {
-                        $weight = 0;
+                        $includeZeroWeightOptions = true;
                     }
                 }
             }
 
             //Look for applicable shipping option records
-            $shippingOptions = self::findByWeight($weight, $frontendOnly, $includeDisabled);
+            $shippingOptions = self::findByWeight($weight, $frontendOnly, $includeDisabled, $includeZeroWeightOptions);
             $shippingOptionsArray = $shippingOptions ? $shippingOptions->as_array(null, 'id') : array();
             if($shippingOptionsArray) {
                 $eventParams = $shippingOptions[0]->getEventParamsForOrder($order);
@@ -1393,7 +1395,18 @@
         }
 
 
-        private static function findByWeight($weight, $frontendOnly = false, $includeDisabled = false){
+        /**
+         * @param string $weight The qualifying weight for shipping options
+         * @param bool $frontendOnly Only include options that are flagged for frontend
+         * @param bool $includeDisabled Include options that have been disabled
+         * @param bool $includeZeroWeightOptions Include shipping options that are explicitly set up for ZERO WEIGHT
+         *             even if the given $weight is not zero.
+         * @return mixed
+         */
+        private static function findByWeight($weight, $frontendOnly = false, $includeDisabled = false, $includeZeroWeightOptions = false){
+            $bind = array(
+                'weight' => $weight
+            );
             $shipping_options = Shop_ShippingOption::create();
             if ( $frontendOnly && !$includeDisabled ) {
                 $shipping_options->where( 'enabled = 1' );
@@ -1401,8 +1414,17 @@
             if ( !$frontendOnly && !$includeDisabled ) {
                 $shipping_options->where( 'backend_enabled = 1' );
             }
-            $shipping_options->where( '(min_weight_allowed is null or min_weight_allowed <= ?)', $weight );
-            $shipping_options->where( '(max_weight_allowed is null or max_weight_allowed >= ?)', $weight );
+
+            $zeroWeightSql = null;
+            if(($weight !== 0) && $includeZeroWeightOptions){
+                $zeroWeightSql = 'OR ((min_weight_allowed = 0) AND (max_weight_allowed = 0))';
+            }
+
+            $shipping_options->where(
+                '((min_weight_allowed is null or min_weight_allowed <= :weight) 
+                 AND (max_weight_allowed is null or max_weight_allowed >= :weight)) '.$zeroWeightSql,
+                $bind
+            );
             return $shipping_options->find_all();
         }
 
