@@ -53,15 +53,40 @@
 			return $this->load_items($cart_name);
 		}
 		
-		public function remove_item($key, $cart_name)
-		{
-			$items = $this->load_items($cart_name);
-			if (array_key_exists($key, $items))
-			{
-				unset($items[$key]);
-				$this->save_items($items, $cart_name);
-			}
-		}
+    /**
+     * Removes the item with matching key from the cart.
+     * If the item is a bundle master item, all its dependants will be removed as well.
+     * @param string $key
+     * @param string $cart_name
+     * @return void
+     */
+        public function remove_item($key, $cart_name)
+        {
+            $items = $this->load_items($cart_name);
+            $itemCount = count($items);
+            $itemToRemove = null;
+            $itemDependants = null;
+
+            foreach ($items as $item) {
+                if ($item->key == $key) {
+                    $itemToRemove = $item;
+                }
+                if ($item->bundle_master_cart_key == $key) {
+                    $itemDependants[] = $item;
+                }
+            }
+            if ($itemToRemove) {
+                unset($items[$itemToRemove->key]);
+            }
+            if ($itemDependants) {
+                foreach ($itemDependants as $itemDependant) {
+                    unset($items[$itemDependant->key]);
+                }
+            }
+            if ($itemCount != count($items)) {
+                $this->save_items($items, $cart_name);
+            }
+        }
 		
 		public function set_quantity($key, $value, $cart_name)
 		{

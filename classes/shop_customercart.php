@@ -52,7 +52,7 @@
 			$this->items[$cart_name][$key] = $item;
 
 			if ($uploaded_files && ($uploaded_files instanceof Db_DataCollection || is_array($uploaded_files)))
-				self::add_uploaded_files($item->key, $uploaded_files, $cart_name);
+				self::add_uploaded_files($item->item_key, $uploaded_files, $cart_name);
 
 			return $item;
 		}
@@ -78,38 +78,40 @@
 			return $this->items[$cart_name] = Shop_CustomerCartItem::create()->where('customer_id=?', $this->customer->id)->where('cart_name=?', $cart_name)->order('shop_customer_cart_items.id')->find_all()->as_array(null, 'item_key');
 		}
 
-    /**
-     * Removes the item with matching key from the cart.
-     * If the item is a bundle master item, all its dependants will be removed as well.
-     * @param string $key
-     * @param string $cart_name
-     * @return void
-     */
-		public function remove_item($key, $cart_name)
-		{
+        /**
+         * Removes the item with matching key from the cart.
+         * If the item is a bundle master item, all its dependants will be removed as well.
+         * @param string $key
+         * @param string $cart_name
+         * @return void
+         */
+        public function remove_item($key, $cart_name)
+        {
             $items = $this->list_items($cart_name);
             $itemToRemove = null;
             $itemDependants = null;
 
-            foreach($items as $item){
-                if($item->item_key == $key){
+            foreach ($items as $item) {
+                if ($item->item_key == $key) {
                     $itemToRemove = $item;
                 }
-                if($item->bundle_master_cart_key == $key){
+                if ($item->bundle_master_cart_key == $key) {
                     $itemDependants[] = $item;
                 }
             }
-            if($itemToRemove){
+            if ($itemToRemove) {
+                $itemKeyToRemove = $itemToRemove->item_key;
                 $itemToRemove->delete();
-                unset($this->items[$cart_name][$key]);
+                unset($this->items[$cart_name][$itemKeyToRemove]);
             }
-            if($itemDependants){
-                foreach($itemDependants as $item){
-                    $item->delete();
-                    unset($this->items[$cart_name][$item->item_key]);
+            if ($itemDependants) {
+                foreach ($itemDependants as $itemDependant) {
+                    $itemKeyToRemove = $itemDependant->item_key;
+                    $itemDependant->delete();
+                    unset($this->items[$cart_name][$itemKeyToRemove]);
                 }
             }
-		}
+        }
 
 		public function set_quantity($key, $value, $cart_name)
 		{
