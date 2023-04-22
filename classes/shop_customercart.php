@@ -78,15 +78,37 @@
 			return $this->items[$cart_name] = Shop_CustomerCartItem::create()->where('customer_id=?', $this->customer->id)->where('cart_name=?', $cart_name)->order('shop_customer_cart_items.id')->find_all()->as_array(null, 'item_key');
 		}
 
+    /**
+     * Removes the item with matching key from the cart.
+     * If the item is a bundle master item, all its dependants will be removed as well.
+     * @param string $key
+     * @param string $cart_name
+     * @return void
+     */
 		public function remove_item($key, $cart_name)
 		{
-			$this->list_items($cart_name);
-			
-			if (array_key_exists($key, $this->items[$cart_name]))
-			{
-				$this->items[$cart_name][$key]->delete();
-				unset($this->items[$cart_name][$key]);
-			}
+            $items = $this->list_items($cart_name);
+            $itemToRemove = null;
+            $itemDependants = null;
+
+            foreach($items as $item){
+                if($item->item_key == $key){
+                    $itemToRemove = $item;
+                }
+                if($item->bundle_master_cart_key == $key){
+                    $itemDependants[] = $item;
+                }
+            }
+            if($itemToRemove){
+                $itemToRemove->delete();
+                unset($this->items[$cart_name][$key]);
+            }
+            if($itemDependants){
+                foreach($itemDependants as $item){
+                    $item->delete();
+                    unset($this->items[$cart_name][$item->item_key]);
+                }
+            }
 		}
 
 		public function set_quantity($key, $value, $cart_name)
