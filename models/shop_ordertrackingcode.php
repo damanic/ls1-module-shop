@@ -18,7 +18,7 @@
 		
 		public function define_form_fields($context = null)
 		{
-            $this->add_form_field('shop_shipping_tracker_provider')->referenceSort('name');
+            $this->add_form_field('shop_shipping_tracker_provider')->renderAs(frm_dropdown)->emptyOption('<none>')->referenceSort('name');
 			$this->add_form_field('code');
 		}
 		
