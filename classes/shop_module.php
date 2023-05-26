@@ -371,7 +371,11 @@
 		}
 
 		public function onFrontEndLogin(){
-			Shop_Cart::move_cart();
+			try {
+				Shop_Cart::move_cart();
+			} catch(\Exception $e){
+				Phpr::$session->flash['error'] = $e->getMessage();
+			}
 		}
 
 		public function onAfterFrontEndLogin($customer)
