@@ -241,6 +241,24 @@
             return $this->get_bundle_item_quantity();
 		}
 
+        /**
+         * Returns the quantity of stock available for this item.
+         * If stock level is not tracked , returns true.
+         * If no stock level can be determined, returns false.
+         * @return int|bool The quantity available or the status of availability
+         */
+        public function getStockAvailable(){
+            $inventoryTrackingEnabled = $this->product && $this->product->inventory_tracking_enabled();
+            if(!$inventoryTrackingEnabled){
+                return true; //stock is available because inventory tracking is disabled
+            }
+            $in_stock = $this->om('in_stock');
+            if(is_numeric($in_stock)){
+                return max(0, $in_stock); //actual quantity available
+            }
+            return false; // stock level could not be determined
+        }
+
 		/**
 		 * Sale reductions can be applied through catalog price rules
 		 * This method returns the amount discounted from the list price by a catalog price rule
