@@ -42,7 +42,12 @@ class Shop_TableRateShipping extends Shop_ShippingType
             ->comment('The name of the shipping carrier these rates are for. Optional, used for backend reference')
             ->tab('Carrier Service');
 
-        $host_obj->add_field('carrier_service_name','Carrier Service Name','right')
+        $host_obj->add_field('requires_receipient_phone_number','Service requires recipient phone number','right')
+            ->renderAs(frm_checkbox)
+            ->comment('Tick if this service requires a contact phone number for delivery')
+            ->tab('Carrier Service');
+
+        $host_obj->add_field('carrier_service_name','Carrier Service Name','left')
             ->renderAs(frm_text)
             ->comment('The name of the shipping service these rates are for. Optional, used for backend reference')
             ->tab('Carrier Service');
@@ -57,10 +62,11 @@ class Shop_TableRateShipping extends Shop_ShippingType
             ->comment('Tick if this service provides proof of delivery')
             ->tab('Carrier Service');
 
-        $host_obj->add_field('requires_receipient_phone_number','Service requires recipient phone number','right')
-            ->renderAs(frm_checkbox)
-            ->comment('Tick if this service requires a contact phone number for delivery')
+        $host_obj->add_field('supported_incoterms', 'Supported incoterms', 'left')
+            ->renderAs(frm_checkboxlist)
+            ->comment('Codes as defined by International Chamber of Commerce (ICC)')
             ->tab('Carrier Service');
+
 
         $parcelTab = 'Shipping Boxes';
         $host_obj->add_field('shipping_boxes', ' Compatible Shipping Boxes','left')->renderAs(frm_checkboxlist)->comment('Select carrier compatible boxes or none to allow all boxes. Shipping boxes can be configured from System -> Settings -> Shipping Settings','above')->tab($parcelTab)->validation();
@@ -107,6 +113,27 @@ class Shop_TableRateShipping extends Shop_ShippingType
         ))->noLabel();
     }
 
+    public function get_supported_incoterms_options()
+    {
+        return [
+            'EXW' => 'EXW',
+            'FCA' => 'FCA',
+            'CPT' => 'CPT',
+            'CIP' => 'CIP',
+            'DAT' => 'DAT',
+            'DAP' => 'DAP',
+            'DDP' => 'DDP',
+            'FAS' => 'FAS',
+            'FOB' => 'FOB',
+            'CFR' => 'CFR',
+            'CIF' => 'CIF',
+        ];
+    }
+
+    public function get_supported_incoterms_option_state($value = 1)
+    {
+        return is_array($this->host_obj->supported_incoterms) && in_array($value, $this->host_obj->supported_incoterms);
+    }
 
     public function get_shipping_boxes_options($current_key_value = -1)
     {
@@ -605,6 +632,10 @@ class Shop_TableRateShipping extends Shop_ShippingType
         $serviceInfo->providesTracking = (bool)$shippingOption->provides_tracking;
         $serviceInfo->providesProofOfDelivery = (bool)$shippingOption->provides_proofofdelivery;
         $serviceInfo->requiresRecipientPhoneNumber = (bool)$shippingOption->requires_receipient_phone_number;
+        $supportedIncoterms = $this->host_obj->supported_incoterms;
+        if (is_array($supportedIncoterms)) {
+            $serviceInfo->supportedIncoterms = $supportedIncoterms;
+        }
 
         $rate = new Shop_ShippingRate();
         $rate->setShippingOptionId($shippingOption->id);
