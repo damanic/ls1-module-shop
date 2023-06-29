@@ -593,7 +593,7 @@
             $info = new self();
             foreach ($info->transliterate_fields as $field_name) {
                 if(property_exists($info,$field_name)){
-                    $info->{$property_name} = $this->get($field_name);
+                    $info->{$field_name} = $this->get($field_name);
                 }
             }
 
