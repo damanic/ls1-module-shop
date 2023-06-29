@@ -42,25 +42,35 @@ class Shop_ActiveRecord extends Db_ActiveRecord{
 	 */
 	public function get_currency_field($db_name, $currency_code){
 
+        $fieldValue = $this->$db_name ? $this->$db_name : 0;
 		if($this->get_currency_code() == $currency_code){
-			return $this->$db_name;
+            return $fieldValue;
 		}
 
 		//check if a price record has been set for this currency
 		$price_record = Shop_CurrencyPriceRecord::find_record($this,$db_name, $currency_code);
 		if($price_record){
-			return $price_record->value;
+            $price = $price_record->getValue();
+            if($price !== null) {
+                return $price;
+            }
+        }
+
+        if($fieldValue === 0){
+            return $fieldValue;
 		}
 
 		//do a currency conversion
 		$currency_converter = Shop_CurrencyConverter::create();
 		$from_currency_code =  $this->get_currency_code();
 		$to_currency_code = $currency_code;
-		return $currency_converter->convert($this->$db_name, $from_currency_code, $to_currency_code, 4);
+        $fieldValue = $currency_converter->convert($fieldValue, $from_currency_code, $to_currency_code, 4);
+        return $fieldValue ? $fieldValue : 0;
 	}
 
 	/**
 	 * Returns a formatted currency value, and applies currency conversion when required
+     *
 	 * @param string $db_name Specifies the column name.
 	 * @param string $currency_code  ISO 4217 , specifies which currency the value should be returned in. Eg. USD
 	 * @return string Returns the formatted currency value.
@@ -73,6 +83,7 @@ class Shop_ActiveRecord extends Db_ActiveRecord{
     /**
      * Returns a formatted currency value formatted according to the records internal currency code.
      * This is used by the application framework to render currency values in list/presentation views
+     *
      * @param float $value A currency value
      * @return string Returns the formatted currency value.
      */

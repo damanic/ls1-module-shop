@@ -13,6 +13,17 @@ class Shop_CurrencyPriceRecord extends Db_ActiveRecord {
 
 	public function define_columns($context = null) {}
 
+    /**
+     * Returns the price or null if no price set.
+     * @return float|null
+     */
+    public function getValue(){
+        if($this->value && is_numeric($this->value)){
+            return (float) $this->value;
+        }
+        return null;
+    }
+
 	public function apply_related(Db_ActiveRecord $model){
 		$this->where('master_object_id = ?', $model->id);
 		$this->where('master_object_class = ?', get_class($model));
