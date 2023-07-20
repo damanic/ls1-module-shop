@@ -74,8 +74,10 @@
 						if ($reflection->isSubclassOf('Shop_RuleActionBase'))
 						{
 							$obj = new $class();
-							$action_type = $obj->get_action_type();
-							self::$action_classes[$action_type][] = $class;
+                            if(get_class ($obj) === $class) { //Ignore class aliases introduced for backwards compatibility
+                                $action_type = $obj->get_action_type();
+                                self::$action_classes[$action_type][] = $class;
+                            }
 						}
 					}
 				}
