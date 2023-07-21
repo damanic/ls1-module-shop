@@ -301,6 +301,9 @@ class Shop_ShippingOption extends Shop_ActiveRecord
         return $obj->$method_name($key_value);
     }
 
+    /**
+     * @return Shop_ShippingType
+     */
     public function get_shippingtype_object()
     {
         if ($this->shipping_type_obj !== null) {
@@ -422,7 +425,7 @@ class Shop_ShippingOption extends Shop_ActiveRecord
          */
 
         $this->define_form_fields(null);
-        $labels = $obj->generate_shipping_labels($this, $order, $parameters);
+        $labels = $obj->generateShippingLabels($this, $order, $parameters);
 
         /*
          * Save order shipping label parameters
