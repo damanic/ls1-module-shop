@@ -1,4 +1,4 @@
-<?
+<?php
 
 	class Shop_CurrencyConverter
 	{
@@ -13,7 +13,7 @@
 		 * Returns exchange rate for two currencies
 		 * @param string $from_currency Specifies 3 character ISO currency code (e.g. USD) to convert from.
 		 * @param string $to_currency Specifies a currency code to convert to
-		 * @return number 
+         * @return float
 		 */
 		public function get_rate($from_currency, $to_currency)
 		{
@@ -148,67 +148,103 @@
 			return $round === null ? $result : round($result, $round);
 		}
 
-		public function update_all_rates($cron=false){
-			$converter = Shop_CurrencyConversionParams::create()->get();
-			if ( !$converter ) {
-				return false;
-			}
-			if ( $cron  ) {
-				if(!$converter->enable_cron_updates) {
-					return false;
-				}
-			}
-			$class_name = $converter->class_name;
-			if ( !class_exists( $class_name ) ) {
-				throw new Phpr_ApplicationException( "Currency converter class $class_name not found." );
-			}
+        /**
+         * This method will update all cached exchange rates
+         *
+         * @param bool $force If false only rates that are older than the refresh interval will be updated
+         * @return void
+         * @throws Phpr_ApplicationException
+         */
+        public function update_all_rates($force = false)
+        {
+            $sql = "SELECT from_currency, to_currency
+				FROM shop_currency_exchange_rates
+				GROUP BY from_currency, to_currency";
 
-			$converter->define_form_fields();
-			$converter_obj = new $class_name();
-			$interval = $converter->refresh_interval ? $converter->refresh_interval : 24;
-			$now = Phpr_DateTime::now()->toSqlDateTime();
+            $currencies = Db_DbHelper::queryArray($sql);
 
-			$sql = "SELECT from_currency, to_currency
-					FROM shop_currency_exchange_rates
-					GROUP BY from_currency, to_currency";
+            if (!$currencies) {
+                return;
+            }
 
-			$currencies = Db_DbHelper::queryArray($sql);
+            foreach ($currencies as $data) {
+                $fromCurrency = $data['from_currency'];
+                $toCurrency = $data['to_currency'];
+                $this->refreshRate($fromCurrency, $toCurrency, $force);
+            }
+        }
 
-			if(!$currencies){
-				return;
-			}
+        /**
+         * This method will update all exchange rate pairs for the specified currency
+         * @param string $currencyCode Specifies 3 character ISO currency code (e.g. USD)
+         * @param bool $force If false only rates that are older than the refresh interval will be updated
+         * @return void
+         * @throws Phpr_ApplicationException
+         */
+        public function updateRates($currencyCode, $force = false)
+        {
+            $sql = "SELECT from_currency, to_currency
+				FROM shop_currency_exchange_rates
+				WHERE (from_currency = :currencyCode OR to_currency = :currencyCode)
+				GROUP BY from_currency, to_currency";
 
-			$sql_vars = array(
-				'interval' =>$interval,
-				'now' => Phpr_DateTime::now()->toSqlDateTime()
-			);
+            $currencies = Db_DbHelper::queryArray($sql);
 
-			foreach($currencies as $data){
-				$from_currency = $sql_vars['from_currency'] = $data['from_currency'];
-				$to_currency = $sql_vars['to_currency']  = $data['to_currency'];
+            if (!$currencies) {
+                return;
+            }
 
-				$sql = "SELECT count(id)
-						FROM shop_currency_exchange_rates
-						WHERE from_currency = :from_currency
-						AND to_currency = :to_currency
-						AND DATE_ADD(created_at, interval :interval hour) >= :now";
+            foreach ($currencies as $data) {
+                $fromCurrency = $data['from_currency'];
+                $toCurrency = $data['to_currency'];
+                $this->refreshRate($fromCurrency, $toCurrency, $force);
+            }
+        }
 
-				$result = Db_DbHelper::scalar($sql,$sql_vars);
 
-				if(!$result) {
-					try {
-						$rate = $converter_obj->get_exchange_rate( $converter, $from_currency, $to_currency );
-						if($rate) {
-							$this->update_rate( $from_currency, $to_currency, $rate );
-						}
-					} catch ( Exception $ex ) {
-						traceLog( 'Failed to get exchange rate ' . $ex->getMessage() );
-					}
-				}
-			}
+        protected function refreshRate($fromCurrency, $toCurrency, $force = false)
+        {
+            $converterConfig = Shop_CurrencyConversionParams::create()->get();
+            $className = $converterConfig->class_name;
+            if (!class_exists($className)) {
+                throw new Phpr_ApplicationException("Currency converter class $className not found.");
+            }
 
-			return true;
-		}
+            $converterConfig->define_form_fields();
+            $converter_obj = new $className();
+            $interval = $converterConfig->refresh_interval ?: 24;
+
+            $bind = [
+                'from_currency' => $fromCurrency,
+                'to_currency' => $toCurrency,
+                'interval' => $interval,
+                'now' => Phpr_DateTime::now()->toSqlDateTime()
+            ];
+
+            $updateRate = true;
+            if (!$force) {
+                //check if rate is older than refresh interval
+                $sql = "SELECT count(id)
+                    FROM shop_currency_exchange_rates
+                    WHERE from_currency = :from_currency
+                    AND to_currency = :to_currency
+                    AND DATE_ADD(created_at, interval :interval hour) >= :now";
+
+                $updateRate = !Db_DbHelper::scalar($sql, $bind);
+            }
+
+            if ($updateRate) {
+                try {
+                    $rate = $converter_obj->get_exchange_rate($converterConfig, $fromCurrency, $toCurrency);
+                    if ($rate) {
+                        $this->update_rate($fromCurrency, $toCurrency, $rate);
+                    }
+                } catch (\Exception $ex) {
+                    traceLog('Failed to get exchange rate ' . $ex->getMessage());
+                }
+            }
+
+            return true;
+        }
 	}
 
-?>

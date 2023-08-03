@@ -208,8 +208,11 @@
 		}
 
 		public function update_currency_rates(){
-			$converter = Shop_CurrencyConverter::create();
-			$converter->update_all_rates($cron=true);
+			$converterConfig = Shop_CurrencyConversionParams::create()->get();
+			if (!$converterConfig || !$converterConfig->enable_cron_updates) {
+				return false;
+			}
+			Shop_CurrencyConverter::create()->update_all_rates();
 			return true;
 		}
 		
