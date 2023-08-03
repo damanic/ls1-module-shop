@@ -188,7 +188,7 @@
 				WHERE (from_currency = :currencyCode OR to_currency = :currencyCode)
 				GROUP BY from_currency, to_currency";
 
-            $currencies = Db_DbHelper::queryArray($sql);
+            $currencies = Db_DbHelper::queryArray($sql, array( 'currencyCode' => $currencyCode));
 
             if (!$currencies) {
                 return;
