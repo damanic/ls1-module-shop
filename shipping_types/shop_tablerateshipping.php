@@ -69,10 +69,14 @@ class Shop_TableRateShipping extends Shop_ShippingType
 
 
         $parcelTab = 'Shipping Boxes';
-        $host_obj->add_field('shipping_boxes', ' Compatible Shipping Boxes','left')->renderAs(frm_checkboxlist)->comment('Select carrier compatible boxes or none to allow all boxes. Shipping boxes can be configured from System -> Settings -> Shipping Settings','above')->tab($parcelTab)->validation();
         $host_obj->add_field('enable_box_packer', 'Enable Box Packer','right')->renderAs(frm_onoffswitcher)->comment('Attempt to calculate parcel dimensions based on items shipping and shipping boxes compatible')->tab($parcelTab);
         $host_obj->add_field('enable_box_count_multiplier', 'Multiply Rate By Box Count','right')->renderAs(frm_onoffswitcher)->comment('Switch this on if the shipping rate should be multiplied when the box packer calculates multiple shipping boxes required')->tab($parcelTab);
         $host_obj->add_field('box_packer_failure_mode', 'Box Packer Failure Mode','right')->renderAs(frm_dropdown)->comment('Select the action to take should the box packer fail to find a packing solution','above')->tab($parcelTab);
+        $host_obj->add_field('shipping_boxes', ' Compatible Shipping Boxes','left')->renderAs(frm_checkboxlist)->comment('Select carrier compatible boxes or none to allow all boxes. Shipping boxes can be configured from System -> Settings -> Shipping Settings','above')->tab($parcelTab)->validation();
+        $host_obj->add_field('shipping_weight_mode', 'Shipping Weight Calculation Method', 'left')->renderAs(frm_dropdown)->comment('Select how the weight should be calculated', 'above')->tab($parcelTab);
+        $host_obj->add_field('volumetric_divisor', 'Volumetric Divisor', 'left')->renderAs(frm_text)->comment('If volumetric weight calculations are required, enter the `divisor` or `dimensional factor` value ).')->tab($parcelTab);
+
+
 
         $host_obj->add_form_section(
             'If estimated box dimensions exceed maximum dimension limits set by the carrier, quotes will not be returned. 
@@ -83,6 +87,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
         $host_obj->add_field('max_box_length', 'Maximum Box Length','left')->renderAs(frm_text)->comment('The shipping option will be ignored if a calculated package dimension is more than the specified value. The longest packed box dimension will be evaluated for length')->tab($parcelTab);
         $host_obj->add_field('max_box_width', 'Maximum Box Width','left')->renderAs(frm_text)->comment('The shipping option will be ignored if a calculated package dimension is more than the specified value. The second longest packed box dimension will be evaluated for width')->tab($parcelTab);
         $host_obj->add_field('max_box_height', 'Maximum Box Height','left')->renderAs(frm_text)->comment('The shipping option will be ignored if a calculated package dimension is more than the specified value. The third longest packed box dimension will be evaluated for height')->tab($parcelTab);
+        $host_obj->add_field('max_box_length_girth', 'Maximum Box Length + Girth', 'left')->renderAs(frm_text)->comment('The shipping option will be ignored if the calculated package length plus girth is more than the specified value.  (longest packed box dimension) plus girth [(2 x width) + (2 x height)] ')->tab($parcelTab);
         $host_obj->add_field('max_box_weight', 'Maximum Box Weight','left')->renderAs(frm_text)->comment('The shipping option will be ignored if a calculated package weight is more than the specified value.')->tab($parcelTab);
 
 
@@ -162,6 +167,21 @@ class Shop_TableRateShipping extends Shop_ShippingType
             return $options;
 
         return array_key_exists($current_key_value, $options) ? $options[$current_key_value] : null;
+    }
+
+    public function get_shipping_weight_mode_options($current_key_value = -1)
+    {
+        $options = array(
+            'actual' => 'Actual Weight (items, packed box)',
+            'volumetric' => 'Volumetric Weight',
+            'volumetric_if_greater_than_actual' => 'Volumetric Weight if greater than Actual Weight'
+        );
+
+        if ($current_key_value == -1) {
+            return $options;
+        }
+
+        return isset($options[$current_key_value]) ? $options[$current_key_value] : null;
     }
 
 	public function get_grid_autocomplete_values($db_name, $column, $term, $row_data)
@@ -406,6 +426,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
             $itemInfo['itemCount'] += $cartItem->quantity;
         }
 
+        $itemInfo['weight'] = $this->getEffectiveShippingWeight($shippingOption, $itemInfo['weight'], $itemInfo['volume']);
         $price = $this->findShippingPrice($shippingOption,$toAddress,$itemInfo);
 
         if($price === null){
@@ -503,8 +524,9 @@ class Shop_TableRateShipping extends Shop_ShippingType
         foreach($packedBoxes as $packedBox){
 
             $items = $packedBox->get_items();
+            $weight = $this->getEffectiveShippingWeight($shippingOption, $packedBox->get_weight(), $packedBox->get_volume());
             $boxInfo = array(
-                'weight' => $packedBox->get_weight(),
+                'weight' => $weight,
                 'width' => $packedBox->get_width(),
                 'height' => $packedBox->get_depth(),
                 'length' => $packedBox->get_length(),
@@ -675,6 +697,15 @@ class Shop_TableRateShipping extends Shop_ShippingType
             'length' => 0
         );
         $boxInfo = array_merge($expectedBoxInfoParams, $boxInfo);
+        $dimensions = [
+            $boxInfo['length'],
+            $boxInfo['width'],
+            $boxInfo['height']
+        ];
+        rsort($dimensions);
+        $length = $dimensions[0]; //longest side
+        $width = $dimensions[1]; //second-longest side
+        $height = $dimensions[2]; //third-longest side
 
         if($shippingOption->max_box_weight && is_numeric($shippingOption->max_box_weight)){
             if(Core_Number::compare_float($boxInfo['weight'], $shippingOption->max_box_weight) >= 0){
@@ -683,20 +714,28 @@ class Shop_TableRateShipping extends Shop_ShippingType
             }
         }
         if($shippingOption->max_box_length && is_numeric($shippingOption->max_box_length)){
-            if(Core_Number::compare_float($boxInfo['length'], $shippingOption->max_box_length) >= 0){
+            if(Core_Number::compare_float($length, $shippingOption->max_box_length) >= 0){
                 //too long
                 return false;
             }
         }
         if($shippingOption->max_box_width && is_numeric($shippingOption->max_box_width)){
-            if(Core_Number::compare_float($boxInfo['width'], $shippingOption->max_box_width) >= 0){
+            if(Core_Number::compare_float($width, $shippingOption->max_box_width) >= 0){
                 //too wide
                 return false;
             }
         }
         if($shippingOption->max_box_height && is_numeric($shippingOption->max_box_height)){
-            if(Core_Number::compare_float($boxInfo['height'], $shippingOption->max_box_height) >= 0){
+            if(Core_Number::compare_float($height, $shippingOption->max_box_height) >= 0){
                 //too tall
+                return false;
+            }
+        }
+        if ($shippingOption->max_box_length_girth !== null) {
+            $girth = ($width * 2) + ($height * 2);
+            $lg = $girth + $length;
+            if (Core_Number::compare_float($lg, $shippingOption->max_box_length_girth) >= 0) {
+                //too big
                 return false;
             }
         }
@@ -1092,6 +1131,22 @@ class Shop_TableRateShipping extends Shop_ShippingType
         }
 
         return $rate;
+    }
+
+    private function getEffectiveShippingWeight($shippingOption, $weight, $volume)
+    {
+        if (in_array($shippingOption->shipping_weight_mode, ['volumetric', 'volumetric_if_greater_than_actual'])) {
+            $divisor = $shippingOption->volumetric_divisor;
+            if ($weight && $divisor) {
+                $volumetricWeight = $volume / $divisor;
+                if ($shippingOption->shipping_weight_mode == 'volumetric_if_greater_than_actual') {
+                    $weight = max($weight, $volumetricWeight);
+                } else {
+                    $weight = $volumetricWeight;
+                }
+            }
+        }
+        return $weight;
     }
 
 
