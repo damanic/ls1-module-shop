@@ -1057,4 +1057,5 @@
 #1.40.2 Fixes issue with orphaned bundle items in cart
 #1.40.3 Minor fixes and improvements
 #1.40.4 Improved Buy M get N price rule action
-#1.40.5 Minor improvement to CurrencyCoverter
+#1.40.5 Minor improvement to CurrencyConverter
+#1.40.6 Improvements to table rate shipping

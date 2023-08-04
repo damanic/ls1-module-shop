@@ -74,7 +74,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
         $host_obj->add_field('box_packer_failure_mode', 'Box Packer Failure Mode','left')->renderAs(frm_dropdown)->comment('Select the action to take should the box packer fail to find a packing solution','above')->tab($parcelTab);
         $host_obj->add_field('shipping_boxes', ' Compatible Shipping Boxes','right')->renderAs(frm_checkboxlist)->comment('Select carrier compatible boxes or none to allow all boxes. Shipping boxes can be configured from System -> Settings -> Shipping Settings','above')->tab($parcelTab)->validation();
         $host_obj->add_field('shipping_weight_mode', 'Shipping Weight Calculation Method', 'left')->renderAs(frm_dropdown)->comment('Select how the weight should be calculated', 'above')->tab($parcelTab);
-        $host_obj->add_field('volumetric_divisor', 'Volumetric Divisor', 'left')->renderAs(frm_text)->comment('If volumetric weight calculations are required, enter the `divisor` or `dimensional factor` value ).')->tab($parcelTab);
+        $host_obj->add_field('volumetric_divisor', 'Volumetric Divisor', 'left')->renderAs(frm_text)->comment('If volumetric weight calculations are required, enter the `divisor` or `dimensional factor` value.')->tab($parcelTab);
 
 
 
