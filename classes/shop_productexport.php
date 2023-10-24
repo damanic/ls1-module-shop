@@ -1,6 +1,6 @@
-<? 
+<?
 
-	class Shop_ProductExport
+class Shop_ProductExport
 	{
 		protected static $manufacturer_names = array();
 		protected static $tax_class_names = array();
@@ -10,6 +10,7 @@
 		protected static $customer_groups = null;
 		protected static $product_types = array();
 		protected static $product_price_tiers = array();
+		protected static $product_property_values = array();
 		
 		public static function export_csv($iwork = false, $columns_override = NULL, $write_to_file = false, $include_images = false)
 		{
@@ -479,18 +480,24 @@
 		}
 
 		protected static function get_property_value($product, $db_name){
+			if(!isset(self::$product_property_values[$product->id])){
+				self::$product_property_values = array();
+				self::$product_property_values[$product->id] =  Db_DbHelper::queryArray(
+					'select id, name, value from shop_product_properties where product_id=:product_id',
+					array('product_id'=>$product->id)
+				);
+			}
+			if(!count(self::$product_property_values[$product->id] )){
+				return null;
+			}
 			$properties = array();
 			$prop_name = mb_substr($db_name, 6);
-			$values = Db_DbHelper::queryArray('select value from shop_product_properties where product_id=:product_id and name=:name', array('product_id'=>$product->id, 'name'=>$prop_name));
-			if(count($values))
-			{
-				foreach($values as $value)
-				{
-					$properties[] = $value['value'];
+			foreach( self::$product_property_values[$product->id] as $ppv_data){
+				if($ppv_data['name'] == $prop_name){
+					$properties[] = $ppv_data['value'];
 				}
-				return implode('|', $properties);
 			}
-			else return null;
+			return implode('|', $properties);
 		}
 
 		/**
@@ -573,16 +580,6 @@
 		
 		protected static function format_product_row($product, &$row_data, $columns, $sku_index)
 		{
-			$updated_data = Backend::$events->fireEvent('shop:onOverrideProductCsvExportColumns', $row_data);
-			foreach ($updated_data as $data_array)
-			{
-				if (!is_array($data_array))
-					continue;
-					
-				foreach ($data_array as $data_key=>$data_element)
-					$row_data[$data_key] = $data_element;
-			}
-
 			$product->fill_external($row_data);
 
 			$row = array();
@@ -607,9 +604,7 @@
 					$row[$column->dbName] = self::get_related_skus($product);
 				elseif ($column->dbName == 'extra_option_sets')
 					$row[$column->dbName] = self::get_global_extra_sets($product);
-				elseif (preg_match('/^ATTR:/', $column->dbName))
-					$row[$column->dbName] = self::get_attribute_value($product, $column->dbName);
-				elseif (preg_match('/^PROP:/', $column->dbName))
+				elseif (preg_match('/^PROP:/', $column->dbName) || preg_match('/^ATTR:/', $column->dbName))
 					$row[$column->dbName] = self::get_property_value($product, $column->dbName);
 				elseif ($column->dbName == 'product_groups')
 					$row[$column->dbName] = self::list_product_groups($product);
