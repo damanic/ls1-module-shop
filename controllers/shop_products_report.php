@@ -28,10 +28,6 @@ class Shop_Products_Report extends Shop_GenericReport {
 
 	protected $timeline_charts = array( Backend_ChartController::rt_line );
 
-	protected $grouped_name_sql = "if (shop_products.grouped = 1, concat(shop_products.name, ' (', shop_products.grouped_option_desc,')'), shop_products.name)";
-	protected $stock_name_sql = "if (shop_option_matrix_records.sku = '' OR shop_option_matrix_records.sku IS NULL, :grouped_name  , CONCAT(:grouped_name, ' (' ,shop_option_matrix_options.option_value, ')' ))";
-
-
 	public function index() {
 		$this->app_page_title     = 'Products';
 		$this->viewData['report'] = 'products';
@@ -50,117 +46,102 @@ class Shop_Products_Report extends Shop_GenericReport {
 		return 'Products Report';
 	}
 
-	protected function getChartData(){
-		$data = array();
-		$series = array();
+    protected function getChartData(){
+        $data = array();
+        $series = array();
 
-		$chartType = $this->viewData['chart_type'] = $this->getChartType();
+        $chartType = $this->viewData['chart_type'] = $this->getChartType();
 
-		$filterStr = $this->filterAsString('product_report');
+        // Common SQL parts
+        $commonSelectFields = "
+        COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
+        ".$this->get_stock_name_sql()." AS graph_name
+    ";
 
-		$paidFilter = $this->getOrderPaidStatusFilter();
-		if ( $paidFilter ) {
-			$paidFilter = 'and ' . $paidFilter;
-		}
+        $commonJoins = "
+        FROM report_dates
+        LEFT JOIN shop_orders ON report_date = shop_orders.order_date
+        LEFT JOIN shop_order_items ON shop_order_items.shop_order_id = shop_orders.id
+        LEFT JOIN shop_products ON shop_products.id = shop_order_items.shop_product_id
+        LEFT JOIN shop_option_matrix_records ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
+        LEFT JOIN shop_customers ON shop_customers.id = shop_orders.customer_id
+    ";
 
-		$displayType = $this->getReportParameter( 'product_report_display_type', 'amount' );
-		if ( $displayType == 'amount' ) {
-			$amountField = 'sum(((shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)*shop_order_items.quantity) * shop_orders.shop_currency_rate)';
-		} else {
-			$amountField = 'sum(shop_order_items.quantity)';
-		}
+        $filterStr = $this->filterAsString('product_report');
+        $paidFilter = $this->getOrderPaidStatusFilter();
+        $paidFilterStr = $paidFilter ? 'AND '.$paidFilter : '';
 
-		if ( $chartType == Backend_ChartController::rt_column || $chartType == Backend_ChartController::rt_pie ) {
-			$intervalLimit = $this->intervalQueryStr( false );
+        $displayType = $this->getReportParameter( 'product_report_display_type', 'amount' );
+        $amountField = $displayType == 'amount' ?
+            'SUM(((shop_order_items.price+shop_order_items.extras_price-shop_order_items.discount)*shop_order_items.quantity) * shop_orders.shop_currency_rate)' :
+            'SUM(shop_order_items.quantity)';
 
-			$data_query = "
-				select 
-					COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
-					'serie' as series_id, 
-					'serie' as series_value, 
-					".$this->get_stock_name_sql()." AS graph_name, 
-					$amountField as record_value
-				from 
-					shop_order_statuses,
-					report_dates
-				left join shop_orders on report_date = shop_orders.order_date
-				left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id
-				left join shop_products on shop_products.id = shop_order_items.shop_product_id	   
-				LEFT JOIN shop_option_matrix_records ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
-				LEFT JOIN shop_option_matrix_options ON shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
-				left join shop_customers on shop_customers.id=shop_orders.customer_id
-				where
-					shop_orders.deleted_at is null and
-					shop_order_statuses.id = shop_orders.status_id and
-					$intervalLimit
-					$filterStr
-					$paidFilter
-				GROUP BY graph_code
-				order by report_date, shop_products.id, shop_option_matrix_records.id
-			";
+        if ($chartType == Backend_ChartController::rt_column || $chartType == Backend_ChartController::rt_pie) {
+            $intervalLimit = $this->intervalQueryStr(false);
 
-		} else {
-			$intervalLimit    = $this->intervalQueryStr();
-			$seriesIdField    = $this->timeSeriesIdField();
-			$seriesValueField = $this->timeSeriesValueField();
+            $data_query = "
+            SELECT 
+                {$commonSelectFields},
+                'serie' as series_id, 
+                'serie' as series_value, 
+                {$amountField} as record_value
+            {$commonJoins}
+            WHERE
+                shop_orders.deleted_at IS NULL AND
+                {$intervalLimit}
+                {$filterStr}
+                {$paidFilterStr}
+            GROUP BY graph_code
+            ORDER BY report_date, shop_products.id, shop_option_matrix_records.id
+        ";
 
-			// if ($paidFilter)
-			// 	$paidFilter = 'and '.$paidFilter;
+        } else {
+            $intervalLimit = $this->intervalQueryStr();
+            $seriesIdField = $this->timeSeriesIdField();
+            $seriesValueField = $this->timeSeriesValueField();
 
-			$data_query = "
-					select
-						COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
-						".$this->get_stock_name_sql()." AS graph_name, 
-						{$seriesIdField} as series_id,
-						{$seriesValueField} as series_value,
-						$amountField as record_value
-					from 
-						shop_order_statuses,
-						report_dates
-					left join shop_orders on report_date = shop_orders.order_date
-					left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id
-					left join shop_products on shop_products.id = shop_order_items.shop_product_id
-					LEFT JOIN shop_option_matrix_records ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
-					LEFT JOIN shop_option_matrix_options ON shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
-				    left join shop_customers on shop_customers.id=shop_orders.customer_id
+            $data_query = "
+            SELECT
+                {$commonSelectFields},
+                {$seriesIdField} as series_id,
+                {$seriesValueField} as series_value,
+                {$amountField} as record_value
+            {$commonJoins}
+            WHERE 
+                (
+                    (shop_orders.deleted_at IS NULL AND
+                    shop_order_statuses.id = shop_orders.status_id
+                    {$paidFilterStr}
+                    {$filterStr}
+                    )
+                    OR shop_orders.id IS NULL
+                )
+                AND {$intervalLimit}
+            GROUP BY {$seriesIdField}, graph_code
+            ORDER BY report_date, shop_products.id, shop_option_matrix_records.id
+        ";
 
-					where 
-						(
-							(shop_orders.deleted_at is null and
-							shop_order_statuses.id = shop_orders.status_id
-							$paidFilter
-							$filterStr
-							)
-							or shop_orders.id is null
-						)
+            $series_query = "
+            SELECT
+                {$seriesIdField} as series_id,
+                {$seriesValueField} as series_value
+            FROM report_dates
+            WHERE 
+                {$intervalLimit}
+            ORDER BY report_date
+        ";
 
-						and $intervalLimit
-					group by {$seriesIdField}, graph_code
-					order by report_date, shop_products.id, shop_option_matrix_records.id
-				";
+            $series = Db_DbHelper::objectArray($series_query);
+        }
 
-			$series_query = "
-					select
-						{$seriesIdField} as series_id,
-						{$seriesValueField} as series_value
-					from report_dates
-					where 
-						$intervalLimit
-					order by report_date
-				";
+        $data = Db_DbHelper::objectArray($data_query);
 
-			$series = Db_DbHelper::objectArray( $series_query );
-		}
+        return array(
+            'data' => $data,
+            'series' => $series
+        );
+    }
 
-		$bind                         = array();
-		$data = Db_DbHelper::objectArray( $data_query, $bind );
-
-		return array(
-			'data' => $data,
-			'series' => $series
-		);
-
-	}
 
 
 	public function chart_data() {
@@ -201,9 +182,39 @@ class Shop_Products_Report extends Shop_GenericReport {
 		$this->renderPartial( 'chart_totals' );
 	}
 
-	protected function get_stock_name_sql(){
-		return str_replace(':grouped_name', $this->grouped_name_sql, $this->stock_name_sql);
-	}
+    protected function get_stock_name_sql(){
+            // prefer the matrix record SKU, if it's not available, use product SKU
+            return "IF(
+                    shop_option_matrix_records.id IS NOT NULL, 
+                    IF(
+                        shop_option_matrix_records.sku = '' OR shop_option_matrix_records.sku IS NULL, 
+                        CONCAT(
+                            shop_products.name, 
+                            COALESCE(
+                                (SELECT 
+                                    CONCAT(' [',
+                                        GROUP_CONCAT(
+                                            CONCAT(shop_custom_attributes.name, ': ', shop_option_matrix_options.option_value)
+                                        SEPARATOR ', '),
+                                    ']')
+                                FROM 
+                                    shop_custom_attributes, 
+                                    shop_option_matrix_options, 
+                                    shop_option_matrix_records
+                                WHERE 
+                                    shop_option_matrix_records.id = shop_order_items.option_matrix_record_id
+                                    AND shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
+                                    AND shop_custom_attributes.id = shop_option_matrix_options.option_id
+                                GROUP BY
+                                    shop_option_matrix_records.id
+                                ORDER BY
+                                    shop_custom_attributes.sort_order),
+                                '' -- In case the subquery returns NULL, COALESCE will replace it with an empty string
+                            )
+                        ),
+                        CONCAT(shop_products.name, ' [', shop_option_matrix_records.sku, ']')
+                    ),
+                    CONCAT(shop_products.name, ' [', shop_products.sku, ']')
+                )";
+    }
 }
-
-?>

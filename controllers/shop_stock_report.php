@@ -27,9 +27,6 @@
 			'shipping_zone'=>array('name'=>'Shipping Zone', 'class_name'=>'Shop_OrderShippingZoneFilter', 'prompt'=>'Please choose shipping zones you want to include in the list. Orders to countries not in the shipping zones will be hidden.', 'added_list_title'=>'Added Shipping Zones')
 		);
 
-		protected $grouped_name_sql = "if (shop_products.grouped = 1, concat(shop_products.name, ' (', shop_products.grouped_option_desc,')'), shop_products.name)";
-		protected $stock_name_sql = "if (shop_option_matrix_records.sku = '' OR shop_option_matrix_records.sku IS NULL, :grouped_name  , CONCAT(:grouped_name, ' (' ,shop_option_matrix_options.option_value, ')' ))";
-
 		public function __construct()
 		{
 			parent::__construct();
@@ -83,7 +80,7 @@
 			$obj->calculated_columns['items_ordered'] = array('sql'=>"sum(shop_order_items.quantity)", 'type'=>db_number);
 			$obj->calculated_columns['stock_sku'] = array('sql'=>"COALESCE(shop_option_matrix_records.sku, shop_products.sku)", 'type'=>db_varchar);
 			$obj->calculated_columns['stock_in_stock'] = array('sql'=>"COALESCE(shop_option_matrix_records.in_stock, shop_products.in_stock)", 'type'=>db_number);
-			$obj->calculated_columns['stock_name'] = array('sql'=>$this->get_stock_name_sql(), 'type'=>db_varchar);
+			$obj->calculated_columns['stock_name'] = array('sql'=>$this->get_stock_name_sql(true), 'type'=>db_varchar);
 
 			$this->list_data_context = 'stock_report_data';
 
@@ -91,7 +88,6 @@
 			$obj->join('shop_orders', 'shop_orders.id=shop_order_items.shop_order_id');
 			$obj->join('shop_customers', 'shop_customers.id=shop_orders.customer_id');
 			$obj->join('shop_option_matrix_records', 'shop_order_items.option_matrix_record_id = shop_option_matrix_records.id');
-			$obj->join('shop_option_matrix_options', 'shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id');
 
 			$obj->group('COALESCE(shop_option_matrix_records.sku, shop_products.sku)');
 			$this->filterApplyToModel($obj, 'product_report');
@@ -109,8 +105,8 @@
 				$model->define_column('stock_sku', 'SKU')->invisible();
 				$model->calculated_columns['stock_sku'] = array('sql'=>"COALESCE(shop_option_matrix_records.sku, shop_products.sku)", 'type'=>db_varchar);
 
-				$model->define_column('stock_name', 'SKU')->invisible();
-				$model->calculated_columns['stock_name'] = array('sql'=>$this->get_stock_name_sql(), 'type'=>db_varchar);
+				$model->define_column('stock_name', 'Name')->invisible();
+				$model->calculated_columns['stock_name'] = array('sql'=>$this->get_stock_name_sql(true), 'type'=>db_varchar);
 
 				$model->define_column('stock_in_stock', 'Units In Stock')->invisible();
 				$model->calculated_columns['stock_in_stock'] = array('sql'=>"COALESCE(shop_option_matrix_records.in_stock, shop_products.in_stock)", 'type'=>db_number);
@@ -179,7 +175,7 @@
 			$data_query = "
 			select 
 						COALESCE(shop_option_matrix_records.sku, shop_products.sku) AS graph_code, 
-						CONCAT(COALESCE(shop_option_matrix_records.sku, shop_products.sku) , ' | ', ".$this->get_stock_name_sql().") AS graph_name, 
+						".$this->get_stock_name_sql()." AS graph_name,
 						'serie' as series_id, 
 						'serie' as series_value, 
 						$amountField as record_value
@@ -190,7 +186,6 @@
 				left join shop_order_items on shop_order_items.shop_order_id = shop_orders.id
 				left join shop_products on shop_products.id = shop_order_items.shop_product_id	   
 				LEFT JOIN shop_option_matrix_records ON shop_order_items.option_matrix_record_id = shop_option_matrix_records.id
-				LEFT JOIN shop_option_matrix_options ON shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
 				left join shop_customers on shop_customers.id=shop_orders.customer_id
 			where
 				shop_orders.deleted_at is null and
@@ -250,10 +245,71 @@
 		}
 
 
-		protected function get_stock_name_sql(){
-			return str_replace(':grouped_name', $this->grouped_name_sql, $this->stock_name_sql);
-		}
+        protected function get_stock_name_sql($extended = false){
+            if ($extended) {
+                // When $extended is true, always return the full option/attribute description, ignoring the SKU
+                $sql = "CONCAT(
+                    shop_products.name, 
+                    COALESCE( -- COALESCE will return the first non-NULL string
+                        (SELECT 
+                            CONCAT(' [',
+                                GROUP_CONCAT(
+                                    CONCAT(shop_custom_attributes.name, ': ', shop_option_matrix_options.option_value)
+                                SEPARATOR ', '),
+                            ']')
+                        FROM 
+                            shop_custom_attributes, 
+                            shop_option_matrix_options, 
+                            shop_option_matrix_records
+                        WHERE 
+                            shop_option_matrix_records.id = shop_order_items.option_matrix_record_id
+                            AND shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
+                            AND shop_custom_attributes.id = shop_option_matrix_options.option_id
+                        GROUP BY
+                            shop_option_matrix_records.id
+                        ORDER BY
+                            shop_custom_attributes.sort_order),
+                        '' -- In case the subquery returns NULL, COALESCE will replace it with an empty string
+                    )
+                )";
+            } else {
+                // When $extended is false, prefer the matrix record SKU, if it's not available, use product SKU
+                $sql = "IF(
+                    shop_option_matrix_records.id IS NOT NULL, 
+                    IF(
+                        shop_option_matrix_records.sku = '' OR shop_option_matrix_records.sku IS NULL, 
+                        CONCAT(
+                            shop_products.name, 
+                            COALESCE(
+                                (SELECT 
+                                    CONCAT(' [',
+                                        GROUP_CONCAT(
+                                            CONCAT(shop_custom_attributes.name, ': ', shop_option_matrix_options.option_value)
+                                        SEPARATOR ', '),
+                                    ']')
+                                FROM 
+                                    shop_custom_attributes, 
+                                    shop_option_matrix_options, 
+                                    shop_option_matrix_records
+                                WHERE 
+                                    shop_option_matrix_records.id = shop_order_items.option_matrix_record_id
+                                    AND shop_option_matrix_options.matrix_record_id = shop_option_matrix_records.id
+                                    AND shop_custom_attributes.id = shop_option_matrix_options.option_id
+                                GROUP BY
+                                    shop_option_matrix_records.id
+                                ORDER BY
+                                    shop_custom_attributes.sort_order),
+                                '' -- In case the subquery returns NULL, COALESCE will replace it with an empty string
+                            )
+                        ),
+                        CONCAT(shop_products.name, ' [', shop_option_matrix_records.sku, ']')
+                    ),
+                    CONCAT(shop_products.name, ' [', shop_products.sku, ']')
+                )";
+            }
+
+            return $sql;
+        }
+
 
 	}
-
-?>
