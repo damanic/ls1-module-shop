@@ -44,12 +44,11 @@
 		 * @param array $options A list of the record options in the following format: ['Color'=>'Red', 'Size'=>'M']
 		 * @return mixed Returns an object containing the record data or NULL if the record cannot be found.
 		 */
-		public function get_record($product, $options)
+		public function get_record($product, $options=array())
 		{
-			if (is_object($product))
-				$product = $product->id;
+            $product_id = is_object($product) ? $product->id : $product;
 
-			if (!count($product))
+			if (!$product_id)
 				throw new Phpr_ApplicationException('Please specify product or product identifier.');
 			
 			if (!count($options))
@@ -59,7 +58,7 @@
 			
 			$hash = Shop_OptionMatrixRecord::generate_options_hash($options, false);
 			
-			$result = Db_DbHelper::object('select * from shop_option_matrix_records where product_id=:product_id and options_hash=:hash', array('product_id'=>$product, 'hash'=>$hash));
+			$result = Db_DbHelper::object('select * from shop_option_matrix_records where product_id=:product_id and options_hash=:hash', array('product_id'=>$product_id, 'hash'=>$hash));
 			if (!$result)
 				return null;
 				
@@ -125,7 +124,7 @@
 		 * $status = $manager->add_or_update($test_product, $options, $data);
 		 * </pre>
 		 * @documentable
-		 * @param Shop_Product $product Specifies a product the record belongs to.
+		 * @param mixed $product Specifies either product identifier or product object ({@link Shop_Product}) the record belongs to.
 		 * @param array $options A list of the product options and option values in the following format: ['Color'=>'Red', 'Size'=>'M'].
 		 * @param array $data Data values to assign to the record.
 		 * @param boolean $skip_existing Skip the operation if a record with specified options already exists (do not update it).
@@ -145,11 +144,9 @@
 			/*
 			 * Find existing record
 			 */
-			
-			$existing_record = $this->get_record($product, $options);
-			if (is_object($product))
-				$product = $product->id;
-				
+            $product_id = is_object($product) ? $product->id : $product;
+
+			$existing_record = $this->get_record($product_id, $options);
 			if ($existing_record && $skip_existing)
 			{
 				$result->status = self::status_skipped;
@@ -161,7 +158,7 @@
 			 * Load product options
 			 */
 			
-			$product_options = $this->load_product_option_ids($product);
+			$product_options = $this->load_product_option_ids($product_id);
 			
 			/*
 			 * Check whether all options exist in the product
