@@ -1560,4 +1560,11 @@
             $this->get_bundle_items();
         }
 
+        public function get_hs_code()
+        {
+            if($this->product){
+                return $this->product->get_shipping_hs_code();
+            }
+            return null;
+        }
     }

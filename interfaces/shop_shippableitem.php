@@ -82,4 +82,11 @@ interface Shop_ShippableItem {
      */
     public function total_height();
 
+    /**
+     * Returns the HS code of one item.
+     * @documentable
+     * @return string|null Returns the item HS code or null if not available.
+     */
+    public function get_hs_code();
+
 }
