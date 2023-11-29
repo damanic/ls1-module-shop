@@ -4,8 +4,9 @@ class Shop_TableRateShipping extends Shop_ShippingType
 {
 
     private $host_obj = null;
+    private $prohibited_items;
 
-	/**
+    /**
 	 * Returns information about the shipping type
 	 * Must return array with key 'name': array('name'=>'FedEx')
 	 * Also the result can contain an optional 'description'
@@ -114,6 +115,20 @@ class Shop_TableRateShipping extends Shop_ShippingType
                 'min_items'=>array('title'=>'Min Items', 'type'=>'text', 'align'=>'right', 'width'=>45),
                 'max_items'=>array('title'=>'Max Items', 'type'=>'text', 'align'=>'right', 'width'=>45),
                 'price'=>array('title'=>'Rate', 'type'=>'text', 'align'=>'right', 'width'=>50)
+            )
+        ))->noLabel();
+
+        $host_obj->add_form_partial( PATH_APP . '/modules/shop/shipping_types/shop_tablerateshipping/_prohibited_items_description.htm' )->tab( 'Prohibited Items' );
+
+        $host_obj->add_field('prohibited_items', 'Prohibited Items')->tab('Prohibited Items')->renderAs(frm_widget, array(
+            'class'=>'Db_GridWidget',
+            'sortable'=>true,
+            'scrollable'=>true,
+            'scrollable_viewport_class'=>'height-300',
+            'csv_file_name'=>'table-rate-shipping-prohibited-items',
+            'columns'=>array(
+                'prohibited_item_ids'=>array('title'=>'Product Identifier(s)', 'type'=>'text', 'minLength'=>1, 'width'=>90),
+                'prohibited_item_country'=>array('title'=>'Country Code', 'type'=>'text', 'minLength'=>0, 'width'=>10),
             )
         ))->noLabel();
     }
@@ -397,6 +412,43 @@ class Shop_TableRateShipping extends Shop_ShippingType
 			$host_obj->field_error('rates', 'Please specify shipping rates.');
 
 		$host_obj->rates = $processed_rates;
+
+
+        /*
+         * Validate prohibited item rows
+         */
+        $input_prohibited_items = $host_obj->prohibited_items;
+        $line_number = 0;
+        foreach($input_prohibited_items as $row_index=>&$entry){
+            $line_number++;
+            $empty = true;
+            foreach ($entry as $value)
+            {
+                if (strlen(trim($value)))
+                {
+                    $empty = false;
+                    break;
+                }
+            }
+
+            if ($empty)
+                continue;
+
+            $country = $entry['prohibited_item_country'] = trim(mb_strtoupper($entry['prohibited_item_country']));
+            if (!strlen($country))
+                $host_obj->field_error('prohibited_items', 'Please specify prohibited item country code. Available codes are: '.implode(', ', $country_codes).'. Line: '.$line_number, $row_index, 'country');
+
+            if (!array_key_exists($country, $countries) && $country != '*')
+                $host_obj->field_error('prohibited_items', 'Invalid country code in Prohibited Items. Available codes are: '.implode(', ', $country_codes).'. Line: '.$line_number, $row_index, 'country');
+
+            $productIdentifiers = $entry['prohibited_item_ids'] = trim(mb_strtoupper($entry['prohibited_item_ids']));
+            if(!strlen($productIdentifiers)){
+                $host_obj->field_error('prohibited_items', 'Please specify at least one product identifier in Prohibited Items. Line: '.$line_number, $row_index, 'prohibited_item_ids');
+            }
+
+
+        }
+
 	}
 
 	/**
@@ -418,6 +470,10 @@ class Shop_TableRateShipping extends Shop_ShippingType
             'itemValue' => 0,
             'itemCount' => 0,
         );
+
+        if ($this->hasProhibitedItems($shippingOption, $toAddress, $items)){
+            return $rates;
+        }
 
         foreach($items as $cartItem){
             $itemInfo['volume'] += $cartItem->total_volume(false); //ignores items marked free_shipping
@@ -524,6 +580,11 @@ class Shop_TableRateShipping extends Shop_ShippingType
         foreach($packedBoxes as $packedBox){
 
             $items = $packedBox->get_items();
+
+            if ($this->hasProhibitedItems($shippingOption, $toAddress, $items)){
+                return $rates;
+            }
+
             $weight = $this->getEffectiveShippingWeight($shippingOption, $packedBox->get_weight(), $packedBox->get_volume());
             $boxInfo = array(
                 'weight' => $weight,
@@ -731,7 +792,7 @@ class Shop_TableRateShipping extends Shop_ShippingType
                 return false;
             }
         }
-        if ($shippingOption->max_box_length_girth !== null) {
+        if ($shippingOption->max_box_length_girth && is_numeric($shippingOption->max_box_length_girth)) {
             $girth = ($width * 2) + ($height * 2);
             $lg = $girth + $length;
             if (Core_Number::compare_float($lg, $shippingOption->max_box_length_girth) >= 0) {
@@ -1149,5 +1210,69 @@ class Shop_TableRateShipping extends Shop_ShippingType
         return $weight;
     }
 
+    private function hasProhibitedItems(Shop_ShippingOption $shippingOption, Shop_AddressInfo $toAddress, $items){
+        return (bool)$this->extractProhibitedItems($shippingOption, $toAddress, $items);
+    }
+    private function extractProhibitedItems(Shop_ShippingOption $shippingOption, Shop_AddressInfo $toAddress, $items){
+        $foundItems = array();
+        $country = $toAddress->get_relation_obj('country');
+        $countryCode = $country ? $country->code : '*';
+        if($shippingOption->prohibited_items){
+            $itemMap = $this->getItemIdMap($items);
+            foreach($shippingOption->prohibited_items as $row){
+                if($row['prohibited_item_country'] != $countryCode && $row['prohibited_item_country'] != '*'){
+                    continue;
+                }
+                $prohibitedProductIdentifiers = $this->stringToArray($row['prohibited_item_ids']);
+                if(!$prohibitedProductIdentifiers){
+                    continue;
+                }
+
+                foreach ($prohibitedProductIdentifiers as $identifier) {
+                    if (isset($itemMap[$identifier])) {
+                        foreach ($itemMap[$identifier] as $itemKey) {
+                            $foundItems[$itemKey] = $items[$itemKey];
+                        }
+                    }
+                }
+
+            }
+        }
+        return $foundItems;
+    }
+
+    private function getItemIdMap($items){
+        $itemMap = array();
+        foreach($items as $key => $item){
+            $hs_code = strtolower(trim($item->get_hs_code()));
+            if($hs_code) {
+                if (!isset($itemMap[$hs_code])) {
+                    $itemMap[$hs_code] = [];
+                }
+                $itemMap[$hs_code][] = $key;
+            }
+
+            $sku = strtolower(trim($item->om('sku')));
+            if($sku) {
+                if (!isset($itemMap[$sku])) {
+                    $itemMap[$sku] = [];
+                }
+                $itemMap[$sku][] = $key;
+            }
+        }
+        return $itemMap;
+    }
+
+    protected function stringToArray($string){
+        $array = [];
+        if(!$string){
+            return $array;
+        }
+        if(strstr($string, ',')){
+            return array_map(function($id) { return strtolower(trim($id)); }, explode(',', $string));
+        }
+        $array[] = $string;
+        return $array;
+    }
 
 }
