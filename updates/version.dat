@@ -1060,3 +1060,4 @@
 #1.40.5 Minor improvement to CurrencyConverter
 #1.40.6 Improvements to table rate shipping
 #1.40.7 Minor fixes and improvements
+#1.40.8 Adds support for Prohibited Items to TableRate shipping type
