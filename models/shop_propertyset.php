@@ -4,7 +4,9 @@
 	{
 		public $table_name = 'shop_property_sets';
 
-		public $custom_columns = array('existing_id');
+        public $custom_columns = array(
+            'existing_id' => db_number
+        );
 
 		//@todo implement applied_categories
 		public $has_and_belongs_to_many = array(

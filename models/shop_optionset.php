@@ -4,7 +4,9 @@
 	{
 		public $table_name = 'shop_option_sets';
 
-		public $custom_columns = array('existing_id');
+        public $custom_columns = array(
+            'existing_id' => db_number
+        );
 
 		public $has_many = array(
 			'options'=>array('class_name'=>'Shop_OptionSetOption', 'foreign_key'=>'option_set_id', 'order'=>'id', 'delete'=>true)
